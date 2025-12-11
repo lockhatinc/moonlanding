@@ -1,27 +1,13 @@
 import { getSpec, getNavItems } from '@/specs';
-import { get, getUser, can } from '@/engine';
-import { redirect, notFound } from 'next/navigation';
+import { get } from '@/engine';
+import { getFormContext } from '@/lib/route-helpers';
 import { EntityForm } from '@/components/entity-form';
 import { Shell } from '@/components/layout';
 import { updateAction } from '../../actions';
-import { loadOptions } from '@/lib/form-utils';
 
 export default async function EditPage({ params }) {
-  const user = await getUser();
-  if (!user) redirect('/login');
-
   const { entity, id } = await params;
-
-  let spec;
-  try { spec = getSpec(entity); } catch { notFound(); }
-
-  if (spec.embedded) notFound();
-  if (!can(user, spec, 'edit')) redirect(`/${entity}/${id}`);
-
-  const data = get(entity, id);
-  if (!data) notFound();
-
-  const options = await loadOptions(spec);
+  const { user, spec, data, options } = await getFormContext(entity, id, 'edit');
 
   return (
     <Shell user={user} nav={getNavItems()}>

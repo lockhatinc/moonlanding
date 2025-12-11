@@ -751,29 +751,13 @@ export const specs = {
 };
 
 // ========================================
-// HELPER FUNCTIONS
+// HELPER FUNCTIONS (Field utils in lib/field-types.js)
 // ========================================
 
 export function getSpec(name) {
   const spec = specs[name];
   if (!spec) throw new Error(`Unknown entity: ${name}`);
   return spec;
-}
-
-export function getListFields(spec) {
-  return Object.entries(spec.fields)
-    .filter(([_, f]) => f.list)
-    .map(([key, f]) => ({ key, ...f }));
-}
-
-export function getFormFields(spec) {
-  return Object.entries(spec.fields)
-    .filter(([_, f]) => !f.hidden && !f.readOnly && f.type !== 'id')
-    .map(([key, f]) => ({ key, ...f }));
-}
-
-export function getOptions(spec, optionsKey) {
-  return spec.options?.[optionsKey] || [];
 }
 
 export function getNavItems() {
@@ -784,12 +768,4 @@ export function getNavItems() {
 
 export function getAllSpecs() {
   return Object.values(specs);
-}
-
-export function hasParent(spec) {
-  return !!spec.parent;
-}
-
-export function getChildren(spec) {
-  return spec.children || {};
 }
