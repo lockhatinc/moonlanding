@@ -15,6 +15,7 @@
     "@mantine/notifications": "^7.13.0",
     "arctic": "^1.9.2",
     "better-sqlite3": "^11.3.0",
+    "googleapis": "^140.0.0",
     "lucia": "^3.2.0",
     "lucide-react": "^0.441.0",
     "nanoid": "^5.0.7",
