@@ -8,6 +8,7 @@ import { BetterSqlite3Adapter } from '@lucia-auth/adapter-sqlite';
 import { Google } from 'arctic';
 import { cookies } from 'next/headers';
 import { specs, getSpec } from './specs';
+import { coerce, SQL_TYPES, getSearchFields } from './lib/field-types';
 
 // === DATABASE ===
 const dataDir = path.join(process.cwd(), 'data');
@@ -16,15 +17,13 @@ if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 const db = new Database(path.join(dataDir, 'app.db'));
 db.pragma('journal_mode = WAL');
 
-const typeMap = { id: 'TEXT PRIMARY KEY', text: 'TEXT', textarea: 'TEXT', email: 'TEXT', int: 'INTEGER', decimal: 'REAL', bool: 'INTEGER', date: 'INTEGER', timestamp: 'INTEGER', json: 'TEXT', image: 'TEXT', ref: 'TEXT', enum: 'TEXT' };
-
 export function migrate() {
   db.exec(`CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id))`);
 
   for (const spec of Object.values(specs)) {
     const columns = [], foreignKeys = [];
     for (const [key, field] of Object.entries(spec.fields)) {
-      let col = `${key} ${typeMap[field.type] || 'TEXT'}`;
+      let col = `${key} ${SQL_TYPES[field.type] || 'TEXT'}`;
       if (field.required && field.type !== 'id') col += ' NOT NULL';
       if (field.unique) col += ' UNIQUE';
       if (field.default !== undefined) col += ` DEFAULT ${typeof field.default === 'string' ? `'${field.default}'` : field.default}`;
@@ -46,17 +45,6 @@ export function migrate() {
 
 export const genId = () => nanoid();
 export const now = () => Math.floor(Date.now() / 1000);
-
-// Type coercion helper
-const coerce = (val, type) => {
-  if (val === undefined || val === '') return type === 'bool' ? 0 : (val === '' ? null : undefined);
-  if (type === 'json') return typeof val === 'string' ? val : JSON.stringify(val);
-  if (type === 'bool') return val === true || val === 'true' || val === 'on' || val === 1 ? 1 : 0;
-  if (type === 'int') return parseInt(val, 10) || 0;
-  if (type === 'decimal') return parseFloat(val) || 0;
-  if ((type === 'date' || type === 'timestamp') && typeof val === 'string' && val.includes('-')) return Math.floor(new Date(val).getTime() / 1000);
-  return val;
-};
 
 // === CRUD ===
 function buildSelect(spec, where = {}, options = {}) {
@@ -128,8 +116,7 @@ export function remove(entityName, id) {
 }
 
 export function search(entityName, query, where = {}) {
-  const spec = getSpec(entityName);
-  const searchFields = Object.entries(spec.fields).filter(([_, f]) => f.search).map(([k]) => k);
+  const spec = getSpec(entityName), searchFields = getSearchFields(spec);
   if (!searchFields.length || !query) return list(entityName, where);
   const table = `${spec.name}s`, { sql: baseSql, params: baseParams } = buildSelect(spec, where);
   const searchClauses = searchFields.map(f => `${table}.${f} LIKE ?`).join(' OR ');

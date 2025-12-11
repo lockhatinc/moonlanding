@@ -1,46 +1,21 @@
 import { getSpec, getNavItems } from '@/specs';
-import { get, getChildren, getUser, can } from '@/engine';
-import { redirect, notFound } from 'next/navigation';
+import { get, can } from '@/engine';
+import { getEntityData } from '@/lib/route-helpers';
 import { EntityDetail } from '@/components/entity-detail';
 import { ReviewDetail } from '@/components/domain';
 import { Shell } from '@/components/layout';
 import { deleteAction } from '../actions';
 
 export default async function DetailPage({ params }) {
-  const user = await getUser();
-  if (!user) redirect('/login');
-
   const { entity, id } = await params;
-
-  let spec;
-  try { spec = getSpec(entity); } catch { notFound(); }
-
-  if (spec.embedded) notFound();
-  if (!can(user, spec, 'view')) redirect('/');
-
-  const data = get(entity, id);
-  if (!data) notFound();
-
-  const children = {};
-  if (spec.children) {
-    for (const [key, childDef] of Object.entries(spec.children)) {
-      children[key] = getChildren(entity, id, childDef);
-    }
-  }
-
+  const { user, spec, data, children } = await getEntityData(entity, id);
   const boundDeleteAction = deleteAction.bind(null, entity, id);
 
-  if (spec.detail?.component === 'review-detail') {
-    return (
-      <Shell user={user} nav={getNavItems()}>
-        <ReviewDetail spec={spec} data={data} children={children} user={user} canEdit={can(user, spec, 'edit')} canDelete={can(user, spec, 'delete')} deleteAction={boundDeleteAction} />
-      </Shell>
-    );
-  }
+  const DetailComp = spec.detail?.component === 'review-detail' ? ReviewDetail : EntityDetail;
 
   return (
     <Shell user={user} nav={getNavItems()}>
-      <EntityDetail spec={spec} data={data} children={children} user={user} canEdit={can(user, spec, 'edit')} canDelete={can(user, spec, 'delete')} deleteAction={boundDeleteAction} />
+      <DetailComp spec={spec} data={data} children={children} user={user} canEdit={can(user, spec, 'edit')} canDelete={can(user, spec, 'delete')} deleteAction={boundDeleteAction} />
     </Shell>
   );
 }

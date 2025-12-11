@@ -1,28 +1,18 @@
 import { getSpec, getNavItems } from '@/specs';
-import { list, search, getUser, can } from '@/engine';
-import { redirect, notFound } from 'next/navigation';
+import { list, search, can } from '@/engine';
+import { requireEntityAccess, generateEntityMetadata } from '@/lib/route-helpers';
 import { EntityList } from '@/components/entity-list';
 import { Shell } from '@/components/layout';
 
 export default async function ListPage({ params, searchParams }) {
-  const user = await getUser();
-  if (!user) redirect('/login');
-
   const { entity } = await params;
   const { q } = await searchParams;
-
-  let spec;
-  try { spec = getSpec(entity); } catch { notFound(); }
-
-  if (spec.embedded || spec.parent) notFound();
-  if (!can(user, spec, 'list')) redirect('/');
-
-  const searchQuery = q || '';
-  const data = searchQuery ? search(entity, searchQuery) : list(entity);
+  const { user, spec } = await requireEntityAccess(entity, 'list');
+  const data = q ? search(entity, q) : list(entity);
 
   return (
     <Shell user={user} nav={getNavItems()}>
-      <EntityList spec={spec} data={data} searchQuery={searchQuery} canCreate={can(user, spec, 'create')} />
+      <EntityList spec={spec} data={data} searchQuery={q || ''} canCreate={can(user, spec, 'create')} />
     </Shell>
   );
 }
