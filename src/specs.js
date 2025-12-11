@@ -13,7 +13,9 @@ export const specs = {
       status: { type: 'enum', label: 'Status', options: 'statuses', list: true, default: 'pending' },
       team_id: { type: 'ref', label: 'Team', ref: 'team', list: true, display: 'avatars' },
       template_id: { type: 'ref', label: 'Template', ref: 'template' },
-      engagement_type: { type: 'enum', label: 'Type', options: 'engagement_types', list: true },
+      // Engagement type - reference to engagement_type_config table OR enum fallback
+      engagement_type_id: { type: 'ref', ref: 'engagement_type_config', label: 'Type', list: true, display: 'engagement_type_config.name' },
+      engagement_type: { type: 'enum', label: 'Type (Legacy)', options: 'engagement_types', hidden: true }, // Legacy field
       // Dates
       commencement_date: { type: 'date', label: 'Commencement Date' },
       completion_date: { type: 'date', label: 'Completion Date' },
@@ -179,14 +181,20 @@ export const specs = {
     },
     form: {
       sections: [
-        { label: 'Basic Info', fields: ['name', 'client_id', 'engagement_type', 'year', 'month'] },
+        { label: 'Basic Info', fields: ['name', 'client_id', 'engagement_type_id', 'year', 'month'] },
         { label: 'Dates', fields: ['commencement_date', 'completion_date', 'deadline'] },
         { label: 'Team', fields: ['team_id', 'template_id'] },
         { label: 'Settings', fields: ['repeat_interval', 'recreate_with_attachments', 'clerks_can_approve', 'is_private'] },
         { label: 'Financial', fields: ['fee', 'wip_value'] },
       ],
     },
-    list: { defaultSort: { field: 'created_at', dir: 'desc' }, filters: ['status', 'stage', 'year', 'team_id', 'engagement_type'] },
+    list: { defaultSort: { field: 'created_at', dir: 'desc' }, filters: ['status', 'stage', 'year', 'team_id', 'engagement_type_id'] },
+    // Triggers for business logic (from Friday)
+    triggers: {
+      onCreate: 'onEngagementCreate',    // Update client counts, send initial emails
+      onUpdate: 'onEngagementUpdate',    // Handle stage/status changes, notifications
+      onDelete: 'onEngagementDelete',    // Decrement counts
+    },
   },
 
   // === REVIEW (My Work Review) ===
@@ -289,6 +297,11 @@ export const specs = {
       { key: 'compare', label: 'Compare PDFs', icon: 'Columns', permission: 'view', dialog: 'comparePdfs' },
       { key: 'ml_consolidate', label: 'ML Consolidate Queries', icon: 'Sparkles', permission: 'edit', handler: 'mlConsolidateQueries' },
     ],
+    // Triggers for business logic (from MWR)
+    triggers: {
+      onCreate: 'onReviewCreate',    // Email team partners, initialize checklists
+      onUpdate: 'onReviewUpdate',    // Archive removed highlights, notify changes
+    },
   },
 
   // === CLIENT ===
@@ -299,7 +312,9 @@ export const specs = {
       name: { type: 'text', label: 'Name', required: true, list: true, sortable: true, search: true },
       email: { type: 'email', label: 'Email', list: true, search: true },
       address: { type: 'textarea', label: 'Address' },
-      entity_type: { type: 'enum', label: 'Entity Type', options: 'entity_types' },
+      // Entity type - reference to entity_type table OR enum fallback
+      entity_type_id: { type: 'ref', ref: 'entity_type', label: 'Entity Type', list: true, display: 'entity_type.name' },
+      entity_type: { type: 'enum', label: 'Entity Type (Legacy)', options: 'entity_types', hidden: true }, // Legacy field
       status: { type: 'enum', label: 'Status', options: 'statuses', list: true, default: 'active' },
       // Counts
       engagement_count: { type: 'int', label: 'Engagements', default: 0, readOnly: true },
@@ -310,6 +325,7 @@ export const specs = {
         { value: 'active', label: 'Active', color: 'green' },
         { value: 'inactive', label: 'Inactive', color: 'gray' },
       ],
+      // Legacy enum options (kept for backward compatibility)
       entity_types: [
         { value: 'company', label: 'Company' },
         { value: 'trust', label: 'Trust' },
@@ -317,6 +333,10 @@ export const specs = {
         { value: 'partnership', label: 'Partnership' },
         { value: 'npo', label: 'Non-Profit' },
       ],
+    },
+    // Triggers for business logic (from Friday: clientInactiveUpdate)
+    triggers: {
+      onUpdate: 'onClientUpdate', // When status changes to inactive
     },
     children: {
       engagements: { entity: 'engagement', fk: 'client_id', label: 'Engagements' },
@@ -418,6 +438,17 @@ export const specs = {
       { key: 'flag', label: 'Toggle Flag', icon: 'Flag', permission: 'edit', handler: 'toggleRfiFlag' },
       { key: 'bulk_deadline', label: 'Set Bulk Deadline', icon: 'Calendar', permission: 'edit', dialog: 'bulkDeadline' },
     ],
+    // Triggers for business logic (from Friday)
+    triggers: {
+      onUpdate: 'onRfiUpdate',    // Status/deadline notifications, update engagement progress
+    },
+    // Validation rules
+    validation: {
+      // Status change requires files or responses (from Friday: Status Change Rules)
+      statusChangeRequires: 'files_or_responses',
+      // Only auditors (not clerks) can change status unless clerksCanApprove
+      statusChangeRoles: ['partner', 'manager'],
+    },
   },
 
   // === HIGHLIGHT (PDF Query) ===
@@ -492,6 +523,17 @@ export const specs = {
       { key: 'push_to_rfi', label: 'Push to RFI', icon: 'Send', permission: 'edit', handler: 'pushHighlightToRfi' },
       { key: 'scroll_to', label: 'Scroll to Page', icon: 'Eye', permission: 'view', handler: 'scrollToHighlight' },
     ],
+    // Triggers for business logic (from MWR)
+    triggers: {
+      beforeDelete: 'onHighlightDelete',    // Archive instead of delete
+    },
+    // Display colors (from MWR)
+    displayColors: {
+      default: '#B0B0B0',
+      scrolledTo: '#7F7EFF',
+      partner: '#ff4141',
+      resolved: '#44BBA4',
+    },
   },
 
   // === HIGHLIGHT RESPONSE ===
@@ -605,6 +647,10 @@ export const specs = {
       create: ['partner'],
       edit: ['partner'],
       delete: ['partner'],
+    },
+    // Triggers for business logic (from Friday)
+    triggers: {
+      onUpdate: 'onTeamUpdate',    // Remove users from engagements when removed from team
     },
   },
 
@@ -896,6 +942,10 @@ export const specs = {
       edit: ['partner', 'manager'],
       delete: ['partner', 'manager'],
     },
+    // Triggers for business logic (from MWR)
+    triggers: {
+      onCreate: 'onCollaboratorCreate',    // Send notification to collaborator
+    },
   },
 
   // === USER GROUP (permissions) ===
@@ -1172,6 +1222,156 @@ export const specs = {
     access: {
       list: ['partner'],
       view: ['partner'],
+    },
+  },
+
+  // === ENTITY TYPE (Client types - managed collection) ===
+  // From Friday: friday/clients/entity_types/
+  entity_type: {
+    name: 'entity_type', label: 'Entity Type', labelPlural: 'Entity Types', icon: 'Building2',
+    fields: {
+      id: { type: 'id' },
+      name: { type: 'text', label: 'Name', required: true, list: true, search: true, unique: true },
+      description: { type: 'textarea', label: 'Description' },
+      status: { type: 'enum', label: 'Status', options: 'statuses', list: true, default: 'active' },
+      sort_order: { type: 'int', label: 'Order', default: 0 },
+      created_at: { type: 'timestamp', auto: 'now', readOnly: true },
+    },
+    options: {
+      statuses: [
+        { value: 'active', label: 'Active', color: 'green' },
+        { value: 'inactive', label: 'Inactive', color: 'gray' },
+      ],
+    },
+    // Initial data for entity types (from Friday)
+    seedData: [
+      { name: 'Company', description: 'Private or public company' },
+      { name: 'Trust', description: 'Family or business trust' },
+      { name: 'Individual', description: 'Individual person' },
+      { name: 'Partnership', description: 'Business partnership' },
+      { name: 'Non-Profit', description: 'Non-profit organization' },
+      { name: 'Close Corporation', description: 'Close corporation (CC)' },
+      { name: 'Sole Proprietor', description: 'Sole proprietorship' },
+    ],
+    access: {
+      list: ['partner', 'manager'],
+      view: ['partner', 'manager'],
+      create: ['partner'],
+      edit: ['partner'],
+      delete: ['partner'],
+    },
+  },
+
+  // === ENGAGEMENT TYPE (Engagement types - managed collection) ===
+  // From Friday: friday/clients/engagement_types/
+  engagement_type_config: {
+    name: 'engagement_type_config', label: 'Engagement Type', labelPlural: 'Engagement Types', icon: 'Briefcase',
+    fields: {
+      id: { type: 'id' },
+      name: { type: 'text', label: 'Name', required: true, list: true, search: true, unique: true },
+      key: { type: 'text', label: 'Key', required: true, unique: true }, // audit, review, compilation, etc.
+      description: { type: 'textarea', label: 'Description' },
+      default_template_id: { type: 'ref', ref: 'template', label: 'Default Template' },
+      default_fee: { type: 'decimal', label: 'Default Fee' },
+      requires_letter: { type: 'bool', label: 'Requires Engagement Letter', default: true },
+      status: { type: 'enum', label: 'Status', options: 'statuses', list: true, default: 'active' },
+      sort_order: { type: 'int', label: 'Order', default: 0 },
+      created_at: { type: 'timestamp', auto: 'now', readOnly: true },
+    },
+    options: {
+      statuses: [
+        { value: 'active', label: 'Active', color: 'green' },
+        { value: 'inactive', label: 'Inactive', color: 'gray' },
+      ],
+    },
+    // Initial data for engagement types (from Friday)
+    seedData: [
+      { key: 'audit', name: 'Audit', description: 'Full audit engagement' },
+      { key: 'review', name: 'Review', description: 'Review engagement' },
+      { key: 'compilation', name: 'Compilation', description: 'Compilation engagement' },
+      { key: 'agreed_upon', name: 'Agreed Upon Procedures', description: 'AUP engagement' },
+      { key: 'tax', name: 'Tax Services', description: 'Tax compliance and advisory' },
+      { key: 'advisory', name: 'Advisory', description: 'Advisory services' },
+    ],
+    access: {
+      list: ['partner', 'manager'],
+      view: ['partner', 'manager'],
+      create: ['partner'],
+      edit: ['partner'],
+      delete: ['partner'],
+    },
+  },
+
+  // === USER PERMISSION (granular permissions) ===
+  // From Friday: friday/users/permissions/
+  user_permission: {
+    name: 'user_permission', label: 'Permission', labelPlural: 'Permissions', icon: 'Key', embedded: true,
+    fields: {
+      id: { type: 'id' },
+      name: { type: 'text', label: 'Name', required: true, list: true, unique: true },
+      key: { type: 'text', label: 'Key', required: true, unique: true }, // e.g., 'reviews.delete', 'settings.manage'
+      description: { type: 'textarea', label: 'Description' },
+      // Role permissions stored as JSON: { partner: true, manager: true, clerk: false }
+      roles: { type: 'json', label: 'Role Access' },
+      created_at: { type: 'timestamp', auto: 'now', readOnly: true },
+    },
+    // Default permissions (from MWR/Friday)
+    seedData: [
+      { key: 'reviews.create', name: 'Create Reviews', roles: { partner: true, manager: true, clerk: false } },
+      { key: 'reviews.delete', name: 'Delete Reviews', roles: { partner: true, manager: false, clerk: false } },
+      { key: 'reviews.resolve', name: 'Resolve Highlights', roles: { partner: true, manager: true, clerk: false } },
+      { key: 'reviews.flags', name: 'Manage Flags', roles: { partner: true, manager: false, clerk: false } },
+      { key: 'reviews.tags', name: 'Manage Tags', roles: { partner: true, manager: true, clerk: false } },
+      { key: 'reviews.wip', name: 'Set WIP Value', roles: { partner: true, manager: true, clerk: false } },
+      { key: 'reviews.deadline', name: 'Set Deadlines', roles: { partner: true, manager: false, clerk: false } },
+      { key: 'reviews.collaborators', name: 'Manage Collaborators', roles: { partner: true, manager: true, clerk: false } },
+      { key: 'reviews.checklists.remove', name: 'Remove Checklists', roles: { partner: true, manager: false, clerk: false } },
+      { key: 'reviews.attachments.delete', name: 'Delete Attachments', roles: { partner: true, manager: false, clerk: false } },
+      { key: 'engagements.create', name: 'Create Engagements', roles: { partner: true, manager: true, clerk: false } },
+      { key: 'engagements.delete', name: 'Delete Engagements', roles: { partner: true, manager: false, clerk: false } },
+      { key: 'engagements.stage', name: 'Change Stage', roles: { partner: true, manager: true, clerk: false } },
+      { key: 'engagements.close', name: 'Close Out', roles: { partner: true, manager: false, clerk: false } },
+      { key: 'rfi.status', name: 'Change RFI Status', roles: { partner: true, manager: true, clerk: false } },
+      { key: 'settings.manage', name: 'Manage Settings', roles: { partner: true, manager: false, clerk: false } },
+      { key: 'users.manage', name: 'Manage Users', roles: { partner: true, manager: false, clerk: false } },
+      { key: 'teams.manage', name: 'Manage Teams', roles: { partner: true, manager: false, clerk: false } },
+      { key: 'templates.manage', name: 'Manage Templates', roles: { partner: true, manager: false, clerk: false } },
+      { key: 'checklists.manage', name: 'Manage Checklists', roles: { partner: true, manager: false, clerk: false } },
+    ],
+    access: {
+      list: ['partner'],
+      view: ['partner'],
+      create: ['partner'],
+      edit: ['partner'],
+      delete: ['partner'],
+    },
+  },
+
+  // === CLIENT SENT NOTIFICATION (for consolidation) ===
+  // From Friday: Used for daily-manager-clerk-notifications consolidation
+  client_sent_notification: {
+    name: 'client_sent_notification', label: 'Client Notification', labelPlural: 'Client Notifications', icon: 'BellRing', embedded: true,
+    fields: {
+      id: { type: 'id' },
+      client_id: { type: 'ref', ref: 'client', required: true },
+      engagement_id: { type: 'ref', ref: 'engagement' },
+      rfi_id: { type: 'ref', ref: 'rfi' },
+      type: { type: 'enum', label: 'Type', options: 'types', list: true },
+      message: { type: 'text', label: 'Message', list: true },
+      details: { type: 'json', label: 'Details' },
+      consolidated: { type: 'bool', label: 'Consolidated', default: false },
+      created_at: { type: 'timestamp', auto: 'now', list: true },
+    },
+    options: {
+      types: [
+        { value: 'rfi_response', label: 'RFI Response' },
+        { value: 'file_upload', label: 'File Upload' },
+        { value: 'status_change', label: 'Status Change' },
+      ],
+    },
+    access: {
+      list: ['partner', 'manager'],
+      view: ['partner', 'manager'],
     },
   },
 };

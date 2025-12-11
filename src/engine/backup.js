@@ -1,0 +1,159 @@
+// Database Backup - Export and restore functionality
+// From MWR: pubsub_dailyBackup
+// From Friday: daily-backup
+
+import fs from 'fs';
+import path from 'path';
+import { specs } from '../specs';
+import db from '../engine';
+
+const backupDir = path.join(process.cwd(), 'data', 'backups');
+
+/**
+ * Export database to JSON backup
+ * From MWR/Friday: Daily backup to storage bucket
+ */
+export async function exportDatabase() {
+  // Ensure backup directory exists
+  if (!fs.existsSync(backupDir)) {
+    fs.mkdirSync(backupDir, { recursive: true });
+  }
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const backupPath = path.join(backupDir, `backup-${timestamp}.json`);
+
+  const backup = {
+    timestamp,
+    version: '1.0',
+    tables: {},
+  };
+
+  // Export each entity table
+  for (const spec of Object.values(specs)) {
+    const tableName = `${spec.name}s`;
+    try {
+      const rows = db.prepare(`SELECT * FROM ${tableName}`).all();
+      backup.tables[tableName] = rows;
+      console.log(`[BACKUP] Exported ${rows.length} rows from ${tableName}`);
+    } catch (error) {
+      console.error(`[BACKUP] Failed to export ${tableName}:`, error.message);
+    }
+  }
+
+  // Write backup file
+  fs.writeFileSync(backupPath, JSON.stringify(backup, null, 2));
+  console.log(`[BACKUP] Created backup: ${backupPath}`);
+
+  // Clean up old backups (keep last 30)
+  await cleanupOldBackups(30);
+
+  return backupPath;
+}
+
+/**
+ * Import database from JSON backup
+ */
+export async function importDatabase(backupPath) {
+  if (!fs.existsSync(backupPath)) {
+    throw new Error(`Backup file not found: ${backupPath}`);
+  }
+
+  const backup = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
+
+  console.log(`[RESTORE] Restoring backup from ${backup.timestamp}`);
+
+  for (const [tableName, rows] of Object.entries(backup.tables)) {
+    if (!rows || rows.length === 0) continue;
+
+    try {
+      // Clear existing data
+      db.prepare(`DELETE FROM ${tableName}`).run();
+
+      // Insert backup data
+      const columns = Object.keys(rows[0]);
+      const placeholders = columns.map(() => '?').join(', ');
+      const stmt = db.prepare(`INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`);
+
+      for (const row of rows) {
+        stmt.run(...columns.map(col => row[col]));
+      }
+
+      console.log(`[RESTORE] Restored ${rows.length} rows to ${tableName}`);
+    } catch (error) {
+      console.error(`[RESTORE] Failed to restore ${tableName}:`, error.message);
+    }
+  }
+
+  console.log(`[RESTORE] Restore completed`);
+}
+
+/**
+ * List available backups
+ */
+export function listBackups() {
+  if (!fs.existsSync(backupDir)) {
+    return [];
+  }
+
+  return fs.readdirSync(backupDir)
+    .filter(f => f.startsWith('backup-') && f.endsWith('.json'))
+    .map(f => {
+      const stat = fs.statSync(path.join(backupDir, f));
+      return {
+        filename: f,
+        path: path.join(backupDir, f),
+        size: stat.size,
+        created: stat.birthtime,
+      };
+    })
+    .sort((a, b) => b.created - a.created);
+}
+
+/**
+ * Clean up old backups, keeping only the specified number
+ */
+async function cleanupOldBackups(keepCount = 30) {
+  const backups = listBackups();
+
+  if (backups.length <= keepCount) return;
+
+  const toDelete = backups.slice(keepCount);
+  for (const backup of toDelete) {
+    try {
+      fs.unlinkSync(backup.path);
+      console.log(`[BACKUP] Deleted old backup: ${backup.filename}`);
+    } catch (error) {
+      console.error(`[BACKUP] Failed to delete ${backup.filename}:`, error.message);
+    }
+  }
+}
+
+/**
+ * Get the latest backup
+ */
+export function getLatestBackup() {
+  const backups = listBackups();
+  return backups.length > 0 ? backups[0] : null;
+}
+
+/**
+ * Export specific tables
+ */
+export function exportTables(tableNames) {
+  const backup = {
+    timestamp: new Date().toISOString(),
+    version: '1.0',
+    tables: {},
+  };
+
+  for (const tableName of tableNames) {
+    try {
+      const rows = db.prepare(`SELECT * FROM ${tableName}`).all();
+      backup.tables[tableName] = rows;
+    } catch (error) {
+      console.error(`[BACKUP] Failed to export ${tableName}:`, error.message);
+    }
+  }
+
+  return backup;
+}
