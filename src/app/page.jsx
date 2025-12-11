@@ -1,8 +1,7 @@
-import { getUser } from '@/engine/auth';
-import { getNavItems, specs } from '@/engine/spec';
-import { count } from '@/engine/crud';
+import { getUser, count } from '@/engine';
+import { getNavItems, specs } from '@/specs';
 import { redirect } from 'next/navigation';
-import { Shell } from '@/components/layout/shell';
+import { Shell } from '@/components/layout';
 import { Paper, Title, Text, SimpleGrid, Group, Stack, ThemeIcon, Box, UnstyledButton } from '@mantine/core';
 import Link from 'next/link';
 import * as Icons from 'lucide-react';

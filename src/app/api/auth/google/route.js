@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { google } from '@/engine/auth';
+import { google } from '@/engine';
 import { generateState, generateCodeVerifier } from 'arctic';
 import { cookies } from 'next/headers';
 

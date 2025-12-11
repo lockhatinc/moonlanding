@@ -4,11 +4,11 @@ import { useRouter } from 'next/navigation';
 import { Tabs, Button, Paper, Title, Group, Text, SimpleGrid, ActionIcon, Badge, Stack, Box } from '@mantine/core';
 import { FieldRender } from './field-render';
 import { EntityList } from './entity-list';
-import { ChatPanel } from '@/domain/chat-panel';
+import { ChatPanel } from './domain';
 import { Pencil, Trash2, File, ArrowLeft } from 'lucide-react';
 import * as Icons from 'lucide-react';
-import { specs } from '@/engine/spec';
-import { can } from '@/engine/auth';
+import { specs } from '@/specs';
+import { can } from '@/engine';
 
 export function EntityDetail({ spec, data, children = {}, user, canEdit = false, canDelete = false, deleteAction }) {
   const router = useRouter();

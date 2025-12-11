@@ -1,28 +1,18 @@
-import { getSpec, getNavItems } from '@/engine/spec';
-import { get, list } from '@/engine/crud';
-import { getUser, can } from '@/engine/auth';
+import { getSpec, getNavItems } from '@/specs';
+import { get, list, getUser, can } from '@/engine';
 import { redirect, notFound } from 'next/navigation';
 import { EntityForm } from '@/components/entity-form';
-import { Shell } from '@/components/layout/shell';
+import { Shell } from '@/components/layout';
 import { updateAction } from '../../actions';
 
 async function loadOptions(spec) {
   const options = {};
-
   for (const [key, field] of Object.entries(spec.fields)) {
     if (field.type === 'ref' && field.ref) {
-      try {
-        const items = list(field.ref);
-        options[key] = items.map(r => ({
-          value: r.id,
-          label: r.name || r.email || r.id,
-        }));
-      } catch {
-        options[key] = [];
-      }
+      try { options[key] = list(field.ref).map(r => ({ value: r.id, label: r.name || r.email || r.id })); }
+      catch { options[key] = []; }
     }
   }
-
   return options;
 }
 
@@ -33,11 +23,7 @@ export default async function EditPage({ params }) {
   const { entity, id } = await params;
 
   let spec;
-  try {
-    spec = getSpec(entity);
-  } catch {
-    notFound();
-  }
+  try { spec = getSpec(entity); } catch { notFound(); }
 
   if (spec.embedded) notFound();
   if (!can(user, spec, 'edit')) redirect(`/${entity}/${id}`);
@@ -47,27 +33,14 @@ export default async function EditPage({ params }) {
 
   const options = await loadOptions(spec);
 
-  const actionWithParams = updateAction.bind(null, entity, id);
-
   return (
     <Shell user={user} nav={getNavItems()}>
-      <EntityForm
-        spec={spec}
-        data={data}
-        options={options}
-        action={actionWithParams}
-      />
+      <EntityForm spec={spec} data={data} options={options} action={updateAction.bind(null, entity, id)} />
     </Shell>
   );
 }
 
 export async function generateMetadata({ params }) {
   const { entity, id } = await params;
-  try {
-    const spec = getSpec(entity);
-    const data = get(entity, id);
-    return { title: `Edit ${data?.name || spec.label}` };
-  } catch {
-    return { title: 'Not Found' };
-  }
+  try { const spec = getSpec(entity), data = get(entity, id); return { title: `Edit ${data?.name || spec.label}` }; } catch { return { title: 'Not Found' }; }
 }
