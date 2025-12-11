@@ -1,0 +1,7 @@
+@import '@mantine/core/styles.css';
+@import '@mantine/notifications/styles.css';
+@import '@mantine/dates/styles.css';
+
+.hover-bg:hover {
+  background-color: var(--mantine-color-gray-1);
+}
