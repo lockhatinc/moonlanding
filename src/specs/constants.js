@@ -120,7 +120,7 @@ export const FIELDS = {
   // Standard ID field
   id: { type: 'id' },
 
-  // Timestamps
+  // Timestamps (group: Metadata - won't show in forms as readOnly)
   created_at: { type: 'timestamp', auto: 'now', readOnly: true },
   updated_at: { type: 'timestamp', auto: 'update', readOnly: true },
 
@@ -132,23 +132,23 @@ export const FIELDS = {
   }),
 
   // Entity reference (polymorphic)
-  entity_type: { type: 'text', required: true },
-  entity_id: { type: 'text', required: true },
+  entity_type: { type: 'text', required: true, hidden: true },
+  entity_id: { type: 'text', required: true, hidden: true },
 
   // Status with options
   status: (options = 'statuses', defaultVal = 'active') => ({
-    type: 'enum', label: 'Status', options, list: true, default: defaultVal,
+    type: 'enum', label: 'Status', options, list: true, default: defaultVal, group: 'Basic Info',
   }),
 
   // Name field (searchable)
   name: (opts = {}) => ({
-    type: 'text', label: 'Name', required: true, list: true, sortable: true, search: true,
+    type: 'text', label: 'Name', required: true, list: true, sortable: true, search: true, group: 'Basic Info',
     ...opts,
   }),
 
   // Email field
   email: (opts = {}) => ({
-    type: 'email', label: 'Email', list: true, search: true,
+    type: 'email', label: 'Email', list: true, search: true, group: 'Basic Info',
     ...opts,
   }),
 
@@ -167,6 +167,30 @@ export const FIELDS = {
 
   // JSON attachments
   attachments: { type: 'json', label: 'Attachments' },
+
+  // Ref field factory with group
+  ref: (refEntity, label, opts = {}) => ({
+    type: 'ref', ref: refEntity, label, display: `${refEntity}.name`, group: 'Basic Info',
+    ...opts,
+  }),
+
+  // Date field factory
+  date: (label, opts = {}) => ({
+    type: 'date', label, group: 'Dates',
+    ...opts,
+  }),
+
+  // Bool field factory (settings)
+  bool: (label, opts = {}) => ({
+    type: 'bool', label, default: false, group: 'Settings',
+    ...opts,
+  }),
+
+  // Decimal field factory (financial)
+  decimal: (label, opts = {}) => ({
+    type: 'decimal', label, group: 'Financial',
+    ...opts,
+  }),
 };
 
 // Generate timestamp fields bundle

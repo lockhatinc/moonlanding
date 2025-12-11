@@ -127,3 +127,55 @@ import { File } from 'lucide-react';
 export function getEntityIcon(spec) {
   return Icons[spec.icon] || File;
 }
+
+// === AUTO-GENERATE FORM SECTIONS ===
+// Groups fields by their explicit `group` property, or infers from field patterns
+const FIELD_GROUP_PATTERNS = {
+  'Basic Info': [/^name$/, /^email$/, /^status$/, /^type$/, /^key$/, /^year$/, /^month$/],
+  'Dates': [/date$/, /^deadline$/, /^expires/],
+  'Details': [/^description$/, /^content$/, /^comment$/, /^question$/, /^address$/, /^body$/],
+  'Settings': [/^is_/, /^can_/, /^has_/, /^enable/, /^recreate/, /^repeat/],
+  'Financial': [/^fee$/, /^wip/, /^amount$/, /^price$/, /value$/],
+};
+
+function inferFieldGroup(fieldKey, field) {
+  // Explicit group takes priority
+  if (field.group) return field.group;
+  // Pattern matching fallback
+  for (const [group, patterns] of Object.entries(FIELD_GROUP_PATTERNS)) {
+    for (const pattern of patterns) {
+      if (pattern.test(fieldKey)) return group;
+    }
+  }
+  return 'Details';
+}
+
+/**
+ * Auto-generate form sections from field metadata
+ * Falls back to spec.form.sections if defined
+ */
+export function getFormSections(spec) {
+  // Use explicit sections if defined
+  if (spec.form?.sections) return spec.form.sections;
+
+  // Auto-generate from fields
+  const formFields = getFormFields(spec);
+  const groups = {};
+
+  for (const field of formFields) {
+    const group = inferFieldGroup(field.key, field);
+    if (!groups[group]) groups[group] = [];
+    groups[group].push(field.key);
+  }
+
+  // Order groups sensibly
+  const order = ['Basic Info', 'Team', 'Dates', 'Details', 'Settings', 'Financial'];
+  return order
+    .filter(g => groups[g]?.length)
+    .map(g => ({ label: g, fields: groups[g] }))
+    .concat(
+      Object.entries(groups)
+        .filter(([g]) => !order.includes(g))
+        .map(([g, fields]) => ({ label: g, fields }))
+    );
+}

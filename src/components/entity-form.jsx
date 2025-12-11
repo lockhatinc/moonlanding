@@ -3,7 +3,7 @@
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Button, TextInput, Textarea, Select, Checkbox, NumberInput, Paper, Title, Group, Stack, Text, Avatar, Box } from '@mantine/core';
-import { getFormFields, getEntityIcon, formatFormValue, getEnumOptions } from '@/lib/field-types';
+import { getFormFields, getFormSections, getEntityIcon, formatFormValue, getEnumOptions } from '@/lib/field-types';
 
 function SubmitButton({ label }) {
   const { pending } = useFormStatus();
@@ -13,7 +13,7 @@ function SubmitButton({ label }) {
 export function EntityForm({ spec, data = {}, options = {}, action }) {
   const router = useRouter();
   const formFields = getFormFields(spec);
-  const sections = spec.form?.sections || [{ fields: formFields.map(f => f.key) }];
+  const sections = getFormSections(spec);
   const Icon = getEntityIcon(spec);
 
   const renderField = (field) => {
