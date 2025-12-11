@@ -47,6 +47,17 @@ export function migrate() {
 export const genId = () => nanoid();
 export const now = () => Math.floor(Date.now() / 1000);
 
+// Type coercion helper
+const coerce = (val, type) => {
+  if (val === undefined || val === '') return type === 'bool' ? 0 : (val === '' ? null : undefined);
+  if (type === 'json') return typeof val === 'string' ? val : JSON.stringify(val);
+  if (type === 'bool') return val === true || val === 'true' || val === 'on' || val === 1 ? 1 : 0;
+  if (type === 'int') return parseInt(val, 10) || 0;
+  if (type === 'decimal') return parseFloat(val) || 0;
+  if ((type === 'date' || type === 'timestamp') && typeof val === 'string' && val.includes('-')) return Math.floor(new Date(val).getTime() / 1000);
+  return val;
+};
+
 // === CRUD ===
 function buildSelect(spec, where = {}, options = {}) {
   const table = `${spec.name}s`, selects = [`${table}.*`], joins = [];
@@ -88,14 +99,8 @@ export function create(entityName, data, user) {
     if (field.type === 'id') continue;
     if (field.auto === 'now') fields[key] = now();
     else if (field.auto === 'user' && user) fields[key] = user.id;
-    else if (data[key] !== undefined && data[key] !== '') {
-      if (field.type === 'json') fields[key] = typeof data[key] === 'string' ? data[key] : JSON.stringify(data[key]);
-      else if (field.type === 'bool') fields[key] = data[key] === true || data[key] === 'true' || data[key] === 'on' || data[key] === 1 ? 1 : 0;
-      else if (field.type === 'int') fields[key] = parseInt(data[key], 10) || 0;
-      else if (field.type === 'decimal') fields[key] = parseFloat(data[key]) || 0;
-      else if ((field.type === 'date' || field.type === 'timestamp') && typeof data[key] === 'string' && data[key].includes('-')) fields[key] = Math.floor(new Date(data[key]).getTime() / 1000);
-      else fields[key] = data[key];
-    } else if (field.default !== undefined) fields[key] = field.default;
+    else if (data[key] !== undefined && data[key] !== '') { const v = coerce(data[key], field.type); if (v !== undefined) fields[key] = v; }
+    else if (field.default !== undefined) fields[key] = field.default;
   }
   const keys = Object.keys(fields);
   try { db.prepare(`INSERT INTO ${spec.name}s (${keys.join(', ')}) VALUES (${keys.map(() => '?').join(', ')})`).run(...Object.values(fields)); return { id, ...fields }; }
@@ -107,15 +112,7 @@ export function update(entityName, id, data, user) {
   for (const [key, field] of Object.entries(spec.fields)) {
     if (field.readOnly || field.type === 'id') continue;
     if (field.auto === 'update') fields[key] = now();
-    else if (data[key] !== undefined) {
-      if (field.type === 'json') fields[key] = typeof data[key] === 'string' ? data[key] : JSON.stringify(data[key]);
-      else if (field.type === 'bool') fields[key] = data[key] === true || data[key] === 'true' || data[key] === 'on' || data[key] === 1 ? 1 : 0;
-      else if (field.type === 'int') fields[key] = parseInt(data[key], 10) || 0;
-      else if (field.type === 'decimal') fields[key] = parseFloat(data[key]) || 0;
-      else if ((field.type === 'date' || field.type === 'timestamp') && typeof data[key] === 'string' && data[key].includes('-')) fields[key] = Math.floor(new Date(data[key]).getTime() / 1000);
-      else if (data[key] === '') fields[key] = null;
-      else fields[key] = data[key];
-    }
+    else if (data[key] !== undefined) { const v = coerce(data[key], field.type); fields[key] = v === undefined ? null : v; }
   }
   if (!Object.keys(fields).length) return;
   try { db.prepare(`UPDATE ${spec.name}s SET ${Object.keys(fields).map(k => `${k} = ?`).join(', ')} WHERE id = ?`).run(...Object.values(fields), id); }
