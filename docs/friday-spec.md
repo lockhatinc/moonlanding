@@ -1,5 +1,8 @@
 # My Friday - Engagement Management System (Compressed)
 
+<img width="1893" height="860" alt="image" src="https://github.com/user-attachments/assets/5986ebed-bd3e-483f-b201-32fbb4888f40" />
+
+
 ## 1. Overview
 Audit firm engagement mgmt: engagements, RFIs, templates, team collab. Auditor+client users w/ RBAC.
 
