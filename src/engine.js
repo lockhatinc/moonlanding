@@ -9,12 +9,13 @@ import { Google } from 'arctic';
 import { cookies } from 'next/headers';
 import { specs, getSpec } from './specs';
 import { coerce, SQL_TYPES, getSearchFields } from './lib/field-types';
+import { config, hasGoogleAuth } from './config';
 
 // === DATABASE ===
-const dataDir = path.join(process.cwd(), 'data');
+const dataDir = path.dirname(path.resolve(process.cwd(), config.db.path));
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
-const db = new Database(path.join(dataDir, 'app.db'));
+const db = new Database(path.resolve(process.cwd(), config.db.path));
 db.pragma('journal_mode = WAL');
 
 export function migrate() {
@@ -148,12 +149,12 @@ export function getBy(entityName, field, value) {
 const adapter = new BetterSqlite3Adapter(db, { user: 'users', session: 'sessions' });
 
 export const lucia = new Lucia(adapter, {
-  sessionCookie: { expires: false, attributes: { secure: process.env.NODE_ENV === 'production' } },
+  sessionCookie: { expires: config.auth.session.expires, attributes: { secure: config.auth.session.secure } },
   getUserAttributes: (row) => ({ id: row.id, email: row.email, name: row.name, avatar: row.avatar, type: row.type, role: row.role }),
 });
 
-export const google = process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-  ? new Google(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/google/callback')
+export const google = hasGoogleAuth()
+  ? new Google(config.auth.google.clientId, config.auth.google.clientSecret, config.auth.google.redirectUri)
   : null;
 
 export async function getUser() {

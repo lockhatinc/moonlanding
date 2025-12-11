@@ -1,5 +1,5 @@
-import { getSpec, getNavItems } from '@/specs';
-import { getFormContext } from '@/lib/route-helpers';
+import { getNavItems } from '@/specs';
+import { getFormContext, newMetadata } from '@/lib/route-helpers';
 import { EntityForm } from '@/components/entity-form';
 import { Shell } from '@/components/layout';
 import { createAction } from '../actions';
@@ -16,6 +16,5 @@ export default async function NewPage({ params }) {
 }
 
 export async function generateMetadata({ params }) {
-  const { entity } = await params;
-  try { return { title: `New ${getSpec(entity).label}` }; } catch { return { title: 'Not Found' }; }
+  return newMetadata((await params).entity);
 }

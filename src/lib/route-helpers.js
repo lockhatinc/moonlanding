@@ -6,10 +6,6 @@ import { loadOptions } from './form-utils';
 
 /**
  * Validate entity access and return spec/user
- * @param {string} entityName - Entity name
- * @param {string} action - Required action permission
- * @param {Object} options - Additional options
- * @returns {{ user, spec }} - Validated user and spec
  */
 export async function requireEntityAccess(entityName, action = 'view', options = {}) {
   const user = await getUser();
@@ -18,11 +14,9 @@ export async function requireEntityAccess(entityName, action = 'view', options =
   let spec;
   try { spec = getSpec(entityName); } catch { notFound(); }
 
-  // Check if entity is accessible via routes
   if (options.notEmbedded !== false && spec.embedded) notFound();
   if (options.allowParent !== true && spec.parent && action !== 'view') notFound();
 
-  // Permission check
   if (!can(user, spec, action)) {
     redirect(options.redirectTo || (action === 'list' ? '/' : `/${entityName}`));
   }
@@ -35,7 +29,6 @@ export async function requireEntityAccess(entityName, action = 'view', options =
  */
 export async function getEntityData(entityName, id, options = {}) {
   const { user, spec } = await requireEntityAccess(entityName, 'view', options);
-
   const data = get(entityName, id);
   if (!data) notFound();
 
@@ -61,27 +54,50 @@ export async function getFormContext(entityName, id = null, action = 'create') {
   if (id && !data) notFound();
 
   const options = await loadOptions(spec);
-
   return { user, spec, data, options };
-}
-
-/**
- * Generate metadata for entity pages
- */
-export function generateEntityMetadata(spec, data = null, prefix = '') {
-  const title = data?.name || data?.email || spec?.label || 'Entity';
-  return { title: prefix ? `${prefix} ${title}` : title };
 }
 
 /**
  * Common page wrapper props
  */
 export function getPageProps(user, spec) {
-  return {
-    user,
-    nav: getNavItems(),
-    canCreate: can(user, spec, 'create'),
-    canEdit: can(user, spec, 'edit'),
-    canDelete: can(user, spec, 'delete'),
-  };
+  return { user, nav: getNavItems(), canCreate: can(user, spec, 'create'), canEdit: can(user, spec, 'edit'), canDelete: can(user, spec, 'delete') };
+}
+
+// ========================================
+// UNIFIED METADATA GENERATORS
+// ========================================
+
+/**
+ * Generate metadata for list pages
+ */
+export function listMetadata(entity) {
+  try { return { title: getSpec(entity).labelPlural }; } catch { return { title: 'Not Found' }; }
+}
+
+/**
+ * Generate metadata for detail pages
+ */
+export function detailMetadata(entity, id) {
+  try {
+    const spec = getSpec(entity), data = get(entity, id);
+    return { title: data?.name || data?.email || spec.label };
+  } catch { return { title: 'Not Found' }; }
+}
+
+/**
+ * Generate metadata for new pages
+ */
+export function newMetadata(entity) {
+  try { return { title: `New ${getSpec(entity).label}` }; } catch { return { title: 'Not Found' }; }
+}
+
+/**
+ * Generate metadata for edit pages
+ */
+export function editMetadata(entity, id) {
+  try {
+    const spec = getSpec(entity), data = get(entity, id);
+    return { title: `Edit ${data?.name || spec.label}` };
+  } catch { return { title: 'Not Found' }; }
 }
