@@ -1,170 +1,74 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import {
-  MessageSquare,
-  Check,
-  X,
-  Send,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { Paper, Stack, Group, Badge, Text, ActionIcon, Button, Avatar, Textarea, Box, Collapse } from '@mantine/core';
+import { MessageSquare, Check, Send, ChevronDown, ChevronUp } from 'lucide-react';
 
-export function HighlightLayer({
-  highlights = [],
-  selectedId,
-  onSelect,
-  onResolve,
-  onAddResponse,
-  user,
-  canResolve = false,
-}) {
+export function HighlightLayer({ highlights = [], selectedId, onSelect, onResolve, onAddResponse, user, canResolve = false }) {
   const [expandedId, setExpandedId] = useState(null);
   const [newResponse, setNewResponse] = useState('');
 
-  const handleToggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
-
+  const handleToggleExpand = (id) => setExpandedId(expandedId === id ? null : id);
   const handleSubmitResponse = (highlightId) => {
     if (!newResponse.trim()) return;
     onAddResponse?.(highlightId, newResponse);
     setNewResponse('');
   };
-
-  const formatTime = (timestamp) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleDateString();
-  };
+  const formatTime = (timestamp) => timestamp ? new Date(timestamp * 1000).toLocaleDateString() : '';
 
   return (
-    <div className="space-y-2">
+    <Stack gap="xs">
       {highlights.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
-            <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p>No queries yet</p>
-            <p className="text-sm">Select an area on the PDF to add a query</p>
-          </CardContent>
-        </Card>
+        <Paper p="xl" withBorder>
+          <Stack align="center" c="dimmed">
+            <MessageSquare size={32} opacity={0.5} />
+            <Text>No queries yet</Text>
+            <Text size="sm">Select an area on the PDF to add a query</Text>
+          </Stack>
+        </Paper>
       ) : (
         highlights.map((highlight) => (
-          <Card
-            key={highlight.id}
-            className={`cursor-pointer transition-colors ${
-              selectedId === highlight.id ? 'ring-2 ring-primary' : ''
-            }`}
-            onClick={() => onSelect?.(highlight.id)}
-          >
-            <CardHeader className="py-3 px-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant={highlight.resolved ? 'default' : 'secondary'}>
-                      Page {highlight.page_number}
-                    </Badge>
-                    {highlight.resolved ? (
-                      <Badge className="bg-green-100 text-green-800">Resolved</Badge>
-                    ) : (
-                      <Badge className="bg-yellow-100 text-yellow-800">Open</Badge>
-                    )}
-                  </div>
-                  <p className="text-sm line-clamp-2">
-                    {highlight.comment || highlight.content || 'No comment'}
-                  </p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="flex-shrink-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleToggleExpand(highlight.id);
-                  }}
-                >
-                  {expandedId === highlight.id ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </CardHeader>
+          <Paper key={highlight.id} p="sm" withBorder style={{ cursor: 'pointer', outline: selectedId === highlight.id ? '2px solid var(--mantine-color-blue-6)' : 'none' }} onClick={() => onSelect?.(highlight.id)}>
+            <Group justify="space-between" align="flex-start">
+              <Box flex={1}>
+                <Group gap="xs" mb={4}>
+                  <Badge size="sm">Page {highlight.page_number}</Badge>
+                  <Badge size="sm" color={highlight.resolved ? 'green' : 'yellow'}>{highlight.resolved ? 'Resolved' : 'Open'}</Badge>
+                </Group>
+                <Text size="sm" lineClamp={2}>{highlight.comment || highlight.content || 'No comment'}</Text>
+              </Box>
+              <ActionIcon variant="subtle" onClick={(e) => { e.stopPropagation(); handleToggleExpand(highlight.id); }}>
+                {expandedId === highlight.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </ActionIcon>
+            </Group>
 
-            {expandedId === highlight.id && (
-              <CardContent className="pt-0 px-4 pb-4" onClick={(e) => e.stopPropagation()}>
-                {/* Metadata */}
-                <div className="text-xs text-muted-foreground mb-3 flex items-center gap-2">
-                  <Avatar className="h-5 w-5">
-                    <AvatarFallback>{highlight.created_by_display?.[0] || '?'}</AvatarFallback>
-                  </Avatar>
-                  <span>{highlight.created_by_display || 'Unknown'}</span>
-                  <span>•</span>
-                  <span>{formatTime(highlight.created_at)}</span>
-                </div>
-
-                {/* Selected text */}
-                {highlight.content && (
-                  <div className="mb-3 p-2 bg-muted rounded text-sm italic">
-                    "{highlight.content}"
-                  </div>
-                )}
-
-                {/* Responses */}
-                {highlight.responses && highlight.responses.length > 0 && (
-                  <div className="space-y-2 mb-3">
-                    <p className="text-xs font-medium text-muted-foreground">Responses</p>
-                    {highlight.responses.map((response) => (
-                      <div key={response.id} className="p-2 bg-muted/50 rounded text-sm">
-                        <p>{response.content}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {response.created_by_display} • {formatTime(response.created_at)}
-                        </p>
-                      </div>
+            <Collapse in={expandedId === highlight.id}>
+              <Box mt="sm" onClick={(e) => e.stopPropagation()}>
+                <Group gap="xs" mb="xs">
+                  <Avatar size="xs">{highlight.created_by_display?.[0] || '?'}</Avatar>
+                  <Text size="xs" c="dimmed">{highlight.created_by_display || 'Unknown'} • {formatTime(highlight.created_at)}</Text>
+                </Group>
+                {highlight.content && <Paper p="xs" bg="gray.1" mb="sm"><Text size="sm" fs="italic">"{highlight.content}"</Text></Paper>}
+                {highlight.responses?.length > 0 && (
+                  <Stack gap="xs" mb="sm">
+                    <Text size="xs" fw={500} c="dimmed">Responses</Text>
+                    {highlight.responses.map((r) => (
+                      <Paper key={r.id} p="xs" bg="gray.0"><Text size="sm">{r.content}</Text><Text size="xs" c="dimmed">{r.created_by_display} • {formatTime(r.created_at)}</Text></Paper>
                     ))}
-                  </div>
+                  </Stack>
                 )}
-
-                {/* Add response */}
-                <div className="flex gap-2 mb-3">
-                  <Textarea
-                    value={newResponse}
-                    onChange={(e) => setNewResponse(e.target.value)}
-                    placeholder="Add a response..."
-                    className="min-h-[60px]"
-                  />
-                  <Button
-                    size="icon"
-                    onClick={() => handleSubmitResponse(highlight.id)}
-                    disabled={!newResponse.trim()}
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                {/* Actions */}
+                <Group gap="xs" mb="xs">
+                  <Textarea value={newResponse} onChange={(e) => setNewResponse(e.target.value)} placeholder="Add a response..." style={{ flex: 1 }} rows={2} />
+                  <ActionIcon onClick={() => handleSubmitResponse(highlight.id)} disabled={!newResponse.trim()}><Send size={16} /></ActionIcon>
+                </Group>
                 {canResolve && !highlight.resolved && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => onResolve?.(highlight.id)}
-                  >
-                    <Check className="h-4 w-4 mr-2" />
-                    Mark as Resolved
-                  </Button>
+                  <Button variant="outline" size="xs" fullWidth leftSection={<Check size={14} />} onClick={() => onResolve?.(highlight.id)}>Mark as Resolved</Button>
                 )}
-              </CardContent>
-            )}
-          </Card>
+              </Box>
+            </Collapse>
+          </Paper>
         ))
       )}
-    </div>
+    </Stack>
   );
 }

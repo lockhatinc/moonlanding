@@ -3,7 +3,7 @@ import { getNavItems, specs } from '@/engine/spec';
 import { count } from '@/engine/crud';
 import { redirect } from 'next/navigation';
 import { Shell } from '@/components/layout/shell';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Paper, Title, Text, SimpleGrid, Group, Stack, ThemeIcon, Box, UnstyledButton } from '@mantine/core';
 import Link from 'next/link';
 import * as Icons from 'lucide-react';
 import { File, Activity, Users, Briefcase, FileSearch, Building } from 'lucide-react';
@@ -14,39 +14,13 @@ export default async function DashboardPage() {
 
   const navItems = getNavItems();
 
-  // Get counts for main entities
   const stats = [
-    {
-      name: 'Engagements',
-      icon: Briefcase,
-      count: count('engagement'),
-      href: '/engagement',
-      color: 'text-blue-600',
-    },
-    {
-      name: 'Reviews',
-      icon: FileSearch,
-      count: count('review'),
-      href: '/review',
-      color: 'text-purple-600',
-    },
-    {
-      name: 'Clients',
-      icon: Building,
-      count: count('client'),
-      href: '/client',
-      color: 'text-green-600',
-    },
-    {
-      name: 'Users',
-      icon: Users,
-      count: count('user'),
-      href: '/user',
-      color: 'text-orange-600',
-    },
+    { name: 'Engagements', icon: Briefcase, count: count('engagement'), href: '/engagement', color: 'blue' },
+    { name: 'Reviews', icon: FileSearch, count: count('review'), href: '/review', color: 'violet' },
+    { name: 'Clients', icon: Building, count: count('client'), href: '/client', color: 'green' },
+    { name: 'Users', icon: Users, count: count('user'), href: '/user', color: 'orange' },
   ];
 
-  // Recent activity placeholder
   const recentItems = [
     { type: 'engagement', action: 'created', time: 'Just now' },
     { type: 'review', action: 'updated', time: '5 minutes ago' },
@@ -55,136 +29,117 @@ export default async function DashboardPage() {
 
   return (
     <Shell user={user} nav={navItems}>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {user.name}</p>
-        </div>
+      <Stack gap="lg">
+        <Box>
+          <Title order={1}>Dashboard</Title>
+          <Text c="dimmed">Welcome back, {user.name}</Text>
+        </Box>
 
-        {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
           {stats.map((stat) => (
-            <Link key={stat.name} href={stat.href}>
-              <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{stat.name}</CardTitle>
-                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.count}</div>
-                  <p className="text-xs text-muted-foreground">Total active</p>
-                </CardContent>
-              </Card>
-            </Link>
+            <UnstyledButton key={stat.name} component={Link} href={stat.href}>
+              <Paper p="md" withBorder style={{ cursor: 'pointer' }}>
+                <Group justify="space-between" mb="xs">
+                  <Text size="sm" fw={500}>{stat.name}</Text>
+                  <ThemeIcon variant="light" color={stat.color} size="sm">
+                    <stat.icon size={14} />
+                  </ThemeIcon>
+                </Group>
+                <Text size="xl" fw={700}>{stat.count}</Text>
+                <Text size="xs" c="dimmed">Total active</Text>
+              </Paper>
+            </UnstyledButton>
           ))}
-        </div>
+        </SimpleGrid>
 
-        {/* Quick Actions & Recent Activity */}
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Link
-                href="/engagement/new"
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
-              >
-                <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <Briefcase className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-medium">New Engagement</p>
-                  <p className="text-sm text-muted-foreground">Start a new engagement</p>
-                </div>
-              </Link>
-              <Link
-                href="/review/new"
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
-              >
-                <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <FileSearch className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="font-medium">New Review</p>
-                  <p className="text-sm text-muted-foreground">Create a new review</p>
-                </div>
-              </Link>
-              <Link
-                href="/client/new"
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors"
-              >
-                <div className="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center">
-                  <Building className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="font-medium">New Client</p>
-                  <p className="text-sm text-muted-foreground">Add a new client</p>
-                </div>
-              </Link>
-            </CardContent>
-          </Card>
+        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+          <Paper p="md" withBorder>
+            <Title order={4} mb="md">Quick Actions</Title>
+            <Stack gap="xs">
+              <UnstyledButton component={Link} href="/engagement/new">
+                <Group p="sm" style={{ borderRadius: 8 }} className="hover-bg">
+                  <ThemeIcon size={40} radius="md" color="blue" variant="light">
+                    <Briefcase size={20} />
+                  </ThemeIcon>
+                  <Box>
+                    <Text fw={500}>New Engagement</Text>
+                    <Text size="sm" c="dimmed">Start a new engagement</Text>
+                  </Box>
+                </Group>
+              </UnstyledButton>
+              <UnstyledButton component={Link} href="/review/new">
+                <Group p="sm" style={{ borderRadius: 8 }} className="hover-bg">
+                  <ThemeIcon size={40} radius="md" color="violet" variant="light">
+                    <FileSearch size={20} />
+                  </ThemeIcon>
+                  <Box>
+                    <Text fw={500}>New Review</Text>
+                    <Text size="sm" c="dimmed">Create a new review</Text>
+                  </Box>
+                </Group>
+              </UnstyledButton>
+              <UnstyledButton component={Link} href="/client/new">
+                <Group p="sm" style={{ borderRadius: 8 }} className="hover-bg">
+                  <ThemeIcon size={40} radius="md" color="green" variant="light">
+                    <Building size={20} />
+                  </ThemeIcon>
+                  <Box>
+                    <Text fw={500}>New Client</Text>
+                    <Text size="sm" c="dimmed">Add a new client</Text>
+                  </Box>
+                </Group>
+              </UnstyledButton>
+            </Stack>
+          </Paper>
 
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Recent Activity
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentItems.map((item, i) => {
-                  const ItemIcon = Icons[specs[item.type]?.icon] || File;
-                  return (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                        <ItemIcon className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm">
-                          <span className="font-medium capitalize">{item.type}</span>{' '}
-                          {item.action}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{item.time}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-                {recentItems.length === 0 && (
-                  <p className="text-muted-foreground text-center py-4">No recent activity</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Entity Overview */}
-        <Card>
-          <CardHeader>
-            <CardTitle>All Entities</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-3 lg:grid-cols-4">
-              {navItems.map((item) => {
-                const Icon = Icons[item.icon] || File;
+          <Paper p="md" withBorder>
+            <Group mb="md">
+              <Activity size={20} />
+              <Title order={4}>Recent Activity</Title>
+            </Group>
+            <Stack gap="md">
+              {recentItems.map((item, i) => {
+                const ItemIcon = Icons[specs[item.type]?.icon] || File;
                 return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted transition-colors"
-                  >
-                    <Icon className="h-5 w-5 text-muted-foreground" />
-                    <span className="font-medium">{item.label}</span>
-                  </Link>
+                  <Group key={i}>
+                    <ThemeIcon variant="light" color="gray" radius="xl" size="md">
+                      <ItemIcon size={14} />
+                    </ThemeIcon>
+                    <Box flex={1}>
+                      <Text size="sm">
+                        <Text span fw={500} tt="capitalize">{item.type}</Text> {item.action}
+                      </Text>
+                      <Text size="xs" c="dimmed">{item.time}</Text>
+                    </Box>
+                  </Group>
                 );
               })}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              {recentItems.length === 0 && (
+                <Text c="dimmed" ta="center" py="md">No recent activity</Text>
+              )}
+            </Stack>
+          </Paper>
+        </SimpleGrid>
+
+        <Paper p="md" withBorder>
+          <Title order={4} mb="md">All Entities</Title>
+          <SimpleGrid cols={{ base: 2, sm: 3, lg: 4 }} spacing="sm">
+            {navItems.map((item) => {
+              const Icon = Icons[item.icon] || File;
+              return (
+                <UnstyledButton key={item.name} component={Link} href={item.href}>
+                  <Paper p="sm" withBorder style={{ cursor: 'pointer' }}>
+                    <Group>
+                      <Icon size={20} color="var(--mantine-color-dimmed)" />
+                      <Text fw={500}>{item.label}</Text>
+                    </Group>
+                  </Paper>
+                </UnstyledButton>
+              );
+            })}
+          </SimpleGrid>
+        </Paper>
+      </Stack>
     </Shell>
   );
 }

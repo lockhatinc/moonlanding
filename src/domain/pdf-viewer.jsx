@@ -1,24 +1,10 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import {
-  ZoomIn,
-  ZoomOut,
-  ChevronLeft,
-  ChevronRight,
-  MessageSquare,
-  Loader2,
-} from 'lucide-react';
+import { Paper, Group, ActionIcon, Text, Button, Loader, Center, Box } from '@mantine/core';
+import { ZoomIn, ZoomOut, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react';
 
-export function PDFViewer({
-  fileUrl,
-  highlights = [],
-  onHighlight,
-  selectedHighlight,
-  onSelectHighlight,
-}) {
+export function PDFViewer({ fileUrl, highlights = [], onHighlight, selectedHighlight, onSelectHighlight }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [scale, setScale] = useState(1);
@@ -27,15 +13,8 @@ export function PDFViewer({
   const [selectionStart, setSelectionStart] = useState(null);
   const containerRef = useRef(null);
 
-  // Note: In production, you'd use PDF.js or a similar library
-  // This is a placeholder implementation
-
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setLoading(false);
-      setTotalPages(10); // Mock total pages
-    }, 500);
+    const timer = setTimeout(() => { setLoading(false); setTotalPages(10); }, 500);
     return () => clearTimeout(timer);
   }, [fileUrl]);
 
@@ -48,39 +27,25 @@ export function PDFViewer({
     if (!onHighlight) return;
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-
     setIsSelecting(true);
-    setSelectionStart({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
+    setSelectionStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
   };
 
   const handleMouseUp = (e) => {
     if (!isSelecting || !selectionStart || !onHighlight) return;
-
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
-
     const endX = e.clientX - rect.left;
     const endY = e.clientY - rect.top;
-
     const position = {
       x: Math.min(selectionStart.x, endX) / rect.width,
       y: Math.min(selectionStart.y, endY) / rect.height,
       width: Math.abs(endX - selectionStart.x) / rect.width,
       height: Math.abs(endY - selectionStart.y) / rect.height,
     };
-
-    // Only create highlight if selection is large enough
     if (position.width > 0.01 && position.height > 0.01) {
-      onHighlight({
-        page_number: currentPage,
-        position,
-        type: 'area',
-      });
+      onHighlight({ page_number: currentPage, position, type: 'area' });
     }
-
     setIsSelecting(false);
     setSelectionStart(null);
   };
@@ -88,107 +53,59 @@ export function PDFViewer({
   const pageHighlights = highlights.filter((h) => h.page_number === currentPage);
 
   return (
-    <Card className="flex flex-col h-full">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between p-2 border-b">
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handlePrevPage}
-            disabled={currentPage <= 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <span className="text-sm">
-            Page {currentPage} of {totalPages}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleNextPage}
-            disabled={currentPage >= totalPages}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+    <Paper withBorder h="100%" style={{ display: 'flex', flexDirection: 'column' }}>
+      <Group p="xs" justify="space-between" style={{ borderBottom: '1px solid var(--mantine-color-gray-3)' }}>
+        <Group gap="xs">
+          <ActionIcon variant="subtle" onClick={handlePrevPage} disabled={currentPage <= 1}><ChevronLeft size={18} /></ActionIcon>
+          <Text size="sm">Page {currentPage} of {totalPages}</Text>
+          <ActionIcon variant="subtle" onClick={handleNextPage} disabled={currentPage >= totalPages}><ChevronRight size={18} /></ActionIcon>
+        </Group>
+        <Group gap="xs">
+          <ActionIcon variant="subtle" onClick={handleZoomOut}><ZoomOut size={18} /></ActionIcon>
+          <Text size="sm" w={50} ta="center">{Math.round(scale * 100)}%</Text>
+          <ActionIcon variant="subtle" onClick={handleZoomIn}><ZoomIn size={18} /></ActionIcon>
+        </Group>
+        {onHighlight && <Button variant="outline" size="xs" leftSection={<MessageSquare size={14} />}>Add Query</Button>}
+      </Group>
 
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={handleZoomOut}>
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <span className="text-sm w-12 text-center">{Math.round(scale * 100)}%</span>
-          <Button variant="ghost" size="icon" onClick={handleZoomIn}>
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-        </div>
-
-        {onHighlight && (
-          <Button variant="outline" size="sm">
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Add Query
-          </Button>
-        )}
-      </div>
-
-      {/* PDF Content */}
-      <div className="flex-1 overflow-auto p-4 bg-muted/30">
+      <Box flex={1} p="md" bg="gray.1" style={{ overflow: 'auto' }}>
         {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
+          <Center h="100%"><Loader /></Center>
         ) : fileUrl ? (
-          <div
+          <Box
             ref={containerRef}
-            className="relative mx-auto bg-white shadow-lg"
-            style={{
-              width: `${612 * scale}px`,
-              height: `${792 * scale}px`,
-              cursor: onHighlight ? 'crosshair' : 'default',
-            }}
+            mx="auto"
+            bg="white"
+            style={{ width: `${612 * scale}px`, height: `${792 * scale}px`, position: 'relative', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', cursor: onHighlight ? 'crosshair' : 'default' }}
             onMouseDown={handleMouseDown}
             onMouseUp={handleMouseUp}
           >
-            {/* Placeholder for PDF page */}
-            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-              <div className="text-center">
-                <p className="text-lg font-medium">PDF Page {currentPage}</p>
-                <p className="text-sm">{fileUrl}</p>
-              </div>
-            </div>
-
-            {/* Highlights overlay */}
+            <Center h="100%"><Text c="dimmed">PDF Page {currentPage}<br /><Text size="sm">{fileUrl}</Text></Text></Center>
             {pageHighlights.map((highlight) => {
               const pos = highlight.position;
               if (!pos) return null;
-
               return (
-                <div
+                <Box
                   key={highlight.id}
-                  className={`absolute border-2 cursor-pointer transition-colors ${
-                    selectedHighlight === highlight.id
-                      ? 'border-primary bg-primary/20'
-                      : highlight.resolved
-                      ? 'border-green-500 bg-green-500/10'
-                      : 'border-yellow-500 bg-yellow-500/20'
-                  }`}
                   style={{
+                    position: 'absolute',
                     left: `${pos.x * 100}%`,
                     top: `${pos.y * 100}%`,
                     width: `${pos.width * 100}%`,
                     height: `${pos.height * 100}%`,
+                    border: `2px solid ${selectedHighlight === highlight.id ? 'var(--mantine-color-blue-6)' : highlight.resolved ? 'var(--mantine-color-green-6)' : 'var(--mantine-color-yellow-6)'}`,
+                    background: selectedHighlight === highlight.id ? 'rgba(0,100,255,0.2)' : highlight.resolved ? 'rgba(0,200,0,0.1)' : 'rgba(255,200,0,0.2)',
+                    cursor: 'pointer',
                   }}
                   onClick={() => onSelectHighlight?.(highlight.id)}
                 />
               );
             })}
-          </div>
+          </Box>
         ) : (
-          <div className="flex items-center justify-center h-full text-muted-foreground">
-            <p>No PDF file loaded</p>
-          </div>
+          <Center h="100%"><Text c="dimmed">No PDF file loaded</Text></Center>
         )}
-      </div>
-    </Card>
+      </Box>
+    </Paper>
   );
 }

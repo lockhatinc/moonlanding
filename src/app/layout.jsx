@@ -1,8 +1,7 @@
-import { Inter } from 'next/font/google';
-import { Toaster } from '@/components/ui/toaster';
-import './globals.css';
-
-const inter = Inter({ subsets: ['latin'] });
+import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
+import { ColorSchemeScript, MantineProvider } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
 
 export const metadata = {
   title: 'Platform',
@@ -12,9 +11,14 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        {children}
-        <Toaster />
+      <head>
+        <ColorSchemeScript />
+      </head>
+      <body>
+        <MantineProvider>
+          <Notifications position="top-right" />
+          {children}
+        </MantineProvider>
       </body>
     </html>
   );

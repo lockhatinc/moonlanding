@@ -1,32 +1,33 @@
 import { getUser } from '@/engine/auth';
 import { redirect } from 'next/navigation';
 import { LoginForm } from './login-form';
+import { Center, Paper, Box, Title, Text, Code, ThemeIcon } from '@mantine/core';
 
 export default async function LoginPage() {
   const user = await getUser();
   if (user) redirect('/');
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30">
-      <div className="w-full max-w-md p-8">
-        <div className="bg-card rounded-lg shadow-lg p-8">
-          <div className="text-center mb-8">
-            <div className="h-12 w-12 rounded-lg bg-primary mx-auto mb-4 flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-xl">P</span>
-            </div>
-            <h1 className="text-2xl font-bold">Welcome back</h1>
-            <p className="text-muted-foreground">Sign in to your account</p>
-          </div>
+    <Center mih="100vh" bg="gray.1">
+      <Box w="100%" maw={400} p="md">
+        <Paper shadow="md" p="xl" radius="md">
+          <Box ta="center" mb="xl">
+            <ThemeIcon size={48} radius="md" mb="md" mx="auto">
+              <Text fw={700} size="xl">P</Text>
+            </ThemeIcon>
+            <Title order={2}>Welcome back</Title>
+            <Text c="dimmed">Sign in to your account</Text>
+          </Box>
 
           <LoginForm />
 
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Demo credentials:</p>
-            <p className="font-mono">admin@example.com / password</p>
-          </div>
-        </div>
-      </div>
-    </div>
+          <Box mt="xl" ta="center">
+            <Text size="sm" c="dimmed">Demo credentials:</Text>
+            <Code>admin@example.com / password</Code>
+          </Box>
+        </Paper>
+      </Box>
+    </Center>
   );
 }
 

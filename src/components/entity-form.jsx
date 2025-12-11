@@ -2,21 +2,15 @@
 
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Button, TextInput, Textarea, Select, Checkbox, NumberInput, Paper, Title, Group, Stack, Text, Avatar, Box } from '@mantine/core';
+import { DateInput } from '@mantine/dates';
 import { Loader2, File } from 'lucide-react';
 import * as Icons from 'lucide-react';
 
 function SubmitButton({ label }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending}>
-      {pending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+    <Button type="submit" loading={pending}>
       {label}
     </Button>
   );
@@ -29,9 +23,7 @@ export function EntityForm({ spec, data = {}, options = {}, action }) {
     .filter(([_, f]) => !f.hidden && !f.readOnly && f.type !== 'id')
     .map(([key, f]) => ({ key, ...f }));
 
-  // Group fields into sections
   const sections = spec.form?.sections || [{ fields: formFields.map(f => f.key) }];
-
   const Icon = Icons[spec.icon] || File;
 
   const renderField = (field) => {
@@ -42,139 +34,107 @@ export function EntityForm({ spec, data = {}, options = {}, action }) {
         return <Textarea name={field.key} defaultValue={val} rows={3} />;
 
       case 'date':
-        let dateValue = '';
-        if (val) {
-          const date = typeof val === 'number' ? new Date(val * 1000) : new Date(val);
-          if (!isNaN(date.getTime())) {
-            dateValue = date.toISOString().split('T')[0];
-          }
-        }
         return (
-          <Input
+          <input
             type="date"
             name={field.key}
-            defaultValue={dateValue}
+            defaultValue={val ? new Date(val * 1000).toISOString().split('T')[0] : ''}
+            style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--mantine-color-gray-4)', borderRadius: 4 }}
           />
         );
 
       case 'int':
-        return <Input type="number" name={field.key} defaultValue={val} step="1" />;
+        return <NumberInput name={field.key} defaultValue={val} />;
 
       case 'decimal':
-        return <Input type="number" name={field.key} defaultValue={val} step="0.01" />;
+        return <NumberInput name={field.key} defaultValue={val} decimalScale={2} />;
 
       case 'bool':
-        return (
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id={field.key}
-              name={field.key}
-              defaultChecked={!!val}
-            />
-            <label htmlFor={field.key} className="text-sm text-muted-foreground">
-              {field.label}
-            </label>
-          </div>
-        );
+        return <Checkbox name={field.key} label={field.label} defaultChecked={!!val} />;
 
       case 'enum':
         const enumOpts = spec.options?.[field.options] || [];
         return (
-          <Select name={field.key} defaultValue={val !== '' ? String(val) : undefined}>
-            <SelectTrigger>
-              <SelectValue placeholder={`Select ${field.label}`} />
-            </SelectTrigger>
-            <SelectContent>
-              {enumOpts.map(o => (
-                <SelectItem key={o.value} value={String(o.value)}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Select
+            name={field.key}
+            defaultValue={val !== '' ? String(val) : null}
+            data={enumOpts.map(o => ({ value: String(o.value), label: o.label }))}
+            placeholder={`Select ${field.label}`}
+            clearable
+          />
         );
 
       case 'ref':
         const refOpts = options[field.key] || [];
         return (
-          <Select name={field.key} defaultValue={val || undefined}>
-            <SelectTrigger>
-              <SelectValue placeholder={`Select ${field.label}`} />
-            </SelectTrigger>
-            <SelectContent>
-              {refOpts.map(o => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Select
+            name={field.key}
+            defaultValue={val || null}
+            data={refOpts.map(o => ({ value: o.value, label: o.label }))}
+            placeholder={`Select ${field.label}`}
+            searchable
+            clearable
+          />
         );
 
       case 'email':
-        return <Input type="email" name={field.key} defaultValue={val} />;
+        return <TextInput type="email" name={field.key} defaultValue={val} />;
 
       case 'image':
         return (
-          <div className="space-y-2">
-            <Input type="url" name={field.key} defaultValue={val} placeholder="Image URL" />
-            {val && (
-              <img src={val} alt="Preview" className="h-16 w-16 rounded-full object-cover" />
-            )}
-          </div>
+          <Stack gap="xs">
+            <TextInput name={field.key} defaultValue={val} placeholder="Image URL" />
+            {val && <Avatar src={val} size="lg" />}
+          </Stack>
         );
 
       default:
-        return <Input type="text" name={field.key} defaultValue={val} />;
+        return <TextInput name={field.key} defaultValue={val} />;
     }
   };
 
   return (
-    <form action={action} className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-semibold flex items-center gap-2">
-        <Icon className="h-6 w-6" />
-        {data.id ? `Edit ${spec.label}` : `New ${spec.label}`}
-      </h1>
+    <form action={action}>
+      <Box maw={600}>
+        <Group gap="xs" mb="lg">
+          <Icon size={24} />
+          <Title order={2}>{data.id ? `Edit ${spec.label}` : `New ${spec.label}`}</Title>
+        </Group>
 
-      {sections.map((section, i) => {
-        const sectionFields = section.fields
-          .map(fieldKey => formFields.find(f => f.key === fieldKey))
-          .filter(Boolean);
+        <Stack gap="md">
+          {sections.map((section, i) => {
+            const sectionFields = section.fields
+              .map(fieldKey => formFields.find(f => f.key === fieldKey))
+              .filter(Boolean);
 
-        if (sectionFields.length === 0) return null;
+            if (sectionFields.length === 0) return null;
 
-        return (
-          <Card key={i}>
-            {section.label && (
-              <CardHeader>
-                <CardTitle className="text-lg">{section.label}</CardTitle>
-              </CardHeader>
-            )}
-            <CardContent className={section.label ? '' : 'pt-6'}>
-              <div className="space-y-4">
-                {sectionFields.map(field => (
-                  <div key={field.key} className="space-y-2">
-                    {field.type !== 'bool' && (
-                      <Label htmlFor={field.key}>
-                        {field.label}
-                        {field.required && <span className="text-red-500 ml-1">*</span>}
-                      </Label>
-                    )}
-                    {renderField(field)}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+            return (
+              <Paper key={i} p="md" withBorder>
+                {section.label && <Title order={4} mb="md">{section.label}</Title>}
+                <Stack gap="sm">
+                  {sectionFields.map(field => (
+                    <Box key={field.key}>
+                      {field.type !== 'bool' && (
+                        <Text size="sm" fw={500} mb={4}>
+                          {field.label}
+                          {field.required && <Text span c="red" ml={4}>*</Text>}
+                        </Text>
+                      )}
+                      {renderField(field)}
+                    </Box>
+                  ))}
+                </Stack>
+              </Paper>
+            );
+          })}
+        </Stack>
 
-      <div className="flex justify-end gap-3">
-        <Button type="button" variant="outline" onClick={() => router.back()}>
-          Cancel
-        </Button>
-        <SubmitButton label={data.id ? 'Update' : 'Create'} />
-      </div>
+        <Group justify="flex-end" mt="lg">
+          <Button variant="outline" onClick={() => router.back()}>Cancel</Button>
+          <SubmitButton label={data.id ? 'Update' : 'Create'} />
+        </Group>
+      </Box>
     </form>
   );
 }

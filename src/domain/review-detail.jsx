@@ -2,242 +2,92 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
+import { Group, Stack, Button, ActionIcon, Title, Badge, Tabs, Paper, Text, Box, Grid, ScrollArea } from '@mantine/core';
 import { PDFViewer } from './pdf-viewer';
 import { HighlightLayer } from './highlight-layer';
 import { ChatPanel } from './chat-panel';
 import { FieldRender } from '@/components/field-render';
-import {
-  FileSearch,
-  Pencil,
-  Trash2,
-  ArrowLeft,
-  MessageSquare,
-  FileText,
-  ClipboardCheck,
-} from 'lucide-react';
+import { FileSearch, Pencil, Trash2, ArrowLeft, MessageSquare, FileText, ClipboardCheck } from 'lucide-react';
 
-export function ReviewDetail({
-  spec,
-  data,
-  children = {},
-  user,
-  canEdit = false,
-  canDelete = false,
-  deleteAction,
-}) {
+export function ReviewDetail({ spec, data, children = {}, user, canEdit = false, canDelete = false, deleteAction }) {
   const router = useRouter();
   const [selectedHighlight, setSelectedHighlight] = useState(null);
-  const [activeTab, setActiveTab] = useState('pdf');
 
   const highlights = children.highlights || [];
   const checklists = children.checklists || [];
-  const attachments = children.attachments || [];
   const chatMessages = children.chat || [];
-
   const unresolvedCount = highlights.filter((h) => !h.resolved).length;
 
-  const handleHighlight = async (highlightData) => {
-    // In production, this would call a server action
-    console.log('New highlight:', highlightData);
-  };
-
-  const handleResolve = async (highlightId) => {
-    // In production, this would call a server action
-    console.log('Resolve highlight:', highlightId);
-  };
-
-  const handleAddResponse = async (highlightId, content) => {
-    // In production, this would call a server action
-    console.log('Add response:', highlightId, content);
-  };
+  const handleHighlight = async (highlightData) => console.log('New highlight:', highlightData);
+  const handleResolve = async (highlightId) => console.log('Resolve:', highlightId);
+  const handleAddResponse = async (highlightId, content) => console.log('Response:', highlightId, content);
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex justify-between items-start">
-        <div className="flex items-start gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push('/review')}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-semibold flex items-center gap-2">
-              <FileSearch className="h-6 w-6" />
-              {data.name}
-            </h1>
-            <div className="flex items-center gap-2 mt-1">
-              <FieldRender
-                spec={spec}
-                field={{ key: 'status', type: 'enum', options: 'statuses' }}
-                value={data.status}
-                row={data}
-              />
-              {unresolvedCount > 0 && (
-                <Badge variant="secondary">
-                  {unresolvedCount} unresolved {unresolvedCount === 1 ? 'query' : 'queries'}
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          {canEdit && (
-            <Button
-              variant="outline"
-              onClick={() => router.push(`/review/${data.id}/edit`)}
-            >
-              <Pencil className="h-4 w-4 mr-2" />
-              Edit
-            </Button>
-          )}
-          {canDelete && deleteAction && (
-            <form action={deleteAction}>
-              <Button type="submit" variant="destructive">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </Button>
-            </form>
-          )}
-        </div>
-      </div>
+    <Stack gap="md">
+      <Group justify="space-between">
+        <Group>
+          <ActionIcon variant="subtle" onClick={() => router.push('/review')}><ArrowLeft size={18} /></ActionIcon>
+          <FileSearch size={24} />
+          <Box>
+            <Title order={2}>{data.name}</Title>
+            <Group gap="xs">
+              <FieldRender spec={spec} field={{ key: 'status', type: 'enum', options: 'statuses' }} value={data.status} row={data} />
+              {unresolvedCount > 0 && <Badge variant="light">{unresolvedCount} unresolved</Badge>}
+            </Group>
+          </Box>
+        </Group>
+        <Group>
+          {canEdit && <Button variant="outline" leftSection={<Pencil size={16} />} onClick={() => router.push(`/review/${data.id}/edit`)}>Edit</Button>}
+          {canDelete && deleteAction && <form action={deleteAction}><Button type="submit" color="red" leftSection={<Trash2 size={16} />}>Delete</Button></form>}
+        </Group>
+      </Group>
 
-      {/* Main content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* PDF Viewer */}
-        <div className="lg:col-span-2 h-[calc(100vh-200px)]">
-          <PDFViewer
-            fileUrl={data.drive_file_id}
-            highlights={highlights}
-            onHighlight={canEdit ? handleHighlight : undefined}
-            selectedHighlight={selectedHighlight}
-            onSelectHighlight={setSelectedHighlight}
-          />
-        </div>
-
-        {/* Sidebar */}
-        <div className="h-[calc(100vh-200px)] overflow-hidden">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="pdf">
-                <MessageSquare className="h-4 w-4" />
-              </TabsTrigger>
-              <TabsTrigger value="details">
-                <FileText className="h-4 w-4" />
-              </TabsTrigger>
-              <TabsTrigger value="checklists">
-                <ClipboardCheck className="h-4 w-4" />
-              </TabsTrigger>
-              <TabsTrigger value="chat">Chat</TabsTrigger>
-            </TabsList>
-
-            <div className="flex-1 overflow-y-auto mt-2">
-              <TabsContent value="pdf" className="mt-0 h-full">
-                <HighlightLayer
-                  highlights={highlights}
-                  selectedId={selectedHighlight}
-                  onSelect={setSelectedHighlight}
-                  onResolve={handleResolve}
-                  onAddResponse={handleAddResponse}
-                  user={user}
-                  canResolve={canEdit}
-                />
-              </TabsContent>
-
-              <TabsContent value="details" className="mt-0">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Details</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Financial Year</p>
-                      <p className="font-medium">{data.financial_year || '—'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Team</p>
-                      <p className="font-medium">{data.team_id_display || '—'}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Deadline</p>
-                      <p className="font-medium">
-                        <FieldRender
-                          spec={spec}
-                          field={{ type: 'date' }}
-                          value={data.deadline}
-                          row={data}
-                        />
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">WIP Value</p>
-                      <p className="font-medium">
-                        {data.wip_value ? `$${data.wip_value.toFixed(2)}` : '—'}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Private</p>
-                      <p className="font-medium">{data.is_private ? 'Yes' : 'No'}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="checklists" className="mt-0">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Checklists</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {checklists.length === 0 ? (
-                      <p className="text-muted-foreground text-center py-4">
-                        No checklists assigned
-                      </p>
-                    ) : (
-                      <div className="space-y-2">
-                        {checklists.map((checklist) => (
-                          <div
-                            key={checklist.id}
-                            className="flex items-center justify-between p-2 border rounded"
-                          >
-                            <span>{checklist.checklist_id_display || 'Checklist'}</span>
-                            <Badge
-                              className={
-                                checklist.status === 'completed'
-                                  ? 'bg-green-100 text-green-800'
-                                  : checklist.status === 'in_progress'
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-yellow-100 text-yellow-800'
-                              }
-                            >
-                              {checklist.status}
-                            </Badge>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="chat" className="mt-0">
-                <ChatPanel
-                  entityType="review"
-                  entityId={data.id}
-                  messages={chatMessages}
-                  user={user}
-                />
-              </TabsContent>
-            </div>
+      <Grid gutter="md">
+        <Grid.Col span={{ base: 12, lg: 8 }}>
+          <Box h="calc(100vh - 200px)"><PDFViewer fileUrl={data.drive_file_id} highlights={highlights} onHighlight={canEdit ? handleHighlight : undefined} selectedHighlight={selectedHighlight} onSelectHighlight={setSelectedHighlight} /></Box>
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, lg: 4 }}>
+          <Tabs defaultValue="queries" h="calc(100vh - 200px)">
+            <Tabs.List>
+              <Tabs.Tab value="queries" leftSection={<MessageSquare size={14} />}>Queries</Tabs.Tab>
+              <Tabs.Tab value="details" leftSection={<FileText size={14} />}>Details</Tabs.Tab>
+              <Tabs.Tab value="checklists" leftSection={<ClipboardCheck size={14} />}>Checklists</Tabs.Tab>
+              <Tabs.Tab value="chat">Chat</Tabs.Tab>
+            </Tabs.List>
+            <ScrollArea h="calc(100% - 40px)" pt="md">
+              <Tabs.Panel value="queries"><HighlightLayer highlights={highlights} selectedId={selectedHighlight} onSelect={setSelectedHighlight} onResolve={handleResolve} onAddResponse={handleAddResponse} user={user} canResolve={canEdit} /></Tabs.Panel>
+              <Tabs.Panel value="details">
+                <Paper p="md" withBorder>
+                  <Stack gap="md">
+                    <Box><Text size="sm" c="dimmed">Financial Year</Text><Text fw={500}>{data.financial_year || '—'}</Text></Box>
+                    <Box><Text size="sm" c="dimmed">Team</Text><Text fw={500}>{data.team_id_display || '—'}</Text></Box>
+                    <Box><Text size="sm" c="dimmed">Deadline</Text><Text fw={500}><FieldRender spec={spec} field={{ type: 'date' }} value={data.deadline} row={data} /></Text></Box>
+                    <Box><Text size="sm" c="dimmed">WIP Value</Text><Text fw={500}>{data.wip_value ? `$${data.wip_value.toFixed(2)}` : '—'}</Text></Box>
+                    <Box><Text size="sm" c="dimmed">Private</Text><Text fw={500}>{data.is_private ? 'Yes' : 'No'}</Text></Box>
+                  </Stack>
+                </Paper>
+              </Tabs.Panel>
+              <Tabs.Panel value="checklists">
+                <Paper p="md" withBorder>
+                  {checklists.length === 0 ? <Text c="dimmed" ta="center" py="md">No checklists assigned</Text> : (
+                    <Stack gap="xs">
+                      {checklists.map((c) => (
+                        <Paper key={c.id} p="xs" withBorder>
+                          <Group justify="space-between">
+                            <Text size="sm">{c.checklist_id_display || 'Checklist'}</Text>
+                            <Badge size="sm" color={c.status === 'completed' ? 'green' : c.status === 'in_progress' ? 'blue' : 'yellow'}>{c.status}</Badge>
+                          </Group>
+                        </Paper>
+                      ))}
+                    </Stack>
+                  )}
+                </Paper>
+              </Tabs.Panel>
+              <Tabs.Panel value="chat"><ChatPanel entityType="review" entityId={data.id} messages={chatMessages} user={user} /></Tabs.Panel>
+            </ScrollArea>
           </Tabs>
-        </div>
-      </div>
-    </div>
+        </Grid.Col>
+      </Grid>
+    </Stack>
   );
 }

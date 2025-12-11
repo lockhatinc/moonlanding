@@ -2,20 +2,15 @@
 
 import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { Send, Loader2, Lock } from 'lucide-react';
+import { Paper, Title, Avatar, Text, Group, Textarea, ActionIcon, Checkbox, Stack, Box, ScrollArea } from '@mantine/core';
+import { Send, Lock } from 'lucide-react';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" size="icon" disabled={pending}>
-      {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-    </Button>
+    <ActionIcon type="submit" size="lg" loading={pending}>
+      <Send size={18} />
+    </ActionIcon>
   );
 }
 
@@ -24,98 +19,57 @@ export function ChatPanel({ entityType, entityId, messages = [], user, sendActio
 
   const formatTime = (timestamp) => {
     if (!timestamp) return '';
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleString();
+    return new Date(timestamp * 1000).toLocaleString();
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Chat</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="flex flex-col h-[400px]">
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-            {messages.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
-                No messages yet. Start the conversation!
-              </p>
-            ) : (
-              messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex gap-3 ${
-                    msg.created_by === user?.id ? 'flex-row-reverse' : ''
-                  }`}
-                >
-                  <Avatar className="h-8 w-8 flex-shrink-0">
-                    <AvatarImage src={msg.created_by_display?.avatar} />
-                    <AvatarFallback>
-                      {msg.created_by_display?.name?.[0] || '?'}
-                    </AvatarFallback>
+    <Paper p="md" withBorder>
+      <Title order={4} mb="md">Chat</Title>
+      <Stack h={400}>
+        <ScrollArea flex={1}>
+          {messages.length === 0 ? (
+            <Text ta="center" c="dimmed" py="xl">No messages yet. Start the conversation!</Text>
+          ) : (
+            <Stack gap="md">
+              {messages.map((msg) => (
+                <Group key={msg.id} gap="sm" align="flex-start" style={{ flexDirection: msg.created_by === user?.id ? 'row-reverse' : 'row' }}>
+                  <Avatar src={msg.created_by_display?.avatar} size="sm" radius="xl">
+                    {msg.created_by_display?.name?.[0] || '?'}
                   </Avatar>
-                  <div
-                    className={`flex flex-col max-w-[70%] ${
-                      msg.created_by === user?.id ? 'items-end' : ''
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                      <span>{msg.created_by_display?.name || 'Unknown'}</span>
-                      <span>{formatTime(msg.created_at)}</span>
+                  <Box maw="70%">
+                    <Group gap="xs" mb={4} style={{ justifyContent: msg.created_by === user?.id ? 'flex-end' : 'flex-start' }}>
+                      <Text size="xs" c="dimmed">{msg.created_by_display?.name || 'Unknown'}</Text>
+                      <Text size="xs" c="dimmed">{formatTime(msg.created_at)}</Text>
                       {msg.is_team_only && (
-                        <span className="flex items-center gap-1 text-amber-600">
-                          <Lock className="h-3 w-3" />
-                          Team only
-                        </span>
+                        <Group gap={4}>
+                          <Lock size={12} color="orange" />
+                          <Text size="xs" c="orange">Team only</Text>
+                        </Group>
                       )}
-                    </div>
-                    <div
-                      className={`rounded-lg px-3 py-2 ${
-                        msg.created_by === user?.id
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+                    </Group>
+                    <Paper p="sm" bg={msg.created_by === user?.id ? 'blue' : 'gray.1'} c={msg.created_by === user?.id ? 'white' : undefined} radius="md">
+                      <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</Text>
+                    </Paper>
+                  </Box>
+                </Group>
+              ))}
+            </Stack>
+          )}
+        </ScrollArea>
 
-          {/* Input */}
-          <form action={sendAction} className="space-y-2">
-            <input type="hidden" name="entity_type" value={entityType} />
-            <input type="hidden" name="entity_id" value={entityId} />
-            <input type="hidden" name="is_team_only" value={isTeamOnly ? 'true' : 'false'} />
-
-            <div className="flex gap-2">
-              <Textarea
-                name="content"
-                placeholder="Type your message..."
-                className="min-h-[60px] resize-none"
-                rows={2}
-              />
-              <SubmitButton />
-            </div>
-
-            {user?.type === 'auditor' && (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="team_only"
-                  checked={isTeamOnly}
-                  onCheckedChange={setIsTeamOnly}
-                />
-                <Label htmlFor="team_only" className="text-sm text-muted-foreground">
-                  Team members only
-                </Label>
-              </div>
-            )}
-          </form>
-        </div>
-      </CardContent>
-    </Card>
+        <form action={sendAction}>
+          <input type="hidden" name="entity_type" value={entityType} />
+          <input type="hidden" name="entity_id" value={entityId} />
+          <input type="hidden" name="is_team_only" value={isTeamOnly ? 'true' : 'false'} />
+          <Group align="flex-end">
+            <Textarea name="content" placeholder="Type your message..." style={{ flex: 1 }} rows={2} />
+            <SubmitButton />
+          </Group>
+          {user?.type === 'auditor' && (
+            <Checkbox label="Team members only" checked={isTeamOnly} onChange={(e) => setIsTeamOnly(e.currentTarget.checked)} mt="xs" />
+          )}
+        </form>
+      </Stack>
+    </Paper>
   );
 }

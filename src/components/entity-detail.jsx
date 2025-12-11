@@ -1,9 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, Button, Paper, Title, Group, Text, SimpleGrid, ActionIcon, Badge, Stack, Box } from '@mantine/core';
 import { FieldRender } from './field-render';
 import { EntityList } from './entity-list';
 import { ChatPanel } from '@/domain/chat-panel';
@@ -38,126 +36,98 @@ export function EntityDetail({ spec, data, children = {}, user, canEdit = false,
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div className="flex items-start gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push(`/${spec.name}`)}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-semibold flex items-center gap-2">
-              <Icon className="h-6 w-6" />
-              {data.name || data.email || data.id}
-            </h1>
+    <Stack gap="md">
+      <Group justify="space-between">
+        <Group>
+          <ActionIcon variant="subtle" onClick={() => router.push(`/${spec.name}`)}>
+            <ArrowLeft size={18} />
+          </ActionIcon>
+          <Icon size={24} />
+          <Box>
+            <Title order={2}>{data.name || data.email || data.id}</Title>
             {data.status && (
-              <div className="mt-1">
-                <FieldRender
-                  spec={spec}
-                  field={{ key: 'status', type: 'enum', options: 'statuses' }}
-                  value={data.status}
-                  row={data}
-                />
-              </div>
+              <FieldRender
+                spec={spec}
+                field={{ key: 'status', type: 'enum', options: 'statuses' }}
+                value={data.status}
+                row={data}
+              />
             )}
-          </div>
-        </div>
-        <div className="flex gap-2">
+          </Box>
+        </Group>
+        <Group>
           {canEdit && (
-            <Button variant="outline" onClick={() => router.push(`/${spec.name}/${data.id}/edit`)}>
-              <Pencil className="h-4 w-4 mr-2" />
+            <Button variant="outline" leftSection={<Pencil size={16} />} onClick={() => router.push(`/${spec.name}/${data.id}/edit`)}>
               Edit
             </Button>
           )}
           {canDelete && deleteAction && (
             <form action={handleDelete}>
-              <Button type="submit" variant="destructive">
-                <Trash2 className="h-4 w-4 mr-2" />
+              <Button type="submit" color="red" leftSection={<Trash2 size={16} />}>
                 Delete
               </Button>
             </form>
           )}
-        </div>
-      </div>
+        </Group>
+      </Group>
 
       <Tabs defaultValue="details">
-        <TabsList>
-          <TabsTrigger value="details">Details</TabsTrigger>
+        <Tabs.List>
+          <Tabs.Tab value="details">Details</Tabs.Tab>
           {childTabs.map(tab => (
-            <TabsTrigger key={tab.key} value={tab.key}>
+            <Tabs.Tab key={tab.key} value={tab.key}>
               {tab.label}
               {tab.data.length > 0 && (
-                <span className="ml-1 px-1.5 bg-primary/10 rounded text-xs">
-                  {tab.data.length}
-                </span>
+                <Badge size="sm" ml="xs" variant="light">{tab.data.length}</Badge>
               )}
-            </TabsTrigger>
+            </Tabs.Tab>
           ))}
-        </TabsList>
+        </Tabs.List>
 
-        <TabsContent value="details" className="mt-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {displayFields.map(field => (
-                  <div key={field.key}>
-                    <p className="text-sm text-muted-foreground">{field.label || field.key}</p>
-                    <div className="font-medium mt-1">
-                      <FieldRender spec={spec} field={field} value={data[field.key]} row={data} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <Tabs.Panel value="details" pt="md">
+          <Paper p="md" withBorder>
+            <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+              {displayFields.map(field => (
+                <Box key={field.key}>
+                  <Text size="sm" c="dimmed">{field.label || field.key}</Text>
+                  <Text fw={500}><FieldRender spec={spec} field={field} value={data[field.key]} row={data} /></Text>
+                </Box>
+              ))}
+            </SimpleGrid>
+          </Paper>
+        </Tabs.Panel>
 
         {childTabs.map(tab => {
           const childSpec = specs[tab.entity];
           if (!childSpec) return null;
 
           return (
-            <TabsContent key={tab.key} value={tab.key} className="mt-4">
+            <Tabs.Panel key={tab.key} value={tab.key} pt="md">
               {tab.component === 'chat' ? (
-                <ChatPanel
-                  entityType={spec.name}
-                  entityId={data.id}
-                  messages={tab.data}
-                  user={user}
-                />
+                <ChatPanel entityType={spec.name} entityId={data.id} messages={tab.data} user={user} />
               ) : (
-                <EntityList
-                  spec={childSpec}
-                  data={tab.data}
-                  canCreate={can(user, childSpec, 'create')}
-                />
+                <EntityList spec={childSpec} data={tab.data} canCreate={can(user, childSpec, 'create')} />
               )}
-            </TabsContent>
+            </Tabs.Panel>
           );
         })}
       </Tabs>
 
       {spec.actions && spec.actions.length > 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="font-medium mb-4">Actions</h3>
-            <div className="flex flex-wrap gap-2">
-              {spec.actions.map(action => {
-                const ActionIcon = Icons[action.icon] || File;
-                return (
-                  <Button key={action.key} variant="outline" size="sm">
-                    <ActionIcon className="h-4 w-4 mr-2" />
-                    {action.label}
-                  </Button>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+        <Paper p="md" withBorder>
+          <Title order={4} mb="sm">Actions</Title>
+          <Group>
+            {spec.actions.map(action => {
+              const ActionIcon = Icons[action.icon] || File;
+              return (
+                <Button key={action.key} variant="outline" size="sm" leftSection={<ActionIcon size={16} />}>
+                  {action.label}
+                </Button>
+              );
+            })}
+          </Group>
+        </Paper>
       )}
-    </div>
+    </Stack>
   );
 }

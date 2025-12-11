@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+import { Table, TextInput, Button, Group, Title, Text, Paper, Collapse, UnstyledButton, Box } from '@mantine/core';
 import { FieldRender } from './field-render';
 import { Search, Plus, ChevronDown, ChevronRight, File } from 'lucide-react';
 import * as Icons from 'lucide-react';
@@ -14,6 +12,7 @@ export function EntityList({ spec, data, searchQuery = '', canCreate = false }) 
   const [expanded, setExpanded] = useState(new Set());
   const [sortField, setSortField] = useState(spec.list?.defaultSort?.field || null);
   const [sortDir, setSortDir] = useState(spec.list?.defaultSort?.dir || 'asc');
+  const [search, setSearch] = useState(searchQuery);
 
   const listFields = useMemo(() =>
     Object.entries(spec.fields)
@@ -68,59 +67,56 @@ export function EntityList({ spec, data, searchQuery = '', canCreate = false }) 
 
   const handleSearch = (e) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const q = formData.get('q');
-    router.push(`/${spec.name}${q ? `?q=${encodeURIComponent(q)}` : ''}`);
+    router.push(`/${spec.name}${search ? `?q=${encodeURIComponent(search)}` : ''}`);
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold flex items-center gap-2">
-          <Icon className="h-6 w-6" />
-          {spec.labelPlural}
-        </h1>
+    <Box>
+      <Group justify="space-between" mb="md">
+        <Group gap="xs">
+          <Icon size={24} />
+          <Title order={2}>{spec.labelPlural}</Title>
+        </Group>
         {canCreate && (
-          <Button onClick={() => router.push(`/${spec.name}/new`)}>
-            <Plus className="h-4 w-4 mr-2" />
+          <Button leftSection={<Plus size={16} />} onClick={() => router.push(`/${spec.name}/new`)}>
             New {spec.label}
           </Button>
         )}
-      </div>
+      </Group>
 
-      <form onSubmit={handleSearch} className="relative w-72">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          name="q"
-          defaultValue={searchQuery}
+      <form onSubmit={handleSearch}>
+        <TextInput
           placeholder={`Search ${spec.labelPlural.toLowerCase()}...`}
-          className="pl-9"
+          leftSection={<Search size={16} />}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          w={300}
+          mb="md"
         />
       </form>
 
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {groupBy && <TableHead className="w-8" />}
+      <Paper withBorder>
+        <Table highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              {groupBy && <Table.Th w={40} />}
               {listFields.map(f => (
-                <TableHead
+                <Table.Th
                   key={f.key}
-                  style={{ width: f.width }}
-                  className={f.sortable ? 'cursor-pointer select-none' : ''}
+                  style={{ width: f.width, cursor: f.sortable ? 'pointer' : 'default' }}
                   onClick={() => handleSort(f.key)}
                 >
-                  <div className="flex items-center gap-1">
+                  <Group gap={4}>
                     {f.label}
                     {f.sortable && sortField === f.key && (
-                      <span className="text-xs">{sortDir === 'asc' ? '↑' : '↓'}</span>
+                      <Text size="xs">{sortDir === 'asc' ? '↑' : '↓'}</Text>
                     )}
-                  </div>
-                </TableHead>
+                  </Group>
+                </Table.Th>
               ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
             {Object.entries(grouped).map(([group, rows]) => (
               <GroupRows
                 key={group}
@@ -135,57 +131,51 @@ export function EntityList({ spec, data, searchQuery = '', canCreate = false }) 
               />
             ))}
             {data.length === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={listFields.length + (groupBy ? 1 : 0)}
-                  className="text-center py-8 text-muted-foreground"
-                >
-                  No {spec.labelPlural.toLowerCase()} found
-                </TableCell>
-              </TableRow>
+              <Table.Tr>
+                <Table.Td colSpan={listFields.length + (groupBy ? 1 : 0)}>
+                  <Text ta="center" py="xl" c="dimmed">
+                    No {spec.labelPlural.toLowerCase()} found
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
             )}
-          </TableBody>
+          </Table.Tbody>
         </Table>
-      </div>
-    </div>
+      </Paper>
+    </Box>
   );
 }
 
 function GroupRows({ group, rows, groupBy, expanded, toggleGroup, listFields, spec, router }) {
+  const isExpanded = expanded.has(group);
+
   return (
     <>
       {groupBy && (
-        <TableRow
-          className="bg-muted/30 cursor-pointer"
-          onClick={() => toggleGroup(group)}
-        >
-          <TableCell>
-            {expanded.has(group) ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </TableCell>
-          <TableCell colSpan={listFields.length}>
-            <span className="font-medium">{group}</span>
-            <span className="ml-2 text-muted-foreground">({rows.length})</span>
-          </TableCell>
-        </TableRow>
+        <Table.Tr style={{ backgroundColor: 'var(--mantine-color-gray-0)', cursor: 'pointer' }} onClick={() => toggleGroup(group)}>
+          <Table.Td>
+            {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          </Table.Td>
+          <Table.Td colSpan={listFields.length}>
+            <Text fw={500}>{group}</Text>
+            <Text span c="dimmed" ml="xs">({rows.length})</Text>
+          </Table.Td>
+        </Table.Tr>
       )}
-      {(!groupBy || expanded.has(group)) &&
+      {(!groupBy || isExpanded) &&
         rows.map(row => (
-          <TableRow
+          <Table.Tr
             key={row.id}
-            className="cursor-pointer hover:bg-muted/50"
+            style={{ cursor: 'pointer' }}
             onClick={() => router.push(`/${spec.name}/${row.id}`)}
           >
-            {groupBy && <TableCell />}
+            {groupBy && <Table.Td />}
             {listFields.map(f => (
-              <TableCell key={f.key}>
+              <Table.Td key={f.key}>
                 <FieldRender spec={spec} field={f} value={row[f.key]} row={row} />
-              </TableCell>
+              </Table.Td>
             ))}
-          </TableRow>
+          </Table.Tr>
         ))}
     </>
   );
