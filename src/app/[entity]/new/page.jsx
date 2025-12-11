@@ -1,20 +1,10 @@
 import { getSpec, getNavItems } from '@/specs';
-import { list, getUser, can } from '@/engine';
+import { getUser, can } from '@/engine';
 import { redirect, notFound } from 'next/navigation';
 import { EntityForm } from '@/components/entity-form';
 import { Shell } from '@/components/layout';
 import { createAction } from '../actions';
-
-async function loadOptions(spec) {
-  const options = {};
-  for (const [key, field] of Object.entries(spec.fields)) {
-    if (field.type === 'ref' && field.ref) {
-      try { options[key] = list(field.ref).map(r => ({ value: r.id, label: r.name || r.email || r.id })); }
-      catch { options[key] = []; }
-    }
-  }
-  return options;
-}
+import { loadOptions } from '@/lib/form-utils';
 
 export default async function NewPage({ params }) {
   const user = await getUser();

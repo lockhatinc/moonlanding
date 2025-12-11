@@ -1,42 +1,12 @@
 // Google Drive integration using Domain-Wide Delegation
 import { google } from 'googleapis';
-import path from 'path';
-import fs from 'fs';
-
-// Service account credentials path
-const SERVICE_ACCOUNT_PATH = process.env.GOOGLE_SERVICE_ACCOUNT_PATH ||
-  path.join(process.cwd(), 'config', 'service-account.json');
+import { getDriveClient, getDocsClient } from './google-auth';
 
 // Default folder for uploads
 const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
 
-// Cache for auth client
-let authClient = null;
-
-/**
- * Get authenticated Google Drive client using Domain-Wide Delegation
- * @param {string} userEmail - Email to impersonate (optional)
- */
-export async function getDriveClient(userEmail = null) {
-  if (!fs.existsSync(SERVICE_ACCOUNT_PATH)) {
-    console.warn('Service account file not found:', SERVICE_ACCOUNT_PATH);
-    return null;
-  }
-
-  const credentials = JSON.parse(fs.readFileSync(SERVICE_ACCOUNT_PATH, 'utf8'));
-
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: [
-      'https://www.googleapis.com/auth/drive',
-      'https://www.googleapis.com/auth/drive.file',
-    ],
-    clientOptions: userEmail ? { subject: userEmail } : undefined,
-  });
-
-  authClient = await auth.getClient();
-  return google.drive({ version: 'v3', auth: authClient });
-}
+// Re-export getDriveClient for backwards compatibility
+export { getDriveClient } from './google-auth';
 
 /**
  * Upload a file to Google Drive
@@ -203,7 +173,8 @@ export async function copyFile(fileId, name, folderId = null) {
  * @param {Object} replacements - Key-value pairs to replace
  */
 export async function replaceInDoc(docId, replacements) {
-  const docs = google.docs({ version: 'v1', auth: authClient });
+  const docs = await getDocsClient();
+  if (!docs) throw new Error('Docs client not available');
 
   const requests = Object.entries(replacements).map(([key, value]) => ({
     replaceAllText: {

@@ -1,44 +1,14 @@
 // Gmail integration using Domain-Wide Delegation
-import { google } from 'googleapis';
-import path from 'path';
-import fs from 'fs';
-
-// Service account credentials path
-const SERVICE_ACCOUNT_PATH = process.env.GOOGLE_SERVICE_ACCOUNT_PATH ||
-  path.join(process.cwd(), 'config', 'service-account.json');
+import { getGmailClient } from './google-auth';
 
 // Default sender email (must be a user in the domain)
 const DEFAULT_SENDER = process.env.GMAIL_SENDER_EMAIL;
 
-/**
- * Get authenticated Gmail client using Domain-Wide Delegation
- * @param {string} userEmail - Email to impersonate (sender)
- */
-export async function getGmailClient(userEmail = DEFAULT_SENDER) {
-  if (!fs.existsSync(SERVICE_ACCOUNT_PATH)) {
-    console.warn('Service account file not found:', SERVICE_ACCOUNT_PATH);
-    return null;
-  }
+// Helper to get Gmail client with default sender
+const getClient = (email = DEFAULT_SENDER) => getGmailClient(email);
 
-  if (!userEmail) {
-    console.warn('No sender email configured');
-    return null;
-  }
-
-  const credentials = JSON.parse(fs.readFileSync(SERVICE_ACCOUNT_PATH, 'utf8'));
-
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: [
-      'https://www.googleapis.com/auth/gmail.send',
-      'https://www.googleapis.com/auth/gmail.readonly',
-    ],
-    clientOptions: { subject: userEmail },
-  });
-
-  const client = await auth.getClient();
-  return google.gmail({ version: 'v1', auth: client });
-}
+// Re-export for backwards compatibility
+export { getGmailClient } from './google-auth';
 
 /**
  * Send an email
@@ -53,7 +23,7 @@ export async function getGmailClient(userEmail = DEFAULT_SENDER) {
  * @param {Array} options.attachments - Attachments [{filename, content, mimeType}]
  */
 export async function sendEmail({ to, subject, body, html, cc, bcc, from = DEFAULT_SENDER, attachments = [] }) {
-  const gmail = await getGmailClient(from);
+  const gmail = await getClient(from);
   if (!gmail) throw new Error('Gmail client not available');
 
   // Build MIME message

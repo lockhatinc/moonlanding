@@ -458,3 +458,77 @@ export const SEED_DATA = {
     { key: 'checklists.manage', name: 'Manage Checklists', roles: { partner: true, manager: false, clerk: false } },
   ],
 };
+
+// ========================================
+// CHILD DEFINITION HELPERS
+// ========================================
+
+// Standard children for entities with files/activity/chat
+export const withStandardChildren = (entityType, extra = {}) => ({
+  files: { entity: 'file', fk: 'entity_id', filter: { entity_type: entityType }, label: 'Files' },
+  activity: { entity: 'activity_log', fk: 'entity_id', filter: { entity_type: entityType }, label: 'Activity' },
+  chat: { entity: 'chat_message', fk: 'entity_id', filter: { entity_type: entityType }, label: 'Chat', component: 'chat' },
+  ...extra,
+});
+
+// ========================================
+// ACTION FACTORY
+// ========================================
+
+const ACTION_TEMPLATES = {
+  send_reminder: { label: 'Send Reminder', icon: 'Bell', permission: 'edit' },
+  flag: { label: 'Toggle Flag', icon: 'Flag', permission: 'edit' },
+  resolve: { label: 'Resolve', icon: 'Check', permission: 'resolve' },
+  partial_resolve: { label: 'Partial Resolve', icon: 'CheckCheck', permission: 'partial_resolve' },
+  push_to_rfi: { label: 'Push to RFI', icon: 'Send', permission: 'edit' },
+  scroll_to: { label: 'Scroll to Page', icon: 'Eye', permission: 'view' },
+  add_collaborator: { label: 'Add Collaborator', icon: 'UserPlus', permission: 'manage_collaborators', dialog: 'addCollaborator' },
+  add_flag: { label: 'Add Flag', icon: 'Flag', permission: 'add_flags', dialog: 'addFlag' },
+  compare: { label: 'Compare PDFs', icon: 'Columns', permission: 'view', dialog: 'comparePdfs' },
+  bulk_deadline: { label: 'Set Bulk Deadline', icon: 'Calendar', permission: 'edit', dialog: 'bulkDeadline' },
+};
+
+export const action = (key, handler, overrides = {}) => ({
+  key,
+  handler: handler || key,
+  ...ACTION_TEMPLATES[key],
+  ...overrides,
+});
+
+export const actions = (...keys) => keys.map(k => typeof k === 'string' ? action(k, k) : action(k.key, k.handler, k));
+
+// ========================================
+// SPEC FACTORY
+// ========================================
+
+// Create a simple embedded spec
+export const embeddedSpec = (name, label, icon, fields, extra = {}) => ({
+  name,
+  label,
+  labelPlural: extra.labelPlural || `${label}s`,
+  icon,
+  embedded: true,
+  fields: { id: FIELDS.id, ...fields, created_at: FIELDS.created_at },
+  access: extra.access || ACCESS.MANAGER_MANAGE,
+  ...extra,
+});
+
+// Create a config/lookup spec (entity_type, engagement_type_config, etc.)
+export const configSpec = (name, label, icon, extraFields = {}, extra = {}) => ({
+  name,
+  label,
+  labelPlural: extra.labelPlural || `${label}s`,
+  icon,
+  fields: {
+    id: FIELDS.id,
+    name: { ...FIELDS.name(), unique: true },
+    description: { type: 'textarea', label: 'Description' },
+    status: FIELDS.status(),
+    sort_order: FIELDS.sort_order,
+    created_at: FIELDS.created_at,
+    ...extraFields,
+  },
+  options: { statuses: STATUS.ACTIVE_INACTIVE },
+  access: ACCESS.READ_ONLY,
+  ...extra,
+});

@@ -8,6 +8,7 @@ import {
   AUTH_PROVIDERS, NOTIFICATION_TYPES, ACTIVITY_ACTIONS, LOG_LEVELS, ENGAGEMENT_TYPES,
   ENTITY_TYPES, TEMPLATE_TYPES, TEMPLATE_TARGET_TYPES, FLAG_TYPES, HIGHLIGHT_TYPES,
   COLLABORATOR_TYPES, MESSAGE_SOURCES, CLIENT_NOTIFICATION_TYPES, RFI_STATUSES, SEED_DATA,
+  withStandardChildren, action, actions, embeddedSpec, configSpec,
 } from './specs/constants.js';
 
 // ========================================
@@ -84,13 +85,10 @@ export const specs = {
       rfi_count: { sql: '(SELECT COUNT(*) FROM rfis WHERE engagement_id = engagements.id)' },
       completed_rfi_count: { sql: "(SELECT COUNT(*) FROM rfis WHERE engagement_id = engagements.id AND client_status = 'completed')" },
     },
-    children: {
+    children: withStandardChildren('engagement', {
       sections: { entity: 'engagement_section', fk: 'engagement_id', label: 'Sections' },
       rfis: { entity: 'rfi', fk: 'engagement_id', label: 'RFIs' },
-      files: { entity: 'file', fk: 'entity_id', filter: { entity_type: 'engagement' }, label: 'Files' },
-      activity: { entity: 'activity_log', fk: 'entity_id', filter: { entity_type: 'engagement' }, label: 'Activity' },
-      chat: { entity: 'chat_message', fk: 'entity_id', filter: { entity_type: 'engagement' }, label: 'Chat', component: 'chat' },
-    },
+    }),
     access: { ...ACCESS.MANAGER_MANAGE, list: ['partner', 'manager', 'clerk', 'client'], view: ['partner', 'manager', 'clerk', 'client'], change_stage: ['partner', 'manager'], close: ['partner'] },
     actions: [
       { key: 'send_letter', label: 'Send Letter', icon: 'Mail', permission: 'edit', handler: 'sendEngagementLetter' },
@@ -157,21 +155,19 @@ export const specs = {
       unresolved_count: { sql: '(SELECT COUNT(*) FROM highlights WHERE review_id = reviews.id AND resolved = 0)' },
       collaborator_count: { sql: '(SELECT COUNT(*) FROM collaborators WHERE review_id = reviews.id)' },
     },
-    children: {
+    children: withStandardChildren('review', {
       highlights: { entity: 'highlight', fk: 'review_id', label: 'Queries' },
       checklists: { entity: 'review_checklist', fk: 'review_id', label: 'Checklists' },
       collaborators: { entity: 'collaborator', fk: 'review_id', label: 'Collaborators' },
       attachments: { entity: 'file', fk: 'entity_id', filter: { entity_type: 'review' }, label: 'Files' },
-      activity: { entity: 'activity_log', fk: 'entity_id', filter: { entity_type: 'review' }, label: 'Activity' },
-      chat: { entity: 'chat_message', fk: 'entity_id', filter: { entity_type: 'review' }, label: 'Chat', component: 'chat' },
-    },
+    }),
     detail: { component: 'review-detail' },
     access: { ...ACCESS.MANAGER_MANAGE, resolve: ['partner', 'manager'], add_flags: ['partner'], add_tags: ['partner', 'manager'], manage_collaborators: ['partner', 'manager'], set_deadline: ['partner'], delete_attachments: ['partner'], remove_checklists: ['partner'], archive: ['partner'] },
     actions: [
-      { key: 'add_collaborator', label: 'Add Collaborator', icon: 'UserPlus', permission: 'manage_collaborators', dialog: 'addCollaborator' },
-      { key: 'add_flag', label: 'Add Flag', icon: 'Flag', permission: 'add_flags', dialog: 'addFlag' },
+      action('add_collaborator'),
+      action('add_flag'),
       { key: 'push_to_friday', label: 'Push to Friday', icon: 'Send', permission: 'edit', handler: 'pushToFriday' },
-      { key: 'compare', label: 'Compare PDFs', icon: 'Columns', permission: 'view', dialog: 'comparePdfs' },
+      action('compare'),
       { key: 'ml_consolidate', label: 'ML Consolidate Queries', icon: 'Sparkles', permission: 'edit', handler: 'mlConsolidateQueries' },
     ],
     triggers: { onCreate: 'onReviewCreate', onUpdate: 'onReviewUpdate' },
@@ -238,15 +234,14 @@ export const specs = {
     },
     children: {
       responses: { entity: 'rfi_response', fk: 'rfi_id', label: 'Responses' },
-      attachments: { entity: 'file', fk: 'entity_id', filter: { entity_type: 'rfi' }, label: 'Attachments' },
-      activity: { entity: 'activity_log', fk: 'entity_id', filter: { entity_type: 'rfi' }, label: 'Activity' },
+      ...withStandardChildren('rfi', {}),
     },
     list: { groupBy: 'section_id', expandable: true },
     access: { ...ACCESS.WITH_CLIENT, create: ['partner', 'manager'], edit: ['partner', 'manager'], respond: ['partner', 'manager', 'clerk', 'client'], change_status: ['partner', 'manager'] },
     actions: [
-      { key: 'send_reminder', label: 'Send Reminder', icon: 'Bell', permission: 'edit', handler: 'sendRfiReminder' },
-      { key: 'flag', label: 'Toggle Flag', icon: 'Flag', permission: 'edit', handler: 'toggleRfiFlag' },
-      { key: 'bulk_deadline', label: 'Set Bulk Deadline', icon: 'Calendar', permission: 'edit', dialog: 'bulkDeadline' },
+      action('send_reminder', 'sendRfiReminder'),
+      action('flag', 'toggleRfiFlag'),
+      action('bulk_deadline'),
     ],
     triggers: { onUpdate: 'onRfiUpdate' },
     validation: { statusChangeRequires: 'files_or_responses', statusChangeRoles: ['partner', 'manager'] },
@@ -284,10 +279,10 @@ export const specs = {
     softDelete: { archive: true, archiveEntity: 'removed_highlight' },
     access: { ...ACCESS.MANAGER_MANAGE, resolve: ['partner', 'manager'], partial_resolve: ['partner', 'manager'] },
     actions: [
-      { key: 'resolve', label: 'Resolve', icon: 'Check', permission: 'resolve', handler: 'resolveHighlight' },
-      { key: 'partial_resolve', label: 'Partial Resolve', icon: 'CheckCheck', permission: 'partial_resolve', handler: 'partialResolveHighlight' },
-      { key: 'push_to_rfi', label: 'Push to RFI', icon: 'Send', permission: 'edit', handler: 'pushHighlightToRfi' },
-      { key: 'scroll_to', label: 'Scroll to Page', icon: 'Eye', permission: 'view', handler: 'scrollToHighlight' },
+      action('resolve', 'resolveHighlight'),
+      action('partial_resolve', 'partialResolveHighlight'),
+      action('push_to_rfi', 'pushHighlightToRfi'),
+      action('scroll_to', 'scrollToHighlight'),
     ],
     triggers: { beforeDelete: 'onHighlightDelete' },
     displayColors: HIGHLIGHT_COLORS,
@@ -705,40 +700,21 @@ export const specs = {
   },
 
   // === ENTITY TYPE ===
-  entity_type: {
-    name: 'entity_type', label: 'Entity Type', labelPlural: 'Entity Types', icon: 'Building2',
-    fields: {
-      id: FIELDS.id,
-      name: { ...FIELDS.name(), unique: true },
-      description: { type: 'textarea', label: 'Description' },
-      status: FIELDS.status(),
-      sort_order: FIELDS.sort_order,
-      created_at: FIELDS.created_at,
-    },
-    options: { statuses: STATUS.ACTIVE_INACTIVE },
+  entity_type: configSpec('entity_type', 'Entity Type', 'Building2', {}, {
+    labelPlural: 'Entity Types',
     seedData: SEED_DATA.entity_types,
-    access: ACCESS.READ_ONLY,
-  },
+  }),
 
   // === ENGAGEMENT TYPE CONFIG ===
-  engagement_type_config: {
-    name: 'engagement_type_config', label: 'Engagement Type', labelPlural: 'Engagement Types', icon: 'Briefcase',
-    fields: {
-      id: FIELDS.id,
-      name: { ...FIELDS.name(), unique: true },
-      key: { type: 'text', label: 'Key', required: true, unique: true },
-      description: { type: 'textarea', label: 'Description' },
-      default_template_id: { type: 'ref', ref: 'template', label: 'Default Template' },
-      default_fee: { type: 'decimal', label: 'Default Fee' },
-      requires_letter: { type: 'bool', label: 'Requires Engagement Letter', default: true },
-      status: FIELDS.status(),
-      sort_order: FIELDS.sort_order,
-      created_at: FIELDS.created_at,
-    },
-    options: { statuses: STATUS.ACTIVE_INACTIVE },
+  engagement_type_config: configSpec('engagement_type_config', 'Engagement Type', 'Briefcase', {
+    key: { type: 'text', label: 'Key', required: true, unique: true },
+    default_template_id: { type: 'ref', ref: 'template', label: 'Default Template' },
+    default_fee: { type: 'decimal', label: 'Default Fee' },
+    requires_letter: { type: 'bool', label: 'Requires Engagement Letter', default: true },
+  }, {
+    labelPlural: 'Engagement Types',
     seedData: SEED_DATA.engagement_types,
-    access: ACCESS.READ_ONLY,
-  },
+  }),
 
   // === USER PERMISSION ===
   user_permission: {
