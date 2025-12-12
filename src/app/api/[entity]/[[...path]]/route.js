@@ -1,4 +1,5 @@
-import { list, get, create, update, remove, search, getChildren, getUser, can } from '@/engine';
+import { list, get, create, update, remove, search, getChildren } from '@/engine';
+import { getUser, can } from '@/engine.server';
 import { getSpec } from '@/specs';
 import { ok, created, notFound, badRequest, unauthorized, serverError, ensureDb, parseParams } from '@/lib/api-helpers';
 

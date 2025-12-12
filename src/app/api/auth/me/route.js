@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getUser } from '@/engine';
+import { getUser } from '@/engine.server';
 
 export async function GET() {
   const user = await getUser();

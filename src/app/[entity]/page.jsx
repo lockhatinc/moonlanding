@@ -1,5 +1,6 @@
 import { getNavItems } from '@/specs';
-import { list, search, can } from '@/engine';
+import { list, search } from '@/engine';
+import { can } from '@/lib/permissions';
 import { requireEntityAccess, listMetadata } from '@/lib/route-helpers';
 import { EntityList } from '@/components/entity-list';
 import { Shell } from '@/components/layout';

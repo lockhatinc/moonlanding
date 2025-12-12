@@ -1,6 +1,8 @@
 // Route Helpers - Consolidates common route patterns
 import { getSpec, getNavItems } from '@/specs';
-import { getUser, can, get, getChildren } from '@/engine';
+import { get, getChildren } from '@/engine';
+import { getUser } from '@/engine.server';
+import { can } from '@/lib/permissions';
 import { redirect, notFound } from 'next/navigation';
 import { loadOptions } from './form-utils';
 

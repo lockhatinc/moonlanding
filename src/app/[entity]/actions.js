@@ -1,6 +1,7 @@
 'use server';
 
-import { create, update, remove, requireUser, check } from '@/engine';
+import { create, update, remove } from '@/engine';
+import { requireUser, check } from '@/engine.server';
 import { getSpec } from '@/specs';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { invalidateSession } from '@/engine';
+import { invalidateSession } from '@/engine.server';
 
 export async function GET() {
   await invalidateSession();

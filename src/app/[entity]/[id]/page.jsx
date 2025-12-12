@@ -1,5 +1,5 @@
 import { getNavItems } from '@/specs';
-import { can } from '@/engine';
+import { can } from '@/lib/permissions';
 import { getEntityData, detailMetadata } from '@/lib/route-helpers';
 import { EntityDetail } from '@/components/entity-detail';
 import { ReviewDetail } from '@/components/domain';

@@ -1,4 +1,4 @@
-import { getUser } from '@/engine/auth';
+import { getUser } from '@/engine.server';
 import { redirect } from 'next/navigation';
 import { LoginForm } from './login-form';
 import { Center, Paper, Box, Title, Text, Code, ThemeIcon } from '@mantine/core';

@@ -1,7 +1,9 @@
 // API Response Helpers - Consolidates common API patterns
 import { NextResponse } from 'next/server';
 import { getSpec } from '@/specs';
-import { getUser, can, migrate } from '@/engine';
+import { migrate } from '@/engine';
+import { getUser } from '@/engine.server';
+import { can } from '@/lib/permissions';
 
 let dbInit = false;
 export function ensureDb() { if (!dbInit) { migrate(); dbInit = true; } }

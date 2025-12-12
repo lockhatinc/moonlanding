@@ -1,6 +1,7 @@
 'use server';
 
-import { getBy, create, createSession, hashPassword, verifyPassword, migrate } from '@/engine';
+import { getBy, create, hashPassword, verifyPassword, migrate } from '@/engine';
+import { createSession } from '@/engine.server';
 import { specs } from '@/specs';
 import { redirect } from 'next/navigation';
 

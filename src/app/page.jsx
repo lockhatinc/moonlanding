@@ -1,4 +1,5 @@
-import { getUser, count } from '@/engine';
+import { count } from '@/engine';
+import { getUser } from '@/engine.server';
 import { getNavItems, specs } from '@/specs';
 import { redirect } from 'next/navigation';
 import { Shell } from '@/components/layout';

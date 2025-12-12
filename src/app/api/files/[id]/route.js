@@ -1,6 +1,6 @@
 // File download API route
 import { NextResponse } from 'next/server';
-import { requireUser, can, get } from '@/engine';
+import { requireUser, can, get } from '@/engine.server';
 import { getSpec } from '@/specs';
 import * as drive from '@/engine/drive';
 
