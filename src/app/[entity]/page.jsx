@@ -1,4 +1,4 @@
-import { getNavItems } from '@/specs';
+import { getNavItems } from '@/config';
 import { list, search } from '@/engine';
 import { can } from '@/lib/permissions';
 import { requireEntityAccess, listMetadata } from '@/lib/route-helpers';

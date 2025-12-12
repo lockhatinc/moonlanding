@@ -1,6 +1,6 @@
 import { count } from '@/engine';
 import { getUser } from '@/engine.server';
-import { getNavItems, specs } from '@/specs';
+import { getNavItems, specs } from '@/config';
 import { redirect } from 'next/navigation';
 import { Shell } from '@/components/layout';
 import { Paper, Title, Text, SimpleGrid, Group, Stack, ThemeIcon, Box, UnstyledButton } from '@mantine/core';

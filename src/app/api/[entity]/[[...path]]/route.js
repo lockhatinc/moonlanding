@@ -1,6 +1,6 @@
 import { list, get, create, update, remove, search, getChildren } from '@/engine';
 import { getUser, can } from '@/engine.server';
-import { getSpec } from '@/specs';
+import { getSpec } from '@/config';
 import { ok, created, notFound, badRequest, unauthorized, serverError, ensureDb, parseParams } from '@/lib/api-helpers';
 
 export async function GET(request, { params }) {

@@ -8,7 +8,7 @@ import { ChatPanel } from './domain';
 import { getDisplayFields, getEntityIcon } from '@/lib/field-types';
 import { Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import * as Icons from 'lucide-react';
-import { specs } from '@/specs';
+import { specs } from '@/config';
 import { can } from '@/lib/permissions';
 
 export function EntityDetail({ spec, data, children = {}, user, canEdit = false, canDelete = false, deleteAction }) {

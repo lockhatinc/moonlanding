@@ -2,7 +2,7 @@
 
 import { getBy, create, hashPassword, verifyPassword, migrate } from '@/engine';
 import { createSession } from '@/engine.server';
-import { specs } from '@/specs';
+import { specs } from '@/config';
 import { redirect } from 'next/navigation';
 
 migrate();

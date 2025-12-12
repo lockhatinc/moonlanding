@@ -1,7 +1,7 @@
 // Email API routes
 import { NextResponse } from 'next/server';
 import { requireUser, can } from '@/engine.server';
-import { getSpec } from '@/specs';
+import { getSpec } from '@/config';
 import * as gmail from '@/engine/gmail';
 
 // Send email

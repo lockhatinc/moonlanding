@@ -1,6 +1,6 @@
 // API Response Helpers - Consolidates common API patterns
 import { NextResponse } from 'next/server';
-import { getSpec } from '@/specs';
+import { getSpec } from '@/config';
 import { migrate } from '@/engine';
 import { getUser } from '@/engine.server';
 import { can } from '@/lib/permissions';

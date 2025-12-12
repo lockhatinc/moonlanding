@@ -1,5 +1,5 @@
 // Route Helpers - Consolidates common route patterns
-import { getSpec, getNavItems } from '@/specs';
+import { getSpec, getNavItems } from '@/config';
 import { get, getChildren } from '@/engine';
 import { getUser } from '@/engine.server';
 import { can } from '@/lib/permissions';

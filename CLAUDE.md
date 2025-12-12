@@ -3,6 +3,39 @@
 
 ---
 
+# CORE PHILOSOPHY (HARD POLICY)
+
+## Minimum Code First
+- **ONE config file drives everything** - All entity specs, constants, options, permissions in single source
+- **Maximum dynamism** - No hardcoded values, no magic strings, ground truth only
+- **Library over code** - If a library solves it, use library (never rewrite)
+- **Centralized configuration** - Change one place, entire app updates
+- **Zero duplication** - Every pattern abstracted, every constant centralized
+- **Clean architecture** - Concise, functional, forward-thinking code
+- **DRY enforcement** - Scan before editing, resolve duplicates immediately
+
+## Code Organization Rules
+- Hard 200-line limit - split files >200L immediately
+- No ephemeral/temp/mock/simulation files - use glootie+playwright MCP execution instead
+- No comments except ground truth data structures
+- No error handling fallbacks - fail with clear logs
+- No hardcoded entity lists - derive from config dynamically
+- Every extra symbol = technical debt
+
+## Configuration Structure
+```
+config.js (ONE file, source of truth)
+├── Entity specs (35 entities defined)
+├── Status/option enums (STATUS.CLIENT, WORKFLOW_STATUS, etc)
+├── Field builders (FIELDS.name(), FIELDS.timestamp(), etc)
+├── Access control (roles × actions)
+├── Workflow rules (stage transitions)
+├── Events & triggers (entity lifecycle)
+└── API/scheduler config
+```
+
+---
+
 # The Concept
 
 **One entity definition generates:**

@@ -2,7 +2,7 @@
 
 import { create, update, remove } from '@/engine';
 import { requireUser, check } from '@/engine.server';
-import { getSpec } from '@/specs';
+import { getSpec } from '@/config';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 

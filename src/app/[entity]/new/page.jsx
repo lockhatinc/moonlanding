@@ -1,4 +1,4 @@
-import { getNavItems } from '@/specs';
+import { getNavItems } from '@/config';
 import { getFormContext, newMetadata } from '@/lib/route-helpers';
 import { EntityForm } from '@/components/entity-form';
 import { Shell } from '@/components/layout';

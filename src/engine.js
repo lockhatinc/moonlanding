@@ -2,15 +2,15 @@ import Database from 'better-sqlite3';
 import { nanoid } from 'nanoid';
 import path from 'path';
 import fs from 'fs';
-import { specs, getSpec } from './specs';
+import { specs, getSpec } from '@/config';
 import { coerce, SQL_TYPES, getSearchFields } from './lib/field-types';
-import { config } from './config';
 
 // === DATABASE ===
-const dataDir = path.dirname(path.resolve(process.cwd(), config.db.path));
+const DB_PATH = path.resolve(process.cwd(), 'data', 'app.db');
+const dataDir = path.dirname(DB_PATH);
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
-const db = new Database(path.resolve(process.cwd(), config.db.path));
+const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
 
 export function migrate() {
