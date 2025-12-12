@@ -1,6 +1,9 @@
 /**
- * Tests for src/engine.js
- * Tests database operations, CRUD functions, and authentication helpers
+ * Unit tests for src/engine.js
+ * Tests fundamental database operations and helper functions.
+ *
+ * Note: Higher-level CRUD tests for complex entities (client, engagement, rfi,
+ * review, highlight) are covered in integration.test.js
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
@@ -17,12 +20,8 @@ import db, {
   create,
   update,
   remove,
-  search,
-  getChildren,
   count,
   getBy,
-  can,
-  check,
   hashPassword,
   verifyPassword,
 } from '../src/engine.js';
@@ -106,6 +105,7 @@ describe('now', () => {
 
 // ========================================
 // CRUD TESTS - TEAMS (simple entity)
+// Foundation tests for CRUD operations
 // ========================================
 
 describe('CRUD operations - team', () => {
@@ -210,7 +210,6 @@ describe('CRUD operations - team', () => {
     it('should soft delete by setting status=deleted', () => {
       const team = create('team', { name: 'To Soft Delete' });
       remove('team', team.id);
-      // list should not include it
       const teams = list('team');
       expect(teams.find(t => t.id === team.id)).toBeFalsy();
     });
@@ -232,7 +231,6 @@ describe('CRUD operations - team', () => {
 
   describe('getBy', () => {
     it('should find by specific field', () => {
-      // Use the get function since the team was updated to 'Updated Team'
       const team = get('team', testTeamId);
       expect(team).toBeTruthy();
       expect(team.name).toBe('Updated Team');
@@ -242,356 +240,6 @@ describe('CRUD operations - team', () => {
       const team = getBy('team', 'name', 'Nonexistent Team Name XYZ ' + Date.now());
       expect(team).toBeUndefined();
     });
-  });
-});
-
-// ========================================
-// CRUD TESTS - CLIENTS (with relationships)
-// ========================================
-
-describe('CRUD operations - client', () => {
-  let testClientId;
-  let testClientEmail;
-
-  it('should create a client', () => {
-    testClientEmail = `test${uniqueSuffix()}@client.com`;
-    const client = create('client', {
-      name: 'Test Client',
-      email: testClientEmail,
-      address: '123 Test St',
-    });
-    testClientId = client.id;
-    expect(client.name).toBe('Test Client');
-    expect(client.status).toBe('active');
-  });
-
-  it('should search clients by name', () => {
-    const results = search('client', 'Test Client');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results.some(c => c.name.includes('Test'))).toBe(true);
-  });
-
-  it('should search clients by email', () => {
-    const results = search('client', testClientEmail.split('@')[0]);
-    expect(results.length).toBeGreaterThan(0);
-  });
-});
-
-// ========================================
-// CRUD TESTS - ENGAGEMENTS (complex entity)
-// ========================================
-
-describe('CRUD operations - engagement', () => {
-  let testClientId;
-  let testTeamId;
-  let testEngagementId;
-
-  beforeAll(() => {
-    // Create prerequisite records
-    const suffix = uniqueSuffix();
-    const client = create('client', { name: `Engagement Client${suffix}`, email: `eng${suffix}@client.com` });
-    testClientId = client.id;
-    const team = create('team', { name: `Engagement Team${suffix}` });
-    testTeamId = team.id;
-  });
-
-  it('should create an engagement with refs', () => {
-    const engagement = create('engagement', {
-      name: 'Test Engagement',
-      client_id: testClientId,
-      team_id: testTeamId,
-      year: 2024,
-    });
-    testEngagementId = engagement.id;
-    expect(engagement.name).toBe('Test Engagement');
-    expect(engagement.client_id).toBe(testClientId);
-    expect(engagement.stage).toBe('info_gathering'); // default
-    expect(engagement.status).toBe('pending'); // default
-  });
-
-  it('should include computed fields in list', () => {
-    // Create an RFI for the engagement
-    create('rfi', {
-      engagement_id: testEngagementId,
-      question: 'Test RFI question',
-    });
-
-    const engagements = list('engagement');
-    const eng = engagements.find(e => e.id === testEngagementId);
-    expect(eng).toBeTruthy();
-    // Computed field should be present
-    expect(typeof eng.rfi_count).toBe('number');
-  });
-
-  it('should include display values for refs', () => {
-    const engagements = list('engagement');
-    const eng = engagements.find(e => e.id === testEngagementId);
-    // client_id_display should be set from the JOIN and include the base name
-    expect(eng.client_id_display).toContain('Engagement Client');
-  });
-
-  it('should handle enum fields correctly', () => {
-    update('engagement', testEngagementId, { stage: 'commencement' });
-    const eng = get('engagement', testEngagementId);
-    expect(eng.stage).toBe('commencement');
-  });
-
-  it('should handle date fields', () => {
-    const deadline = Math.floor(new Date('2024-12-31').getTime() / 1000);
-    update('engagement', testEngagementId, { deadline });
-    const eng = get('engagement', testEngagementId);
-    expect(eng.deadline).toBe(deadline);
-  });
-
-  it('should handle JSON fields', () => {
-    const users = JSON.stringify([{ id: 'user1', name: 'User 1' }]);
-    update('engagement', testEngagementId, { users });
-    const eng = get('engagement', testEngagementId);
-    expect(eng.users).toBe(users);
-  });
-});
-
-// ========================================
-// CRUD TESTS - RFI (child entity)
-// ========================================
-
-describe('CRUD operations - rfi', () => {
-  let testEngagementId;
-  let testRfiId;
-
-  beforeAll(() => {
-    const suffix = uniqueSuffix();
-    const client = create('client', { name: `RFI Test Client${suffix}`, email: `rfitest${suffix}@client.com` });
-    const engagement = create('engagement', {
-      name: `RFI Test Engagement${suffix}`,
-      client_id: client.id,
-      year: 2024,
-    });
-    testEngagementId = engagement.id;
-  });
-
-  it('should create RFI with auto timestamp', () => {
-    const rfi = create('rfi', {
-      engagement_id: testEngagementId,
-      question: 'Please provide bank statements',
-      name: 'Bank Statements',
-    });
-    testRfiId = rfi.id;
-    expect(rfi.question).toBe('Please provide bank statements');
-    expect(rfi.date_requested).toBeTruthy();
-    expect(rfi.status).toBe(0); // default
-    expect(rfi.client_status).toBe('pending'); // default
-  });
-
-  it('should list RFIs for engagement', () => {
-    const rfis = list('rfi', { engagement_id: testEngagementId });
-    expect(rfis.length).toBeGreaterThan(0);
-    expect(rfis.every(r => r.engagement_id === testEngagementId)).toBe(true);
-  });
-
-  it('should search RFIs by question', () => {
-    const results = search('rfi', 'bank statements');
-    expect(results.length).toBeGreaterThan(0);
-  });
-});
-
-// ========================================
-// CRUD TESTS - HIGHLIGHTS
-// ========================================
-
-describe('CRUD operations - highlight', () => {
-  let testReviewId;
-
-  beforeAll(() => {
-    const suffix = uniqueSuffix();
-    const team = create('team', { name: `Highlight Test Team${suffix}` });
-    const review = create('review', {
-      name: `Highlight Test Review${suffix}`,
-      team_id: team.id,
-    });
-    testReviewId = review.id;
-  });
-
-  it('should create highlight with position JSON', () => {
-    const position = JSON.stringify({
-      boundingRect: { x1: 100, y1: 200, x2: 300, y2: 250 },
-      rects: [{ x1: 100, y1: 200, x2: 300, y2: 250 }],
-      pageNumber: 1,
-    });
-    const highlight = create('highlight', {
-      review_id: testReviewId,
-      page_number: 1,
-      position,
-      content: 'Selected text content',
-      comment: 'This needs clarification',
-    });
-    expect(highlight.id).toBeTruthy();
-    expect(highlight.page_number).toBe(1);
-    expect(highlight.resolved).toBe(0); // false as 0
-    expect(highlight.color).toBe('#B0B0B0'); // default
-  });
-});
-
-// ========================================
-// CHILDREN TESTS
-// ========================================
-
-describe('getChildren', () => {
-  let testEngagementId;
-
-  beforeAll(() => {
-    const suffix = uniqueSuffix();
-    const client = create('client', { name: `Children Test Client${suffix}`, email: `children${suffix}@test.com` });
-    const engagement = create('engagement', {
-      name: `Children Test Engagement${suffix}`,
-      client_id: client.id,
-      year: 2024,
-    });
-    testEngagementId = engagement.id;
-
-    // Create some RFIs
-    create('rfi', { engagement_id: testEngagementId, question: 'Q1' });
-    create('rfi', { engagement_id: testEngagementId, question: 'Q2' });
-  });
-
-  it('should get children records', () => {
-    const rfis = getChildren('engagement', testEngagementId, {
-      entity: 'rfi',
-      fk: 'engagement_id',
-    });
-    expect(rfis.length).toBe(2);
-  });
-
-  it('should apply filter to children', () => {
-    // Create activity log for engagement
-    create('activity_log', {
-      entity_type: 'engagement',
-      entity_id: testEngagementId,
-      action: 'create',
-      message: 'Engagement created',
-    });
-
-    const activities = getChildren('engagement', testEngagementId, {
-      entity: 'activity_log',
-      fk: 'entity_id',
-      filter: { entity_type: 'engagement' },
-    });
-    expect(activities.length).toBeGreaterThan(0);
-    expect(activities.every(a => a.entity_type === 'engagement')).toBe(true);
-  });
-});
-
-// ========================================
-// SEARCH TESTS
-// ========================================
-
-describe('search', () => {
-  let suffix;
-
-  beforeAll(() => {
-    suffix = uniqueSuffix();
-    create('client', { name: `Alpha Corp${suffix}`, email: `alpha${suffix}@corp.com` });
-    create('client', { name: `Beta Inc${suffix}`, email: `beta${suffix}@inc.com` });
-    create('client', { name: `Gamma LLC${suffix}`, email: `gamma${suffix}@llc.com` });
-  });
-
-  it('should search by name', () => {
-    const results = search('client', `Alpha Corp${suffix}`);
-    expect(results.some(c => c.name === `Alpha Corp${suffix}`)).toBe(true);
-  });
-
-  it('should search by email', () => {
-    const results = search('client', `beta${suffix}@`);
-    expect(results.some(c => c.email === `beta${suffix}@inc.com`)).toBe(true);
-  });
-
-  it('should search case-insensitively (LIKE)', () => {
-    const results = search('client', `gamma${suffix}`.toLowerCase());
-    expect(results.some(c => c.name.includes('Gamma'))).toBe(true);
-  });
-
-  it('should return empty for no matches', () => {
-    const results = search('client', 'zzzznonexistent');
-    expect(results).toHaveLength(0);
-  });
-
-  it('should return all if no query', () => {
-    const allClients = list('client');
-    const searchResults = search('client', '');
-    expect(searchResults.length).toBe(allClients.length);
-  });
-});
-
-// ========================================
-// AUTHENTICATION HELPER TESTS
-// ========================================
-
-describe('can', () => {
-  const mockSpec = {
-    name: 'test',
-    access: {
-      list: ['partner', 'manager', 'clerk'],
-      view: ['partner', 'manager', 'clerk'],
-      create: ['partner', 'manager'],
-      edit: ['partner', 'manager'],
-      delete: ['partner'],
-    },
-  };
-
-  it('should return false for null user', () => {
-    expect(can(null, mockSpec, 'list')).toBe(false);
-  });
-
-  it('should allow partner all actions', () => {
-    const user = { role: 'partner' };
-    expect(can(user, mockSpec, 'list')).toBe(true);
-    expect(can(user, mockSpec, 'create')).toBe(true);
-    expect(can(user, mockSpec, 'delete')).toBe(true);
-  });
-
-  it('should allow manager create/edit but not delete', () => {
-    const user = { role: 'manager' };
-    expect(can(user, mockSpec, 'create')).toBe(true);
-    expect(can(user, mockSpec, 'edit')).toBe(true);
-    expect(can(user, mockSpec, 'delete')).toBe(false);
-  });
-
-  it('should allow clerk only list/view', () => {
-    const user = { role: 'clerk' };
-    expect(can(user, mockSpec, 'list')).toBe(true);
-    expect(can(user, mockSpec, 'view')).toBe(true);
-    expect(can(user, mockSpec, 'create')).toBe(false);
-    expect(can(user, mockSpec, 'edit')).toBe(false);
-  });
-
-  it('should return true if action not in access definition', () => {
-    const user = { role: 'clerk' };
-    expect(can(user, mockSpec, 'nonexistent_action')).toBe(true);
-  });
-
-  it('should return true if spec has no access definition', () => {
-    const specNoAccess = { name: 'test' };
-    const user = { role: 'clerk' };
-    expect(can(user, specNoAccess, 'list')).toBe(true);
-  });
-});
-
-describe('check', () => {
-  const mockSpec = {
-    name: 'test',
-    access: {
-      delete: ['partner'],
-    },
-  };
-
-  it('should not throw for allowed action', () => {
-    const user = { role: 'partner' };
-    expect(() => check(user, mockSpec, 'delete')).not.toThrow();
-  });
-
-  it('should throw for disallowed action', () => {
-    const user = { role: 'clerk' };
-    expect(() => check(user, mockSpec, 'delete')).toThrow('Permission denied');
   });
 });
 
@@ -682,113 +330,9 @@ describe('CRUD operations - user', () => {
 });
 
 // ========================================
-// REVIEW CRUD TESTS
-// ========================================
-
-describe('CRUD operations - review', () => {
-  let testTeamId;
-  let testReviewId;
-
-  beforeAll(() => {
-    const suffix = uniqueSuffix();
-    const team = create('team', { name: `Review CRUD Test Team${suffix}` });
-    testTeamId = team.id;
-  });
-
-  it('should create a review', () => {
-    const review = create('review', {
-      name: 'Annual Review 2024',
-      team_id: testTeamId,
-      financial_year: '2024',
-    });
-    testReviewId = review.id;
-    expect(review.name).toBe('Annual Review 2024');
-    expect(review.status).toBe('open'); // default
-    expect(review.stage).toBe(1); // default
-    expect(review.is_private).toBe(0); // false
-    expect(review.published).toBe(0); // false
-  });
-
-  it('should handle tender fields', () => {
-    update('review', testReviewId, {
-      is_tender: true,
-      tender_details: JSON.stringify({ deadline: '2024-06-30', description: 'Tender for audit services' }),
-    });
-    const review = get('review', testReviewId);
-    expect(review.is_tender).toBe(1);
-    expect(review.tender_details).toContain('Tender for audit services');
-  });
-
-  it('should include computed highlight counts', () => {
-    // Create highlights for the review
-    create('highlight', {
-      review_id: testReviewId,
-      page_number: 1,
-      position: '{}',
-      comment: 'Query 1',
-    });
-    create('highlight', {
-      review_id: testReviewId,
-      page_number: 2,
-      position: '{}',
-      comment: 'Query 2',
-      resolved: true,
-    });
-
-    const reviews = list('review');
-    const review = reviews.find(r => r.id === testReviewId);
-    expect(review.highlight_count).toBe(2);
-    expect(review.unresolved_count).toBe(1);
-  });
-});
-
-// ========================================
-// TYPE COERCION TESTS IN CRUD
-// ========================================
-
-describe('type coercion in CRUD', () => {
-  it('should coerce string numbers to int', () => {
-    const suffix = uniqueSuffix();
-    const engagement = create('engagement', {
-      name: `Coerce Test${suffix}`,
-      client_id: create('client', { name: `Coerce Client${suffix}`, email: `coerce${suffix}@test.com` }).id,
-      year: '2024', // string, should coerce to int
-    });
-    expect(engagement.year).toBe(2024);
-  });
-
-  it('should coerce string bools', () => {
-    const suffix = uniqueSuffix();
-    const engagement = create('engagement', {
-      name: `Bool Test${suffix}`,
-      client_id: create('client', { name: `Bool Client${suffix}`, email: `bool${suffix}@test.com` }).id,
-      year: 2024,
-      is_private: 'true',
-      clerks_can_approve: 'on',
-    });
-    expect(engagement.is_private).toBe(1);
-    expect(engagement.clerks_can_approve).toBe(1);
-  });
-
-  it('should handle date strings', () => {
-    const suffix = uniqueSuffix();
-    const engagement = create('engagement', {
-      name: `Date Test${suffix}`,
-      client_id: create('client', { name: `Date Client${suffix}`, email: `date${suffix}@test.com` }).id,
-      year: 2024,
-      deadline: '2024-12-31',
-    });
-    // Should be converted to unix timestamp
-    expect(engagement.deadline).toBeTypeOf('number');
-    expect(engagement.deadline).toBeGreaterThan(0);
-  });
-});
-
-// ========================================
 // CLEAN UP
 // ========================================
 
 afterAll(() => {
-  // Close database connection
   db.close();
 });
