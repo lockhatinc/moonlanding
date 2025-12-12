@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 import path from 'path';
 import fs from 'fs';
 import { specs, getSpec } from '@/config';
-import { coerce, SQL_TYPES, getSearchFields } from './lib/field-types';
+import { coerce, SQL_TYPES, getSearchFields } from '@/lib/field-types';
 
 // === DATABASE ===
 const DB_PATH = path.resolve(process.cwd(), 'data', 'app.db');
