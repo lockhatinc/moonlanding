@@ -1,7 +1,7 @@
 // Unified Event System - Triggers, Jobs, and Business Logic
 // Consolidates triggers.js and jobs.js into a single event-driven system
 
-import { list, get, update, create, remove, count } from '../engine';
+import { list, get, update, create, remove, count } from '../engine.js';
 import { queueEmail, sendQueuedEmails, generateChecklistPdf } from './email-templates';
 import { exportDatabase } from './backup';
 
