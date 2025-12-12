@@ -89,7 +89,7 @@ export function create(entityName, data, user) {
     if (field.auto === 'now') fields[key] = now();
     else if (field.auto === 'user' && user) fields[key] = user.id;
     else if (data[key] !== undefined && data[key] !== '') { const v = coerce(data[key], field.type); if (v !== undefined) fields[key] = v; }
-    else if (field.default !== undefined) fields[key] = field.default;
+    else if (field.default !== undefined) fields[key] = coerce(field.default, field.type);
   }
   const keys = Object.keys(fields);
   try { db.prepare(`INSERT INTO ${spec.name}s (${keys.join(', ')}) VALUES (${keys.map(() => '?').join(', ')})`).run(...Object.values(fields)); return { id, ...fields }; }
@@ -111,8 +111,16 @@ export function update(entityName, id, data, user) {
 export function remove(entityName, id) {
   const spec = getSpec(entityName);
   try {
-    if (spec.fields.status) db.prepare(`UPDATE ${spec.name}s SET status = 'deleted', updated_at = ? WHERE id = ?`).run(now(), id);
-    else db.prepare(`DELETE FROM ${spec.name}s WHERE id = ?`).run(id);
+    if (spec.fields.status) {
+      const hasUpdatedAt = spec.fields.updated_at;
+      if (hasUpdatedAt) {
+        db.prepare(`UPDATE ${spec.name}s SET status = 'deleted', updated_at = ? WHERE id = ?`).run(now(), id);
+      } else {
+        db.prepare(`UPDATE ${spec.name}s SET status = 'deleted' WHERE id = ?`).run(id);
+      }
+    } else {
+      db.prepare(`DELETE FROM ${spec.name}s WHERE id = ?`).run(id);
+    }
   } catch (e) { console.error('Remove error:', e.message); throw e; }
 }
 
