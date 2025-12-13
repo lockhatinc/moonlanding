@@ -21,25 +21,25 @@ export function EntityForm({ spec, data = {}, options = {}, action }) {
 
     switch (field.type) {
       case 'textarea':
-        return <Textarea name={field.key} defaultValue={val} rows={3} />;
+        return <Textarea name={field.key} defaultValue={val} rows={3} required={field.required} />;
       case 'date':
-        return <input type="date" name={field.key} defaultValue={val} style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--mantine-color-gray-4)', borderRadius: 4 }} />;
+        return <input type="date" name={field.key} defaultValue={val} required={field.required} style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--mantine-color-gray-4)', borderRadius: 4 }} />;
       case 'int':
-        return <NumberInput name={field.key} defaultValue={val} />;
+        return <NumberInput name={field.key} defaultValue={val} required={field.required} />;
       case 'decimal':
-        return <NumberInput name={field.key} defaultValue={val} decimalScale={2} />;
+        return <NumberInput name={field.key} defaultValue={val} decimalScale={2} required={field.required} />;
       case 'bool':
         return <Checkbox name={field.key} label={field.label} defaultChecked={!!val} />;
       case 'enum':
-        return <Select name={field.key} defaultValue={val !== '' ? String(val) : null} data={getEnumOptions(spec, field.options).map(o => ({ value: String(o.value), label: o.label }))} placeholder={`Select ${field.label}`} clearable />;
+        return <Select name={field.key} defaultValue={val !== '' ? String(val) : null} data={getEnumOptions(spec, field.options).map(o => ({ value: String(o.value), label: o.label }))} placeholder={`Select ${field.label}`} clearable required={field.required} />;
       case 'ref':
-        return <Select name={field.key} defaultValue={val || null} data={(options[field.key] || []).map(o => ({ value: o.value, label: o.label }))} placeholder={`Select ${field.label}`} searchable clearable />;
+        return <Select name={field.key} defaultValue={val || null} data={(options[field.key] || []).map(o => ({ value: o.value, label: o.label }))} placeholder={`Select ${field.label}`} searchable clearable required={field.required} />;
       case 'email':
-        return <TextInput type="email" name={field.key} defaultValue={val} />;
+        return <TextInput type="email" name={field.key} defaultValue={val} required={field.required} />;
       case 'image':
-        return <Stack gap="xs"><TextInput name={field.key} defaultValue={val} placeholder="Image URL" />{val && <Avatar src={val} size="lg" />}</Stack>;
+        return <Stack gap="xs"><TextInput name={field.key} defaultValue={val} placeholder="Image URL" required={field.required} />{val && <Avatar src={val} size="lg" />}</Stack>;
       default:
-        return <TextInput name={field.key} defaultValue={val} />;
+        return <TextInput name={field.key} defaultValue={val} required={field.required} />;
     }
   };
 

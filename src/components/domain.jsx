@@ -1,32 +1,68 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { Paper, Stack, Group, Badge, Text, ActionIcon, Button, Avatar, Textarea, Box, Collapse, Title, Tabs, Grid, ScrollArea, Loader, Center, Checkbox } from '@mantine/core';
 import { MessageSquare, Check, Send, ChevronDown, ChevronUp, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, FileSearch, Pencil, Trash2, ArrowLeft, FileText, ClipboardCheck, Lock } from 'lucide-react';
 import { FieldRender } from './field-render';
+import { AddChecklistDialog } from './dialogs/add-checklist';
 
 // === CHAT PANEL ===
-function ChatSubmitButton() {
-  const { pending } = useFormStatus();
-  return <ActionIcon type="submit" size="lg" loading={pending}><Send size={18} /></ActionIcon>;
-}
-
-export function ChatPanel({ entityType, entityId, messages = [], user, sendAction }) {
+export function ChatPanel({ entityType, entityId, messages = [], user, onSendMessage }) {
+  const [displayMessages, setDisplayMessages] = useState(messages);
   const [isTeamOnly, setIsTeamOnly] = useState(false);
+  const [content, setContent] = useState('');
+  const [sending, setSending] = useState(false);
   const formatTime = (ts) => ts ? new Date(ts * 1000).toLocaleString() : '';
+
+  const loadMessages = async () => {
+    try {
+      const res = await fetch(`/api/chat?entity_type=${entityType}&entity_id=${entityId}`);
+      if (res.ok) {
+        const msgs = await res.json();
+        setDisplayMessages(msgs);
+      }
+    } catch (e) {
+      console.error('Failed to load messages:', e);
+    }
+  };
+
+  const handleSend = async () => {
+    if (!content.trim() || !onSendMessage) return;
+    setSending(true);
+    try {
+      await onSendMessage({
+        entity_type: entityType,
+        entity_id: entityId,
+        content: content.trim(),
+        is_team_only: isTeamOnly,
+      });
+      setContent('');
+      await loadMessages();
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
 
   return (
     <Paper p="md" withBorder>
       <Title order={4} mb="md">Chat</Title>
       <Stack h={400}>
         <ScrollArea flex={1}>
-          {messages.length === 0 ? (
+          {displayMessages.length === 0 ? (
             <Text ta="center" c="dimmed" py="xl">No messages yet. Start the conversation!</Text>
           ) : (
             <Stack gap="md">
-              {messages.map((msg) => (
+              {displayMessages.map((msg) => (
                 <Group key={msg.id} gap="sm" align="flex-start" style={{ flexDirection: msg.created_by === user?.id ? 'row-reverse' : 'row' }}>
                   <Avatar src={msg.created_by_display?.avatar} size="sm" radius="xl">{msg.created_by_display?.name?.[0] || '?'}</Avatar>
                   <Box maw="70%">
@@ -44,16 +80,11 @@ export function ChatPanel({ entityType, entityId, messages = [], user, sendActio
             </Stack>
           )}
         </ScrollArea>
-        <form action={sendAction}>
-          <input type="hidden" name="entity_type" value={entityType} />
-          <input type="hidden" name="entity_id" value={entityId} />
-          <input type="hidden" name="is_team_only" value={isTeamOnly ? 'true' : 'false'} />
-          <Group align="flex-end">
-            <Textarea name="content" placeholder="Type your message..." style={{ flex: 1 }} rows={2} />
-            <ChatSubmitButton />
-          </Group>
-          {user?.type === 'auditor' && <Checkbox label="Team members only" checked={isTeamOnly} onChange={(e) => setIsTeamOnly(e.currentTarget.checked)} mt="xs" />}
-        </form>
+        <Group align="flex-end">
+          <Textarea value={content} onChange={(e) => setContent(e.target.value)} onKeyDown={handleKeyDown} placeholder="Type your message..." style={{ flex: 1 }} rows={2} disabled={sending} />
+          <ActionIcon onClick={handleSend} size="lg" loading={sending} disabled={!content.trim() || sending}><Send size={18} /></ActionIcon>
+        </Group>
+        {user?.type === 'auditor' && <Checkbox label="Team members only" checked={isTeamOnly} onChange={(e) => setIsTeamOnly(e.currentTarget.checked)} mt="xs" />}
       </Stack>
     </Paper>
   );
@@ -136,24 +167,24 @@ export function HighlightLayer({ highlights = [], selectedId, onSelect, onResolv
           <Stack align="center" c="dimmed"><MessageSquare size={32} opacity={0.5} /><Text>No queries yet</Text><Text size="sm">Select an area on the PDF to add a query</Text></Stack>
         </Paper>
       ) : highlights.map((h) => (
-        <Paper key={h.id} p="sm" withBorder style={{ cursor: 'pointer', outline: selectedId === h.id ? '2px solid var(--mantine-color-blue-6)' : 'none' }} onClick={() => onSelect?.(h.id)}>
-          <Group justify="space-between" align="flex-start">
+        <Box key={h.id} style={{ border: '1px solid var(--mantine-color-gray-3)', borderRadius: '8px', padding: '12px' }}>
+          <Group justify="space-between" align="flex-start" onClick={() => onSelect?.(h.id)} style={{ cursor: 'pointer' }}>
             <Box flex={1}>
               <Group gap="xs" mb={4}><Badge size="sm">Page {h.page_number}</Badge><Badge size="sm" color={h.resolved ? 'green' : 'yellow'}>{h.resolved ? 'Resolved' : 'Open'}</Badge></Group>
               <Text size="sm" lineClamp={2}>{h.comment || h.content || 'No comment'}</Text>
             </Box>
             <ActionIcon variant="subtle" onClick={(e) => { e.stopPropagation(); setExpandedId(expandedId === h.id ? null : h.id); }}>{expandedId === h.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</ActionIcon>
           </Group>
-          <Collapse in={expandedId === h.id}>
-            <Box mt="sm" onClick={(e) => e.stopPropagation()}>
+          {expandedId === h.id && (
+            <Box style={{ marginTop: '12px' }}>
               <Group gap="xs" mb="xs"><Avatar size="xs">{h.created_by_display?.[0] || '?'}</Avatar><Text size="xs" c="dimmed">{h.created_by_display || 'Unknown'} • {formatTime(h.created_at)}</Text></Group>
-              {h.content && <Paper p="xs" bg="gray.1" mb="sm"><Text size="sm" fs="italic">"{h.content}"</Text></Paper>}
-              {h.responses?.length > 0 && <Stack gap="xs" mb="sm"><Text size="xs" fw={500} c="dimmed">Responses</Text>{h.responses.map((r) => <Paper key={r.id} p="xs" bg="gray.0"><Text size="sm">{r.content}</Text><Text size="xs" c="dimmed">{r.created_by_display} • {formatTime(r.created_at)}</Text></Paper>)}</Stack>}
+              {h.content && <Box style={{ padding: '8px', backgroundColor: 'var(--mantine-color-gray-1)', marginBottom: '12px', borderRadius: '4px' }}><Text size="sm" fs="italic">"{h.content}"</Text></Box>}
+              {h.responses?.length > 0 && <Stack gap="xs" mb="sm"><Text size="xs" fw={500} c="dimmed">Responses</Text>{h.responses.map((r) => <Box key={r.id} style={{ padding: '8px', backgroundColor: 'var(--mantine-color-gray-0)', borderRadius: '4px' }}><Text size="sm">{r.content}</Text><Text size="xs" c="dimmed">{r.created_by_display} • {formatTime(r.created_at)}</Text></Box>)}</Stack>}
               <Group gap="xs" mb="xs"><Textarea value={newResponse} onChange={(e) => setNewResponse(e.target.value)} placeholder="Add a response..." style={{ flex: 1 }} rows={2} /><ActionIcon onClick={() => handleSubmitResponse(h.id)} disabled={!newResponse.trim()}><Send size={16} /></ActionIcon></Group>
-              {canResolve && !h.resolved && <Button variant="outline" size="xs" fullWidth leftSection={<Check size={14} />} onClick={() => onResolve?.(h.id)}>Mark as Resolved</Button>}
+              {canResolve && !h.resolved && <Button variant="outline" size="xs" fullWidth leftSection={<Check size={14} />} onClick={(e) => onResolve?.(h.id)}>Mark as Resolved</Button>}
             </Box>
-          </Collapse>
-        </Paper>
+          )}
+        </Box>
       ))}
     </Stack>
   );
@@ -163,12 +194,70 @@ export function HighlightLayer({ highlights = [], selectedId, onSelect, onResolv
 export function ReviewDetail({ spec, data, children = {}, user, canEdit = false, canDelete = false, deleteAction }) {
   const router = useRouter();
   const [selectedHighlight, setSelectedHighlight] = useState(null);
+  const [showAddChecklistDialog, setShowAddChecklistDialog] = useState(false);
   const highlights = children.highlights || [], checklists = children.checklists || [], chatMessages = children.chat || [];
   const unresolvedCount = highlights.filter((h) => !h.resolved).length;
 
-  const handleHighlight = async (d) => console.log('New highlight:', d);
-  const handleResolve = async (id) => console.log('Resolve:', id);
-  const handleAddResponse = async (id, content) => console.log('Response:', id, content);
+  const handleHighlight = async (d) => {
+    try {
+      const res = await fetch('/api/highlight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ review_id: data.id, ...d }),
+      });
+      if (!res.ok) throw new Error('Failed to create highlight');
+      router.refresh();
+    } catch (e) {
+      console.error('Error creating highlight:', e);
+      alert(`Error creating highlight: ${e.message}`);
+    }
+  };
+
+  const handleResolve = async (id) => {
+    try {
+      const res = await fetch(`/api/highlight/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resolved: true }),
+      });
+      if (!res.ok) throw new Error('Failed to resolve highlight');
+      router.refresh();
+    } catch (e) {
+      console.error('Error resolving highlight:', e);
+      alert(`Error resolving highlight: ${e.message}`);
+    }
+  };
+
+  const handleAddResponse = async (id, content) => {
+    try {
+      const res = await fetch('/api/highlight_response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ highlight_id: id, content }),
+      });
+      if (!res.ok) throw new Error('Failed to add response');
+      router.refresh();
+    } catch (e) {
+      console.error('Error adding response:', e);
+      alert(`Error adding response: ${e.message}`);
+    }
+  };
+
+  const handleSendMessage = async (message) => {
+    try {
+      const response = await fetch(`/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(message),
+      });
+      if (!response.ok) throw new Error('Failed to send message');
+      router.refresh();
+      return await response.json();
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw error;
+    }
+  };
 
   return (
     <Stack gap="md">
@@ -185,6 +274,7 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
           </Box>
         </Group>
         <Group>
+          {canEdit && <Button variant="outline" leftSection={<ClipboardCheck size={16} />} onClick={() => setShowAddChecklistDialog(true)}>Add Checklist</Button>}
           {canEdit && <Button variant="outline" leftSection={<Pencil size={16} />} onClick={() => router.push(`/review/${data.id}/edit`)}>Edit</Button>}
           {canDelete && deleteAction && <form action={deleteAction}><Button type="submit" color="red" leftSection={<Trash2 size={16} />}>Delete</Button></form>}
         </Group>
@@ -206,11 +296,11 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
               <Tabs.Panel value="details">
                 <Paper p="md" withBorder>
                   <Stack gap="md">
-                    <Box><Text size="sm" c="dimmed">Financial Year</Text><Text fw={500}>{data.financial_year || '—'}</Text></Box>
-                    <Box><Text size="sm" c="dimmed">Team</Text><Text fw={500}>{data.team_id_display || '—'}</Text></Box>
-                    <Box><Text size="sm" c="dimmed">Deadline</Text><Text fw={500}><FieldRender spec={spec} field={{ type: 'date' }} value={data.deadline} row={data} /></Text></Box>
-                    <Box><Text size="sm" c="dimmed">WIP Value</Text><Text fw={500}>{data.wip_value ? `$${data.wip_value.toFixed(2)}` : '—'}</Text></Box>
-                    <Box><Text size="sm" c="dimmed">Private</Text><Text fw={500}>{data.is_private ? 'Yes' : 'No'}</Text></Box>
+                    <Box><Text size="sm" c="dimmed">Financial Year</Text><Box fw={500}>{data.financial_year || '—'}</Box></Box>
+                    <Box><Text size="sm" c="dimmed">Team</Text><Box fw={500}>{data.team_id_display || '—'}</Box></Box>
+                    <Box><Text size="sm" c="dimmed">Deadline</Text><Box fw={500}><FieldRender spec={spec} field={{ type: 'date' }} value={data.deadline} row={data} /></Box></Box>
+                    <Box><Text size="sm" c="dimmed">WIP Value</Text><Box fw={500}>{data.wip_value ? `$${data.wip_value.toFixed(2)}` : '—'}</Box></Box>
+                    <Box><Text size="sm" c="dimmed">Private</Text><Box fw={500}>{data.is_private ? 'Yes' : 'No'}</Box></Box>
                   </Stack>
                 </Paper>
               </Tabs.Panel>
@@ -221,11 +311,12 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
                   )}
                 </Paper>
               </Tabs.Panel>
-              <Tabs.Panel value="chat"><ChatPanel entityType="review" entityId={data.id} messages={chatMessages} user={user} /></Tabs.Panel>
+              <Tabs.Panel value="chat"><ChatPanel entityType="review" entityId={data.id} messages={chatMessages} user={user} onSendMessage={handleSendMessage} /></Tabs.Panel>
             </ScrollArea>
           </Tabs>
         </Grid.Col>
       </Grid>
+      {showAddChecklistDialog && <AddChecklistDialog review={data} onClose={() => setShowAddChecklistDialog(false)} onSuccess={() => { setShowAddChecklistDialog(false); router.refresh(); }} />}
     </Stack>
   );
 }

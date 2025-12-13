@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Table, TextInput, Button, Group, Title, Text, Paper, Box } from '@mantine/core';
 import { FieldRender } from './field-render';
 import { getListFields, getEntityIcon } from '@/lib/field-types';
 import { Search, Plus, ChevronDown, ChevronRight } from 'lucide-react';
+import { useRealtimeData } from '@/lib/use-realtime';
 
 export function EntityList({ spec, data, searchQuery = '', canCreate = false }) {
   const router = useRouter();
@@ -13,21 +14,23 @@ export function EntityList({ spec, data, searchQuery = '', canCreate = false }) 
   const [sortField, setSortField] = useState(spec.list?.defaultSort?.field || null);
   const [sortDir, setSortDir] = useState(spec.list?.defaultSort?.dir || 'asc');
   const [search, setSearch] = useState(searchQuery);
+  const { data: realtimeData } = useRealtimeData(spec.name, null, { initialData: data, pollInterval: 2000 });
+  const displayData = realtimeData || data;
 
   const listFields = useMemo(() => getListFields(spec), [spec]);
   const groupBy = spec.list?.groupBy;
   const Icon = getEntityIcon(spec);
 
   const sortedData = useMemo(() => {
-    if (!sortField) return data;
-    return [...data].sort((a, b) => {
+    if (!sortField) return displayData;
+    return [...displayData].sort((a, b) => {
       const aVal = a[sortField], bVal = b[sortField];
       if (aVal === bVal) return 0;
       if (aVal == null) return 1;
       if (bVal == null) return -1;
       return (aVal < bVal ? -1 : 1) * (sortDir === 'asc' ? 1 : -1);
     });
-  }, [data, sortField, sortDir]);
+  }, [displayData, sortField, sortDir]);
 
   const grouped = useMemo(() => {
     if (!groupBy) return { '': sortedData };
@@ -70,7 +73,7 @@ export function EntityList({ spec, data, searchQuery = '', canCreate = false }) 
             {Object.entries(grouped).map(([group, rows]) => (
               <GroupRows key={group} group={group} rows={rows} groupBy={groupBy} expanded={expanded} toggleGroup={toggleGroup} listFields={listFields} spec={spec} router={router} />
             ))}
-            {!data.length && <Table.Tr><Table.Td colSpan={listFields.length + (groupBy ? 1 : 0)}><Text ta="center" py="xl" c="dimmed">No {spec.labelPlural.toLowerCase()} found</Text></Table.Td></Table.Tr>}
+            {!displayData.length && <Table.Tr><Table.Td colSpan={listFields.length + (groupBy ? 1 : 0)}><Text ta="center" py="xl" c="dimmed">No {spec.labelPlural.toLowerCase()} found</Text></Table.Td></Table.Tr>}
           </Table.Tbody>
         </Table>
       </Paper>

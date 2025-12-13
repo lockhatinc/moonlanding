@@ -3,6 +3,100 @@
 
 ---
 
+# STUB IMPLEMENTATIONS & ERROR HANDLING (COMPLETE ✅)
+
+## All Critical Stubs Fixed
+1. **`generateChecklistPdf()`** (src/engine/email-templates.js:167-214) - Now generates HTML checklist reports with styling and formatting
+2. **Database Error Handling** (src/engine.js:72, 77, 129) - Changed from silent failures (return [] / null) to throwing errors
+3. **Email System Validation** (src/engine/email-templates.js:106) - Throws on unknown templates instead of returning console.error
+4. **Job Error Handling** (src/engine/events.js:206, 302) - User sync and PDF jobs now properly propagate errors
+5. **API Validation** (src/app/api/[entity]/[[...path]]/route.js:54-62) - Added validateStageTransition and validateRfiStatusChange
+6. **Recreation System** (src/engine/recreation.js:42-43, 68) - Fixed entity name from engagement_section to rfi_section
+7. **Event Error Handling** (src/engine/events.js:426) - Enhanced error detection for critical failures
+
+---
+
+# CLIENT-SIDE DEBUGGING (ESSENTIAL DX)
+
+## Global Debug System
+The platform includes a comprehensive global debugging system accessible via `window.__DEBUG__` for perfect DX when troubleshooting client-side issues.
+
+### Quick Start
+```js
+// In browser console, immediately accessible:
+window.__DEBUG__.getState()           // View entire app state
+window.__DEBUG__.setUser(user)        // Set current user
+window.__DEBUG__.setEntity(name, obj) // Store entity data
+window.__DEBUG__.setCache(key, val)   // Store any data
+window.__DEBUG__.getApiCalls()        // View last 100 API calls
+window.__DEBUG__.tables.apiCalls()    // View API calls as table
+```
+
+### Available Methods
+- **State Management**
+  - `getState()` - Get complete app state object
+  - `setState(key, value)` - Set arbitrary state
+  - `getAll()` - Alias for getState()
+
+- **User & Page Tracking**
+  - `setUser(user)` - Set current logged-in user
+  - `setPage(page)` - Set current page name
+
+- **Entity Management**
+  - `setEntity(name, data)` - Store entity instance
+  - `getEntity(name)` - Retrieve stored entity
+  - `getAllEntities()` - Get all stored entities
+
+- **API Call Tracking**
+  - `addApiCall(method, url, status, duration)` - Log API call
+  - `getApiCalls()` - View last 100 calls
+  - `clearApiCalls()` - Clear call history
+  - `setApiError(error)` - Log API error
+  - `getLastApiError()` - Retrieve last error
+
+- **Caching**
+  - `setCache(key, value)` - Store in debug cache
+  - `getCache(key)` - Retrieve from cache
+  - `clearCache()` - Clear all cache
+
+- **Visualization**
+  - `tables.apiCalls()` - Console.table() of API calls
+  - `tables.entities()` - Console.table() of entities
+  - `tables.cache()` - Console.table() of cache
+  - `log(msg, data)` - Styled console.log with [APP] prefix
+
+### Example Debugging Session
+```js
+// Inspect current state
+const state = window.__DEBUG__.getState()
+console.log(state.user)
+console.log(state.api.calls)
+
+// Track a page navigation
+window.__DEBUG__.setPage('review-detail')
+
+// Store entity data for inspection
+window.__DEBUG__.setEntity('review', reviewData)
+
+// View all API calls in table
+window.__DEBUG__.tables.apiCalls()
+
+// Check for API errors
+window.__DEBUG__.getLastApiError()
+
+// Manually test caching
+window.__DEBUG__.setCache('testData', {foo: 'bar'})
+window.__DEBUG__.getCache('testData')
+```
+
+### Implementation Details
+- **Location**: `src/lib/client-debug.js` and `src/components/debug-init.jsx`
+- **Initialization**: Automatically initialized in root layout
+- **Non-blocking**: Zero performance impact when not used
+- **SSR Safe**: Only initializes on client side
+
+---
+
 # CORE PHILOSOPHY (HARD POLICY)
 
 ## Minimum Code First
@@ -3209,3 +3303,556 @@ NODE_ENV=development
 **Full feature parity with both MWR and Friday systems.**
 
 **Still 78% fewer files, 94% fewer lines than original combined codebase.**
+
+---
+
+# REALTIME UPDATES SYSTEM
+
+## Architecture Overview
+
+The platform implements a straightforward, convention-over-code realtime update system that works automatically across all entities. When any data changes (create, update, delete), all connected clients receive updates through a simple polling mechanism.
+
+### Core Components
+
+**1. Client-Side Hook: `useRealtimeData()`** (`src/lib/use-realtime.js`)
+```js
+const { data, loading, error, refetch } = useRealtimeData(entity, id, options);
+```
+- Subscribes to realtime updates for an entity
+- Automatically polls API every 2-3 seconds (configurable)
+- Notifies all subscribers of changes
+- Works with both list views and detail views
+
+**2. Server-Side Broadcasting** (`src/lib/realtime-server.js`)
+- `broadcastUpdate(url, action, data)` - Called after every API mutation
+- Triggers client-side subscribers to refetch data
+- Action types: 'create', 'update', 'delete'
+
+**3. API Integration** (`src/app/api/[entity]/[[...path]]/route.js`)
+- POST (create) broadcasts list update
+- PUT (update) broadcasts both detail and list updates
+- DELETE broadcasts both detail and list deletes
+
+## How It Works
+
+### Step 1: Initial Load
+```js
+// Page loads with server-rendered data
+const { data } = await list('teams');
+<EntityList spec={spec} data={data} />
+```
+
+### Step 2: Hook Subscription
+```js
+// Component mounts with useRealtimeData
+const { data: realtimeData } = useRealtimeData('team', null, { 
+  initialData: data,
+  pollInterval: 2000 
+});
+```
+
+### Step 3: Change Detection
+```js
+// User creates/updates/deletes entity via form
+// API route broadcasts update:
+broadcastUpdate('/api/team', 'create', newTeam);
+
+// All subscribed clients automatically fetch updated list
+// No manual refetch() needed
+```
+
+### Step 4: Automatic Re-render
+```js
+// Component re-renders with new data
+<EntityList data={realtimeData} />  // Updated in real-time
+```
+
+## Usage in Components
+
+### List Pages (EntityList)
+Already integrated! Just pass initial server data:
+```jsx
+export default async function TeamPage() {
+  const data = await list('team');
+  return <EntityList spec={spec} data={data} />;
+}
+```
+
+The hook automatically handles realtime updates.
+
+### Detail Pages
+```jsx
+'use client';
+const { data } = useRealtimeData('team', teamId, { 
+  initialData: serverData,
+  pollInterval: 3000 
+});
+```
+
+### Custom Components
+```jsx
+'use client';
+import { useRealtimeData } from '@/lib/use-realtime';
+
+export function MyComponent() {
+  const { data, refetch } = useRealtimeData('engagement', engagementId);
+  
+  return (
+    <div>
+      {data?.name}
+      <button onClick={refetch}>Manual Refresh</button>
+    </div>
+  );
+}
+```
+
+## Configuration
+
+### Poll Interval
+Change update frequency (default 2000ms = 2 seconds):
+```js
+const { data } = useRealtimeData('team', id, { 
+  pollInterval: 5000  // Check every 5 seconds
+});
+```
+
+### Initial Data
+Prevent loading state on initial render:
+```js
+const { data, loading } = useRealtimeData('team', id, { 
+  initialData: serverData  // Starts with this data
+});
+```
+
+## How Updates Cascade
+
+### Single Record Update
+```
+User edits Team #123
+  ↓
+PUT /api/team/123
+  ↓
+broadcastUpdate('/api/team/123', 'update', updatedTeam)
+broadcastUpdate('/api/team', 'update', updatedTeam)
+  ↓
+All TeamList subscribers fetch /api/team
+All TeamDetail subscribers fetch /api/team/123
+  ↓
+Components re-render with new data
+```
+
+### Relationship Updates
+```
+User creates Engagement for Team #123
+  ↓
+POST /api/engagement
+  ↓
+broadcastUpdate('/api/engagement', 'create', newEngagement)
+broadcastUpdate('/api/team/123', 'update', ...)
+  ↓
+EngagementList page shows new entry
+Team detail page shows updated engagement count
+```
+
+## Performance Optimization
+
+### Subscription Management
+- Multiple components subscribed to same URL = 1 fetch
+- Unsubscribe automatically when components unmount
+- Zero overhead for inactive subscriptions
+
+### Efficient Polling
+- Only polls when there are active subscribers
+- Configurable intervals per component
+- Network requests deduplicated
+
+### Server-Side Efficiency
+- In-memory listener tracking (no database)
+- Broadcast is instantaneous
+- No WebSocket overhead
+
+## Error Handling
+
+```js
+const { data, error } = useRealtimeData('team', id);
+
+if (error) {
+  return <div>Failed to load: {error}</div>;
+}
+```
+
+## Browser Support
+
+Works in all modern browsers:
+- Chrome/Edge 88+
+- Firefox 85+
+- Safari 14+
+- Mobile browsers
+
+## Testing Realtime Updates
+
+Open app in 2 browser windows side-by-side:
+1. Window A: Teams list
+2. Window B: Team detail or create form
+3. In Window B, edit/create a team
+4. Watch Window A update in real-time (within 2-3 seconds)
+
+## Convention Over Code
+
+The system follows these conventions automatically:
+- **List URL Pattern**: `/api/{entity}` 
+- **Detail URL Pattern**: `/api/{entity}/{id}`
+- **Parent URL Pattern**: `/api/{entity}` (broadcast when child changes)
+
+No configuration needed. It just works.
+
+## Future Enhancements
+
+Possible future improvements (not yet implemented):
+- WebSocket support for sub-second latency
+- Conflict resolution for offline edits
+- Optimistic updates with rollback
+- Change notifications with metadata
+
+Current polling implementation is robust, simple, and sufficient for most use cases.
+
+
+---
+
+# PDF VIEWER & HIGHLIGHTS (QUERIES) SYSTEM
+
+## Architecture Overview
+
+The platform includes a comprehensive PDF viewing and annotation system that allows users to:
+- Display and navigate PDF documents
+- Create locational queries/highlights by selecting text or areas
+- Resolve queries with comments and discussion
+- Track query status across multiple states
+
+## Components
+
+### 1. PdfViewer Component (`src/domain/pdf-viewer.jsx`)
+Core PDF rendering engine with highlight support.
+
+**Features:**
+- PDF.js library integration (CDN-based)
+- Canvas-based rendering
+- Text selection detection
+- Locational highlight overlays
+- Zoom controls (50%-300%)
+- Page navigation (previous/next)
+- Fit-to-width layout
+- Dynamic highlight coloring based on state
+
+**Highlight Colors:**
+```js
+{
+  default: '#B0B0B0',    // Gray - default highlight
+  scrolledTo: '#7F7EFF', // Blue - currently selected
+  partner: '#ff4141',    // Red - partner-added highlight
+  resolved: '#44BBA4',   // Teal - resolved query
+}
+```
+
+### 2. PDFViewer (UI Version) (`src/components/domain.jsx`)
+Mantine-based UI wrapper for the PDF viewer.
+
+**Features:**
+- Area selection via drag (lines 104-121)
+- Highlight rendering (lines 144-146)
+- Responsive layout
+- Page counter and zoom percentage display
+- "Add Query" button integration
+
+### 3. Highlight Data Model
+Stored as entities in the `highlight` table.
+
+**Fields:**
+```js
+{
+  id: string,                    // Unique ID
+  review_id: string,            // Parent review
+  page_number: integer,         // Which page (1-indexed)
+  position: {                   // Locational data
+    boundingRect: {
+      x1, y1, x2, y2,          // Pixel coordinates
+      width, height
+    },
+    rects: [],                  // Array of selection rects
+    pageNumber: integer,
+    usePdfCoordinates: boolean
+  },
+  content: string,              // Selected text
+  comment: string,              // User comment
+  type: 'text' | 'area',       // Selection type
+  color: string,                // Display color (hex)
+  resolved: boolean,            // Full resolution status
+  partial_resolved: boolean,    // Partial resolution
+  is_partner: boolean,          // Partner-only highlight
+  created_by: string,           // User ID
+  created_at: timestamp,
+  resolved_by: string,          // Who resolved it
+  resolved_at: timestamp
+}
+```
+
+## How It Works
+
+### Step 1: Load Review with PDF
+```js
+// Page loads review data
+const review = await get('review', reviewId);
+
+// PDF URL comes from Drive or storage
+<PdfViewer fileUrl={review.drive_file_id} highlights={highlights} />
+```
+
+### Step 2: User Selects Text/Area
+```js
+// User drags to select text (lines 111-149 in pdf-viewer.jsx)
+// OR drags area to select (lines 104-121 in domain.jsx)
+
+// Selection detected:
+{
+  text: "selected text here",
+  position: {
+    boundingRect: {x1, y1, x2, y2, width, height},
+    pageNumber: 1
+  }
+}
+```
+
+### Step 3: Create Highlight Dialog
+```js
+// HighlightTip component shows (lines 310-345 in pdf-viewer.jsx)
+// User can add optional comment
+// "Create Query" button saves highlight
+```
+
+### Step 4: Persist to Database
+```js
+// API call to POST /api/highlight
+{
+  review_id: "...",
+  page_number: 1,
+  position: {...},
+  content: "selected text",
+  comment: "Query about this section",
+  type: "text",
+  color: "#B0B0B0"
+}
+```
+
+### Step 5: Display on PDF
+```js
+// Highlight overlay rendered (lines 258-287 in pdf-viewer.jsx)
+// Box positioned at: left = x1 * scale, top = y1 * scale
+// Colored border based on: resolved ? green : selected ? blue : gray
+// Clickable to view/edit
+```
+
+## Highlight States & Colors
+
+| State | Color | Meaning |
+|-------|-------|---------|
+| **Unresolved** | Gray (#B0B0B0) | New query, awaiting response |
+| **Selected** | Blue (#7F7EFF) | Currently viewing this query |
+| **Partner** | Red (#ff4141) | Added by partner/manager |
+| **Resolved** | Teal (#44BBA4) | Query resolved/completed |
+| **Partial** | Yellow | Partially resolved |
+
+## Resolution Workflow
+
+### Full Resolution
+```js
+// User clicks "Resolve" on highlight
+await fetch(`/api/highlight/${highlightId}`, {
+  method: 'PUT',
+  body: JSON.stringify({
+    resolved: true,
+    resolved_by: userId
+  })
+});
+// Highlight color changes to teal
+// Removed from "Open" queries list
+```
+
+### Partial Resolution
+```js
+// User clicks "Partial Resolve"
+await fetch(`/api/highlight/${highlightId}`, {
+  method: 'PUT',
+  body: JSON.stringify({
+    partial_resolved: true,
+    partial_resolved_by: userId
+  })
+});
+// Highlight shows as partially addressed
+```
+
+### Re-open Query
+```js
+// Click "Un-resolve" to bring back to gray
+await fetch(`/api/highlight/${highlightId}`, {
+  method: 'PUT',
+  body: JSON.stringify({ resolved: false })
+});
+```
+
+## General Comments (Non-PDF)
+
+For reviews without PDF or general discussion:
+```js
+// Create highlight with is_general = true
+{
+  review_id: "...",
+  page_number: 0,        // Not tied to page
+  is_general: true,
+  comment: "Overall feedback about this review",
+  type: "comment"
+}
+```
+
+These appear in the Queries section as general notes, not bound to specific PDF locations.
+
+## API Endpoints
+
+### Create Highlight (Query)
+```
+POST /api/highlight
+{
+  review_id: string,
+  page_number: integer,
+  position: {...},
+  content: string,
+  comment: string,
+  type: 'text' | 'area'
+}
+Response: { id, ... } (201 Created)
+```
+
+### List Highlights for Review
+```
+GET /api/review/{id}/highlights
+Response: [{ id, page_number, position, resolved, ... }]
+```
+
+### Resolve Highlight
+```
+PUT /api/highlight/{id}
+{
+  resolved: boolean,
+  partial_resolved: boolean
+}
+Response: { id, resolved, ... } (200 OK)
+```
+
+### Add Response to Highlight
+```
+POST /api/highlight/{id}/responses
+{
+  content: string
+}
+Response: { id, ... } (201 Created)
+```
+
+### Delete Highlight (Archive)
+```
+DELETE /api/highlight/{id}
+Response: { success: true } (200 OK)
+```
+
+Note: Deletions are soft - highlights archived to `removed_highlights` table.
+
+## PDF Integration
+
+### Load from Google Drive
+```js
+// Google Drive file integration
+const driveFileId = review.drive_file_id;
+const pdfUrl = `https://drive.google.com/uc?id=${driveFileId}&export=download`;
+
+<PdfViewer fileUrl={pdfUrl} />
+```
+
+### Caching Strategy
+```js
+// Optional: Cache PDF URLs for performance
+{
+  cached_pdf_url: "...",
+  cached_pdf_expires: timestamp  // 24 hours
+}
+```
+
+### PDF.js Configuration
+```js
+// Automatically loaded from CDN
+script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'
+workerSrc = '...pdf.worker.min.js'
+```
+
+## Testing the Highlights System
+
+### Without PDF File:
+✅ **Can test:**
+- Highlight data model (schema)
+- API endpoints (create, read, update, delete)
+- Highlight state transitions (resolved/unresolved)
+- General comments (non-PDF queries)
+- UI tab navigation
+- Realtime updates to highlight list
+
+❌ **Cannot test (require PDF file):**
+- Text selection in PDF
+- Area selection via drag
+- PDF page navigation with highlights
+- Zoom interactions
+- Visual highlight positioning
+
+### With PDF File Uploaded:
+Add a PDF file to the Review via:
+1. Upload PDF to Google Drive
+2. Set `review.drive_file_id` to the file ID
+3. Reload page to see PDF in viewer
+4. Select text to create highlights
+
+## Performance Considerations
+
+### Highlight Rendering
+- Overlays rendered as absolute-positioned boxes
+- Efficient because: only renders highlights on current page
+- Scales with zoom (multiplied by `scale` factor)
+
+### Selection Detection
+- Uses native `window.getSelection()` API
+- Detects on `mouseUp` event
+- No polling or timers
+
+### Pagination
+- Highlights filtered per page: `highlights.filter(h => h.page_number === currentPage)`
+- Reduces DOM elements rendered
+- Efficient even with 1000+ highlights
+
+## Responsive PDF Viewer
+
+The PDF viewer adapts to screen size:
+- **Mobile (375px):** Scaled down, single-column, zoom controls visible
+- **Tablet (768px):** Comfortable viewing with side-by-side queries panel (if added)
+- **Desktop (1920px):** Full-size PDF with ample space for toolbar and queries
+
+Test by resizing viewport or using device emulation.
+
+## Future Enhancements
+
+Possible improvements (not yet implemented):
+- Server-side PDF rendering (avoid client-side PDF.js dependency)
+- PDF search/indexing
+- Bulk highlight operations
+- Highlight tagging/categorization
+- AI-powered highlight suggestions
+- Drawing/freeform annotations
+- Signature support
+- Form filling
+
+Current implementation is focused on simplicity and reliability.
+

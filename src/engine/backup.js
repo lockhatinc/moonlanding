@@ -1,11 +1,9 @@
-// Database Backup - Export and restore functionality
-// From MWR: pubsub_dailyBackup
-// From Friday: daily-backup
+'use server';
 
 import fs from 'fs';
 import path from 'path';
-import { specs } from '../specs';
-import db from '../engine';
+import { specs } from '@/config';
+import db from './db';
 
 const backupDir = path.join(process.cwd(), 'data', 'backups');
 
@@ -34,15 +32,12 @@ export async function exportDatabase() {
     try {
       const rows = db.prepare(`SELECT * FROM ${tableName}`).all();
       backup.tables[tableName] = rows;
-      console.log(`[BACKUP] Exported ${rows.length} rows from ${tableName}`);
     } catch (error) {
       console.error(`[BACKUP] Failed to export ${tableName}:`, error.message);
     }
   }
 
-  // Write backup file
   fs.writeFileSync(backupPath, JSON.stringify(backup, null, 2));
-  console.log(`[BACKUP] Created backup: ${backupPath}`);
 
   // Clean up old backups (keep last 30)
   await cleanupOldBackups(30);
@@ -60,8 +55,6 @@ export async function importDatabase(backupPath) {
 
   const backup = JSON.parse(fs.readFileSync(backupPath, 'utf8'));
 
-  console.log(`[RESTORE] Restoring backup from ${backup.timestamp}`);
-
   for (const [tableName, rows] of Object.entries(backup.tables)) {
     if (!rows || rows.length === 0) continue;
 
@@ -77,14 +70,10 @@ export async function importDatabase(backupPath) {
       for (const row of rows) {
         stmt.run(...columns.map(col => row[col]));
       }
-
-      console.log(`[RESTORE] Restored ${rows.length} rows to ${tableName}`);
     } catch (error) {
       console.error(`[RESTORE] Failed to restore ${tableName}:`, error.message);
     }
   }
-
-  console.log(`[RESTORE] Restore completed`);
 }
 
 /**
@@ -121,7 +110,6 @@ async function cleanupOldBackups(keepCount = 30) {
   for (const backup of toDelete) {
     try {
       fs.unlinkSync(backup.path);
-      console.log(`[BACKUP] Deleted old backup: ${backup.filename}`);
     } catch (error) {
       console.error(`[BACKUP] Failed to delete ${backup.filename}:`, error.message);
     }

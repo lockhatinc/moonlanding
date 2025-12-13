@@ -39,8 +39,8 @@ export async function recreateEngagement(sourceId) {
 
     // Copy sections
     const sectionMap = {};
-    for (const s of list('engagement_section', { engagement_id: sourceId })) {
-      const ns = create('engagement_section', { engagement_id: newEng.id, name: s.name, key: s.key, sort_order: s.sort_order });
+    for (const s of list('rfi_section', { engagement_id: sourceId })) {
+      const ns = create('rfi_section', { engagement_id: newEng.id, name: s.name, key: s.key, sort_order: s.sort_order });
       sectionMap[s.id] = ns.id;
     }
 
@@ -65,7 +65,7 @@ export async function recreateEngagement(sourceId) {
   } catch (e) {
     if (newEng?.id) {
       list('rfi', { engagement_id: newEng.id }).forEach(r => remove('rfi', r.id));
-      list('engagement_section', { engagement_id: newEng.id }).forEach(s => remove('engagement_section', s.id));
+      list('rfi_section', { engagement_id: newEng.id }).forEach(s => remove('rfi_section', s.id));
       remove('engagement', newEng.id);
     }
     update('engagement', sourceId, { repeat_interval: src.repeat_interval });

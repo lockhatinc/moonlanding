@@ -370,6 +370,7 @@ const ACTION_TEMPLATES = {
   scroll_to: { label: 'Scroll to Page', icon: 'Eye', permission: 'view' },
   add_collaborator: { label: 'Add Collaborator', icon: 'UserPlus', permission: 'manage_collaborators', dialog: 'addCollaborator' },
   add_flag: { label: 'Add Flag', icon: 'Flag', permission: 'add_flags', dialog: 'addFlag' },
+  add_checklist: { label: 'Add Checklist', icon: 'ClipboardCheck', permission: 'add_checklist', dialog: 'addChecklist' },
   compare: { label: 'Compare PDFs', icon: 'Columns', permission: 'view', dialog: 'comparePdfs' },
   bulk_deadline: { label: 'Set Bulk Deadline', icon: 'Calendar', permission: 'edit', dialog: 'bulkDeadline' },
 };
@@ -496,10 +497,11 @@ export const specs = {
     computed: { highlight_count: { sql: '(SELECT COUNT(*) FROM highlights WHERE review_id = reviews.id)' }, unresolved_count: { sql: '(SELECT COUNT(*) FROM highlights WHERE review_id = reviews.id AND resolved = 0)' }, collaborator_count: { sql: '(SELECT COUNT(*) FROM collaborators WHERE review_id = reviews.id)' } },
     children: withStandardChildren('review', { highlights: { entity: 'highlight', fk: 'review_id', label: 'Queries' }, checklists: { entity: 'review_checklist', fk: 'review_id', label: 'Checklists' }, collaborators: { entity: 'collaborator', fk: 'review_id', label: 'Collaborators' }, attachments: { entity: 'file', fk: 'entity_id', filter: { entity_type: 'review' }, label: 'Files' } }),
     detail: { component: 'review-detail' },
-    access: { ...ACCESS.MANAGER_MANAGE, resolve: ['partner', 'manager'], add_flags: ['partner'], add_tags: ['partner', 'manager'], manage_collaborators: ['partner', 'manager'], set_deadline: ['partner'], delete_attachments: ['partner'], remove_checklists: ['partner'], archive: ['partner'] },
+    access: { ...ACCESS.MANAGER_MANAGE, resolve: ['partner', 'manager'], add_flags: ['partner'], add_tags: ['partner', 'manager'], manage_collaborators: ['partner', 'manager'], add_checklist: ['partner', 'manager'], set_deadline: ['partner'], delete_attachments: ['partner'], remove_checklists: ['partner'], archive: ['partner'] },
     actions: [
       action('add_collaborator'),
       action('add_flag'),
+      action('add_checklist'),
       { key: 'push_to_friday', label: 'Push to Friday', icon: 'Send', permission: 'edit', handler: 'pushToFriday' },
       action('compare'),
       { key: 'ml_consolidate', label: 'ML Consolidate Queries', icon: 'Sparkles', permission: 'edit', handler: 'mlConsolidateQueries' },

@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tabs, Button, Paper, Title, Group, Text, SimpleGrid, ActionIcon, Badge, Stack, Box } from '@mantine/core';
+import { Tabs, Button, Paper, Title, Group, Text, SimpleGrid, ActionIcon, Badge, Stack, Box, Modal } from '@mantine/core';
 import { FieldRender } from './field-render';
 import { EntityList } from './entity-list';
 import { ChatPanel } from './domain';
+import { AddChecklistDialog } from './dialogs/add-checklist';
 import { getDisplayFields, getEntityIcon } from '@/lib/field-types';
 import { Pencil, Trash2, ArrowLeft } from 'lucide-react';
 import * as Icons from 'lucide-react';
@@ -15,6 +17,7 @@ export function EntityDetail({ spec, data, children = {}, user, canEdit = false,
   const router = useRouter();
   const displayFields = getDisplayFields(spec);
   const Icon = getEntityIcon(spec);
+  const [activeDialog, setActiveDialog] = useState(null);
 
   const childTabs = spec.children
     ? Object.entries(spec.children).map(([key, child]) => ({ key, ...child, data: children[key] || [] }))
@@ -23,6 +26,21 @@ export function EntityDetail({ spec, data, children = {}, user, canEdit = false,
   const handleDelete = async () => {
     if (confirm(`Are you sure you want to delete this ${spec.label.toLowerCase()}?`)) {
       if (deleteAction) await deleteAction();
+    }
+  };
+
+  const handleSendMessage = async (message) => {
+    try {
+      const response = await fetch(`/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(message),
+      });
+      if (!response.ok) throw new Error('Failed to send message');
+      return await response.json();
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw error;
     }
   };
 
@@ -55,7 +73,7 @@ export function EntityDetail({ spec, data, children = {}, user, canEdit = false,
           <Paper p="md" withBorder>
             <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
               {displayFields.map(field => (
-                <Box key={field.key}><Text size="sm" c="dimmed">{field.label || field.key}</Text><Text fw={500}><FieldRender spec={spec} field={field} value={data[field.key]} row={data} /></Text></Box>
+                <Box key={field.key}><Text size="sm" c="dimmed">{field.label || field.key}</Text><Box fw={500}><FieldRender spec={spec} field={field} value={data[field.key]} row={data} /></Box></Box>
               ))}
             </SimpleGrid>
           </Paper>
@@ -66,7 +84,7 @@ export function EntityDetail({ spec, data, children = {}, user, canEdit = false,
           if (!childSpec) return null;
           return (
             <Tabs.Panel key={tab.key} value={tab.key} pt="md">
-              {tab.component === 'chat' ? <ChatPanel entityType={spec.name} entityId={data.id} messages={tab.data} user={user} /> : <EntityList spec={childSpec} data={tab.data} canCreate={can(user, childSpec, 'create')} />}
+              {tab.component === 'chat' ? <ChatPanel entityType={spec.name} entityId={data.id} messages={tab.data} user={user} onSendMessage={handleSendMessage} /> : <EntityList spec={childSpec} data={tab.data} canCreate={can(user, childSpec, 'create')} />}
             </Tabs.Panel>
           );
         })}
@@ -78,11 +96,24 @@ export function EntityDetail({ spec, data, children = {}, user, canEdit = false,
           <Group>
             {spec.actions.map(action => {
               const ActionIconComp = Icons[action.icon] || Icons.File;
-              return <Button key={action.key} variant="outline" size="sm" leftSection={<ActionIconComp size={16} />}>{action.label}</Button>;
+              if (!can(user, spec, action.permission)) return null;
+              return (
+                <Button
+                  key={action.key}
+                  variant="outline"
+                  size="sm"
+                  leftSection={<ActionIconComp size={16} />}
+                  onClick={() => action.dialog && setActiveDialog(action.dialog)}
+                >
+                  {action.label}
+                </Button>
+              );
             })}
           </Group>
         </Paper>
       )}
+
+      {activeDialog === 'addChecklist' && <AddChecklistDialog review={data} onClose={() => setActiveDialog(null)} onSuccess={() => { setActiveDialog(null); router.refresh(); }} />}
     </Stack>
   );
 }

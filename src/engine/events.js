@@ -1,5 +1,4 @@
-// Unified Event System - Triggers, Jobs, and Business Logic
-// Consolidates triggers.js and jobs.js into a single event-driven system
+'use server';
 
 import { list, get, update, create, remove, count } from '../engine.js';
 import { queueEmail, sendQueuedEmails, generateChecklistPdf } from './email-templates';
@@ -203,7 +202,7 @@ handlers.scheduled = {
         for (const u of list('user', { type: 'auditor', status: 'active' })) {
           if (!wsEmails.has(u.email.toLowerCase())) update('user', u.id, { status: 'inactive' });
         }
-      } catch (e) { console.error('[JOB] User sync error:', e.message); }
+      } catch (e) { console.error('[JOB] User sync error:', e.message); throw new Error(`User sync failed: ${e.message}`); }
     },
   },
 
@@ -299,7 +298,7 @@ handlers.scheduled = {
         try {
           const url = await generateChecklistPdf(p);
           if (url) await queueEmail('weekly_checklist_pdf', { user: p, pdfUrl: url, date: new Date().toISOString().split('T')[0], recipients: 'user' });
-        } catch (e) { console.error(`[JOB] Checklist PDF error for ${p.email}:`, e.message); }
+        } catch (e) { console.error(`[JOB] Checklist PDF error for ${p.email}:`, e.message); await create('notification', { type: 'system_error', recipient_id: p.id, subject: 'Checklist PDF Generation Failed', content: `Error: ${e.message}`, status: 'pending' }); }
       }
     },
   },
@@ -423,18 +422,15 @@ export async function emit(entityName, event, ...args) {
     await handler(...args);
   } catch (error) {
     console.error(`[EVENT] ${entityName}.${event} error:`, error.message);
-    if (error.message.includes('Cannot') || error.message.includes('Only')) throw error;
+    if (error.message.includes('Cannot') || error.message.includes('Only') || error.message.includes('Permission') || error.message.includes('Failed')) throw error;
   }
 }
 
 export async function runJob(name) {
   const job = handlers.scheduled[name];
   if (!job) throw new Error(`Unknown job: ${name}`);
-  console.log(`[JOB] Running ${name}...`);
-  const start = Date.now();
   try {
     await job.run(job.config);
-    console.log(`[JOB] ${name} completed in ${Date.now() - start}ms`);
   } catch (e) {
     console.error(`[JOB] ${name} failed:`, e.message);
     throw e;

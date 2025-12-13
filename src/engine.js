@@ -69,12 +69,12 @@ function buildSelect(spec, where = {}, options = {}) {
 
 export function list(entityName, where = {}, options = {}) {
   const spec = getSpec(entityName), { sql, params } = buildSelect(spec, where, options);
-  try { return db.prepare(sql).all(...params); } catch (e) { console.error('List error:', e.message); return []; }
+  try { return db.prepare(sql).all(...params); } catch (e) { console.error(`List error for ${entityName}:`, e.message); throw e; }
 }
 
 export function get(entityName, id) {
   const spec = getSpec(entityName), { sql, params } = buildSelect(spec, { id });
-  try { return db.prepare(sql).get(...params); } catch (e) { console.error('Get error:', e.message); return null; }
+  try { return db.prepare(sql).get(...params); } catch (e) { console.error(`Get error for ${entityName}:${id}:`, e.message); throw e; }
 }
 
 export function create(entityName, data, user) {
@@ -126,7 +126,7 @@ export function search(entityName, query, where = {}) {
   const searchClauses = searchFields.map(f => `${table}.${f} LIKE ?`).join(' OR ');
   const searchParams = searchFields.map(() => `%${query}%`);
   let sql = baseSql.includes('WHERE') ? baseSql.replace(' WHERE ', ` WHERE (${searchClauses}) AND `) : `${baseSql} WHERE (${searchClauses})`;
-  try { return db.prepare(sql).all(...searchParams, ...baseParams); } catch (e) { console.error('Search error:', e.message); return []; }
+  try { return db.prepare(sql).all(...searchParams, ...baseParams); } catch (e) { console.error(`Search error for ${entityName} (${query}):`, e.message); throw e; }
 }
 
 export function getChildren(entityName, parentId, childDef) {

@@ -2,6 +2,8 @@ import { list, get, create, update, remove, search, getChildren } from '@/engine
 import { getUser, can } from '@/engine.server';
 import { getSpec } from '@/config';
 import { ok, created, notFound, badRequest, unauthorized, serverError, ensureDb, parseParams } from '@/lib/api-helpers';
+import { broadcastUpdate } from '@/lib/realtime-server';
+import { validateStageTransition, validateRfiStatusChange } from '@/engine/events';
 
 export async function GET(request, { params }) {
   ensureDb();
@@ -30,7 +32,9 @@ export async function POST(request, { params }) {
     let spec; try { spec = getSpec(entity); } catch { return notFound('Unknown entity'); }
     const user = await getUser();
     if (!can(user, spec, 'create')) return unauthorized();
-    return created(create(entity, await request.json(), user));
+    const result = create(entity, await request.json(), user);
+    broadcastUpdate(`/api/${entity}`, 'create', result);
+    return created(result);
   } catch (e) { console.error('API POST error:', e); return serverError(e.message); }
 }
 
@@ -42,9 +46,26 @@ export async function PUT(request, { params }) {
     let spec; try { spec = getSpec(entity); } catch { return notFound('Unknown entity'); }
     const user = await getUser();
     if (!can(user, spec, 'edit')) return unauthorized();
-    if (!get(entity, id)) return notFound();
-    update(entity, id, await request.json(), user);
-    return ok(get(entity, id));
+    const prev = get(entity, id);
+    if (!prev) return notFound();
+
+    const data = await request.json();
+
+    // Validate stage transitions
+    if (entity === 'engagement' && data.stage && data.stage !== prev.stage) {
+      validateStageTransition(prev, data.stage, user);
+    }
+
+    // Validate RFI status changes
+    if (entity === 'rfi' && data.status !== undefined && data.status !== prev.status) {
+      validateRfiStatusChange(prev, data.status, user);
+    }
+
+    update(entity, id, data, user);
+    const result = get(entity, id);
+    broadcastUpdate(`/api/${entity}/${id}`, 'update', result);
+    broadcastUpdate(`/api/${entity}`, 'update', result);
+    return ok(result);
   } catch (e) { console.error('API PUT error:', e); return serverError(e.message); }
 }
 
@@ -59,6 +80,8 @@ export async function DELETE(request, { params }) {
     if (!can(await getUser(), spec, 'delete')) return unauthorized();
     if (!get(entity, id)) return notFound();
     remove(entity, id);
+    broadcastUpdate(`/api/${entity}/${id}`, 'delete', { id });
+    broadcastUpdate(`/api/${entity}`, 'delete', { id });
     return ok({ success: true });
   } catch (e) { console.error('API DELETE error:', e); return serverError(e.message); }
 }
