@@ -151,19 +151,49 @@ export async function sendQueuedEmails(limit = 50) {
 }
 
 async function sendEmail(n) {
-  const nodemailer = await import('nodemailer');
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.EMAIL_PORT || '587'),
-    secure: process.env.EMAIL_SECURE === 'true',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASSWORD },
-  });
-  await transporter.sendMail({
-    from: emailConfig.from,
-    to: n.recipient_email,
-    subject: n.subject,
-    html: `<!DOCTYPE html><html><head><style>body{font-family:system-ui;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px}h2{color:#293241}a{color:#3b82f6}li{margin:5px 0}</style></head><body>${n.content}<hr style="margin-top:30px;border:none;border-top:1px solid #ddd"><p style="font-size:12px;color:#666">Automated message - do not reply</p></body></html>`,
-  });
+  try {
+    const { google } = await import('googleapis');
+    const fs = await import('fs');
+    const path = await import('path');
+
+    const credentialsPath = process.env.GOOGLE_SERVICE_ACCOUNT_PATH ||
+      path.join(process.cwd(), 'service-account.json');
+
+    if (!fs.existsSync(credentialsPath)) {
+      console.error('Service account file not found at:', credentialsPath);
+      throw new Error('Email service not configured');
+    }
+
+    const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
+    const auth = new google.auth.GoogleAuth({
+      credentials,
+      scopes: ['https://www.googleapis.com/auth/gmail.send'],
+    });
+
+    const gmail = google.gmail({ version: 'v1', auth });
+
+    const htmlContent = `<!DOCTYPE html><html><head><style>body{font-family:system-ui;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px}h2{color:#293241}a{color:#3b82f6}li{margin:5px 0}</style></head><body>${n.content}<hr style="margin-top:30px;border:none;border-top:1px solid #ddd"><p style="font-size:12px;color:#666">Automated message - do not reply</p></body></html>`;
+
+    const message = [
+      `From: ${emailConfig.from}`,
+      `To: ${n.recipient_email}`,
+      'Content-Type: text/html; charset="UTF-8"',
+      'MIME-Version: 1.0',
+      `Subject: ${n.subject}`,
+      '',
+      htmlContent,
+    ].join('\n');
+
+    const encodedMessage = Buffer.from(message).toString('base64');
+
+    await gmail.users.messages.send({
+      userId: 'me',
+      requestBody: { raw: encodedMessage },
+    });
+  } catch (error) {
+    console.error('[EMAIL] Failed to send:', error.message);
+    throw error;
+  }
 }
 
 export async function generateChecklistPdf(user) {
