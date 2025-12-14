@@ -1,5 +1,3 @@
-'use server';
-
 import fs from 'fs';
 import path from 'path';
 import { specs } from '@/config';
@@ -79,7 +77,7 @@ export async function importDatabase(backupPath) {
 /**
  * List available backups
  */
-export function listBackups() {
+function listBackups() {
   if (!fs.existsSync(backupDir)) {
     return [];
   }
@@ -119,7 +117,7 @@ async function cleanupOldBackups(keepCount = 30) {
 /**
  * Get the latest backup
  */
-export function getLatestBackup() {
+function getLatestBackup() {
   const backups = listBackups();
   return backups.length > 0 ? backups[0] : null;
 }
@@ -127,7 +125,7 @@ export function getLatestBackup() {
 /**
  * Export specific tables
  */
-export function exportTables(tableNames) {
+function exportTables(tableNames) {
   const backup = {
     timestamp: new Date().toISOString(),
     version: '1.0',

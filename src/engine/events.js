@@ -2,7 +2,6 @@
 
 import { list, get, update, create, remove, count } from '../engine.js';
 import { queueEmail, sendQueuedEmails, generateChecklistPdf } from './email-templates';
-import { exportDatabase } from './backup';
 
 // ========================================
 // EVENT HANDLERS REGISTRY
@@ -180,7 +179,7 @@ handlers.scheduled = {
   daily_backup: {
     schedule: '0 2 * * *',
     description: 'Export database to backup',
-    run: async () => { await exportDatabase(); },
+    run: async () => { const { exportDatabase } = await import(/* webpackIgnore: true */ './backup'); await exportDatabase(); },
   },
 
   daily_user_sync: {
@@ -370,7 +369,7 @@ async function recreateEngagements(interval) {
 // VALIDATION FUNCTIONS
 // ========================================
 
-export function validateStageTransition(engagement, newStage, user) {
+export async function validateStageTransition(engagement, newStage, user) {
   const stages = ['info_gathering', 'commencement', 'team_execution', 'partner_review', 'finalization', 'close_out'];
   const curr = stages.indexOf(engagement.stage), next = stages.indexOf(newStage);
 
@@ -386,7 +385,7 @@ export function validateStageTransition(engagement, newStage, user) {
   return true;
 }
 
-export function validateRfiStatusChange(rfi, newStatus, user) {
+export async function validateRfiStatusChange(rfi, newStatus, user) {
   if (user.type !== 'auditor' || user.role === 'clerk') {
     const e = get('engagement', rfi.engagement_id);
     if (!e?.clerks_can_approve) throw new Error('Only auditors (not clerks) can change RFI status');
@@ -399,7 +398,7 @@ export function validateRfiStatusChange(rfi, newStatus, user) {
   return true;
 }
 
-export function calculateWorkingDays(start, end) {
+function calculateWorkingDays(start, end) {
   if (!start) return 0;
   let count = 0;
   const curr = new Date(start * 1000), endDate = end ? new Date(end * 1000) : new Date();
@@ -437,11 +436,11 @@ export async function runJob(name) {
   }
 }
 
-export function getJobs() {
+function getJobs() {
   return Object.entries(handlers.scheduled).map(([name, job]) => ({ name, schedule: job.schedule, description: job.description }));
 }
 
-export function shouldRunNow(schedule) {
+function shouldRunNow(schedule) {
   const [m, h, dom, mon, dow] = schedule.split(' '), now = new Date();
   const match = (f, v) => f === '*' || parseInt(f) === v;
   return match(m, now.getMinutes()) && match(h, now.getHours()) && match(dom, now.getDate()) && match(mon, now.getMonth() + 1) && match(dow, now.getDay());

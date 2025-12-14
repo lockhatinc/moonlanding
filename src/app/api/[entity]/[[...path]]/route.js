@@ -53,12 +53,12 @@ export async function PUT(request, { params }) {
 
     // Validate stage transitions
     if (entity === 'engagement' && data.stage && data.stage !== prev.stage) {
-      validateStageTransition(prev, data.stage, user);
+      await validateStageTransition(prev, data.stage, user);
     }
 
     // Validate RFI status changes
     if (entity === 'rfi' && data.status !== undefined && data.status !== prev.status) {
-      validateRfiStatusChange(prev, data.status, user);
+      await validateRfiStatusChange(prev, data.status, user);
     }
 
     update(entity, id, data, user);

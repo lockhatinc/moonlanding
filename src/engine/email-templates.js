@@ -1,5 +1,3 @@
-'use server';
-
 import { list, get, create, update } from '../engine';
 
 // ========================================
