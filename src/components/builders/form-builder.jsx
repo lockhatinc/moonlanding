@@ -3,10 +3,10 @@
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
-import { Button, TextInput, Textarea, Select, Checkbox, NumberInput, Paper, Title, Group, Stack, Text, Avatar, Box } from '@mantine/core';
+import { Button, Paper, Title, Group, Stack, Text, Box } from '@mantine/core';
 import { useFormState } from '@/lib/use-entity-state';
 import { buildFormFields } from '@/config';
-import { secondsToDate, dateToSeconds } from '@/lib/field-types';
+import { renderFormField } from './form-field-renderer';
 
 function SubmitButton({ label, isSubmitting }) {
   const { pending } = useFormStatus();
@@ -18,124 +18,28 @@ export function FormBuilder({ spec, data = {}, options = {}, onSubmit, sections 
   const { values, setField, errors, setError, isValid } = useFormState(data);
   const formFields = useMemo(() => buildFormFields(spec), [spec]);
   const formSections = useMemo(() => sections || spec.form?.sections || [{ label: 'Details', fields: formFields.map(f => f.key) }], [sections, spec, formFields]);
-
-  const renderField = (field) => {
-    const val = values[field.key] ?? '';
-
-    switch (field.type) {
-      case 'textarea':
-        return <Textarea name={field.key} value={val} onChange={(e) => setField(field.key, e.target.value)} rows={3} required={field.required} />;
-
-      case 'date':
-        return (
-          <input
-            type="date"
-            name={field.key}
-            value={val ? secondsToDate(val).toISOString().split('T')[0] : ''}
-            onChange={(e) => setField(field.key, e.target.value ? dateToSeconds(new Date(e.target.value)) : '')}
-            required={field.required}
-            style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--mantine-color-gray-4)', borderRadius: 4 }}
-          />
-        );
-
-      case 'int':
-        return (
-          <NumberInput
-            name={field.key}
-            value={val}
-            onChange={(v) => setField(field.key, v)}
-            required={field.required}
-          />
-        );
-
-      case 'decimal':
-        return (
-          <NumberInput
-            name={field.key}
-            value={val}
-            onChange={(v) => setField(field.key, v)}
-            decimalScale={2}
-            required={field.required}
-          />
-        );
-
-      case 'bool':
-        return (
-          <Checkbox
-            name={field.key}
-            label={field.label}
-            checked={!!val}
-            onChange={(e) => setField(field.key, e.currentTarget.checked)}
-          />
-        );
-
-      case 'enum': {
+  const enumSelectData = useMemo(() => {
+    const data = {};
+    for (const field of formFields) {
+      if (field.type === 'enum' && field.options) {
         const enumOptions = spec.options?.[field.options] || [];
-        return (
-          <Select
-            name={field.key}
-            value={val ? String(val) : null}
-            onChange={(v) => setField(field.key, v)}
-            data={enumOptions.map(o => ({ value: String(o.value), label: o.label }))}
-            placeholder={`Select ${field.label}`}
-            clearable
-            required={field.required}
-          />
-        );
+        data[field.key] = enumOptions.map(o => ({ value: String(o.value), label: o.label }));
       }
-
-      case 'ref': {
-        const refOptions = options[field.key] || [];
-        return (
-          <Select
-            name={field.key}
-            value={val || null}
-            onChange={(v) => setField(field.key, v)}
-            data={refOptions.map(o => ({ value: o.value, label: o.label }))}
-            placeholder={`Select ${field.label}`}
-            searchable
-            clearable
-            required={field.required}
-          />
-        );
-      }
-
-      case 'email':
-        return (
-          <TextInput
-            type="email"
-            name={field.key}
-            value={val}
-            onChange={(e) => setField(field.key, e.target.value)}
-            required={field.required}
-          />
-        );
-
-      case 'image':
-        return (
-          <Stack gap="xs">
-            <TextInput
-              name={field.key}
-              value={val}
-              onChange={(e) => setField(field.key, e.target.value)}
-              placeholder="Image URL"
-              required={field.required}
-            />
-            {val && <Avatar src={val} size="lg" />}
-          </Stack>
-        );
-
-      default:
-        return (
-          <TextInput
-            name={field.key}
-            value={val}
-            onChange={(e) => setField(field.key, e.target.value)}
-            required={field.required}
-          />
-        );
     }
-  };
+    return data;
+  }, [spec, formFields]);
+  const refSelectData = useMemo(() => {
+    const data = {};
+    for (const field of formFields) {
+      if (field.type === 'ref') {
+        const refOptions = options[field.key] || [];
+        data[field.key] = refOptions.map(o => ({ value: o.value, label: o.label }));
+      }
+    }
+    return data;
+  }, [options, formFields]);
+
+  const renderField = (field) => renderFormField(field, values, setField, enumSelectData, refSelectData);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
