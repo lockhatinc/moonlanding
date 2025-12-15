@@ -1,4 +1,3 @@
-// File upload/download API routes
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/engine.server';
 import { can } from '@/lib/permissions';
@@ -6,7 +5,6 @@ import { create, get, remove } from '@/engine';
 import { getSpec } from '@/config';
 import * as drive from '@/engine/drive';
 
-// Upload file
 export async function POST(request) {
   try {
     const user = await requireUser();
@@ -21,13 +19,11 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Check permission
     const spec = getSpec('file');
     if (!can(user, spec, 'create')) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
-    // Upload to Drive
     const buffer = Buffer.from(await file.arrayBuffer());
     const driveFile = await drive.uploadFile(
       buffer,
@@ -36,7 +32,6 @@ export async function POST(request) {
       folderId || undefined
     );
 
-    // Create file record
     const fileRecord = create('file', {
       entity_type: entityType,
       entity_id: entityId,
@@ -55,7 +50,6 @@ export async function POST(request) {
   }
 }
 
-// List files for entity
 export async function GET(request) {
   try {
     const user = await requireUser();
@@ -67,7 +61,6 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Missing entity_type or entity_id' }, { status: 400 });
     }
 
-    // Check permission
     const spec = getSpec('file');
     if (!can(user, spec, 'list')) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
@@ -81,7 +74,6 @@ export async function GET(request) {
   }
 }
 
-// Delete file
 export async function DELETE(request) {
   try {
     const user = await requireUser();
@@ -92,19 +84,16 @@ export async function DELETE(request) {
       return NextResponse.json({ error: 'Missing file id' }, { status: 400 });
     }
 
-    // Check permission
     const spec = getSpec('file');
     if (!can(user, spec, 'delete')) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
-    // Get file record
     const fileRecord = get('file', fileId);
     if (!fileRecord) {
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
 
-    // Delete from Drive
     if (fileRecord.drive_file_id) {
       try {
         await drive.deleteFile(fileRecord.drive_file_id);
@@ -113,7 +102,6 @@ export async function DELETE(request) {
       }
     }
 
-    // Delete record
     remove('file', fileId);
 
     return NextResponse.json({ success: true });

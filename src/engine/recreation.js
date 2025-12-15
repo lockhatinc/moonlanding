@@ -1,4 +1,3 @@
-// Engagement Recreation - Compact implementation
 import { list, get, update, create, remove } from '../engine';
 import { ENGAGEMENT_STATUS, ENGAGEMENT_STAGE, RFI_STATUS, RFI_CLIENT_STATUS, RFI_AUDITOR_STATUS } from '@/lib/status-helpers';
 
@@ -21,14 +20,12 @@ export async function recreateEngagement(sourceId) {
 
   const { year, month } = calcNextPeriod(src.year, src.month, src.repeat_interval);
 
-  // Check duplicates
   if (list('engagement', { client_id: src.client_id, engagement_type: src.engagement_type }).find(e => e.year === year && e.month === month && e.id !== sourceId)) {
     throw new Error(`Engagement exists for ${year}/${month || 'annual'}`);
   }
 
   let newEng = null;
   try {
-    // Create engagement
     newEng = create('engagement', {
       name: src.name, client_id: src.client_id, year, month, stage: ENGAGEMENT_STAGE.INFO_GATHERING, status: ENGAGEMENT_STATUS.PENDING,
       team_id: src.team_id, template_id: src.template_id, engagement_type: src.engagement_type,
@@ -38,14 +35,12 @@ export async function recreateEngagement(sourceId) {
       users: src.users, client_users: src.client_users, previous_year_review_id: src.review_id,
     });
 
-    // Copy sections
     const sectionMap = {};
     for (const s of list('rfi_section', { engagement_id: sourceId })) {
       const ns = create('rfi_section', { engagement_id: newEng.id, name: s.name, key: s.key, sort_order: s.sort_order });
       sectionMap[s.id] = ns.id;
     }
 
-    // Copy RFIs
     const rfis = list('rfi', { engagement_id: sourceId });
     for (const r of rfis) {
       const nr = create('rfi', {
@@ -59,7 +54,6 @@ export async function recreateEngagement(sourceId) {
       }
     }
 
-    // Update source & log
     update('engagement', sourceId, { repeat_interval: 'once' });
     create('recreation_log', { engagement_id: sourceId, client_id: src.client_id, engagement_type_id: src.engagement_type, status: 'completed', details: JSON.stringify({ source_id: sourceId, new_id: newEng.id, year, month, sections: Object.keys(sectionMap).length, rfis: rfis.length }) });
     return newEng;
@@ -77,12 +71,10 @@ export async function recreateEngagement(sourceId) {
 
 async function copyRfiData(srcId, tgtId) {
   const src = get('rfi', srcId);
-  // Copy files
   for (const f of list('file', { entity_type: 'rfi', entity_id: srcId })) {
     create('file', { entity_type: 'rfi', entity_id: tgtId, drive_file_id: f.drive_file_id, file_name: f.file_name, file_type: f.file_type, file_size: f.file_size, mime_type: f.mime_type, download_url: f.download_url });
   }
   if (src?.files) update('rfi', tgtId, { files: src.files, files_count: JSON.parse(src.files || '[]').length });
-  // Copy responses
   for (const r of list('rfi_response', { rfi_id: srcId })) {
     create('rfi_response', { rfi_id: tgtId, content: r.content, attachments: r.attachments, is_client: r.is_client });
   }

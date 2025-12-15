@@ -1,10 +1,8 @@
-// Email API routes
 import { NextResponse } from 'next/server';
 import { requireUser, can } from '@/engine.server';
 import { getSpec } from '@/config';
 import * as gmail from '@/engine/gmail';
 
-// Send email
 export async function POST(request) {
   try {
     const user = await requireUser();
@@ -19,11 +17,9 @@ export async function POST(request) {
 
     let result;
 
-    // Use template if provided
     if (template) {
       result = await gmail.sendTemplatedEmail(template, data, to);
     } else {
-      // Direct email
       if (!to || !emailOptions.subject) {
         return NextResponse.json({ error: 'Missing required fields (to, subject)' }, { status: 400 });
       }
@@ -37,7 +33,6 @@ export async function POST(request) {
   }
 }
 
-// Send bulk emails
 export async function PUT(request) {
   try {
     const user = await requireUser();

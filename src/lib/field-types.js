@@ -82,7 +82,6 @@ export function formatDisplayValue(value, field, spec, row) {
   }
 }
 
-// === FORM INPUT VALUE FORMATTING ===
 export function formatFormValue(value, fieldType) {
   if (value === null || value === undefined) return '';
   switch (fieldType) {
@@ -95,7 +94,6 @@ export function formatFormValue(value, fieldType) {
   }
 }
 
-// === FIELD FILTERING HELPERS ===
 export function getListFields(spec) {
   return Object.entries(spec.fields)
     .filter(([_, f]) => f.list)

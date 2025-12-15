@@ -24,7 +24,6 @@ export async function GET(request) {
     const tokens = await google.validateAuthorizationCode(code, storedCodeVerifier);
     const accessToken = tokens.accessToken();
 
-    // Fetch user info from Google
     const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
@@ -35,7 +34,6 @@ export async function GET(request) {
 
     const googleUser = await response.json();
 
-    // Find or create user
     let user = getBy('user', 'email', googleUser.email);
 
     if (!user) {
@@ -49,10 +47,8 @@ export async function GET(request) {
       });
     }
 
-    // Create session
     await createSession(user.id);
 
-    // Clear OAuth cookies
     cookieStore.delete('google_oauth_state');
     cookieStore.delete('google_code_verifier');
 

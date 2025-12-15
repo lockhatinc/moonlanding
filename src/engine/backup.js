@@ -10,7 +10,6 @@ const backupDir = path.join(process.cwd(), 'data', 'backups');
  * From MWR/Friday: Daily backup to storage bucket
  */
 export async function exportDatabase() {
-  // Ensure backup directory exists
   if (!fs.existsSync(backupDir)) {
     fs.mkdirSync(backupDir, { recursive: true });
   }
@@ -24,7 +23,6 @@ export async function exportDatabase() {
     tables: {},
   };
 
-  // Export each entity table
   for (const spec of Object.values(specs)) {
     const tableName = `${spec.name}s`;
     try {
@@ -57,10 +55,8 @@ export async function importDatabase(backupPath) {
     if (!rows || rows.length === 0) continue;
 
     try {
-      // Clear existing data
       db.prepare(`DELETE FROM ${tableName}`).run();
 
-      // Insert backup data
       const columns = Object.keys(rows[0]);
       const placeholders = columns.map(() => '?').join(', ');
       const stmt = db.prepare(`INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`);

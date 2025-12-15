@@ -8,7 +8,6 @@ export function FieldRender({ spec, field, value, row }) {
 
   if (formatted === null) return <Text c="dimmed">-</Text>;
 
-  // Handle special formatted types
   if (typeof formatted === 'object') {
     if (formatted.color) {
       return <Badge color={formatted.color} variant="light">{formatted.label}</Badge>;
@@ -18,7 +17,6 @@ export function FieldRender({ spec, field, value, row }) {
     }
   }
 
-  // Handle specific field types for special rendering
   if (field.type === 'image' && value) {
     return <Avatar src={value} size="sm" radius="xl">{row?.name?.[0] || '?'}</Avatar>;
   }
