@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { google, createSession, getBy, create } from '@/engine.server';
+import { google, createSession } from '@/engine.server';
+import { getBy, create } from '@/engine';
 import { cookies } from 'next/headers';
 
 export async function GET(request) {

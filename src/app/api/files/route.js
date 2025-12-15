@@ -1,8 +1,9 @@
 // File upload/download API routes
 import { NextResponse } from 'next/server';
-import { requireUser, can } from '@/engine.server';
+import { requireUser } from '@/engine.server';
+import { can } from '@/lib/permissions';
+import { create, get, remove } from '@/engine';
 import { getSpec } from '@/config';
-import { create, get, remove } from '@/engine.server';
 import * as drive from '@/engine/drive';
 
 // Upload file

@@ -196,7 +196,7 @@ async function sendEmail(n) {
 
 export async function generateChecklistPdf(user) {
   try {
-    const { list } = await import('./index.js');
+    const { list } = await import('../engine');
     const checklists = list('review_checklist', { created_by: user.id });
 
     if (!checklists.length) return null;

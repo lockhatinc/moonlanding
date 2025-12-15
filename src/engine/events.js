@@ -1,5 +1,3 @@
-'use server';
-
 import { list, get, update, create, remove, count } from '../engine.js';
 import { queueEmail, sendQueuedEmails, generateChecklistPdf } from './email-templates';
 
