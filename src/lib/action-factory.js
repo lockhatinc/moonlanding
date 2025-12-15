@@ -1,8 +1,8 @@
 import { create, update, remove } from '@/engine';
 import { withRequiredSpecAndUser } from '@/lib/auth-helpers';
+import { withErrorHandling } from '@/lib/error-wrapper';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { logger } from '@/lib/logger';
 
 export function createCRUDActions(entityName) {
   return {

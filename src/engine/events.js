@@ -2,6 +2,7 @@ import { entityHandlers } from './events-entity';
 import { scheduledJobs } from './events-jobs';
 import { get } from '../engine.js';
 import { ENGAGEMENT_STAGE, ENGAGEMENT_STATUS, RFI_STATUS, canTransitionStage } from '@/lib/status-helpers';
+import { withErrorHandling } from '@/lib/error-wrapper';
 
 const handlers = { entity: entityHandlers, scheduled: scheduledJobs };
 const stageSequence = [
