@@ -3,6 +3,7 @@
 import { list, get, remove, create, update } from '@/engine';
 import { requireUser, check } from '@/engine.server';
 import { getSpec } from '@/config';
+import { dateToSeconds } from '@/lib/field-types';
 import { revalidatePath } from 'next/cache';
 import { createCRUDActions, createEntityAction } from '@/lib/action-factory';
 
@@ -111,7 +112,7 @@ export const setBulkDeadline = createEntityAction('rfi', 'setBulkDeadline', 'edi
     if (!Array.isArray(rfiIds) || !rfiIds.length) throw new Error('No RFIs specified');
     if (!deadline) throw new Error('Deadline required');
 
-    const deadlineTime = Math.floor(new Date(deadline).getTime() / 1000);
+    const deadlineTime = dateToSeconds(new Date(deadline));
     let updated = 0;
 
     for (const id of rfiIds) {

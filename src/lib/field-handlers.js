@@ -1,5 +1,5 @@
 // Field Type Handler Registry - Consolidates field type rendering and formatting
-import { formatDate, BADGE_COLORS, getEnumOption } from './field-types';
+import { formatDate, BADGE_COLORS, getEnumOption, dateToSeconds } from './field-types';
 import { truncateJson, truncateTextarea } from './display-config';
 
 /**
@@ -47,7 +47,7 @@ export const fieldHandlers = {
     format: (val) => formatDate(val, 'locale'),
     coerce: (val) => {
       if (!val || typeof val !== 'string') return val;
-      return Math.floor(new Date(val).getTime() / 1000);
+      return dateToSeconds(new Date(val));
     },
     isValid: (val) => !isNaN(new Date(val).getTime()),
   },
@@ -56,7 +56,7 @@ export const fieldHandlers = {
     format: (val) => formatDate(val, 'datetime'),
     coerce: (val) => {
       if (!val || typeof val !== 'string') return val;
-      return Math.floor(new Date(val).getTime() / 1000);
+      return dateToSeconds(new Date(val));
     },
     isValid: (val) => !isNaN(new Date(val).getTime()),
   },

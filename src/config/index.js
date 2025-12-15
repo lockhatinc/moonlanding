@@ -235,7 +235,8 @@ export function formatValue(value, fieldType) {
   if (value === null || value === undefined) return null;
   if (fieldType === 'bool') return value ? 'Yes' : 'No';
   if (fieldType === 'date' || fieldType === 'timestamp') {
-    return value ? new Date(value * 1000).toLocaleString() : '';
+    const date = typeof value === 'number' ? new Date(value * 1000) : new Date(value);
+    return date ? date.toLocaleString() : '';
   }
   return String(value);
 }
@@ -600,7 +601,8 @@ export function formatDisplayText(value, field) {
   if (value === null || value === undefined) return '—';
   if (field.type === 'bool') return value ? 'Yes' : 'No';
   if (field.type === 'date' || field.type === 'timestamp') {
-    return new Date(value * 1000).toLocaleDateString();
+    const date = typeof value === 'number' ? new Date(value * 1000) : new Date(value);
+    return date.toLocaleDateString();
   }
   if (field.type === 'decimal') return parseFloat(value).toFixed(2);
   return String(value);

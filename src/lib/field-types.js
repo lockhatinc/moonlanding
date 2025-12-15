@@ -16,15 +16,24 @@ export function coerce(val, type) {
   if (type === 'int') return parseInt(val, 10) || 0;
   if (type === 'decimal') return parseFloat(val) || 0;
   if ((type === 'date' || type === 'timestamp') && typeof val === 'string' && val.includes('-')) {
-    return Math.floor(new Date(val).getTime() / 1000);
+    return dateToSeconds(new Date(val));
   }
   return val;
 }
 
-// === DATE FORMATTING ===
+export const SECONDS_TO_MS = 1000;
+
+export function secondsToDate(seconds) {
+  return seconds ? new Date(seconds * SECONDS_TO_MS) : null;
+}
+
+export function dateToSeconds(date) {
+  return date ? Math.floor(date.getTime() / SECONDS_TO_MS) : null;
+}
+
 export function formatDate(value, format = 'locale') {
   if (!value) return null;
-  const date = typeof value === 'number' ? new Date(value * 1000) : new Date(value);
+  const date = typeof value === 'number' ? secondsToDate(value) : new Date(value);
   if (isNaN(date.getTime())) return null;
   switch (format) {
     case 'iso': return date.toISOString().split('T')[0];
@@ -37,7 +46,7 @@ export function formatDate(value, format = 'locale') {
 export function parseDate(dateString) {
   if (!dateString) return null;
   const date = new Date(dateString);
-  return isNaN(date.getTime()) ? null : Math.floor(date.getTime() / 1000);
+  return dateToSeconds(date);
 }
 
 // === ENUM COLOR MAPPING ===

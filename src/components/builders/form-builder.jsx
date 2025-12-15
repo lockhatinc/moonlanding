@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button, TextInput, Textarea, Select, Checkbox, NumberInput, Paper, Title, Group, Stack, Text, Avatar, Box } from '@mantine/core';
 import { useFormState } from '@/lib/use-entity-state';
 import { buildFormFields } from '@/config';
+import { secondsToDate, dateToSeconds } from '@/lib/field-types';
 
 function SubmitButton({ label, isSubmitting }) {
   const { pending } = useFormStatus();
@@ -29,8 +30,8 @@ export function FormBuilder({ spec, data = {}, options = {}, onSubmit, sections 
           <input
             type="date"
             name={field.key}
-            value={val ? new Date(val * 1000).toISOString().split('T')[0] : ''}
-            onChange={(e) => setField(field.key, e.target.value ? new Date(e.target.value).getTime() / 1000 : '')}
+            value={val ? secondsToDate(val).toISOString().split('T')[0] : ''}
+            onChange={(e) => setField(field.key, e.target.value ? dateToSeconds(new Date(e.target.value)) : '')}
             required={field.required}
             style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--mantine-color-gray-4)', borderRadius: 4 }}
           />

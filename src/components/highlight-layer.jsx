@@ -3,11 +3,15 @@
 import { useState } from 'react';
 import { Stack, Paper, Box, Group, Badge, Text, ActionIcon, Avatar, Textarea, Button } from '@mantine/core';
 import { MessageSquare, ChevronUp, ChevronDown, Send, Check } from 'lucide-react';
+import { secondsToDate } from '@/lib/field-types';
 
 export function HighlightLayer({ highlights = [], selectedId, onSelect, onResolve, onAddResponse, user, canResolve = false }) {
   const [expandedId, setExpandedId] = useState(null);
   const [newResponse, setNewResponse] = useState('');
-  const formatTime = (ts) => ts ? new Date(ts * 1000).toLocaleDateString() : '';
+  const formatTime = (ts) => {
+    const date = secondsToDate(ts);
+    return date ? date.toLocaleDateString() : '';
+  };
 
   const handleSubmitResponse = (highlightId) => {
     if (!newResponse.trim()) return;

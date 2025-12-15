@@ -1,5 +1,6 @@
 import { list, get, update, create, remove, count } from '../engine.js';
 import { queueEmail } from './email-templates';
+import { secondsToDate } from '@/lib/field-types';
 
 function logActivity(entityType, entityId, action, message, user, details) {
   create('activity_log', { entity_type: entityType, entity_id: entityId, action, message, details: details ? JSON.stringify(details) : null, user_email: user?.email }, user);
@@ -82,7 +83,9 @@ export const entityHandlers = {
       }
       if (changes.deadline && changes.deadline !== prev.deadline) {
         await queueEmail('rfi_deadline_change', { rfi, newDeadline: changes.deadline, recipients: 'assigned_users' });
-        logActivity('rfi', rfi.id, 'update', `Deadline: ${new Date(changes.deadline * 1000).toLocaleDateString()}`, user);
+        const date = secondsToDate(changes.deadline);
+        const dateStr = date ? date.toLocaleDateString() : changes.deadline;
+        logActivity('rfi', rfi.id, 'update', `Deadline: ${dateStr}`, user);
       }
       if (changes.status !== undefined || changes.client_status !== undefined) {
         await updateEngagementProgress(rfi.engagement_id);

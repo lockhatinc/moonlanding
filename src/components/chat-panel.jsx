@@ -3,13 +3,17 @@
 import { useState } from 'react';
 import { Paper, Stack, Group, Text, ActionIcon, Avatar, Textarea, Box, Title, ScrollArea, Checkbox } from '@mantine/core';
 import { Send, Lock } from 'lucide-react';
+import { secondsToDate } from '@/lib/field-types';
 
 export function ChatPanel({ entityType, entityId, messages = [], user, onSendMessage }) {
   const [displayMessages, setDisplayMessages] = useState(messages);
   const [isTeamOnly, setIsTeamOnly] = useState(false);
   const [content, setContent] = useState('');
   const [sending, setSending] = useState(false);
-  const formatTime = (ts) => ts ? new Date(ts * 1000).toLocaleString() : '';
+  const formatTime = (ts) => {
+    const date = secondsToDate(ts);
+    return date ? date.toLocaleString() : '';
+  };
 
   const loadMessages = async () => {
     try {

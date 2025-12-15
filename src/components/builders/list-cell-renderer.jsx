@@ -1,6 +1,7 @@
 'use client';
 
 import { Avatar, Badge } from '@mantine/core';
+import { secondsToDate } from '@/lib/field-types';
 
 export function renderCellValue(value, col, spec, row) {
   if (value === null || value === undefined) return '—';
@@ -36,7 +37,8 @@ export function renderCellValue(value, col, spec, row) {
 
   if (field.type === 'date' || field.type === 'timestamp') {
     if (!value) return '—';
-    return new Date(value * 1000).toLocaleDateString();
+    const date = secondsToDate(value);
+    return date ? date.toLocaleDateString() : '—';
   }
 
   if (field.type === 'image') {
