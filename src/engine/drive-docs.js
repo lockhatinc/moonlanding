@@ -1,8 +1,6 @@
 import { getDocsClient, getDriveClient } from './google-auth';
 import { copyFile } from './drive-files';
 
-const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
-
 export async function replaceInDoc(docId, replacements) {
   const docs = await getDocsClient();
   if (!docs) throw new Error('Docs client not available');

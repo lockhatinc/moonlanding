@@ -1,8 +1,7 @@
 import { getDriveClient } from './google-auth';
+import { config } from '@/config';
 
-const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
-
-export async function uploadFile(content, name, mimeType, folderId = ROOT_FOLDER_ID, convertToGoogleDoc = false) {
+export async function uploadFile(content, name, mimeType, folderId = config.drive.rootFolderId, convertToGoogleDoc = false) {
   const drive = await getDriveClient();
   if (!drive) throw new Error('Drive client not available');
 
@@ -62,7 +61,7 @@ export async function getFile(fileId) {
   return response.data;
 }
 
-export async function listFiles(folderId = ROOT_FOLDER_ID) {
+export async function listFiles(folderId = config.drive.rootFolderId) {
   const drive = await getDriveClient();
   if (!drive) throw new Error('Drive client not available');
 

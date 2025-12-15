@@ -1,8 +1,7 @@
 import { getDriveClient } from './google-auth';
+import { config } from '@/config';
 
-const ROOT_FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID;
-
-export async function createFolder(name, parentId = ROOT_FOLDER_ID) {
+export async function createFolder(name, parentId = config.drive.rootFolderId) {
   const drive = await getDriveClient();
   if (!drive) throw new Error('Drive client not available');
 
@@ -29,5 +28,5 @@ export async function getEntityFolder(entityType, entityId, entityName) {
     return search.data.files[0];
   }
 
-  return createFolder(`${entityName || entityId}`, ROOT_FOLDER_ID);
+  return createFolder(`${entityName || entityId}`, config.drive.rootFolderId);
 }
