@@ -64,11 +64,14 @@ export function notifyRealtimeUpdate(entityOrUrl) {
 
   const listeners_for_url = listeners.get(url);
   if (listeners_for_url) {
-    listeners_for_url.forEach(setData => {
-      fetch(url)
-        .then(r => r.json())
-        .then(data => setData(data))
-        .catch(err => console.error('Realtime update error:', err));
+    listeners_for_url.forEach(async setData => {
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        setData(data);
+      } catch (err) {
+        console.error('Realtime update error:', err);
+      }
     });
   }
 
@@ -76,11 +79,14 @@ export function notifyRealtimeUpdate(entityOrUrl) {
   if (parentUrl && parentUrl !== url) {
     const parentListeners = listeners.get(parentUrl);
     if (parentListeners) {
-      parentListeners.forEach(setData => {
-        fetch(parentUrl)
-          .then(r => r.json())
-          .then(data => setData(data))
-          .catch(err => console.error('Parent list update error:', err));
+      parentListeners.forEach(async setData => {
+        try {
+          const res = await fetch(parentUrl);
+          const data = await res.json();
+          setData(data);
+        } catch (err) {
+          console.error('Parent list update error:', err);
+        }
       });
     }
   }

@@ -27,7 +27,8 @@ export function AddChecklistDialog({ review, onClose, onSuccess }) {
     }
 
     try {
-      const checklistData = await fetch(`/api/checklist/${values.selected}`).then(r => r.json());
+      const checklistRes = await fetch(`/api/checklist/${values.selected}`);
+      const checklistData = await checklistRes.json();
 
       const res = await fetch('/api/review_checklist', {
         method: 'POST',
