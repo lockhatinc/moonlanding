@@ -1,5 +1,6 @@
 // Field Type Handler Registry - Consolidates field type rendering and formatting
 import { formatDate, BADGE_COLORS, getEnumOption } from './field-types';
+import { truncateJson, truncateTextarea } from './display-config';
 
 /**
  * Registry of field type handlers with format and render logic
@@ -20,10 +21,7 @@ export const fieldHandlers = {
   },
 
   textarea: {
-    format: (val) => {
-      const text = String(val);
-      return text.length > 100 ? text.substring(0, 100) + '...' : text;
-    },
+    format: (val) => truncateTextarea(String(val)),
     isValid: () => true,
   },
 
@@ -84,10 +82,7 @@ export const fieldHandlers = {
   },
 
   json: {
-    format: (val) => {
-      const str = typeof val === 'string' ? val : JSON.stringify(val);
-      return str.length > 50 ? str.substring(0, 50) + '...' : str;
-    },
+    format: (val) => truncateJson(val),
     coerce: (val) => typeof val === 'string' ? val : JSON.stringify(val),
     isValid: () => true,
   },
