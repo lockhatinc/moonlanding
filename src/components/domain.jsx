@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Stack, Group, Box, Title, Tabs, Grid, ScrollArea, Paper, Badge, Text, ActionIcon, Button } from '@mantine/core';
 import { ArrowLeft, FileSearch, Pencil, Trash2, MessageSquare, FileText, ClipboardCheck } from 'lucide-react';
@@ -15,7 +15,7 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
   const [selectedHighlight, setSelectedHighlight] = useState(null);
   const [showAddChecklistDialog, setShowAddChecklistDialog] = useState(false);
   const highlights = children.highlights || [], checklists = children.checklists || [], chatMessages = children.chat || [];
-  const unresolvedCount = highlights.filter((h) => !h.resolved).length;
+  const unresolvedCount = useMemo(() => highlights.filter((h) => !h.resolved).length, [highlights]);
 
   const handleHighlight = async (d) => {
     try {

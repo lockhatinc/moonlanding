@@ -2,6 +2,7 @@
 
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
+import { useMemo } from 'react';
 import { Button, TextInput, Textarea, Select, Checkbox, NumberInput, Paper, Title, Group, Stack, Text, Avatar, Box } from '@mantine/core';
 import { useFormState } from '@/lib/use-entity-state';
 import { buildFormFields } from '@/config';
@@ -15,8 +16,8 @@ function SubmitButton({ label, isSubmitting }) {
 export function FormBuilder({ spec, data = {}, options = {}, onSubmit, sections = null }) {
   const router = useRouter();
   const { values, setField, errors, setError, isValid } = useFormState(data);
-  const formFields = buildFormFields(spec);
-  const formSections = sections || spec.form?.sections || [{ label: 'Details', fields: formFields.map(f => f.key) }];
+  const formFields = useMemo(() => buildFormFields(spec), [spec]);
+  const formSections = useMemo(() => sections || spec.form?.sections || [{ label: 'Details', fields: formFields.map(f => f.key) }], [sections, spec, formFields]);
 
   const renderField = (field) => {
     const val = values[field.key] ?? '';
