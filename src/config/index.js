@@ -376,4 +376,298 @@ export function getNavItems() {
 
 export const VALIDATORS = config.validators;
 
+// ============ GENERIC RESPONSE BUILDERS ============
+export const HTTP_RESPONSES = {
+  ok: (data) => ({ status: 200, data }),
+  created: (data) => ({ status: 201, data }),
+  badRequest: (error) => ({ status: 400, error }),
+  unauthorized: (error = 'Unauthorized') => ({ status: 401, error }),
+  forbidden: (error = 'Permission denied') => ({ status: 403, error }),
+  notFound: (error = 'Not found') => ({ status: 404, error }),
+  conflict: (error) => ({ status: 409, error }),
+  serverError: (error) => ({ status: 500, error }),
+};
+
+// ============ PERMISSION CHECKER ============
+// Generic permission check based on config
+export function checkPermission(user, entity, action) {
+  if (!user) throw new Error(ERRORS.UNAUTHORIZED);
+  const perms = PERMISSIONS[entity]?.[action];
+  if (perms && !perms.includes(user.role)) {
+    throw new Error(ERRORS.PERMISSION_DENIED);
+  }
+}
+
+// ============ FORM FIELD BUILDERS ============
+// Generate form field config from spec fields
+export function buildFormFields(spec) {
+  const formFields = [];
+  for (const [key, field] of Object.entries(spec.fields)) {
+    if (field.hidden || field.readOnly || field.type === 'id') continue;
+    formFields.push({
+      key,
+      ...field,
+      required: field.required || false,
+      validate: field.isValid ? field.isValid : () => true,
+    });
+  }
+  return formFields;
+}
+
+// ============ LIST VIEW BUILDERS ============
+// Generate list view config from spec fields
+export function buildListColumns(spec) {
+  return Object.entries(spec.fields)
+    .filter(([_, f]) => f.list)
+    .map(([key, f]) => ({
+      key,
+      label: f.label,
+      sortable: f.sortable,
+      width: f.width,
+      type: f.type,
+    }));
+}
+
+// ============ RESPONSE MAPPERS ============
+// Map CRUD operations to HTTP responses
+export const RESPONSE_MAPPERS = {
+  GET: (data) => ({ status: 200, data }),
+  POST: (data) => ({ status: 201, data }),
+  PUT: (data) => ({ status: 200, data }),
+  DELETE: () => ({ status: 200, data: { success: true } }),
+  LIST: (data) => ({ status: 200, data }),
+};
+
+// ============ ACTION BUILDERS ============
+// Generate entity actions from config
+export function buildActions(spec) {
+  if (!spec.actions) return [];
+  return spec.actions.map(action => ({
+    key: action.key,
+    label: action.label,
+    icon: action.icon,
+    permission: action.permission,
+    handler: action.handler,
+    dialog: action.dialog,
+  }));
+}
+
+// ============ COMPUTED GETTERS ============
+// Functions to compute common values from config
+export function getDefaultSort(spec) {
+  return spec.list?.defaultSort || { field: 'created_at', dir: 'desc' };
+}
+
+export function getAvailableFilters(spec) {
+  return spec.list?.filters || [];
+}
+
+export function getPageSize(spec) {
+  return spec.list?.pageSize || PAGINATION.DEFAULT_PAGE_SIZE;
+}
+
+export function getEntityLabel(spec, plural = false) {
+  return plural ? (spec.labelPlural || spec.label) : spec.label;
+}
+
+// ============ TYPE PREDICATES ============
+// Check entity properties
+export function isEmbeddedEntity(spec) {
+  return spec.embedded === true;
+}
+
+export function isParentEntity(spec) {
+  return !spec.embedded && !spec.parent;
+}
+
+export function hasChildRelationships(spec) {
+  return !!spec.children && Object.keys(spec.children).length > 0;
+}
+
+export function isSoftDeleted(spec) {
+  return spec.fields.status && spec.softDelete?.archive;
+}
+
+// ============ FIELD UTILITIES ============
+// Work with field definitions
+export function getRequiredFields(spec) {
+  return Object.entries(spec.fields)
+    .filter(([_, f]) => f.required)
+    .map(([key]) => key);
+}
+
+export function getEditableFields(spec) {
+  return Object.entries(spec.fields)
+    .filter(([_, f]) => !f.hidden && !f.readOnly && f.type !== 'id')
+    .map(([key]) => key);
+}
+
+export function getField(spec, fieldKey) {
+  return spec.fields[fieldKey];
+}
+
+export function getFieldType(spec, fieldKey) {
+  return spec.fields[fieldKey]?.type;
+}
+
+// ============ OPTION HELPERS ============
+// Work with enum options
+export function getOptions(spec, optionKey) {
+  return spec.options?.[optionKey] || [];
+}
+
+export function getOptionLabel(spec, optionKey, value) {
+  const option = getOptions(spec, optionKey).find(o => o.value === value);
+  return option?.label || String(value);
+}
+
+export function getOptionColor(spec, optionKey, value) {
+  const option = getOptions(spec, optionKey).find(o => o.value === value);
+  return option?.color || 'gray';
+}
+
+// ============ SEARCH & FILTER HELPERS ============
+// Generic search and filtering
+export function getSearchableFields(spec) {
+  return Object.entries(spec.fields)
+    .filter(([_, f]) => f.search)
+    .map(([key]) => key);
+}
+
+export function getFilterableFields(spec) {
+  return (spec.list?.filters || [])
+    .map(filterKey => spec.fields[filterKey])
+    .filter(Boolean);
+}
+
+// ============ NAVIGATION & ROUTING ============
+// Generate navigation based on config
+export function buildNavigation() {
+  return Object.values(specs)
+    .filter(s => !s.embedded && !s.parent)
+    .sort((a, b) => (a.order || 999) - (b.order || 999))
+    .map(s => ({
+      name: s.name,
+      label: s.labelPlural || s.label,
+      icon: s.icon,
+      href: `/${s.name}`,
+      badge: s.badge,
+    }));
+}
+
+// ============ RELATIONSHIP HELPERS ============
+// Handle entity relationships
+export function getChildEntities(spec) {
+  if (!spec.children) return [];
+  return Object.entries(spec.children).map(([key, child]) => ({
+    key,
+    entity: child.entity,
+    label: child.label,
+    fk: child.fk,
+    filter: child.filter,
+    component: child.component,
+  }));
+}
+
+export function getParentEntity(spec) {
+  return spec.parent || null;
+}
+
+// ============ STATE INITIALIZERS ============
+// Generate initial state from spec
+export function getInitialState(spec) {
+  const state = {};
+  for (const [key, field] of Object.entries(spec.fields)) {
+    if (field.type === 'id') continue;
+    if (field.default !== undefined) {
+      state[key] = field.default;
+    } else if (field.type === 'bool') {
+      state[key] = false;
+    } else if (field.type === 'int' || field.type === 'decimal') {
+      state[key] = 0;
+    } else if (field.type === 'json') {
+      state[key] = [];
+    } else {
+      state[key] = '';
+    }
+  }
+  return state;
+}
+
+// ============ DISPLAY HELPERS ============
+// Format values for display
+export function formatDisplayText(value, field) {
+  if (value === null || value === undefined) return '—';
+  if (field.type === 'bool') return value ? 'Yes' : 'No';
+  if (field.type === 'date' || field.type === 'timestamp') {
+    return new Date(value * 1000).toLocaleDateString();
+  }
+  if (field.type === 'decimal') return parseFloat(value).toFixed(2);
+  return String(value);
+}
+
+// ============ QUERY BUILDERS ============
+// Build queries from config
+export function buildListQuery(spec, page = 1, sort = null, filter = null) {
+  const pageSize = getPageSize(spec);
+  const offset = (page - 1) * pageSize;
+  const sortConfig = sort || getDefaultSort(spec);
+  return {
+    offset,
+    limit: pageSize,
+    sort: sortConfig,
+    filter: filter || {},
+  };
+}
+
+// ============ BATCH OPERATIONS ============
+// Support for batch operations on entities
+export function canBatchDelete(spec) {
+  return !spec.embedded && spec.access?.delete;
+}
+
+export function canBatchUpdate(spec) {
+  return !spec.embedded && spec.access?.edit;
+}
+
+// ============ EXPORT HELPERS ============
+// Generate export configs from spec
+export function getExportableFields(spec) {
+  return Object.entries(spec.fields)
+    .filter(([_, f]) => !f.hidden && f.type !== 'id')
+    .map(([key, f]) => ({
+      key,
+      label: f.label,
+      type: f.type,
+    }));
+}
+
+// ============ AUDIT & LOGGING ============
+// Extract audit-relevant fields
+export function getAuditFields(spec) {
+  return {
+    created_by: spec.fields.created_by,
+    created_at: spec.fields.created_at,
+    updated_at: spec.fields.updated_at,
+  };
+}
+
+// ============ VALIDATION BUILDERS ============
+// Generate validators from spec
+export function buildValidators(spec) {
+  const validators = {};
+  for (const [key, field] of Object.entries(spec.fields)) {
+    if (field.required) {
+      validators[key] = [(v) => v && v.toString().trim() !== '', 'Required'];
+    }
+    if (field.type === 'email' && field.isValid) {
+      validators[key] = [(v) => VALIDATION.EMAIL_REGEX.test(v), 'Invalid email'];
+    }
+    if (field.type === 'int') {
+      validators[key] = [(v) => Number.isInteger(+v), 'Must be integer'];
+    }
+  }
+  return validators;
+}
+
 export default config;
