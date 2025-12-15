@@ -1,0 +1,112 @@
+import { getNavItems } from '@/config';
+import { list, search, get, getChildren } from '@/engine';
+import { can } from '@/lib/permissions';
+import { requireEntityAccess, listMetadata, detailMetadata, newMetadata, editMetadata } from '@/lib/route-helpers';
+import { EntityList } from '@/components/entity-list';
+import { EntityForm } from '@/components/entity-form';
+import { EntityDetail } from '@/components/entity-detail';
+import { Shell } from '@/components/layout';
+import { notFound, redirect } from 'next/navigation';
+import { deleteAction } from '@/app/[entity]/actions';
+
+export function createListPage() {
+  const ListPage = async ({ params, searchParams }) => {
+    const { entity } = await params;
+    const { q } = await searchParams;
+    const { user, spec } = await requireEntityAccess(entity, 'list');
+
+    return (
+      <Shell user={user} nav={getNavItems()}>
+        <EntityList spec={spec} data={q ? search(entity, q) : list(entity)} searchQuery={q || ''} canCreate={can(user, spec, 'create')} />
+      </Shell>
+    );
+  };
+
+  ListPage.generateMetadata = ({ params }) => listMetadata(params.entity);
+  return ListPage;
+}
+
+export function createDetailPage(DetailComponent = null) {
+  const DetailPage = async ({ params }) => {
+    const { entity, id } = await params;
+    const { user, spec } = await requireEntityAccess(entity, 'view');
+
+    const data = get(entity, id);
+    if (!data) notFound();
+
+    const children = {};
+    if (spec.children) {
+      for (const [key, childDef] of Object.entries(spec.children)) {
+        children[key] = getChildren(entity, id, childDef);
+      }
+    }
+
+    const Comp = DetailComponent || (spec.detail?.component === 'review-detail' ? (await import('@/components/domain')).ReviewDetail : EntityDetail);
+
+    return (
+      <Shell user={user} nav={getNavItems()}>
+        <Comp
+          spec={spec}
+          data={data}
+          children={children}
+          user={user}
+          canEdit={can(user, spec, 'edit')}
+          canDelete={can(user, spec, 'delete')}
+          deleteAction={deleteAction.bind(null, entity, id)}
+        />
+      </Shell>
+    );
+  };
+
+  DetailPage.generateMetadata = ({ params }) => detailMetadata(params.entity, params.id);
+  return DetailPage;
+}
+
+export function createCreatePage() {
+  const CreatePage = async ({ params }) => {
+    const { entity } = await params;
+    const { user, spec } = await requireEntityAccess(entity, 'create');
+
+    const options = {};
+    for (const [key, field] of Object.entries(spec.fields)) {
+      if (field.type === 'ref' && field.ref) {
+        options[key] = list(field.ref).map(r => ({ value: r.id, label: r.name || r.email || r.id }));
+      }
+    }
+
+    return (
+      <Shell user={user} nav={getNavItems()}>
+        <EntityForm spec={spec} options={options} />
+      </Shell>
+    );
+  };
+
+  CreatePage.generateMetadata = ({ params }) => newMetadata(params.entity);
+  return CreatePage;
+}
+
+export function createEditPage() {
+  const EditPage = async ({ params }) => {
+    const { entity, id } = await params;
+    const { user, spec } = await requireEntityAccess(entity, 'edit');
+
+    const data = get(entity, id);
+    if (!data) notFound();
+
+    const options = {};
+    for (const [key, field] of Object.entries(spec.fields)) {
+      if (field.type === 'ref' && field.ref) {
+        options[key] = list(field.ref).map(r => ({ value: r.id, label: r.name || r.email || r.id }));
+      }
+    }
+
+    return (
+      <Shell user={user} nav={getNavItems()}>
+        <EntityForm spec={spec} data={data} options={options} />
+      </Shell>
+    );
+  };
+
+  EditPage.generateMetadata = ({ params }) => editMetadata(params.entity, params.id);
+  return EditPage;
+}
