@@ -1,20 +1,28 @@
 import { entityHandlers } from './events-entity';
 import { scheduledJobs } from './events-jobs';
 import { get } from '../engine.js';
+import { ENGAGEMENT_STAGE, ENGAGEMENT_STATUS, RFI_STATUS, canTransitionStage } from '@/lib/status-helpers';
 
 const handlers = { entity: entityHandlers, scheduled: scheduledJobs };
+const stageSequence = [
+  ENGAGEMENT_STAGE.INFO_GATHERING,
+  ENGAGEMENT_STAGE.COMMENCEMENT,
+  ENGAGEMENT_STAGE.TEAM_EXECUTION,
+  ENGAGEMENT_STAGE.PARTNER_REVIEW,
+  ENGAGEMENT_STAGE.FINALIZATION,
+  ENGAGEMENT_STAGE.CLOSE_OUT,
+];
 
 export async function validateStageTransition(engagement, newStage, user) {
-  const stages = ['info_gathering', 'commencement', 'team_execution', 'partner_review', 'finalization', 'close_out'];
-  const curr = stages.indexOf(engagement.stage), next = stages.indexOf(newStage);
+  const curr = stageSequence.indexOf(engagement.stage), next = stageSequence.indexOf(newStage);
 
   if (!['partner', 'manager'].includes(user.role)) throw new Error('Only partners and managers can change stage');
-  if (engagement.status === 'pending') throw new Error('Cannot change stage while pending');
-  if (newStage === 'close_out' && user.role !== 'partner') throw new Error('Only partners can close out');
-  if (newStage === 'close_out' && engagement.letter_auditor_status !== 'accepted' && engagement.progress > 0) {
+  if (engagement.status === ENGAGEMENT_STATUS.PENDING) throw new Error('Cannot change stage while pending');
+  if (newStage === ENGAGEMENT_STAGE.CLOSE_OUT && user.role !== 'partner') throw new Error('Only partners can close out');
+  if (newStage === ENGAGEMENT_STAGE.CLOSE_OUT && engagement.letter_auditor_status !== 'accepted' && engagement.progress > 0) {
     throw new Error('Cannot close out: Letter must be accepted or progress must be 0%');
   }
-  if (next < curr && !{ team_execution: ['commencement'], partner_review: ['team_execution'] }[engagement.stage]?.includes(newStage)) {
+  if (!canTransitionStage(engagement.stage, newStage)) {
     throw new Error(`Cannot go backward from ${engagement.stage} to ${newStage}`);
   }
   return true;
@@ -25,7 +33,7 @@ export async function validateRfiStatusChange(rfi, newStatus, user) {
     const e = get('engagement', rfi.engagement_id);
     if (!e?.clerks_can_approve) throw new Error('Only auditors (not clerks) can change RFI status');
   }
-  if (newStatus === 1) {
+  if (newStatus === RFI_STATUS.COMPLETED) {
     const hasFiles = rfi.files_count > 0 || JSON.parse(rfi.files || '[]').length > 0;
     const hasResponses = rfi.response_count > 0 || JSON.parse(rfi.responses || '[]').length > 0;
     if (!hasFiles && !hasResponses) throw new Error('RFI must have files or responses before completing');
