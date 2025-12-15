@@ -12,6 +12,22 @@ export const VALIDATORS = {
   rfi: { status: 'validateRfiStatusChange' },
 };
 
+// Email recipient resolvers: declarative recipient specifications
+// Each resolver is called with context and returns array of {id, email} objects
+export const EMAIL_RESOLVERS = {
+  team_partners: { type: 'team', role: 'partners' },
+  team_members: { type: 'team', role: 'all' },
+  collaborator: { type: 'collaborator' },
+  client_users: { type: 'client', role: null },
+  client_admin: { type: 'client', role: 'admin' },
+  client_user: { type: 'single', field: 'user' },
+  assigned_users: { type: 'json', field: 'rfi.assigned_users' },
+  user: { type: 'single', field: 'user' },
+  partners: { type: 'list', entity: 'user', filter: { role: 'partner', status: 'active' } },
+  developers: { type: 'static', emails: [{ email: process.env.DEVELOPER_EMAIL || 'dev@example.com' }] },
+  new_client_user: { type: 'single', field: 'user' },
+};
+
 export const config = {
   db: { path: 'data/app.db' },
   auth: {

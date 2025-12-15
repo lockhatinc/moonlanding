@@ -1,35 +1,53 @@
 import { list, get, create, update } from '../engine';
 import { emailConfig, emailTemplates } from './email-config';
+import { EMAIL_RESOLVERS } from '../config';
 
 export { emailConfig, emailTemplates };
 
-const resolvers = {
-  team_partners: (ctx) => getTeamUsers(ctx, 'partners'),
-  team_members: (ctx) => getTeamUsers(ctx, 'all'),
-  collaborator: (ctx) => ctx.collaborator?.email ? [ctx.collaborator] : (ctx.collaborator?.user_id ? [get('user', ctx.collaborator.user_id)].filter(Boolean) : []),
-  client_users: (ctx) => getClientUsers(ctx.engagement?.client_id || ctx.client?.id),
-  client_admin: (ctx) => getClientUsers(ctx.engagement?.client_id || ctx.client?.id, 'admin'),
-  client_user: (ctx) => ctx.user ? [ctx.user] : [],
-  assigned_users: (ctx) => JSON.parse(ctx.rfi?.assigned_users || '[]').map(id => get('user', id)).filter(Boolean),
-  user: (ctx) => ctx.user ? [ctx.user] : [],
-  partners: () => list('user', { role: 'partner', status: 'active' }),
-  developers: () => [{ email: process.env.DEVELOPER_EMAIL || 'dev@example.com' }],
-  new_client_user: (ctx) => ctx.user ? [ctx.user] : [],
-};
+// Dynamically resolve recipients based on config specification
+function resolveRecipients(spec, ctx) {
+  if (!spec) return [];
 
-function getTeamUsers(ctx, type) {
-  const teamId = ctx.review?.team_id || ctx.engagement?.team_id;
-  if (!teamId) return [];
-  const team = get('team', teamId);
-  if (!team) return [];
-  const ids = type === 'partners' ? JSON.parse(team.partners || '[]') : [...new Set([...JSON.parse(team.partners || '[]'), ...JSON.parse(team.users || '[]')])];
-  return ids.map(id => get('user', id)).filter(Boolean);
-}
+  switch (spec.type) {
+    case 'team': {
+      const teamId = ctx.review?.team_id || ctx.engagement?.team_id;
+      if (!teamId) return [];
+      const team = get('team', teamId);
+      if (!team) return [];
+      const ids = spec.role === 'partners'
+        ? JSON.parse(team.partners || '[]')
+        : [...new Set([...JSON.parse(team.partners || '[]'), ...JSON.parse(team.users || '[]')])];
+      return ids.map(id => get('user', id)).filter(Boolean);
+    }
 
-function getClientUsers(clientId, role) {
-  if (!clientId) return [];
-  const users = list('client_user', { client_id: clientId, status: 'active' });
-  return (role ? users.filter(u => u.role === role) : users).map(cu => get('user', cu.user_id)).filter(Boolean);
+    case 'collaborator':
+      return ctx.collaborator?.email ? [ctx.collaborator] : (ctx.collaborator?.user_id ? [get('user', ctx.collaborator.user_id)].filter(Boolean) : []);
+
+    case 'client': {
+      const clientId = ctx.engagement?.client_id || ctx.client?.id;
+      if (!clientId) return [];
+      const users = list('client_user', { client_id: clientId, status: 'active' });
+      return (spec.role ? users.filter(u => u.role === spec.role) : users).map(cu => get('user', cu.user_id)).filter(Boolean);
+    }
+
+    case 'single': {
+      const val = spec.field.split('.').reduce((obj, key) => obj?.[key], ctx);
+      return val ? [val] : [];
+    }
+
+    case 'json': {
+      const arr = JSON.parse(spec.field.split('.').reduce((obj, key) => obj?.[key], ctx) || '[]');
+      return arr.map(id => get('user', id)).filter(Boolean);
+    }
+
+    case 'list':
+      return list(spec.entity, spec.filter || {});
+
+    case 'static':
+      return spec.emails || [];
+
+    default: return [];
+  }
 }
 
 // ========================================
@@ -40,7 +58,8 @@ export async function queueEmail(key, context) {
   const template = emailTemplates[key];
   if (!template) throw new Error(`Unknown email template: ${key}`);
 
-  const recipients = await (resolvers[template.recipients] || (() => []))(context);
+  const resolverSpec = EMAIL_RESOLVERS[template.recipients];
+  const recipients = resolveRecipients(resolverSpec, context);
   if (!recipients.length) {
     console.warn(`[EMAIL] No recipients found for template "${key}" in context:`, { entity: context.review?.name || context.engagement?.name || context.client?.name || 'unknown' });
     return;
