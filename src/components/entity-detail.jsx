@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Tabs, Button, Paper, Title, Group, Text, SimpleGrid, ActionIcon, Badge, Stack, Box, Modal } from '@mantine/core';
 import { FieldRender } from './field-render';
 import { EntityList } from './entity-list';
-import { ChatPanel } from './domain';
+import { ChatPanel } from './chat-panel';
 import { AddChecklistDialog } from './dialogs/add-checklist';
 import { getDisplayFields, getEntityIcon } from '@/lib/field-types';
 import { Pencil, Trash2, ArrowLeft } from 'lucide-react';
