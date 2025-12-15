@@ -2,8 +2,8 @@ import Database from 'better-sqlite3';
 import { nanoid } from 'nanoid';
 import path from 'path';
 import fs from 'fs';
-import { specs, getSpec } from '@/config';
-import { coerce, SQL_TYPES, getSearchFields } from '@/lib/field-types';
+import { specs, getSpec, SQL_TYPES } from '@/config';
+import { coerce, getSearchFields } from '@/lib/field-types';
 import { forEachField, iterateCreateFields, iterateUpdateFields } from '@/lib/field-iterator';
 
 // === DATABASE ===
