@@ -3,6 +3,15 @@
 import { Avatar, Badge } from '@mantine/core';
 import { secondsToDate } from '@/lib/field-types';
 
+const BADGE_COLORS = {
+  green: { bg: '#d3f9d8', color: '#2f9e44' },
+  yellow: { bg: '#fff3bf', color: '#f08c00' },
+  amber: { bg: '#ffe066', color: '#d9480f' },
+  blue: { bg: '#d0ebff', color: '#1971c2' },
+  gray: { bg: '#f1f3f5', color: '#495057' },
+  red: { bg: '#ffe0e0', color: '#c92a2a' },
+};
+
 export function renderCellValue(value, col, spec, row) {
   if (value === null || value === undefined) return '—';
 
@@ -14,16 +23,7 @@ export function renderCellValue(value, col, spec, row) {
     const opt = options.find(o => o.value === value);
     if (!opt) return value;
 
-    const colors = {
-      green: { bg: '#d3f9d8', color: '#2f9e44' },
-      yellow: { bg: '#fff3bf', color: '#f08c00' },
-      amber: { bg: '#ffe066', color: '#d9480f' },
-      blue: { bg: '#d0ebff', color: '#1971c2' },
-      gray: { bg: '#f1f3f5', color: '#495057' },
-      red: { bg: '#ffe0e0', color: '#c92a2a' },
-    };
-
-    const color = colors[opt.color] || colors.gray;
+    const color = BADGE_COLORS[opt.color] || BADGE_COLORS.gray;
     return (
       <Badge style={{ backgroundColor: color.bg, color: color.color, border: 'none' }}>
         {opt.label}

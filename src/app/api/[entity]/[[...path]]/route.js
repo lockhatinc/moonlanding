@@ -39,7 +39,6 @@ export async function PUT(request, { params }) {
     if (!prev) return notFound();
 
     const data = await request.json();
-
     const entityValidators = VALIDATORS[entity];
     if (entityValidators) {
       for (const [field, validatorName] of Object.entries(entityValidators)) {

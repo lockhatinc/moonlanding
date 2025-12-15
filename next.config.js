@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingRoot: __dirname,
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
@@ -11,7 +12,6 @@ const nextConfig = {
     }
     return config;
   },
-  // Skip static generation for catch-all routes
   staticPageGenerationTimeout: 0,
   onDemandEntries: {
     maxInactiveAge: 60 * 1000,
