@@ -4,17 +4,26 @@ import { getSpec } from '@/config';
 import { migrate } from '@/engine';
 import { getUser } from '@/engine.server';
 import { can } from '@/lib/permissions';
+import { logger } from '@/lib/logger';
 
 let dbInit = false;
 export function ensureDb() { if (!dbInit) { migrate(); dbInit = true; } }
 
-// Standard responses
-export const ok = (data) => NextResponse.json(data);
-export const created = (data) => NextResponse.json(data, { status: 201 });
-export const notFound = (msg = 'Not found') => NextResponse.json({ error: msg }, { status: 404 });
-export const badRequest = (msg = 'Bad request') => NextResponse.json({ error: msg }, { status: 400 });
-export const unauthorized = (msg = 'Unauthorized') => NextResponse.json({ error: msg }, { status: 403 });
-export const serverError = (msg = 'Internal server error') => NextResponse.json({ error: msg }, { status: 500 });
+// Standard responses with metadata
+const withMetadata = (data, status = 200, type = 'success') => ({
+  status,
+  type,
+  timestamp: new Date().toISOString(),
+  data,
+  ...(!data.error && { success: true }),
+});
+
+export const ok = (data) => NextResponse.json(withMetadata(data, 200, 'success'));
+export const created = (data) => NextResponse.json(withMetadata(data, 201, 'created'), { status: 201 });
+export const notFound = (msg = 'Not found') => NextResponse.json(withMetadata({ error: msg }, 404, 'error'), { status: 404 });
+export const badRequest = (msg = 'Bad request') => NextResponse.json(withMetadata({ error: msg }, 400, 'error'), { status: 400 });
+export const unauthorized = (msg = 'Unauthorized') => NextResponse.json(withMetadata({ error: msg }, 403, 'error'), { status: 403 });
+export const serverError = (msg = 'Internal server error') => NextResponse.json(withMetadata({ error: msg }, 500, 'error'), { status: 500 });
 
 /**
  * Wrap API handler with common checks
@@ -31,7 +40,7 @@ export async function withEntityAccess(entity, action, handler) {
     if (!can(user, spec, action)) return unauthorized();
     return await handler(spec, user);
   } catch (e) {
-    console.error(`API ${action} error:`, e);
+    logger.apiError(action, entity, e);
     return serverError(e.message || 'Internal server error');
   }
 }
