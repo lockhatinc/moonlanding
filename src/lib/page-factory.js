@@ -3,8 +3,8 @@ import { list, search, get, getChildren } from '@/engine';
 import { can } from '@/lib/permissions';
 import { loadOptions } from '@/lib/form-utils';
 import { requireEntityAccess, listMetadata, detailMetadata, newMetadata, editMetadata } from '@/lib/route-helpers';
-import { EntityList } from '@/components/entity-list';
-import { EntityForm } from '@/components/entity-form';
+import { ListBuilder } from '@/components/builders/list-builder';
+import { FormBuilder } from '@/components/builders/form-builder';
 import { EntityDetail } from '@/components/entity-detail';
 import { Shell } from '@/components/layout';
 import { notFound, redirect } from 'next/navigation';
@@ -18,7 +18,7 @@ export function createListPage() {
 
     return (
       <Shell user={user} nav={getNavItems()}>
-        <EntityList spec={spec} data={q ? search(entity, q) : list(entity)} searchQuery={q || ''} canCreate={can(user, spec, 'create')} />
+        <ListBuilder spec={spec} data={q ? search(entity, q) : list(entity)} searchQuery={q || ''} canCreate={can(user, spec, 'create')} />
       </Shell>
     );
   };
@@ -71,7 +71,7 @@ export function createCreatePage() {
 
     return (
       <Shell user={user} nav={getNavItems()}>
-        <EntityForm spec={spec} options={options} />
+        <FormBuilder spec={spec} options={options} />
       </Shell>
     );
   };
@@ -92,7 +92,7 @@ export function createEditPage() {
 
     return (
       <Shell user={user} nav={getNavItems()}>
-        <EntityForm spec={spec} data={data} options={options} />
+        <FormBuilder spec={spec} data={data} options={options} />
       </Shell>
     );
   };

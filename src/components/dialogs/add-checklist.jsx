@@ -1,66 +1,54 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Modal, Button, Stack, Group, Select, Text, Loader, Center, Alert } from '@mantine/core';
 import { AlertCircle } from 'lucide-react';
+import { useAsyncState } from '@/lib/use-entity-state';
+import { useFormState } from '@/lib/use-entity-state';
 
 export function AddChecklistDialog({ review, onClose, onSuccess }) {
-  const [checklists, setChecklists] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
+  const { data: checklists, loading, error: loadError, start } = useAsyncState([]);
+  const { values, setField, setErrors, errors } = useFormState({ selected: null });
+  const { loading: submitting, error: submitError, setSuccess, setFailed } = useAsyncState();
 
   useEffect(() => {
-    const loadChecklists = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch('/api/checklist');
-        if (!res.ok) throw new Error('Failed to load checklists');
-        const data = await res.json();
-        setChecklists(data.map(c => ({ value: c.id, label: c.name })));
-      } catch (e) {
-        setError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadChecklists();
-  }, []);
+    start(async () => {
+      const res = await fetch('/api/checklist');
+      if (!res.ok) throw new Error('Failed to load checklists');
+      const data = await res.json();
+      return data.map(c => ({ value: c.id, label: c.name }));
+    });
+  }, [start]);
 
   const handleAdd = async () => {
-    if (!selected) {
-      setError('Please select a checklist');
+    if (!values.selected) {
+      setErrors({ selected: 'Please select a checklist' });
       return;
     }
 
     try {
-      setSubmitting(true);
-      setError(null);
-
-      const selectedChecklist = checklists.find(c => c.value === selected);
-      const checklistData = await fetch(`/api/checklist/${selected}`).then(r => r.json());
+      const checklistData = await fetch(`/api/checklist/${values.selected}`).then(r => r.json());
 
       const res = await fetch('/api/review_checklist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           review_id: review.id,
-          checklist_id: selected,
+          checklist_id: values.selected,
           items: checklistData.section_items || checklistData.items || [],
           status: 'pending',
         }),
       });
 
       if (!res.ok) throw new Error('Failed to add checklist');
-
+      setSuccess();
       onSuccess();
     } catch (e) {
-      setError(e.message);
-    } finally {
-      setSubmitting(false);
+      setFailed(e);
     }
   };
+
+  const error = loadError || submitError;
 
   return (
     <Modal opened={true} onClose={onClose} title="Add Checklist to Review" size="md">
@@ -70,7 +58,7 @@ export function AddChecklistDialog({ review, onClose, onSuccess }) {
         </Center>
       ) : (
         <Stack gap="md">
-          {error && <Alert icon={<AlertCircle size={16} />} title="Error" color="red">{error}</Alert>}
+          {error && <Alert icon={<AlertCircle size={16} />} title="Error" color="red">{typeof error === 'string' ? error : error.message}</Alert>}
 
           {checklists.length === 0 ? (
             <Text c="dimmed" ta="center" py="xl">No checklists available. Create one first.</Text>
@@ -80,14 +68,15 @@ export function AddChecklistDialog({ review, onClose, onSuccess }) {
                 label="Select Checklist"
                 placeholder="Choose a checklist to add"
                 data={checklists}
-                value={selected}
-                onChange={setSelected}
+                value={values.selected}
+                onChange={(val) => setField('selected', val)}
                 searchable
+                error={errors.selected}
               />
 
               <Group justify="flex-end">
                 <Button variant="outline" onClick={onClose} disabled={submitting}>Cancel</Button>
-                <Button onClick={handleAdd} loading={submitting} disabled={!selected || submitting}>Add Checklist</Button>
+                <Button onClick={handleAdd} loading={submitting} disabled={!values.selected || submitting}>Add Checklist</Button>
               </Group>
             </>
           )}

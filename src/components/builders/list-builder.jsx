@@ -2,8 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, useMemo } from 'react';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@mantine/core';
-import { Input, Button, Group, Stack, Text, Badge, Avatar } from '@mantine/core';
+import { Table, Button, Group, Stack, Text, Badge, Avatar, TextInput } from '@mantine/core';
 import { useSelectionState, useSearchState, useSortState } from '@/lib/use-entity-state';
 import { buildListColumns, formatDisplayText } from '@/config';
 import { Search, Plus, ChevronDown, ChevronRight } from 'lucide-react';
@@ -84,7 +83,7 @@ export function ListBuilder({ spec, data = [], onCreateClick, canCreate = true }
 
       <div style={{ position: 'relative', width: 288 }}>
         <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--mantine-color-gray-6)' }} />
-        <Input
+        <TextInput
           placeholder={`Search ${spec.labelPlural.toLowerCase()}...`}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -94,11 +93,11 @@ export function ListBuilder({ spec, data = [], onCreateClick, canCreate = true }
 
       <div style={{ border: '1px solid var(--mantine-color-gray-3)', borderRadius: 8, overflow: 'hidden' }}>
         <Table striped highlightOnHover>
-          <TableHeader>
-            <TableRow>
-              {groupBy && <TableHead style={{ width: 40 }} />}
+          <Table.Thead>
+            <Table.Tr>
+              {groupBy && <Table.Th style={{ width: 40 }} />}
               {columns.map(col => (
-                <TableHead
+                <Table.Th
                   key={col.key}
                   style={{ width: col.width, cursor: col.sortable ? 'pointer' : 'default' }}
                   onClick={() => col.sortable && setSortField(col.key)}
@@ -109,36 +108,36 @@ export function ListBuilder({ spec, data = [], onCreateClick, canCreate = true }
                       <span style={{ fontSize: 12 }}>{sortDir === 'asc' ? '↑' : '↓'}</span>
                     )}
                   </Group>
-                </TableHead>
+                </Table.Th>
               ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Object.entries(sorted).map(([group, rows]) => (
-              <div key={group}>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {Object.entries(sorted).map(([group, rows], idx) => (
+              <div key={`group-${idx}-${group}`}>
                 {groupBy && (
-                  <TableRow
+                  <Table.Tr
                     style={{ backgroundColor: 'var(--mantine-color-gray-1)', cursor: 'pointer' }}
                     onClick={() => toggleGroup(group)}
                   >
-                    <TableCell style={{ width: 40 }}>
+                    <Table.Td style={{ width: 40 }}>
                       {isExpanded(group) ? (
                         <ChevronDown size={16} />
                       ) : (
                         <ChevronRight size={16} />
                       )}
-                    </TableCell>
-                    <TableCell colSpan={columns.length}>
+                    </Table.Td>
+                    <Table.Td colSpan={columns.length}>
                       <Group gap="xs">
                         <Text fw={500}>{group}</Text>
                         <Badge>{rows.length}</Badge>
                       </Group>
-                    </TableCell>
-                  </TableRow>
+                    </Table.Td>
+                  </Table.Tr>
                 )}
                 {(!groupBy || isExpanded(group)) &&
                   rows.map(row => (
-                    <TableRow
+                    <Table.Tr
                       key={row.id}
                       style={{
                         cursor: 'pointer',
@@ -146,24 +145,24 @@ export function ListBuilder({ spec, data = [], onCreateClick, canCreate = true }
                       }}
                       onClick={() => handleRowClick(row)}
                     >
-                      {groupBy && <TableCell style={{ width: 40 }} />}
+                      {groupBy && <Table.Td style={{ width: 40 }} />}
                       {columns.map(col => (
-                        <TableCell key={col.key}>
+                        <Table.Td key={col.key}>
                           {renderCellValue(row[col.key], col, spec, row)}
-                        </TableCell>
+                        </Table.Td>
                       ))}
-                    </TableRow>
+                    </Table.Tr>
                   ))}
               </div>
             ))}
             {data.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={columns.length + (groupBy ? 1 : 0)} style={{ textAlign: 'center', padding: 32, color: 'var(--mantine-color-gray-6)' }}>
+              <Table.Tr>
+                <Table.Td colSpan={columns.length + (groupBy ? 1 : 0)} style={{ textAlign: 'center', padding: 32, color: 'var(--mantine-color-gray-6)' }}>
                   No {spec.labelPlural.toLowerCase()} found
-                </TableCell>
-              </TableRow>
+                </Table.Td>
+              </Table.Tr>
             )}
-          </TableBody>
+          </Table.Tbody>
         </Table>
       </div>
     </Stack>
