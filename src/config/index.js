@@ -56,6 +56,20 @@ export const config = {
     },
   },
 
+  // API Validators (entity-specific field validation on update)
+  validators: {
+    engagement: {
+      fields: {
+        stage: { validator: 'validateStageTransition' },
+      },
+    },
+    rfi: {
+      fields: {
+        status: { validator: 'validateRfiStatusChange' },
+      },
+    },
+  },
+
   // App
   app: {
     url: process.env.APP_URL || 'http://localhost:3000',

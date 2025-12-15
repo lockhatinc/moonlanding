@@ -1,6 +1,6 @@
 import { list, get, create, update, remove, search, getChildren } from '@/engine';
 import { getUser, can } from '@/engine.server';
-import { getSpec } from '@/config';
+import { getSpec, VALIDATORS } from '@/config';
 import { ok, created, notFound, badRequest, unauthorized, serverError, ensureDb, parseParams } from '@/lib/api-helpers';
 import { broadcastUpdate } from '@/lib/realtime-server';
 import { validateStageTransition, validateRfiStatusChange } from '@/engine/events';
@@ -52,14 +52,16 @@ export async function PUT(request, { params }) {
 
     const data = await request.json();
 
-    // Validate stage transitions
-    if (entity === 'engagement' && data.stage && data.stage !== prev.stage) {
-      await validateStageTransition(prev, data.stage, user);
-    }
-
-    // Validate RFI status changes
-    if (entity === 'rfi' && data.status !== undefined && data.status !== prev.status) {
-      await validateRfiStatusChange(prev, data.status, user);
+    // Run configured validators for this entity
+    const entityValidators = VALIDATORS[entity];
+    if (entityValidators) {
+      for (const [field, validatorName] of Object.entries(entityValidators)) {
+        if (data[field] !== undefined && data[field] !== prev[field]) {
+          const validators = { validateStageTransition, validateRfiStatusChange };
+          const validator = validators[validatorName];
+          if (validator) await validator(prev, data[field], user);
+        }
+      }
     }
 
     update(entity, id, data, user);

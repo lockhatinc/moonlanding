@@ -6,6 +6,12 @@
 // RUNTIME CONFIGURATION
 // ========================================
 
+// API validators: entity → field → validator function name
+export const VALIDATORS = {
+  engagement: { stage: 'validateStageTransition' },
+  rfi: { status: 'validateRfiStatusChange' },
+};
+
 export const config = {
   db: { path: 'data/app.db' },
   auth: {
