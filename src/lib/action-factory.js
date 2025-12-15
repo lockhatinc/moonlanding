@@ -1,6 +1,5 @@
 import { create, update, remove } from '@/engine';
-import { requireUser, check } from '@/engine.server';
-import { getSpec } from '@/config';
+import { withRequiredSpecAndUser } from '@/lib/auth-helpers';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { logger } from '@/lib/logger';
@@ -9,9 +8,7 @@ export function createCRUDActions(entityName) {
   return {
     async create(formData) {
       try {
-        const user = await requireUser();
-        const spec = getSpec(entityName);
-        check(user, spec, 'create');
+        const { user, spec } = await withRequiredSpecAndUser(entityName, 'create');
         const result = create(entityName, Object.fromEntries(formData), user);
         revalidatePath(`/${entityName}`);
         redirect(`/${entityName}/${result.id}`);
@@ -23,9 +20,7 @@ export function createCRUDActions(entityName) {
 
     async update(id, formData) {
       try {
-        const user = await requireUser();
-        const spec = getSpec(entityName);
-        check(user, spec, 'edit');
+        const { user, spec } = await withRequiredSpecAndUser(entityName, 'edit');
         update(entityName, id, Object.fromEntries(formData), user);
         revalidatePath(`/${entityName}/${id}`);
         redirect(`/${entityName}/${id}`);
@@ -37,9 +32,7 @@ export function createCRUDActions(entityName) {
 
     async delete(id) {
       try {
-        const user = await requireUser();
-        const spec = getSpec(entityName);
-        check(user, spec, 'delete');
+        const { user, spec } = await withRequiredSpecAndUser(entityName, 'delete');
         remove(entityName, id);
         revalidatePath(`/${entityName}`);
         redirect(`/${entityName}`);
@@ -54,9 +47,7 @@ export function createCRUDActions(entityName) {
 export function createEntityAction(entityName, actionKey, permission, handler) {
   return async function (...args) {
     try {
-      const user = await requireUser();
-      const spec = getSpec(entityName);
-      check(user, spec, permission);
+      const { user, spec } = await withRequiredSpecAndUser(entityName, permission);
       return await handler(user, spec, ...args);
     } catch (e) {
       logger.apiError(actionKey, entityName, e);

@@ -1,6 +1,7 @@
 import { getNavItems } from '@/config';
 import { list, search, get, getChildren } from '@/engine';
 import { can } from '@/lib/permissions';
+import { loadOptions } from '@/lib/form-utils';
 import { requireEntityAccess, listMetadata, detailMetadata, newMetadata, editMetadata } from '@/lib/route-helpers';
 import { EntityList } from '@/components/entity-list';
 import { EntityForm } from '@/components/entity-form';
@@ -66,13 +67,7 @@ export function createCreatePage() {
   const CreatePage = async ({ params }) => {
     const { entity } = await params;
     const { user, spec } = await requireEntityAccess(entity, 'create');
-
-    const options = {};
-    for (const [key, field] of Object.entries(spec.fields)) {
-      if (field.type === 'ref' && field.ref) {
-        options[key] = list(field.ref).map(r => ({ value: r.id, label: r.name || r.email || r.id }));
-      }
-    }
+    const options = await loadOptions(spec);
 
     return (
       <Shell user={user} nav={getNavItems()}>
@@ -93,12 +88,7 @@ export function createEditPage() {
     const data = get(entity, id);
     if (!data) notFound();
 
-    const options = {};
-    for (const [key, field] of Object.entries(spec.fields)) {
-      if (field.type === 'ref' && field.ref) {
-        options[key] = list(field.ref).map(r => ({ value: r.id, label: r.name || r.email || r.id }));
-      }
-    }
+    const options = await loadOptions(spec);
 
     return (
       <Shell user={user} nav={getNavItems()}>

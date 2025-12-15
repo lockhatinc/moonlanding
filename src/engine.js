@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { specs, getSpec } from '@/config';
 import { coerce, SQL_TYPES, getSearchFields } from '@/lib/field-types';
+import { forEachField, iterateCreateFields, iterateUpdateFields } from '@/lib/field-iterator';
 
 // === DATABASE ===
 const DB_PATH = path.resolve(process.cwd(), 'data', 'app.db');
@@ -18,24 +19,24 @@ export function migrate() {
 
   for (const spec of Object.values(specs)) {
     const columns = [], foreignKeys = [];
-    for (const [key, field] of Object.entries(spec.fields)) {
+    forEachField(spec, (key, field) => {
       let col = `${key} ${SQL_TYPES[field.type] || 'TEXT'}`;
       if (field.required && field.type !== 'id') col += ' NOT NULL';
       if (field.unique) col += ' UNIQUE';
       if (field.default !== undefined) col += ` DEFAULT ${typeof field.default === 'string' ? `'${field.default}'` : field.default}`;
       columns.push(col);
       if (field.type === 'ref' && field.ref) foreignKeys.push(`FOREIGN KEY (${key}) REFERENCES ${field.ref}s(id)`);
-    }
+    });
     const fkPart = foreignKeys.length ? ',\n' + foreignKeys.join(',\n') : '';
     db.exec(`CREATE TABLE IF NOT EXISTS ${spec.name}s (${columns.join(',\n')}${fkPart})`);
   }
 
   for (const spec of Object.values(specs)) {
-    for (const [key, field] of Object.entries(spec.fields)) {
+    forEachField(spec, (key, field) => {
       if (field.type === 'ref' || field.sortable || field.search) {
         try { db.exec(`CREATE INDEX IF NOT EXISTS idx_${spec.name}s_${key} ON ${spec.name}s(${key})`); } catch {}
       }
-    }
+    });
   }
 }
 
@@ -79,13 +80,12 @@ export function get(entityName, id) {
 
 export function create(entityName, data, user) {
   const spec = getSpec(entityName), id = data.id || genId(), fields = { id };
-  for (const [key, field] of Object.entries(spec.fields)) {
-    if (field.type === 'id') continue;
+  iterateCreateFields(spec, (key, field) => {
     if (field.auto === 'now') fields[key] = now();
     else if (field.auto === 'user' && user) fields[key] = user.id;
     else if (data[key] !== undefined && data[key] !== '') { const v = coerce(data[key], field.type); if (v !== undefined) fields[key] = v; }
     else if (field.default !== undefined) fields[key] = coerce(field.default, field.type);
-  }
+  });
   const keys = Object.keys(fields);
   try { db.prepare(`INSERT INTO ${spec.name}s (${keys.join(', ')}) VALUES (${keys.map(() => '?').join(', ')})`).run(...Object.values(fields)); return { id, ...fields }; }
   catch (e) { console.error('Create error:', e.message); throw e; }
@@ -93,11 +93,10 @@ export function create(entityName, data, user) {
 
 export function update(entityName, id, data, user) {
   const spec = getSpec(entityName), fields = {};
-  for (const [key, field] of Object.entries(spec.fields)) {
-    if (field.readOnly || field.type === 'id') continue;
+  iterateUpdateFields(spec, (key, field) => {
     if (field.auto === 'update') fields[key] = now();
     else if (data[key] !== undefined) { const v = coerce(data[key], field.type); fields[key] = v === undefined ? null : v; }
-  }
+  });
   if (!Object.keys(fields).length) return;
   try { db.prepare(`UPDATE ${spec.name}s SET ${Object.keys(fields).map(k => `${k} = ?`).join(', ')} WHERE id = ?`).run(...Object.values(fields), id); }
   catch (e) { console.error('Update error:', e.message); throw e; }
