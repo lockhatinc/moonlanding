@@ -4,6 +4,7 @@ import { getSpec } from '@/config';
 import { ok, created, notFound, badRequest, unauthorized, serverError, ensureDb, parseParams } from '@/lib/api-helpers';
 import { broadcastUpdate } from '@/lib/realtime-server';
 import { validateStageTransition, validateRfiStatusChange } from '@/engine/events';
+import { logger } from '@/lib/logger';
 
 export async function GET(request, { params }) {
   ensureDb();
@@ -22,7 +23,7 @@ export async function GET(request, { params }) {
     }
     const q = new URL(request.url).searchParams.get('q');
     return ok(q ? search(entity, q) : list(entity));
-  } catch (e) { console.error('API GET error:', e); return serverError(); }
+  } catch (e) { logger.apiError('GET', params.entity, e); return serverError(); }
 }
 
 export async function POST(request, { params }) {
@@ -35,7 +36,7 @@ export async function POST(request, { params }) {
     const result = create(entity, await request.json(), user);
     broadcastUpdate(`/api/${entity}`, 'create', result);
     return created(result);
-  } catch (e) { console.error('API POST error:', e); return serverError(e.message); }
+  } catch (e) { logger.apiError('POST', params.entity, e); return serverError(e.message); }
 }
 
 export async function PUT(request, { params }) {
@@ -66,7 +67,7 @@ export async function PUT(request, { params }) {
     broadcastUpdate(`/api/${entity}/${id}`, 'update', result);
     broadcastUpdate(`/api/${entity}`, 'update', result);
     return ok(result);
-  } catch (e) { console.error('API PUT error:', e); return serverError(e.message); }
+  } catch (e) { logger.apiError('PUT', params.entity, e); return serverError(e.message); }
 }
 
 export async function PATCH(request, { params }) { return PUT(request, { params }); }
@@ -83,5 +84,5 @@ export async function DELETE(request, { params }) {
     broadcastUpdate(`/api/${entity}/${id}`, 'delete', { id });
     broadcastUpdate(`/api/${entity}`, 'delete', { id });
     return ok({ success: true });
-  } catch (e) { console.error('API DELETE error:', e); return serverError(e.message); }
+  } catch (e) { logger.apiError('DELETE', params.entity, e); return serverError(e.message); }
 }
