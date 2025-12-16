@@ -21,7 +21,7 @@ export function ListBuilder({
 }) {
   const router = useRouter();
   const { query, setQuery } = useSearch();
-  const { selected, toggle, isSelected } = useSelection(null, false);
+  const { selected: expandedGroups, toggle: toggleGroup } = useSelection([], true);
   const { field: sortField, dir: sortDir, setSortField } = useSort(spec.list?.defaultSort?.field);
 
   const columns = useMemo(() => buildListColumns(spec), [spec]);
@@ -35,7 +35,6 @@ export function ListBuilder({
     return sorted;
   }, [data, query, groupBy, sortField, sortDir]);
 
-  const toggleGroup = (g) => toggle(g);
   const handleRowClick = (row) => router.push(`/${spec.name}/${row.id}`);
 
   const handlePageChange = (newPage) => {
@@ -108,7 +107,7 @@ export function ListBuilder({
                     onClick={() => toggleGroup(group)}
                   >
                     <Table.Td style={{ width: 40 }}>
-                      {isExpanded(group) ? (
+                      {expandedGroups.includes(group) ? (
                         <ChevronDown size={16} />
                       ) : (
                         <ChevronRight size={16} />
@@ -122,13 +121,12 @@ export function ListBuilder({
                     </Table.Td>
                   </Table.Tr>
                 )}
-                {(!groupBy || isExpanded(group)) &&
+                {(!groupBy || expandedGroups.includes(group)) &&
                   rows.map(row => (
                     <Table.Tr
                       key={row.id}
                       style={{
                         cursor: 'pointer',
-                        backgroundColor: isSelected(row.id) ? 'var(--mantine-color-blue-0)' : undefined,
                       }}
                       onClick={() => handleRowClick(row)}
                     >
