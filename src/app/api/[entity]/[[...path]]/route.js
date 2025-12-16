@@ -1,4 +1,4 @@
-import { list, get, create, update, remove, search, getChildren } from '@/engine';
+import { list, get, create, update, remove, search, getChildren, listWithPagination } from '@/engine';
 import { getUser } from '@/engine.server';
 import { getSpec, VALIDATORS } from '@/config';
 import { ok, created, notFound, badRequest, serverError, withEntityAccess, parseParams } from '@/lib/api-helpers';
@@ -17,8 +17,19 @@ export async function GET(request, { params }) {
       const childDef = spec.children?.[childKey];
       return childDef ? ok(getChildren(entity, id, childDef)) : notFound('Unknown child');
     }
-    const q = new URL(request.url).searchParams.get('q');
-    return ok(q ? search(entity, q) : list(entity));
+
+    const url = new URL(request.url);
+    const q = url.searchParams.get('q');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const pageSize = parseInt(url.searchParams.get('pageSize') || String(spec.list?.pageSize || 20));
+
+    if (q) {
+      const results = search(entity, q);
+      return ok({ items: results });
+    }
+
+    const { items, pagination } = listWithPagination(entity, {}, page, pageSize);
+    return ok({ items, pagination });
   });
 }
 
