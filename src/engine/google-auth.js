@@ -2,6 +2,7 @@
 import { google } from 'googleapis';
 import path from 'path';
 import fs from 'fs';
+import { GOOGLE_SCOPES } from '@/config/constants';
 
 const SERVICE_ACCOUNT_PATH = process.env.GOOGLE_SERVICE_ACCOUNT_PATH ||
   path.join(process.cwd(), 'config', 'service-account.json');
@@ -32,10 +33,7 @@ export async function getAuthClient(scopes, userEmail = null) {
 }
 
 export async function getDriveClient(userEmail = null) {
-  const client = await getAuthClient([
-    'https://www.googleapis.com/auth/drive',
-    'https://www.googleapis.com/auth/drive.file',
-  ], userEmail);
+  const client = await getAuthClient(GOOGLE_SCOPES.drive, userEmail);
   if (!client) return null;
   return google.drive({ version: 'v3', auth: client });
 }
@@ -45,18 +43,13 @@ export async function getGmailClient(userEmail) {
     console.warn('No sender email configured');
     return null;
   }
-  const client = await getAuthClient([
-    'https://www.googleapis.com/auth/gmail.send',
-    'https://www.googleapis.com/auth/gmail.readonly',
-  ], userEmail);
+  const client = await getAuthClient(GOOGLE_SCOPES.gmail, userEmail);
   if (!client) return null;
   return google.gmail({ version: 'v1', auth: client });
 }
 
 export async function getDocsClient(userEmail = null) {
-  const client = await getAuthClient([
-    'https://www.googleapis.com/auth/documents',
-  ], userEmail);
+  const client = await getAuthClient(GOOGLE_SCOPES.docs, userEmail);
   if (!client) return null;
   return google.docs({ version: 'v1', auth: client });
 }

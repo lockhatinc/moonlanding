@@ -164,3 +164,19 @@ export const VALIDATION = {
   PAGE_SIZE: 20,
   MAX_PAGE_SIZE: 100,
 };
+
+export const GOOGLE_SCOPES = {
+  drive: [
+    'https://www.googleapis.com/auth/drive',
+    'https://www.googleapis.com/auth/drive.file',
+  ],
+  gmail: [
+    'https://www.googleapis.com/auth/gmail.send',
+    'https://www.googleapis.com/auth/gmail.readonly',
+  ],
+  docs: ['https://www.googleapis.com/auth/documents'],
+};
+
+export const GOOGLE_APIS = {
+  oauth2: 'https://www.googleapis.com/oauth2/v1/userinfo',
+};

@@ -2,6 +2,8 @@ import { list, get, create, update } from '../engine';
 import { emailConfig, emailTemplates } from './email-config';
 import { EMAIL_RESOLVERS } from '../config';
 import { generateChecklistPdf } from './generate-checklist-pdf';
+import { GOOGLE_SCOPES } from '@/config/constants';
+import { config } from '@/config/env';
 
 export { emailConfig, emailTemplates, generateChecklistPdf };
 
@@ -61,7 +63,7 @@ export async function queueEmail(key, context) {
     return;
   }
 
-  const baseUrl = process.env.APP_URL || 'http://localhost:3000';
+  const baseUrl = config.app.url;
   const ctx = {
     ...context,
     review_url: context.review ? `${baseUrl}/review/${context.review.id}` : '',
@@ -118,7 +120,7 @@ async function sendEmail(n) {
     const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
     const auth = new google.auth.GoogleAuth({
       credentials,
-      scopes: ['https://www.googleapis.com/auth/gmail.send'],
+      scopes: GOOGLE_SCOPES.gmail,
     });
 
     const gmail = google.gmail({ version: 'v1', auth });

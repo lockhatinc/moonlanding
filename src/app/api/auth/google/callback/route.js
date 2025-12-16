@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { google, createSession } from '@/engine.server';
 import { getBy, create } from '@/engine';
 import { cookies } from 'next/headers';
+import { GOOGLE_APIS } from '@/config/constants';
 
 export async function GET(request) {
   if (!google) {
@@ -24,7 +25,7 @@ export async function GET(request) {
     const tokens = await google.validateAuthorizationCode(code, storedCodeVerifier);
     const accessToken = tokens.accessToken();
 
-    const response = await fetch('https://www.googleapis.com/oauth2/v1/userinfo', {
+    const response = await fetch(GOOGLE_APIS.oauth2, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
