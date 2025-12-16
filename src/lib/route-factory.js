@@ -5,6 +5,8 @@ import { getSpec } from '@/config';
 import { ok, created, notFound, badRequest, unauthorized, serverError, parseParams } from '@/lib/api-helpers';
 import { broadcastUpdate } from '@/lib/realtime-server';
 import { logger } from '@/lib/logger';
+import { executeHook } from '@/lib/hook-registry';
+import { validateEntity, validateUpdate } from '@/lib/validation-engine';
 
 const withErrorHandling = async (handler, action, entity) => {
   try {
@@ -64,7 +66,12 @@ export const createCrudHandlers = (options = {}) => ({
 
       return withAuth('create', entity, async (spec, user) => {
         const data = await request.json();
-        const result = create(entity, data, user);
+        const errors = await validateEntity(spec, data);
+        if (Object.keys(errors).length) return badRequest(errors);
+
+        const context = await executeHook(`create:${entity}:before`, { entity, data, user });
+        const result = create(context.entity, context.data, user);
+        await executeHook(`create:${entity}:after`, { entity, data: result, user });
         broadcastUpdate(`/api/${entity}`, 'create', result);
         return created(result);
       });
@@ -81,14 +88,18 @@ export const createCrudHandlers = (options = {}) => ({
         if (!prev) return notFound();
 
         const data = await request.json();
+        const errors = await validateUpdate(spec, id, data);
+        if (Object.keys(errors).length) return badRequest(errors);
 
         if (options.onBeforeUpdate) {
           const result = await options.onBeforeUpdate(entity, prev, data, user);
           if (result !== null) return result;
         }
 
-        update(entity, id, data, user);
+        const context = await executeHook(`update:${entity}:before`, { entity, id, data, user, prev });
+        update(context.entity, context.id, context.data, user);
         const result = get(entity, id);
+        await executeHook(`update:${entity}:after`, { entity, id, data: result, user });
         broadcastUpdate(`/api/${entity}/${id}`, 'update', result);
         broadcastUpdate(`/api/${entity}`, 'update', result);
 
@@ -115,7 +126,13 @@ export const createCrudHandlers = (options = {}) => ({
           if (result !== null) return result;
         }
 
-        remove(entity, id);
+        const context = await executeHook(`delete:${entity}:before`, { entity, id, record, user });
+        if (spec.fields.status) {
+          update(context.entity, context.id, { status: 'deleted' }, user);
+        } else {
+          remove(context.entity, context.id);
+        }
+        await executeHook(`delete:${entity}:after`, { entity, id, record, user });
         broadcastUpdate(`/api/${entity}/${id}`, 'delete', { id });
         broadcastUpdate(`/api/${entity}`, 'delete', { id });
 

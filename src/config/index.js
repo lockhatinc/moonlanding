@@ -28,6 +28,8 @@ export { PERMISSIONS, canUserAction, canUserPerformAction, checkPermission } fro
 export { specs, getSpec, getNavItems, buildNavigation, getChildEntities, getParentEntity, getDefaultSort, getAvailableFilters, getPageSize, getEntityLabel, getInitialState, isEmbeddedEntity, isParentEntity, hasChildRelationships, isSoftDeleted, getOptions, getOptionLabel, getOptionColor, getNextEngagementStage } from './spec-helpers';
 export { HTTP_RESPONSES, RESPONSE_MAPPERS } from './responses';
 export { config, VALIDATORS, hasGoogleAuth, hasDriveConfig, hasEmailConfig, EMAIL_RESOLVERS } from './env';
+export { SpecBuilder, spec } from './spec-builder';
+export { allSpecs } from './entities';
 
 export const API_ENDPOINTS = {
   entity: (name) => `/api/${name}`,
