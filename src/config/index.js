@@ -14,14 +14,15 @@ export {
   COLORS,
   BADGE_COLORS_MANTINE,
   DISPLAY,
-  FIELD_TYPES,
   SQL_TYPES,
   STAGE_TRANSITIONS,
-  PAGINATION,
   VALIDATION,
 } from './constants';
 
-export { getFormFields, getListFields, getDisplayFields, getEditableFields, getRequiredFields, getSearchFields, getFilterableFields, getRefFields, getField, getFieldType } from '@/lib/field-iterator';
+export { getFormFields, getListFields, getDisplayFields, getEditableFields, getRequiredFields, getSearchFields, getFilterableFields, getRefFields, getField, getFieldType, forEachField, iterateCreateFields, iterateUpdateFields } from '@/lib/field-iterator';
+
+export const buildFormFields = getFormFields;
+export const buildListColumns = getListFields;
 
 export { PERMISSIONS, canUserAction, canUserPerformAction, checkPermission } from './permissions';
 export { specs, getSpec, getNavItems, buildNavigation, getChildEntities, getParentEntity, getDefaultSort, getAvailableFilters, getPageSize, getEntityLabel, getInitialState, isEmbeddedEntity, isParentEntity, hasChildRelationships, isSoftDeleted, getOptions, getOptionLabel, getOptionColor, getNextEngagementStage } from './spec-helpers';

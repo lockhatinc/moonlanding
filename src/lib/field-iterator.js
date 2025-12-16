@@ -63,3 +63,11 @@ export function forEachField(spec, callback, filter = () => true) {
     if (filter(field)) callback(key, field);
   }
 }
+
+export function iterateCreateFields(spec, callback) {
+  forEachField(spec, callback, f => !f.hidden && !f.readOnly && f.type !== 'id');
+}
+
+export function iterateUpdateFields(spec, callback) {
+  forEachField(spec, callback, f => !f.hidden && !f.readOnly && f.type !== 'id');
+}
