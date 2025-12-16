@@ -1,15 +1,3 @@
-
-
-export {
-  RFI_STATUS,
-  RFI_CLIENT_STATUS,
-  RFI_AUDITOR_STATUS,
-  ENGAGEMENT_STATUS,
-  ENGAGEMENT_STAGE,
-  REVIEW_STATUS,
-  STAGE_TRANSITIONS,
-} from '@/config/constants';
-
 import {
   RFI_STATUS,
   RFI_CLIENT_STATUS,
@@ -18,6 +6,15 @@ import {
   REVIEW_STATUS,
   STAGE_TRANSITIONS,
 } from '@/config/constants';
+
+export {
+  RFI_STATUS,
+  RFI_CLIENT_STATUS,
+  ENGAGEMENT_STATUS,
+  ENGAGEMENT_STAGE,
+  REVIEW_STATUS,
+  STAGE_TRANSITIONS,
+};
 
 export function isRfiCompleted(rfi) {
   return rfi.status === RFI_STATUS.COMPLETED || rfi.client_status === RFI_CLIENT_STATUS.COMPLETED;
