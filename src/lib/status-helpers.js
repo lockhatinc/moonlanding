@@ -1,48 +1,25 @@
-// Status and enum helpers - consolidates magic numbers and status checks
-// Replaces scattered hardcoded status checks throughout events, recreation, and validation code
+// STATUS HELPERS - Re-exports constants from config/constants (single source of truth)
+// Plus status check functions that reduce repeated conditional logic
 
-// RFI Status constants
-export const RFI_STATUS = {
-  PENDING: 0,
-  COMPLETED: 1,
-};
+// Re-export all status constants from unified config (single source)
+export {
+  RFI_STATUS,
+  RFI_CLIENT_STATUS,
+  RFI_AUDITOR_STATUS,
+  ENGAGEMENT_STATUS,
+  ENGAGEMENT_STAGE,
+  REVIEW_STATUS,
+  STAGE_TRANSITIONS,
+} from '@/config/constants';
 
-export const RFI_CLIENT_STATUS = {
-  PENDING: 'pending',
-  SENT: 'sent',
-  RESPONDED: 'responded',
-  COMPLETED: 'completed',
-};
-
-export const RFI_AUDITOR_STATUS = {
-  REQUESTED: 'requested',
-  REVIEWING: 'reviewing',
-  QUERIES: 'queries',
-  RECEIVED: 'received',
-};
-
-// Engagement Status constants
-export const ENGAGEMENT_STATUS = {
-  PENDING: 'pending',
-  ACTIVE: 'active',
-  COMPLETED: 'completed',
-  ARCHIVED: 'archived',
-};
-
-export const ENGAGEMENT_STAGE = {
-  INFO_GATHERING: 'info_gathering',
-  COMMENCEMENT: 'commencement',
-  TEAM_EXECUTION: 'team_execution',
-  PARTNER_REVIEW: 'partner_review',
-  FINALIZATION: 'finalization',
-  CLOSE_OUT: 'close_out',
-};
-
-// Review Status constants
-export const REVIEW_STATUS = {
-  OPEN: 'open',
-  CLOSED: 'closed',
-};
+import {
+  RFI_STATUS,
+  RFI_CLIENT_STATUS,
+  ENGAGEMENT_STATUS,
+  ENGAGEMENT_STAGE,
+  REVIEW_STATUS,
+  STAGE_TRANSITIONS,
+} from '@/config/constants';
 
 // Check helpers - reduce repeated conditional logic
 export function isRfiCompleted(rfi) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { TextInput, Textarea, Select, Checkbox, NumberInput, Stack, Avatar } from '@mantine/core';
-import { secondsToDate, dateToSeconds } from '@/lib/field-types';
+import { secondsToDate, dateToSeconds } from '@/lib/field-registry';
 
 export function renderFormField(field, values, setField, enumSelectData, refSelectData) {
   const val = values[field.key] ?? '';

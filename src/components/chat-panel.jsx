@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Paper, Stack, Group, Text, ActionIcon, Avatar, Textarea, Box, Title, ScrollArea, Checkbox } from '@mantine/core';
 import { Send, Lock } from 'lucide-react';
-import { secondsToDate } from '@/lib/field-types';
+import { secondsToDate } from '@/lib/field-registry';
 
 export function ChatPanel({ entityType, entityId, messages = [], user, onSendMessage }) {
   const [displayMessages, setDisplayMessages] = useState(messages);

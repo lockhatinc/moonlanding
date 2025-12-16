@@ -3,6 +3,65 @@
 
 ---
 
+# ARCHITECTURE REFACTORING (COMPLETE ✅)
+
+## Configuration Consolidation
+Eliminated all configuration duplication across multiple files:
+
+**Before:** Constants scattered across 4+ files with duplicates
+- `config/index.js` (675 lines)
+- `lib/status-helpers.js` (duplicate RFI_STATUS, ENGAGEMENT_STATUS, etc.)
+- `lib/display-config.js` (duplicate DISPLAY constants)
+- `lib/field-types.js` (duplicate BADGE_COLORS)
+- Components (hardcoded colors)
+
+**After:** Single source of truth
+- `config/constants.js` (200 lines) - ALL enums, colors, limits
+- `lib/status-helpers.js` (79 lines) - Re-exports only + helper functions
+- `config/index.js` (314 lines) - Imports & re-exports from constants
+
+## Field Type Handling Unified
+Consolidated field type operations from 7 files → 2 files:
+
+**New unified system:**
+- `lib/field-registry.js` (209 lines) - Complete field type registry
+  - All field types with: coerce, format, validate, render config
+  - formatFieldValue(), coerceFieldValue(), validateFieldValue()
+  - Badge color helpers (BADGE_COLORS_MANTINE, getBadgeStyle())
+  - Date helpers (secondsToDate, dateToSeconds, formatDate)
+
+- `lib/field-iterator.js` (67 lines) - Field selection helpers
+  - getFormFields(), getListFields(), getDisplayFields()
+  - getEditableFields(), getRequiredFields(), getSearchFields()
+  - All duplicates removed from config/index.js
+
+**Eliminated:**
+- `lib/field-types.js` (old - now just a shell for compatibility)
+- `lib/field-handlers.js` (old - logic moved to field-registry)
+- `lib/display-config.js` (old - values moved to constants)
+- Hardcoded color definitions in list-cell-renderer.jsx
+
+## Files Updated (Import Migration)
+9 files updated to use new unified modules:
+- `components/field-render.jsx` - Now uses formatFieldValue from field-registry
+- `components/builders/form-field-renderer.jsx` - Uses dateToSeconds from field-registry
+- `components/builders/list-cell-renderer.jsx` - Uses BADGE_COLORS_MANTINE from constants
+- `components/chat-panel.jsx` - Uses secondsToDate from field-registry
+- `components/highlight-layer.jsx` - Uses secondsToDate from field-registry
+- `components/entity-detail.jsx` - Uses getDisplayFields from config
+- `engine/events-entity.js` - Uses secondsToDate from field-registry
+- `app/[entity]/actions.js` - Uses dateToSeconds from field-registry
+- `engine.js` - Uses coerceFieldValue instead of coerce
+
+## Key Metrics
+- **Config reduction:** 675 → 314 lines (54% smaller)
+- **Duplication eliminated:** ~300 lines removed
+- **Single sources of truth:** 4 areas consolidated
+- **Files with imports updated:** 9 files migrated
+- **Backward compatibility:** All old imports still work via re-exports
+
+---
+
 # STUB IMPLEMENTATIONS & ERROR HANDLING (COMPLETE ✅)
 
 ## All Critical Stubs Fixed

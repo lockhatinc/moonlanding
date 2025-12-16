@@ -2,8 +2,8 @@ import Database from 'better-sqlite3';
 import { nanoid } from 'nanoid';
 import path from 'path';
 import fs from 'fs';
-import { specs, getSpec, SQL_TYPES } from '@/config';
-import { coerce, getSearchFields } from '@/lib/field-types';
+import { specs, getSpec, SQL_TYPES, getSearchFields } from '@/config';
+import { coerceFieldValue } from '@/lib/field-registry';
 import { forEachField, iterateCreateFields, iterateUpdateFields } from '@/lib/field-iterator';
 
 // === DATABASE ===
@@ -83,8 +83,8 @@ export function create(entityName, data, user) {
   iterateCreateFields(spec, (key, field) => {
     if (field.auto === 'now') fields[key] = now();
     else if (field.auto === 'user' && user) fields[key] = user.id;
-    else if (data[key] !== undefined && data[key] !== '') { const v = coerce(data[key], field.type); if (v !== undefined) fields[key] = v; }
-    else if (field.default !== undefined) fields[key] = coerce(field.default, field.type);
+    else if (data[key] !== undefined && data[key] !== '') { const v = coerceFieldValue(data[key], field.type); if (v !== undefined) fields[key] = v; }
+    else if (field.default !== undefined) fields[key] = coerceFieldValue(field.default, field.type);
   });
   const keys = Object.keys(fields);
   try { db.prepare(`INSERT INTO ${spec.name}s (${keys.join(', ')}) VALUES (${keys.map(() => '?').join(', ')})`).run(...Object.values(fields)); return { id, ...fields }; }
@@ -95,7 +95,7 @@ export function update(entityName, id, data, user) {
   const spec = getSpec(entityName), fields = {};
   iterateUpdateFields(spec, (key, field) => {
     if (field.auto === 'update') fields[key] = now();
-    else if (data[key] !== undefined) { const v = coerce(data[key], field.type); fields[key] = v === undefined ? null : v; }
+    else if (data[key] !== undefined) { const v = coerceFieldValue(data[key], field.type); fields[key] = v === undefined ? null : v; }
   });
   if (!Object.keys(fields).length) return;
   try { db.prepare(`UPDATE ${spec.name}s SET ${Object.keys(fields).map(k => `${k} = ?`).join(', ')} WHERE id = ?`).run(...Object.values(fields), id); }

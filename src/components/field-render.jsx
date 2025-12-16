@@ -1,10 +1,10 @@
 'use client';
 
 import { Avatar, Badge, Code, Text } from '@mantine/core';
-import { formatDisplayValue, BADGE_COLORS } from '@/lib/field-types';
+import { formatFieldValue } from '@/lib/field-registry';
 
 export function FieldRender({ spec, field, value, row }) {
-  const formatted = formatDisplayValue(value, field, spec, row);
+  const formatted = formatFieldValue(value, field, spec, row);
 
   if (formatted === null) return <Text c="dimmed">-</Text>;
 

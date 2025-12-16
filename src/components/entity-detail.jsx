@@ -7,14 +7,15 @@ import { DetailHeader } from './entity-detail/detail-header';
 import { DetailFields } from './entity-detail/detail-fields';
 import { ChildTabs } from './entity-detail/child-tabs';
 import { ActionsPanel } from './entity-detail/actions-panel';
-import { getDisplayFields, getEntityIcon } from '@/lib/field-types';
+import { getDisplayFields } from '@/config';
 import { useRouter } from 'next/navigation';
+import * as Icons from 'lucide-react';
 
 export function EntityDetail({ spec, data, children = {}, user, canEdit = false, canDelete = false, deleteAction }) {
   const router = useRouter();
   const [activeDialog, setActiveDialog] = useState(null);
   const displayFields = getDisplayFields(spec);
-  const Icon = getEntityIcon(spec);
+  const Icon = Icons[spec.icon] || Icons.File;
 
   const childTabs = spec.children
     ? Object.entries(spec.children).map(([key, child]) => ({ key, ...child, data: children[key] || [] }))

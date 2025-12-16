@@ -3,7 +3,7 @@
 import { list, get, remove, create, update } from '@/engine';
 import { requireUser, check } from '@/engine.server';
 import { getSpec } from '@/config';
-import { dateToSeconds } from '@/lib/field-types';
+import { dateToSeconds } from '@/lib/field-registry';
 import { revalidatePath } from 'next/cache';
 import { createCRUDActions, createEntityAction } from '@/lib/action-factory';
 

@@ -1,6 +1,6 @@
 import { list, get, update, create, remove, count } from '../engine.js';
 import { queueEmail } from './email-templates';
-import { secondsToDate } from '@/lib/field-types';
+import { secondsToDate } from '@/lib/field-registry';
 
 function logActivity(entityType, entityId, action, message, user, details) {
   create('activity_log', { entity_type: entityType, entity_id: entityId, action, message, details: details ? JSON.stringify(details) : null, user_email: user?.email }, user);

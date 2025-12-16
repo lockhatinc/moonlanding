@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Stack, Paper, Box, Group, Badge, Text, ActionIcon, Avatar, Textarea, Button } from '@mantine/core';
 import { MessageSquare, ChevronUp, ChevronDown, Send, Check } from 'lucide-react';
-import { secondsToDate } from '@/lib/field-types';
+import { secondsToDate } from '@/lib/field-registry';
 
 export function HighlightLayer({ highlights = [], selectedId, onSelect, onResolve, onAddResponse, user, canResolve = false }) {
   const [expandedId, setExpandedId] = useState(null);
