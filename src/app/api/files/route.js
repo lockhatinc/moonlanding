@@ -1,37 +1,23 @@
-import { NextResponse } from 'next/server';
+import { badRequest, unauthorized, notFound, serverError, ok } from '@/lib/api-helpers';
 import { requireUser } from '@/engine.server';
 import { can } from '@/lib/permissions';
-import { create, get, remove } from '@/engine';
+import { create, get, remove, list } from '@/engine';
 import { getSpec } from '@/config';
 import * as drive from '@/engine/drive';
 
 export async function POST(request) {
   try {
     const user = await requireUser();
-
     const formData = await request.formData();
     const file = formData.get('file');
     const entityType = formData.get('entity_type');
     const entityId = formData.get('entity_id');
     const folderId = formData.get('folder_id');
-
-    if (!file || !entityType || !entityId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
-
+    if (!file || !entityType || !entityId) return badRequest('Missing required fields');
     const spec = getSpec('file');
-    if (!can(user, spec, 'create')) {
-      return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
-    }
-
+    if (!can(user, spec, 'create')) return unauthorized();
     const buffer = Buffer.from(await file.arrayBuffer());
-    const driveFile = await drive.uploadFile(
-      buffer,
-      file.name,
-      file.type,
-      folderId || undefined
-    );
-
+    const driveFile = await drive.uploadFile(buffer, file.name, file.type, folderId || undefined);
     const fileRecord = create('file', {
       entity_type: entityType,
       entity_id: entityId,
@@ -42,11 +28,10 @@ export async function POST(request) {
       mime_type: file.type,
       download_url: driveFile.webContentLink,
     }, user);
-
-    return NextResponse.json(fileRecord);
+    return ok(fileRecord);
   } catch (error) {
-    console.error('File upload error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[FILES] POST error:', error.message);
+    return serverError(error.message);
   }
 }
 
@@ -56,21 +41,14 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const entityType = searchParams.get('entity_type');
     const entityId = searchParams.get('entity_id');
-
-    if (!entityType || !entityId) {
-      return NextResponse.json({ error: 'Missing entity_type or entity_id' }, { status: 400 });
-    }
-
+    if (!entityType || !entityId) return badRequest('Missing entity_type or entity_id');
     const spec = getSpec('file');
-    if (!can(user, spec, 'list')) {
-      return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
-    }
-
-    const files = await list('file', { entity_type: entityType, entity_id: entityId });
-    return NextResponse.json(files);
+    if (!can(user, spec, 'list')) return unauthorized();
+    const files = list('file', { entity_type: entityType, entity_id: entityId });
+    return ok(files);
   } catch (error) {
-    console.error('File list error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[FILES] GET error:', error.message);
+    return serverError(error.message);
   }
 }
 
@@ -79,34 +57,22 @@ export async function DELETE(request) {
     const user = await requireUser();
     const { searchParams } = new URL(request.url);
     const fileId = searchParams.get('id');
-
-    if (!fileId) {
-      return NextResponse.json({ error: 'Missing file id' }, { status: 400 });
-    }
-
+    if (!fileId) return badRequest('Missing file id');
     const spec = getSpec('file');
-    if (!can(user, spec, 'delete')) {
-      return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
-    }
-
+    if (!can(user, spec, 'delete')) return unauthorized();
     const fileRecord = get('file', fileId);
-    if (!fileRecord) {
-      return NextResponse.json({ error: 'File not found' }, { status: 404 });
-    }
-
+    if (!fileRecord) return notFound('File not found');
     if (fileRecord.drive_file_id) {
       try {
         await drive.deleteFile(fileRecord.drive_file_id);
       } catch (e) {
-        console.warn('Failed to delete from Drive:', e.message);
+        console.warn('[FILES] Failed to delete from Drive:', e.message);
       }
     }
-
     remove('file', fileId);
-
-    return NextResponse.json({ success: true });
+    return ok({ success: true });
   } catch (error) {
-    console.error('File delete error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[FILES] DELETE error:', error.message);
+    return serverError(error.message);
   }
 }
