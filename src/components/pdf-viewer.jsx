@@ -1,8 +1,34 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Paper, Group, Text, ActionIcon, Box, Button, Center, Loader } from '@mantine/core';
 import { MessageSquare, ZoomIn, ZoomOut, ChevronLeft, ChevronRight } from 'lucide-react';
+
+function getHighlightStyle(highlight, isSelected) {
+  const resolvedColor = isSelected ? 'var(--mantine-color-blue-6)' : highlight.resolved ? 'var(--mantine-color-green-6)' : 'var(--mantine-color-yellow-6)';
+  const bgColor = isSelected ? 'rgba(0,100,255,0.2)' : highlight.resolved ? 'rgba(0,200,0,0.1)' : 'rgba(255,200,0,0.2)';
+  return { borderColor: resolvedColor, bgColor };
+}
+
+function HighlightBox({ highlight, isSelected, onSelect }) {
+  const { borderColor, bgColor } = useMemo(() => getHighlightStyle(highlight, isSelected), [highlight, isSelected]);
+  return (
+    <Box
+      key={highlight.id}
+      style={{
+        position: 'absolute',
+        left: `${highlight.position.x * 100}%`,
+        top: `${highlight.position.y * 100}%`,
+        width: `${highlight.position.width * 100}%`,
+        height: `${highlight.position.height * 100}%`,
+        border: `2px solid ${borderColor}`,
+        background: bgColor,
+        cursor: 'pointer',
+      }}
+      onClick={() => onSelect(highlight.id)}
+    />
+  );
+}
 
 export function PDFViewer({ fileUrl, highlights = [], onHighlight, selectedHighlight, onSelectHighlight }) {
   const [currentPage, setCurrentPage] = useState(1);
@@ -77,10 +103,29 @@ export function PDFViewer({ fileUrl, highlights = [], onHighlight, selectedHighl
         {loading ? (
           <Center h="100%"><Loader /></Center>
         ) : fileUrl ? (
-          <Box ref={containerRef} mx="auto" bg="white" style={{ width: `${612 * scale}px`, height: `${792 * scale}px`, position: 'relative', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', cursor: onHighlight ? 'crosshair' : 'default' }} onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}>
-            <Center h="100%"><Text c="dimmed">PDF Page {currentPage}<br /><Text size="sm">{fileUrl}</Text></Text></Center>
+          <Box
+            ref={containerRef}
+            mx="auto"
+            bg="white"
+            style={{
+              width: `${612 * scale}px`,
+              height: `${792 * scale}px`,
+              position: 'relative',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              cursor: onHighlight ? 'crosshair' : 'default',
+            }}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+          >
+            <Center h="100%">
+              <Text c="dimmed">
+                PDF Page {currentPage}
+                <br />
+                <Text size="sm">{fileUrl}</Text>
+              </Text>
+            </Center>
             {pageHighlights.map((h) => h.position && (
-              <Box key={h.id} style={{ position: 'absolute', left: `${h.position.x * 100}%`, top: `${h.position.y * 100}%`, width: `${h.position.width * 100}%`, height: `${h.position.height * 100}%`, border: `2px solid ${selectedHighlight === h.id ? 'var(--mantine-color-blue-6)' : h.resolved ? 'var(--mantine-color-green-6)' : 'var(--mantine-color-yellow-6)'}`, background: selectedHighlight === h.id ? 'rgba(0,100,255,0.2)' : h.resolved ? 'rgba(0,200,0,0.1)' : 'rgba(255,200,0,0.2)', cursor: 'pointer' }} onClick={() => onSelectHighlight?.(h.id)} />
+              <HighlightBox key={h.id} highlight={h} isSelected={selectedHighlight === h.id} onSelect={onSelectHighlight} />
             ))}
           </Box>
         ) : (
