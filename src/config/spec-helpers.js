@@ -1,6 +1,7 @@
 import { STAGE_TRANSITIONS, VALIDATION } from './constants';
+import { allSpecs } from './entities';
 
-export const specs = {};
+export const specs = { ...allSpecs };
 
 export function getSpec(name) {
   const spec = specs[name];
