@@ -11,6 +11,18 @@ import { PDFViewer } from './pdf-viewer';
 import { HighlightLayer } from './highlight-layer';
 import { useReviewHandlers } from '@/lib/use-review-handlers';
 
+function ChecklistItem({ checklist }) {
+  const statusColor = checklist.status === 'completed' ? 'green' : checklist.status === 'in_progress' ? 'blue' : 'yellow';
+  return (
+    <Paper key={checklist.id} p="xs" withBorder>
+      <Group justify="space-between">
+        <Text size="sm">{checklist.checklist_id_display || 'Checklist'}</Text>
+        <Badge size="sm" color={statusColor}>{checklist.status}</Badge>
+      </Group>
+    </Paper>
+  );
+}
+
 export function ReviewDetail({ spec, data, children = {}, user, canEdit = false, canDelete = false, deleteAction }) {
   const router = useRouter();
   const [selectedHighlight, setSelectedHighlight] = useState(null);
@@ -69,8 +81,12 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
               </Tabs.Panel>
               <Tabs.Panel value="checklists">
                 <Paper p="md" withBorder>
-                  {checklists.length === 0 ? <Text c="dimmed" ta="center" py="md">No checklists assigned</Text> : (
-                    <Stack gap="xs">{checklists.map((c) => <Paper key={c.id} p="xs" withBorder><Group justify="space-between"><Text size="sm">{c.checklist_id_display || 'Checklist'}</Text><Badge size="sm" color={c.status === 'completed' ? 'green' : c.status === 'in_progress' ? 'blue' : 'yellow'}>{c.status}</Badge></Group></Paper>)}</Stack>
+                  {checklists.length === 0 ? (
+                    <Text c="dimmed" ta="center" py="md">No checklists assigned</Text>
+                  ) : (
+                    <Stack gap="xs">
+                      {checklists.map((c) => <ChecklistItem key={c.id} checklist={c} />)}
+                    </Stack>
                   )}
                 </Paper>
               </Tabs.Panel>
