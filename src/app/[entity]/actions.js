@@ -7,11 +7,7 @@ import { dateToSeconds } from '@/lib/field-registry';
 import { revalidatePath } from 'next/cache';
 import { createCRUDActions, createEntityAction } from '@/lib/action-factory';
 
-const createAction = (entityName, formData) => createCRUDActions(entityName).create(formData);
-const updateAction = (entityName, id, formData) => createCRUDActions(entityName).update(id, formData);
-const deleteAction = (entityName, id) => createCRUDActions(entityName).delete(id);
-
-export { createAction, updateAction, deleteAction };
+export const deleteAction = (entityName, id) => createCRUDActions(entityName).delete(id);
 
 export const mlConsolidateQueries = createEntityAction('review', 'mlConsolidateQueries', 'edit',
   async (_user, _spec, reviewId) => {
