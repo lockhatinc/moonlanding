@@ -9,74 +9,18 @@ import { AddChecklistDialog } from './dialogs/add-checklist';
 import { ChatPanel } from './chat-panel';
 import { PDFViewer } from './pdf-viewer';
 import { HighlightLayer } from './highlight-layer';
+import { useReviewHandlers } from '@/lib/use-review-handlers';
 
 export function ReviewDetail({ spec, data, children = {}, user, canEdit = false, canDelete = false, deleteAction }) {
   const router = useRouter();
   const [selectedHighlight, setSelectedHighlight] = useState(null);
   const [showAddChecklistDialog, setShowAddChecklistDialog] = useState(false);
-  const highlights = children.highlights || [], checklists = children.checklists || [], chatMessages = children.chat || [];
+  const { handleHighlight, handleResolve, handleAddResponse, handleSendMessage } = useReviewHandlers(data.id);
+
+  const highlights = children.highlights || [];
+  const checklists = children.checklists || [];
+  const chatMessages = children.chat || [];
   const unresolvedCount = useMemo(() => highlights.filter((h) => !h.resolved).length, [highlights]);
-
-  const handleHighlight = async (d) => {
-    try {
-      const res = await fetch('/api/highlight', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ review_id: data.id, ...d }),
-      });
-      if (!res.ok) throw new Error('Failed to create highlight');
-      router.refresh();
-    } catch (e) {
-      console.error('Error creating highlight:', e);
-      alert(`Error creating highlight: ${e.message}`);
-    }
-  };
-
-  const handleResolve = async (id) => {
-    try {
-      const res = await fetch(`/api/highlight/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resolved: true }),
-      });
-      if (!res.ok) throw new Error('Failed to resolve highlight');
-      router.refresh();
-    } catch (e) {
-      console.error('Error resolving highlight:', e);
-      alert(`Error resolving highlight: ${e.message}`);
-    }
-  };
-
-  const handleAddResponse = async (id, content) => {
-    try {
-      const res = await fetch('/api/highlight_response', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ highlight_id: id, content }),
-      });
-      if (!res.ok) throw new Error('Failed to add response');
-      router.refresh();
-    } catch (e) {
-      console.error('Error adding response:', e);
-      alert(`Error adding response: ${e.message}`);
-    }
-  };
-
-  const handleSendMessage = async (message) => {
-    try {
-      const response = await fetch(`/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(message),
-      });
-      if (!response.ok) throw new Error('Failed to send message');
-      router.refresh();
-      return await response.json();
-    } catch (error) {
-      console.error('Error sending message:', error);
-      throw error;
-    }
-  };
 
   return (
     <Stack gap="md">

@@ -8,64 +8,24 @@ import { buildListColumns } from '@/config';
 import { Search, Plus, ChevronDown, ChevronRight } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { renderCellValue } from './list-cell-renderer';
+import { filterByQuery, groupByField, sortGroups } from '@/lib/list-data-transform';
 
 export function ListBuilder({ spec, data = [], onCreateClick, canCreate = true }) {
   const router = useRouter();
-  const { query, setQuery, clear, hasQuery } = useSearchState();
-  const { selected, expanded, toggle, select, isSelected, isExpanded } = useSelectionState(null, false);
+  const { query, setQuery } = useSearchState();
+  const { selected, expanded, toggle, isSelected, isExpanded } = useSelectionState(null, false);
   const { field: sortField, dir: sortDir, setSortField } = useSortState(spec.list?.defaultSort?.field);
 
   const columns = useMemo(() => buildListColumns(spec), [spec]);
   const Icon = Icons[spec.icon] || Icons.File;
-
   const groupBy = spec.list?.groupBy;
-  const grouped = useMemo(() => {
-    let filtered = data;
 
-    if (hasQuery) {
-      const lowerQuery = query.toLowerCase();
-      filtered = data.filter(row =>
-        JSON.stringify(row).toLowerCase().includes(lowerQuery)
-      );
-    }
-
-    if (!groupBy) return { '': filtered };
-
-    return filtered.reduce((acc, row) => {
-      const g = row[groupBy] || 'Other';
-      (acc[g] = acc[g] || []).push(row);
-      return acc;
-    }, {});
-  }, [data, groupBy, query, hasQuery]);
-
-  const sorted = useMemo(() => {
-    const result = {};
-    for (const [group, rows] of Object.entries(grouped)) {
-      if (!sortField) {
-        result[group] = rows;
-        continue;
-      }
-
-      result[group] = [...rows].sort((a, b) => {
-        const aVal = a[sortField];
-        const bVal = b[sortField];
-
-        if (aVal == null && bVal == null) return 0;
-        if (aVal == null) return sortDir === 'asc' ? 1 : -1;
-        if (bVal == null) return sortDir === 'asc' ? -1 : 1;
-
-        const cmp = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-        return sortDir === 'asc' ? cmp : -cmp;
-      });
-    }
-    return result;
-  }, [grouped, sortField, sortDir]);
-
-  const toggleGroup = (g) => toggle(g);
-
-  const handleRowClick = (row) => {
-    router.push(`/${spec.name}/${row.id}`);
-  };
+  const transformed = useMemo(() => {
+    const filtered = filterByQuery(data, query);
+    const grouped = groupByField(filtered, groupBy);
+    const sorted = sortGroups(grouped, sortField, sortDir);
+    return sorted;
+  }, [data, query, groupBy, sortField, sortDir]);
 
   return (
     <Stack gap="md">
@@ -114,7 +74,7 @@ export function ListBuilder({ spec, data = [], onCreateClick, canCreate = true }
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {Object.entries(sorted).map(([group, rows], idx) => (
+            {Object.entries(transformed).map(([group, rows], idx) => (
               <div key={`group-${idx}-${group}`}>
                 {groupBy && (
                   <Table.Tr
