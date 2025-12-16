@@ -5,7 +5,6 @@ import { generateChecklistPdf } from './generate-checklist-pdf';
 
 export { emailConfig, emailTemplates, generateChecklistPdf };
 
-// Dynamically resolve recipients based on config specification
 function resolveRecipients(spec, ctx) {
   if (!spec) return [];
 
@@ -51,10 +50,6 @@ function resolveRecipients(spec, ctx) {
   }
 }
 
-// ========================================
-// EMAIL API
-// ========================================
-
 export async function queueEmail(key, context) {
   const template = emailTemplates[key];
   if (!template) throw new Error(`Unknown email template: ${key}`);
@@ -66,7 +61,7 @@ export async function queueEmail(key, context) {
     return;
   }
 
-  const baseUrl = process.env.APP_URL || 'http://localhost:3000';
+  const baseUrl = process.env.APP_URL || 'http:
   const ctx = {
     ...context,
     review_url: context.review ? `${baseUrl}/review/${context.review.id}` : '',
@@ -116,14 +111,14 @@ async function sendEmail(n) {
       path.join(process.cwd(), 'service-account.json');
 
     if (!fs.existsSync(credentialsPath)) {
-      console.error('Service account file not found at:', credentialsPath);
+      throw new Error(`[API Error] ${'Service account file not found at:', credentialsPath}`);
       throw new Error('Email service not configured');
     }
 
     const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
     const auth = new google.auth.GoogleAuth({
       credentials,
-      scopes: ['https://www.googleapis.com/auth/gmail.send'],
+      scopes: ['https:
     });
 
     const gmail = google.gmail({ version: 'v1', auth });
@@ -147,7 +142,7 @@ async function sendEmail(n) {
       requestBody: { raw: encodedMessage },
     });
   } catch (error) {
-    console.error('[EMAIL] Failed to send:', error.message);
+    throw new Error(`[API Error] ${'[EMAIL] Failed to send:', error.message}`);
     throw error;
   }
 }

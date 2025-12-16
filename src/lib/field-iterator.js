@@ -1,6 +1,4 @@
-// UNIFIED FIELD ITERATOR - Single source for field filtering/selection
-// Eliminates duplication from config/index.js, field-types.js, and field-iterator patterns
-// All spec-based field selection happens here
+
 
 function getFieldsByFilter(spec, filter) {
   const fields = [];
@@ -8,6 +6,14 @@ function getFieldsByFilter(spec, filter) {
     if (filter(field)) fields.push({ key, ...field });
   }
   return fields;
+}
+
+function getFieldKeysByFilter(spec, filter) {
+  const keys = [];
+  for (const [key, field] of Object.entries(spec.fields)) {
+    if (filter(field)) keys.push(key);
+  }
+  return keys;
 }
 
 export function getFormFields(spec) {
@@ -23,21 +29,15 @@ export function getDisplayFields(spec) {
 }
 
 export function getEditableFields(spec) {
-  return Object.entries(spec.fields)
-    .filter(([_, f]) => !f.hidden && !f.readOnly && f.type !== 'id')
-    .map(([key]) => key);
+  return getFieldKeysByFilter(spec, f => !f.hidden && !f.readOnly && f.type !== 'id');
 }
 
 export function getRequiredFields(spec) {
-  return Object.entries(spec.fields)
-    .filter(([_, f]) => f.required)
-    .map(([key]) => key);
+  return getFieldKeysByFilter(spec, f => f.required);
 }
 
 export function getSearchFields(spec) {
-  return Object.entries(spec.fields)
-    .filter(([_, f]) => f.search)
-    .map(([key]) => key);
+  return getFieldKeysByFilter(spec, f => f.search);
 }
 
 export function getFilterableFields(spec) {
@@ -58,7 +58,6 @@ export function getFieldType(spec, fieldKey) {
   return spec.fields[fieldKey]?.type;
 }
 
-// Legacy iterator functions (kept for compatibility)
 export function forEachField(spec, callback, filter = () => true) {
   for (const [key, field] of Object.entries(spec.fields)) {
     if (filter(field)) callback(key, field);

@@ -20,7 +20,7 @@ export const scheduledJobs = {
   daily_backup: {
     schedule: '0 2 * * *',
     description: 'Export database to backup',
-    run: async () => { const { exportDatabase } = await import(/* webpackIgnore: true */ './backup'); await exportDatabase(); },
+    run: async () => { const { exportDatabase } = await import( './backup'); await exportDatabase(); },
   },
 
   daily_user_sync: {

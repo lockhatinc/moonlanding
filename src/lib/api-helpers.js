@@ -1,4 +1,4 @@
-// API Response Helpers - Consolidates common API patterns
+
 import { NextResponse } from 'next/server';
 import { getSpec } from '@/config';
 import { migrate } from '@/engine';
@@ -9,7 +9,6 @@ import { logger } from '@/lib/logger';
 let dbInit = false;
 export function ensureDb() { if (!dbInit) { migrate(); dbInit = true; } }
 
-// Standard responses with metadata
 const withMetadata = (data, status = 200, type = 'success') => ({
   status,
   type,
@@ -25,12 +24,6 @@ export const badRequest = (msg = 'Bad request') => NextResponse.json(withMetadat
 export const unauthorized = (msg = 'Unauthorized') => NextResponse.json(withMetadata({ error: msg }, 403, 'error'), { status: 403 });
 export const serverError = (msg = 'Internal server error') => NextResponse.json(withMetadata({ error: msg }, 500, 'error'), { status: 500 });
 
-/**
- * Wrap API handler with common checks
- * @param {string} entity - Entity name (from params)
- * @param {string} action - Required permission
- * @param {Function} handler - async (spec, user, request) => Response
- */
 export async function withEntityAccess(entity, action, handler) {
   ensureDb();
   try {
@@ -45,9 +38,6 @@ export async function withEntityAccess(entity, action, handler) {
   }
 }
 
-/**
- * Parse entity and path from dynamic route params
- */
 export async function parseParams(params) {
   const { entity, path = [] } = await params;
   const [id, childKey] = path;

@@ -6,7 +6,6 @@ export async function POST(request) {
   try {
     const user = await requireUser();
 
-    // Only partners and managers can send emails
     if (!['partner', 'manager'].includes(user.role)) {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
@@ -27,7 +26,7 @@ export async function POST(request) {
 
     return NextResponse.json({ success: true, messageId: result.id });
   } catch (error) {
-    console.error('Email send error:', error);
+    throw new Error(`[API Error] ${'Email send error:', error}`);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -36,7 +35,6 @@ export async function PUT(request) {
   try {
     const user = await requireUser();
 
-    // Only partners can send bulk emails
     if (user.role !== 'partner') {
       return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
@@ -51,7 +49,7 @@ export async function PUT(request) {
     const results = await gmail.sendBulkEmails(emails);
     return NextResponse.json({ results });
   } catch (error) {
-    console.error('Bulk email error:', error);
+    throw new Error(`[API Error] ${'Bulk email error:', error}`);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

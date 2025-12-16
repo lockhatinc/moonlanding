@@ -1,5 +1,4 @@
-// Authentication and spec helpers - consolidates repeated auth patterns
-// Eliminates duplication of getSpec + getUser + can(user, spec, action) across routes and actions
+
 
 import { getSpec } from '@/config';
 import { getUser, requireUser, can, check } from '@/engine.server';

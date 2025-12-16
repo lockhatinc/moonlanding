@@ -24,7 +24,7 @@ export async function GET(request) {
     const tokens = await google.validateAuthorizationCode(code, storedCodeVerifier);
     const accessToken = tokens.accessToken();
 
-    const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+    const response = await fetch('https:
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 

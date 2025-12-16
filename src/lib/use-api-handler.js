@@ -2,17 +2,6 @@
 
 import { useState } from 'react';
 
-/**
- * Hook for handling API calls with standardized error handling
- * @param {string} endpoint - API endpoint URL
- * @param {Object} options - configuration
- * @param {string} options.method - HTTP method (default: GET)
- * @param {string} options.errorMsg - User-friendly error message
- * @param {Function} options.onSuccess - Callback on success
- * @param {Function} options.onError - Callback on error
- * @param {boolean} options.json - Parse response as JSON (default: true)
- * @returns {Object} { loading, error, execute }
- */
 export function useApiHandler(endpoint, options = {}) {
   const {
     method = 'GET',
@@ -60,12 +49,6 @@ export function useApiHandler(endpoint, options = {}) {
   return { loading, error, execute };
 }
 
-/**
- * Simplified hook for read-only GET requests
- * @param {string} endpoint - API endpoint URL
- * @param {Object} options - configuration (same as useApiHandler)
- * @returns {Object} { loading, error, data, refetch }
- */
 export function useApiGet(endpoint, options = {}) {
   const [data, setData] = useState(null);
   const { loading, error, execute } = useApiHandler(endpoint, {
@@ -77,32 +60,14 @@ export function useApiGet(endpoint, options = {}) {
   return { loading, error, data, refetch: execute };
 }
 
-/**
- * Hook for POST requests
- * @param {string} endpoint - API endpoint URL
- * @param {Object} options - configuration
- * @returns {Object} { loading, error, execute }
- */
 export function useApiPost(endpoint, options = {}) {
   return useApiHandler(endpoint, { method: 'POST', ...options });
 }
 
-/**
- * Hook for PUT requests
- * @param {string} endpoint - API endpoint URL
- * @param {Object} options - configuration
- * @returns {Object} { loading, error, execute }
- */
 export function useApiPut(endpoint, options = {}) {
   return useApiHandler(endpoint, { method: 'PUT', ...options });
 }
 
-/**
- * Hook for DELETE requests
- * @param {string} endpoint - API endpoint URL
- * @param {Object} options - configuration
- * @returns {Object} { loading, error, execute }
- */
 export function useApiDelete(endpoint, options = {}) {
   return useApiHandler(endpoint, { method: 'DELETE', ...options });
 }

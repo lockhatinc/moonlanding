@@ -1,17 +1,11 @@
-// API Endpoints Configuration - Centralized URLs for all API routes
-// Use these constants instead of hardcoded '/api/...' strings in components
 
-/**
- * Entity CRUD endpoints
- * Usage: API_ENDPOINTS.entity('engagement') => '/api/engagement'
- */
+
 export const API_ENDPOINTS = {
-  // Generic entity endpoint builder
+  
   entity: (name) => `/api/${name}`,
   entityId: (name, id) => `/api/${name}/${id}`,
   entityChild: (name, id, child) => `/api/${name}/${id}/${child}`,
 
-  // Specific entity endpoints
   engagement: {
     list: '/api/engagement',
     detail: (id) => `/api/engagement/${id}`,
@@ -91,7 +85,6 @@ export const API_ENDPOINTS = {
     list: '/api/chat',
   },
 
-  // Auth endpoints
   auth: {
     login: '/api/auth/login',
     logout: '/api/auth/logout',
@@ -101,13 +94,6 @@ export const API_ENDPOINTS = {
   },
 };
 
-/**
- * Build dynamic entity endpoint with method
- * @param {string} entity - Entity name
- * @param {string} method - HTTP method (GET, POST, PUT, DELETE)
- * @param {string} id - Entity ID (optional)
- * @returns {Object} Endpoint configuration
- */
 export function getEntityEndpoint(entity, method = 'GET', id = null) {
   const base = `/api/${entity}`;
   return {
@@ -116,21 +102,10 @@ export function getEntityEndpoint(entity, method = 'GET', id = null) {
   };
 }
 
-/**
- * Build search endpoint
- * @param {string} entity - Entity name
- * @param {string} query - Search query
- * @returns {string} Search endpoint with query
- */
 export function getSearchEndpoint(entity, query) {
   return `/api/${entity}?q=${encodeURIComponent(query)}`;
 }
 
-/**
- * Check if URL is API endpoint
- * @param {string} url - URL to check
- * @returns {boolean} Whether URL is an API endpoint
- */
 export function isApiEndpoint(url) {
   return url.startsWith('/api/');
 }

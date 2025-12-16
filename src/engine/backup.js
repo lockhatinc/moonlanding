@@ -5,10 +5,6 @@ import db from './db';
 
 const backupDir = path.join(process.cwd(), 'data', 'backups');
 
-/**
- * Export database to JSON backup
- * From MWR/Friday: Daily backup to storage bucket
- */
 export async function exportDatabase() {
   if (!fs.existsSync(backupDir)) {
     fs.mkdirSync(backupDir, { recursive: true });
@@ -35,15 +31,11 @@ export async function exportDatabase() {
 
   fs.writeFileSync(backupPath, JSON.stringify(backup, null, 2));
 
-  // Clean up old backups (keep last 30)
   await cleanupOldBackups(30);
 
   return backupPath;
 }
 
-/**
- * Import database from JSON backup
- */
 export async function importDatabase(backupPath) {
   if (!fs.existsSync(backupPath)) {
     throw new Error(`Backup file not found: ${backupPath}`);
@@ -70,9 +62,6 @@ export async function importDatabase(backupPath) {
   }
 }
 
-/**
- * List available backups
- */
 function listBackups() {
   if (!fs.existsSync(backupDir)) {
     return [];
@@ -92,9 +81,6 @@ function listBackups() {
     .sort((a, b) => b.created - a.created);
 }
 
-/**
- * Clean up old backups, keeping only the specified number
- */
 async function cleanupOldBackups(keepCount = 30) {
   const backups = listBackups();
 
@@ -110,17 +96,11 @@ async function cleanupOldBackups(keepCount = 30) {
   }
 }
 
-/**
- * Get the latest backup
- */
 function getLatestBackup() {
   const backups = listBackups();
   return backups.length > 0 ? backups[0] : null;
 }
 
-/**
- * Export specific tables
- */
 function exportTables(tableNames) {
   const backup = {
     timestamp: new Date().toISOString(),

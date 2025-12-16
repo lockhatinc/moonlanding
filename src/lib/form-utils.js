@@ -1,11 +1,6 @@
-// Shared form utilities for entity forms
+
 import { list } from '@/engine';
 
-/**
- * Load options for all ref fields in a spec
- * @param {Object} spec - Entity specification
- * @returns {Object} Options keyed by field name
- */
 export async function loadOptions(spec) {
   const options = {};
   for (const [key, field] of Object.entries(spec.fields)) {

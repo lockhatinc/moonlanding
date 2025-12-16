@@ -1,4 +1,4 @@
-// Route Helpers - Consolidates common route patterns
+
 import { getSpec, getNavItems } from '@/config';
 import { get, getChildren } from '@/engine';
 import { getUser } from '@/engine.server';
@@ -6,9 +6,6 @@ import { can } from '@/lib/permissions';
 import { redirect, notFound } from 'next/navigation';
 import { loadOptions } from './form-utils';
 
-/**
- * Validate entity access and return spec/user
- */
 export async function requireEntityAccess(entityName, action = 'view', options = {}) {
   const user = await getUser();
   if (!user) redirect('/login');
@@ -26,9 +23,6 @@ export async function requireEntityAccess(entityName, action = 'view', options =
   return { user, spec };
 }
 
-/**
- * Get entity data with validation
- */
 export async function getEntityData(entityName, id, options = {}) {
   const { user, spec } = await requireEntityAccess(entityName, 'view', options);
   const data = get(entityName, id);
@@ -44,9 +38,6 @@ export async function getEntityData(entityName, id, options = {}) {
   return { user, spec, data, children };
 }
 
-/**
- * Prepare form page context
- */
 export async function getFormContext(entityName, id = null, action = 'create') {
   const { user, spec } = await requireEntityAccess(entityName, action, {
     redirectTo: id ? `/${entityName}/${id}` : `/${entityName}`
@@ -59,27 +50,14 @@ export async function getFormContext(entityName, id = null, action = 'create') {
   return { user, spec, data, options };
 }
 
-/**
- * Common page wrapper props
- */
 export function getPageProps(user, spec) {
   return { user, nav: getNavItems(), canCreate: can(user, spec, 'create'), canEdit: can(user, spec, 'edit'), canDelete: can(user, spec, 'delete') };
 }
 
-// ========================================
-// UNIFIED METADATA GENERATORS
-// ========================================
-
-/**
- * Generate metadata for list pages
- */
 export function listMetadata(entity) {
   try { return { title: getSpec(entity).labelPlural }; } catch { return { title: 'Not Found' }; }
 }
 
-/**
- * Generate metadata for detail pages
- */
 export function detailMetadata(entity, id) {
   try {
     const spec = getSpec(entity), data = get(entity, id);
@@ -87,16 +65,10 @@ export function detailMetadata(entity, id) {
   } catch { return { title: 'Not Found' }; }
 }
 
-/**
- * Generate metadata for new pages
- */
 export function newMetadata(entity) {
   try { return { title: `New ${getSpec(entity).label}` }; } catch { return { title: 'Not Found' }; }
 }
 
-/**
- * Generate metadata for edit pages
- */
 export function editMetadata(entity, id) {
   try {
     const spec = getSpec(entity), data = get(entity, id);

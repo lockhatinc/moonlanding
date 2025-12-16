@@ -19,6 +19,8 @@ let appState = {
 export function initDebug() {
   if (typeof window === 'undefined') return;
 
+  let errors = [];
+
   window.__DEBUG__ = {
     getState: () => appState,
     setState: (key, value) => { appState[key] = value; console.log(`[DEBUG] Set ${key}:`, value); },
@@ -40,10 +42,20 @@ export function initDebug() {
     clearCache: () => { appState.cache = {}; },
     getAll: () => appState,
     log: (msg, data) => console.log(`[APP] ${msg}`, data || ''),
+    error: (msg, context) => {
+      const err = { msg, context, timestamp: new Date(), stack: new Error().stack };
+      errors.push(err);
+      if (errors.length > 50) errors.shift();
+      console.error(`[ERROR] ${msg}`, context || '');
+      return err;
+    },
+    getErrors: () => errors,
+    clearErrors: () => { errors = []; },
     tables: {
       apiCalls: () => console.table(appState.api.calls),
       entities: () => console.table(appState.entities),
       cache: () => console.table(appState.cache),
+      errors: () => console.table(errors),
     },
   };
 }

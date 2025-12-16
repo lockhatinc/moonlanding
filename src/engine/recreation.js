@@ -1,7 +1,6 @@
 import { list, get, update, create, remove } from '../engine';
 import { ENGAGEMENT_STATUS, ENGAGEMENT_STAGE, RFI_STATUS, RFI_CLIENT_STATUS, RFI_AUDITOR_STATUS } from '@/lib/status-helpers';
 
-// === HELPERS ===
 const calcNextPeriod = (year, month, interval) => {
   if (interval === 'yearly') return { year: year + 1, month };
   if (interval === 'monthly') return month === 12 ? { year: year + 1, month: 1 } : { year, month: (month || 0) + 1 };
@@ -13,7 +12,6 @@ const copyEntity = (entity, src, overrides) => {
   return e.map(item => create(entity, { ...item, id: undefined, ...overrides(item) }));
 };
 
-// === MAIN ===
 export async function recreateEngagement(sourceId) {
   const src = get('engagement', sourceId);
   if (!src) throw new Error('Source engagement not found');

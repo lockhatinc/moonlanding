@@ -6,7 +6,6 @@ import { specs, getSpec, SQL_TYPES, getSearchFields } from '@/config';
 import { coerceFieldValue } from '@/lib/field-registry';
 import { forEachField, iterateCreateFields, iterateUpdateFields } from '@/lib/field-iterator';
 
-// === DATABASE ===
 const DB_PATH = path.resolve(process.cwd(), 'data', 'app.db');
 const dataDir = path.dirname(DB_PATH);
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
@@ -43,7 +42,6 @@ export function migrate() {
 export const genId = () => nanoid();
 export const now = () => Math.floor(Date.now() / 1000);
 
-// === CRUD ===
 function buildSelect(spec, where = {}, options = {}) {
   const table = `${spec.name}s`, selects = [`${table}.*`], joins = [];
   if (spec.computed) for (const [key, comp] of Object.entries(spec.computed)) selects.push(`${comp.sql} as ${key}`);
@@ -146,7 +144,6 @@ export function getBy(entityName, field, value) {
   const spec = getSpec(entityName), { sql, params } = buildSelect(spec, { [field]: value });
   try { return db.prepare(sql).get(...params); } catch { return null; }
 }
-
 
 export function hashPassword(password) { return require('crypto').createHash('sha256').update(password).digest('hex'); }
 export function verifyPassword(password, hash) { return hashPassword(password) === hash; }

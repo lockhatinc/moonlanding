@@ -66,7 +66,7 @@ export async function sendEmail({ to, subject, body, html, cc, bcc, from = DEFAU
   const raw = Buffer.from(message.join('\r\n'))
     .toString('base64')
     .replace(/\+/g, '-')
-    .replace(/\//g, '_')
+    .replace(/\
     .replace(/=+$/, '');
 
   const response = await gmail.users.messages.send({

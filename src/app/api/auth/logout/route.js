@@ -3,7 +3,7 @@ import { invalidateSession } from '@/engine.server';
 
 export async function GET() {
   await invalidateSession();
-  return NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'));
+  return NextResponse.redirect(new URL('/login', process.env.NEXT_PUBLIC_URL || 'http:
 }
 
 export async function POST() {
