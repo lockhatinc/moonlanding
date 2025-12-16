@@ -27,6 +27,9 @@ export function ListBuilder({ spec, data = [], onCreateClick, canCreate = true }
     return sorted;
   }, [data, query, groupBy, sortField, sortDir]);
 
+  const toggleGroup = (g) => toggle(g);
+  const handleRowClick = (row) => router.push(`/${spec.name}/${row.id}`);
+
   return (
     <Stack gap="md">
       <Group justify="space-between">
