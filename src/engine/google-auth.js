@@ -33,8 +33,8 @@ export async function getAuthClient(scopes, userEmail = null) {
 
 export async function getDriveClient(userEmail = null) {
   const client = await getAuthClient([
-    'https:
-    'https:
+    'https://www.googleapis.com/auth/drive',
+    'https://www.googleapis.com/auth/drive.file',
   ], userEmail);
   if (!client) return null;
   return google.drive({ version: 'v3', auth: client });
@@ -46,8 +46,8 @@ export async function getGmailClient(userEmail) {
     return null;
   }
   const client = await getAuthClient([
-    'https:
-    'https:
+    'https://www.googleapis.com/auth/gmail.send',
+    'https://www.googleapis.com/auth/gmail.readonly',
   ], userEmail);
   if (!client) return null;
   return google.gmail({ version: 'v1', auth: client });
@@ -55,7 +55,7 @@ export async function getGmailClient(userEmail) {
 
 export async function getDocsClient(userEmail = null) {
   const client = await getAuthClient([
-    'https:
+    'https://www.googleapis.com/auth/documents',
   ], userEmail);
   if (!client) return null;
   return google.docs({ version: 'v1', auth: client });

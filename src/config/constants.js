@@ -98,11 +98,9 @@ export const DISPLAY = {
   MAX_API_CALLS_HISTORY: 100,
   API_TIMEOUT_MS: 30000,
   POLLING_INTERVAL_MS: 2000,
-  DEFAULT_PAGE_SIZE: 20,
   MAX_INLINE_ITEMS: 5,
   MAX_UPLOAD_SIZE_MB: 100,
   MAX_FILE_NAME_LENGTH: 255,
-  MIN_PASSWORD_LENGTH: 8,
   MAX_FIELD_NAME_LENGTH: 100,
   TOAST_DURATION_MS: 3000,
   MAX_NOTIFICATIONS: 50,
@@ -136,22 +134,6 @@ export const ERRORS = {
   EXTERNAL_API_ERROR: 'External API request failed',
 };
 
-export const FIELD_TYPES = {
-  text: { sqlType: 'TEXT' },
-  email: { sqlType: 'TEXT' },
-  textarea: { sqlType: 'TEXT' },
-  int: { sqlType: 'INTEGER' },
-  decimal: { sqlType: 'REAL' },
-  bool: { sqlType: 'INTEGER' },
-  date: { sqlType: 'INTEGER' },
-  timestamp: { sqlType: 'INTEGER' },
-  enum: { sqlType: 'TEXT' },
-  ref: { sqlType: 'TEXT' },
-  json: { sqlType: 'TEXT' },
-  image: { sqlType: 'TEXT' },
-  id: { sqlType: 'TEXT PRIMARY KEY' },
-};
-
 export const SQL_TYPES = {
   id: 'TEXT PRIMARY KEY',
   text: 'TEXT',
@@ -176,12 +158,9 @@ export const STAGE_TRANSITIONS = {
   'finalization': 'close_out',
 };
 
-export const PAGINATION = {
-  DEFAULT_PAGE_SIZE: 20,
-  MAX_PAGE_SIZE: 100,
-};
-
 export const VALIDATION = {
   EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   PASSWORD_MIN_LENGTH: 8,
+  PAGE_SIZE: 20,
+  MAX_PAGE_SIZE: 100,
 };

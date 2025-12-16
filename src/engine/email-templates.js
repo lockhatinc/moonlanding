@@ -61,7 +61,7 @@ export async function queueEmail(key, context) {
     return;
   }
 
-  const baseUrl = process.env.APP_URL || 'http:
+  const baseUrl = process.env.APP_URL || 'http://localhost:3000';
   const ctx = {
     ...context,
     review_url: context.review ? `${baseUrl}/review/${context.review.id}` : '',
@@ -118,7 +118,7 @@ async function sendEmail(n) {
     const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));
     const auth = new google.auth.GoogleAuth({
       credentials,
-      scopes: ['https:
+      scopes: ['https://www.googleapis.com/auth/gmail.send'],
     });
 
     const gmail = google.gmail({ version: 'v1', auth });

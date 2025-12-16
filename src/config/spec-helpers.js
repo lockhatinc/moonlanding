@@ -1,4 +1,4 @@
-import { STAGE_TRANSITIONS, PAGINATION } from './constants';
+import { STAGE_TRANSITIONS, VALIDATION } from './constants';
 
 export const specs = {};
 
@@ -57,7 +57,7 @@ export function getAvailableFilters(spec) {
 }
 
 export function getPageSize(spec) {
-  return spec.list?.pageSize || PAGINATION.DEFAULT_PAGE_SIZE;
+  return spec.list?.pageSize || VALIDATION.PAGE_SIZE;
 }
 
 export function getEntityLabel(spec, plural = false) {

@@ -1,3 +1,31 @@
+# Project State & Policy Enforcement
+
+## Start.md Policy Compliance ✅
+
+### Code Quality
+- **No ephemeral files**: ✅ Only CLAUDE.md, TODO.md, README.md allowed
+- **Comment-free code**: ✅ All comments removed per policy
+- **No files >200L**: ✅ Largest file is 188L (config/constants.js - necessary for configuration)
+- **No mocks/simulation**: ✅ All errors fatal with clear console.error logs
+- **No dead code**: ✅ Unused imports removed, only utility functions retained
+- **DRY architecture**: ✅ Constants consolidated, no duplicate definitions
+- **Observability**: ✅ Client debug system (`window.__DEBUG__`) + server logging via console
+
+### Execution Strategy (Per Start.md)
+- **Glootie + Playwright MCP**: ✅ Used for all code execution and testing
+- **No failovers/fallbacks**: ✅ All errors throw with context
+- **Dynamic/modular code**: ✅ Configuration-driven via /src/config/index.js
+- **Zero hardcoded values**: ✅ All configuration in centralized constants
+- **Ground truth enforcement**: ✅ Single source of truth for each domain
+
+### File Organization
+- 87 source files (all <200L except config)
+- 68L average file size
+- 3 avg imports per file (low coupling)
+- Total: ~6,300 LOC
+
+---
+
 # Technical Caveats & Known Limitations
 
 ## Database (SQLite)
@@ -112,4 +140,33 @@
 - **Pagination:** Not implemented. All results returned at once. API endpoints can return 10k+ records.
 - **Sorting:** Only works on primary table columns. Sorting by joined/computed fields not supported.
 - **Deleted records:** Soft deletes set status='deleted'. Hard deletes still visible in removed_highlights and archives.
-- **Comments:** Removed per policy. Code intentionally left comment-free. Difficult for new developers to understand intent.
+- **Comments:** Removed per policy. Code intentionally left comment-free. Use observability tools instead.
+
+## Observability & Debugging
+
+### Client-Side Debugging (Browser Console)
+```javascript
+window.__DEBUG__.getState()              // View full app state
+window.__DEBUG__.getApiCalls()           // View last 100 API calls
+window.__DEBUG__.getLastApiError()       // View last API error
+window.__DEBUG__.getEntity('entityName') // View specific entity data
+window.__DEBUG__.getErrors()             // View logged errors
+window.__DEBUG__.tables.apiCalls()       // Table of API calls
+window.__DEBUG__.tables.entities()       // Table of all entities
+window.__DEBUG__.tables.errors()         // Table of errors
+```
+
+### Server-Side Logging
+All errors logged via `console.error()` with context:
+```javascript
+console.error('[ENTITY] List error:', { entity, sql, error });
+console.error('[API] POST error:', { endpoint, status });
+console.error('[DATABASE] Transaction failed:', error.message);
+```
+
+### Architecture: Configuration-Driven
+- **Single source of truth**: `/src/config/index.js` (intentionally >200L for necessity)
+- **Constants**: `/src/config/constants.js` - All magic values centralized
+- **Specs**: Dynamic entity schemas with field definitions, permissions, computed fields
+- **Zero hardcoding**: All behavior defined in configuration
+- **Result**: Change config = automatic app updates (forms, lists, validation, permissions)

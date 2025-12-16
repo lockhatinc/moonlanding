@@ -1,31 +1,9 @@
-
+import { DISPLAY } from '@/config/constants';
 
 export const DISPLAY_LIMITS = {
-  
-  JSON_PREVIEW: 50,           
-  TEXTAREA_PREVIEW: 100,      
-  TEXT_PREVIEW: 200,          
-  EMAIL_PREVIEW: 150,         
-  URL_PREVIEW: 100,           
-
-  MAX_API_CALLS_HISTORY: 100, 
-  API_TIMEOUT_MS: 30000,      
-  POLLING_INTERVAL_MS: 2000,  
-
-  DEFAULT_PAGE_SIZE: 20,      
-  MAX_INLINE_ITEMS: 5,        
-
-  MAX_UPLOAD_SIZE_MB: 100,    
-  MAX_FILE_NAME_LENGTH: 255,
-
+  ...DISPLAY,
+  DEFAULT_PAGE_SIZE: 20,
   MIN_PASSWORD_LENGTH: 8,
-  MAX_FIELD_NAME_LENGTH: 100,
-
-  TOAST_DURATION_MS: 3000,    
-  MAX_NOTIFICATIONS: 50,      
-
-  DEBOUNCE_SEARCH_MS: 300,    
-  DEBOUNCE_FORM_CHANGE_MS: 500, 
 };
 
 export const STATUS_COLORS = {
