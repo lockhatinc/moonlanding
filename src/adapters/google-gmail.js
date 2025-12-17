@@ -1,49 +1,44 @@
 import { getGmailClient } from './google-auth.js';
+import { GoogleAdapter } from './google-adapter-base.js';
 
 const DEFAULT_SENDER = process.env.GMAIL_SENDER_EMAIL;
+const gmailAdapter = new GoogleAdapter('Gmail', () => getGmailClient(DEFAULT_SENDER));
 
-async function sendEmail({ to, subject, body, html, cc, bcc, from = DEFAULT_SENDER, attachments = [] }) {
-  const gmail = await getGmailClient(from);
-  if (!gmail) throw new Error('Gmail client not available');
-  const boundary = `boundary_${Date.now()}`;
-  let m = [`From: ${from}`, `To: ${to}`];
-  if (cc) m.push(`Cc: ${cc}`);
-  if (bcc) m.push(`Bcc: ${bcc}`);
-  m.push(`Subject: ${subject}`, 'MIME-Version: 1.0');
-  if (attachments.length > 0) { m.push(`Content-Type: multipart/mixed; boundary="${boundary}"`, '', `--${boundary}`); }
-  if (html) {
-    if (attachments.length > 0) { m.push(`Content-Type: multipart/alternative; boundary="${boundary}_alt"`, '', `--${boundary}_alt`); }
-    m.push('Content-Type: text/plain; charset=utf-8', '', body || '');
-    if (attachments.length > 0) m.push(`--${boundary}_alt`);
-    m.push('Content-Type: text/html; charset=utf-8', '', html);
-    if (attachments.length > 0) m.push(`--${boundary}_alt--`);
-  } else {
-    m.push('Content-Type: text/plain; charset=utf-8', '', body || '');
-  }
-  for (const a of attachments) {
-    m.push(`--${boundary}`, `Content-Type: ${a.mimeType || 'application/octet-stream'}`, 'Content-Transfer-Encoding: base64', `Content-Disposition: attachment; filename="${a.filename}"`, '');
-    const c = Buffer.isBuffer(a.content) ? a.content.toString('base64') : Buffer.from(a.content).toString('base64');
-    m.push(c);
-  }
-  if (attachments.length > 0) m.push(`--${boundary}--`);
-  const raw = Buffer.from(m.join('\r\n')).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  const resp = await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
-  return resp.data;
-}
-
-async function sendBulkEmails(emails, delayMs = 100) {
-  const r = [];
-  for (const e of emails) {
-    try {
-      const res = await sendEmail(e);
-      r.push({ success: true, messageId: res.id, to: e.to });
-    } catch (err) {
-      r.push({ success: false, error: err.message, to: e.to });
+const sendEmail = ({ to, subject, body, html, cc, bcc, from = DEFAULT_SENDER, attachments = [] }) =>
+  gmailAdapter.safeExecute(async (gmail) => {
+    const boundary = `boundary_${Date.now()}`;
+    let m = [`From: ${from}`, `To: ${to}`];
+    if (cc) m.push(`Cc: ${cc}`);
+    if (bcc) m.push(`Bcc: ${bcc}`);
+    m.push(`Subject: ${subject}`, 'MIME-Version: 1.0');
+    if (attachments.length > 0) m.push(`Content-Type: multipart/mixed; boundary="${boundary}"`, '', `--${boundary}`);
+    if (html) {
+      if (attachments.length > 0) m.push(`Content-Type: multipart/alternative; boundary="${boundary}_alt"`, '', `--${boundary}_alt`);
+      m.push('Content-Type: text/plain; charset=utf-8', '', body || '');
+      if (attachments.length > 0) m.push(`--${boundary}_alt`);
+      m.push('Content-Type: text/html; charset=utf-8', '', html);
+      if (attachments.length > 0) m.push(`--${boundary}_alt--`);
+    } else {
+      m.push('Content-Type: text/plain; charset=utf-8', '', body || '');
     }
+    for (const a of attachments) {
+      m.push(`--${boundary}`, `Content-Type: ${a.mimeType || 'application/octet-stream'}`, 'Content-Transfer-Encoding: base64', `Content-Disposition: attachment; filename="${a.filename}"`, '');
+      m.push(Buffer.isBuffer(a.content) ? a.content.toString('base64') : Buffer.from(a.content).toString('base64'));
+    }
+    if (attachments.length > 0) m.push(`--${boundary}--`);
+    const raw = Buffer.from(m.join('\r\n')).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    return (await gmail.users.messages.send({ userId: 'me', requestBody: { raw } })).data;
+  }, 'sendEmail');
+
+const sendBulkEmails = async (emails, delayMs = 100) => {
+  const results = [];
+  for (const e of emails) {
+    try { results.push({ success: true, messageId: (await sendEmail(e)).id, to: e.to }); }
+    catch (err) { results.push({ success: false, error: err.message, to: e.to }); }
     await new Promise(resolve => setTimeout(resolve, delayMs));
   }
-  return r;
-}
+  return results;
+};
 
 const templates = {
   rfiReminder: ({ clientName, engagementName, rfiQuestion, deadline, portalUrl }) => ({
@@ -83,12 +78,11 @@ const templates = {
   }),
 };
 
-export { getGmailClient };
-export { sendEmail, sendBulkEmails, templates };
+export { getGmailClient, sendEmail, sendBulkEmails, templates };
 
-export async function sendTemplatedEmail(templateName, data, to) {
+export const sendTemplatedEmail = async (templateName, data, to) => {
   const t = templates[templateName];
   if (!t) throw new Error(`Unknown email template: ${templateName}`);
   const { subject, body, html } = t(data);
   return sendEmail({ to, subject, body, html });
-}
+};
