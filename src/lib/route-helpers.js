@@ -4,7 +4,7 @@ import { get, getChildren } from '@/engine';
 import { getUser } from '@/engine.server';
 import { can } from '@/lib/permissions';
 import { redirect, notFound } from 'next/navigation';
-import { loadOptions } from './form-utils';
+import { loadFormOptions } from './utils';
 
 export async function requireEntityAccess(entityName, action = 'view', options = {}) {
   const user = await getUser();
@@ -46,7 +46,7 @@ export async function getFormContext(entityName, id = null, action = 'create') {
   const data = id ? get(entityName, id) : {};
   if (id && !data) notFound();
 
-  const options = await loadOptions(spec);
+  const options = await loadFormOptions(spec);
   return { user, spec, data, options };
 }
 
