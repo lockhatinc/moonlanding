@@ -1,11 +1,9 @@
+import { hookEngine } from './hook-engine.js';
+
 export class WorkflowEngine {
   constructor() {
     this.workflows = new Map();
-    this.hooks = {
-      before: new Map(),
-      after: new Map(),
-      guard: new Map(),
-    };
+    this.engine = hookEngine;
   }
 
   define(entityName, workflowDef) {
@@ -15,22 +13,19 @@ export class WorkflowEngine {
 
   before(entityName, transitionName, handler) {
     const key = `${entityName}.${transitionName}`;
-    if (!this.hooks.before.has(key)) this.hooks.before.set(key, []);
-    this.hooks.before.get(key).push(handler);
+    this.engine.register(key, handler, { phase: 'before' });
     return this;
   }
 
   after(entityName, transitionName, handler) {
     const key = `${entityName}.${transitionName}`;
-    if (!this.hooks.after.has(key)) this.hooks.after.set(key, []);
-    this.hooks.after.get(key).push(handler);
+    this.engine.register(key, handler, { phase: 'after' });
     return this;
   }
 
   guard(entityName, transitionName, validator) {
     const key = `${entityName}.${transitionName}`;
-    if (!this.hooks.guard.has(key)) this.hooks.guard.set(key, []);
-    this.hooks.guard.get(key).push(validator);
+    this.engine.register(key, validator, { phase: 'guard' });
     return this;
   }
 
@@ -41,10 +36,16 @@ export class WorkflowEngine {
     const transition = workflow.transitions[toStage];
     if (!transition) return false;
 
-    const guards = this.hooks.guard.get(`${entityName}.${toStage}`) || [];
+    const key = `${entityName}.${toStage}`;
+    const guards = this.engine.listeners(key, 'guard');
     for (const guard of guards) {
-      const result = await guard(record);
-      if (!result) return false;
+      try {
+        const result = await guard.callback(record);
+        if (!result) return false;
+      } catch (error) {
+        console.error(`[WorkflowEngine] Guard failed:`, error.message);
+        return false;
+      }
     }
 
     return true;
@@ -56,18 +57,8 @@ export class WorkflowEngine {
       throw new Error(`Cannot transition from ${record.stage} to ${toStage}`);
     }
 
-    const beforeHooks = this.hooks.before.get(`${entityName}.${toStage}`) || [];
-    for (const hook of beforeHooks) {
-      await hook(record, context);
-    }
-
-    const updated = { ...record, stage: toStage };
-
-    const afterHooks = this.hooks.after.get(`${entityName}.${toStage}`) || [];
-    for (const hook of afterHooks) {
-      await hook(updated, context);
-    }
-
+    const key = `${entityName}.${toStage}`;
+    const updated = await this.engine.transition(key, record.stage, toStage, record, context);
     return updated;
   }
 
