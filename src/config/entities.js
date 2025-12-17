@@ -1,5 +1,7 @@
 import { spec } from './spec-builder';
 import { ROLES, ENGAGEMENT_STATUS, ENGAGEMENT_STAGE, REVIEW_STATUS, HIGHLIGHT_STATUS, RFI_CLIENT_STATUS, RFI_AUDITOR_STATUS } from './constants';
+import * as gmail from '@/engine/gmail';
+import * as drive from '@/engine/drive';
 
 export const userSpec = spec('user')
   .label('User', 'Users')
@@ -231,6 +233,46 @@ export const messageSpec = spec('message')
   })
   .build();
 
+export const fileSpec = spec('file')
+  .label('File', 'Files')
+  .icon('File')
+  .fields({
+    entity_type: { type: 'text', required: true },
+    entity_id: { type: 'text', required: true },
+    drive_file_id: { type: 'text', required: true },
+    file_name: { type: 'text', required: true },
+    file_type: { type: 'text' },
+    file_size: { type: 'int' },
+    mime_type: { type: 'text' },
+    download_url: { type: 'text' },
+  })
+  .access({
+    list: [ROLES.PARTNER, ROLES.MANAGER, ROLES.CLERK],
+    view: [ROLES.PARTNER, ROLES.MANAGER, ROLES.CLERK],
+    create: [ROLES.PARTNER, ROLES.MANAGER, ROLES.CLERK],
+    edit: [ROLES.PARTNER],
+    delete: [ROLES.PARTNER],
+  })
+  .build();
+
+export const emailSpec = spec('email')
+  .label('Email', 'Emails')
+  .icon('Mail')
+  .fields({
+    to: { type: 'email', required: true },
+    subject: { type: 'text', required: true },
+    body: { type: 'textarea', required: true },
+    template: { type: 'text' },
+  })
+  .access({
+    list: [ROLES.PARTNER, ROLES.MANAGER],
+    view: [ROLES.PARTNER, ROLES.MANAGER],
+    create: [ROLES.PARTNER, ROLES.MANAGER],
+    edit: [],
+    delete: [],
+  })
+  .build();
+
 export const allSpecs = {
   user: userSpec,
   engagement: engagementSpec,
@@ -241,4 +283,6 @@ export const allSpecs = {
   checklist: checklistSpec,
   rfi: rfiSpec,
   message: messageSpec,
+  file: fileSpec,
+  email: emailSpec,
 };

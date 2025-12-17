@@ -3,11 +3,10 @@ import { list, search, get, getChildren, listWithPagination } from '@/engine';
 import { can } from '@/lib/permissions';
 import { loadOptions } from '@/lib/form-utils';
 import { requireEntityAccess, listMetadata, detailMetadata, newMetadata, editMetadata } from '@/lib/route-helpers';
-import { ListBuilder } from '@/components/builders/list-builder';
-import { FormBuilder } from '@/components/builders/form-builder';
+import { Entity } from '@/lib/entity-component';
 import { EntityDetail } from '@/components/entity-detail';
 import { Shell } from '@/components/layout';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { deleteAction } from '@/app/[entity]/actions';
 
 export function createListPage() {
@@ -31,12 +30,12 @@ export function createListPage() {
 
     return (
       <Shell user={user} nav={getNavItems()}>
-        <ListBuilder
+        <Entity
           spec={spec}
           data={data}
-          searchQuery={q || ''}
-          canCreate={can(user, spec, 'create')}
+          mode="list"
           pagination={pagination}
+          canCreate={can(user, spec, 'create')}
         />
       </Shell>
     );
@@ -90,7 +89,7 @@ export function createCreatePage() {
 
     return (
       <Shell user={user} nav={getNavItems()}>
-        <FormBuilder spec={spec} options={options} />
+        <Entity spec={spec} mode="create" options={options} />
       </Shell>
     );
   };
@@ -111,7 +110,7 @@ export function createEditPage() {
 
     return (
       <Shell user={user} nav={getNavItems()}>
-        <FormBuilder spec={spec} data={data} options={options} />
+        <Entity spec={spec} data={data} mode="edit" options={options} />
       </Shell>
     );
   };
