@@ -4,7 +4,7 @@ import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 import { Button, Paper, Title, Group, Stack, Text, Box } from '@mantine/core';
-import { useFormState } from '@/lib/use-entity-state';
+import { useFormState } from '@/lib/hooks';
 import { buildFormFields } from '@/config';
 import { renderFormField } from './form-field-renderer';
 
@@ -15,7 +15,7 @@ function SubmitButton({ label, isSubmitting }) {
 
 export function FormBuilder({ spec, data = {}, options = {}, onSubmit, sections = null }) {
   const router = useRouter();
-  const { values, setField, errors, setError, isValid } = useFormState(data);
+  const { values, setValue, errors, setError, hasErrors } = useFormState(spec, data);
   const formFields = useMemo(() => buildFormFields(spec), [spec]);
   const formSections = useMemo(() => sections || spec.form?.sections || [{ label: 'Details', fields: formFields.map(f => f.key) }], [sections, spec, formFields]);
   const enumSelectData = useMemo(() => {
@@ -39,11 +39,11 @@ export function FormBuilder({ spec, data = {}, options = {}, onSubmit, sections 
     return data;
   }, [options, formFields]);
 
-  const renderField = (field) => renderFormField(field, values, setField, enumSelectData, refSelectData);
+  const renderField = (field) => renderFormField(field, values, setValue, enumSelectData, refSelectData);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!isValid()) {
+    if (hasErrors) {
       console.error('Form has errors');
       return;
     }

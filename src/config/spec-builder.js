@@ -60,7 +60,8 @@ export class SpecBuilder {
   fields(fieldsObj) {
     for (const [name, config] of Object.entries(fieldsObj)) {
       const type = config.type || 'text';
-      this.field(name, type, { ...config, type: undefined });
+      const { type: _, ...rest } = config;
+      this.field(name, type, rest);
     }
     return this;
   }

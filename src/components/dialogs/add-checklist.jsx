@@ -1,31 +1,42 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal, Button, Stack, Group, Select, Text, Loader, Center, Alert } from '@mantine/core';
 import { AlertCircle } from 'lucide-react';
-import { useAsyncState } from '@/lib/use-entity-state';
-import { useFormState } from '@/lib/use-entity-state';
+import { useFormState } from '@/lib/hooks';
 
 export function AddChecklistDialog({ review, onClose, onSuccess }) {
-  const { data: checklists, loading, error: loadError, start } = useAsyncState([]);
-  const { values, setField, setErrors, errors } = useFormState({ selected: null });
-  const { loading: submitting, error: submitError, setSuccess, setFailed } = useAsyncState();
+  const [checklists, setChecklists] = useState([]);
+  const [loadError, setLoadError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { values, setValue, setError, errors } = useFormState({}, { selected: null });
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   useEffect(() => {
-    start(async () => {
-      const res = await fetch('/api/checklist');
-      if (!res.ok) throw new Error('Failed to load checklists');
-      const data = await res.json();
-      return data.map(c => ({ value: c.id, label: c.name }));
-    });
-  }, [start]);
+    const loadChecklists = async () => {
+      try {
+        const res = await fetch('/api/checklist');
+        if (!res.ok) throw new Error('Failed to load checklists');
+        const data = await res.json();
+        setChecklists(data.map(c => ({ value: c.id, label: c.name })));
+        setLoadError(null);
+      } catch (e) {
+        setLoadError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadChecklists();
+  }, []);
 
   const handleAdd = async () => {
     if (!values.selected) {
-      setErrors({ selected: 'Please select a checklist' });
+      setError('selected', 'Please select a checklist');
       return;
     }
 
+    setSubmitting(true);
     try {
       const checklistRes = await fetch(`/api/checklist/${values.selected}`);
       const checklistData = await checklistRes.json();
@@ -42,10 +53,12 @@ export function AddChecklistDialog({ review, onClose, onSuccess }) {
       });
 
       if (!res.ok) throw new Error('Failed to add checklist');
-      setSuccess();
+      setSubmitError(null);
       onSuccess();
     } catch (e) {
-      setFailed(e);
+      setSubmitError(e.message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -70,7 +83,7 @@ export function AddChecklistDialog({ review, onClose, onSuccess }) {
                 placeholder="Choose a checklist to add"
                 data={checklists}
                 value={values.selected}
-                onChange={(val) => setField('selected', val)}
+                onChange={(val) => setValue('selected', val)}
                 searchable
                 error={errors.selected}
               />

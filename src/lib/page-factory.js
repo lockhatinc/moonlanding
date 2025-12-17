@@ -1,5 +1,5 @@
 import { getNavItems } from '@/config';
-import { list, search, get, getChildren } from '@/engine';
+import { list, search, get, getChildren, listWithPagination } from '@/engine';
 import { can } from '@/lib/permissions';
 import { loadOptions } from '@/lib/form-utils';
 import { requireEntityAccess, listMetadata, detailMetadata, newMetadata, editMetadata } from '@/lib/route-helpers';
@@ -13,12 +13,31 @@ import { deleteAction } from '@/app/[entity]/actions';
 export function createListPage() {
   const ListPage = async ({ params, searchParams }) => {
     const { entity } = await params;
-    const { q } = await searchParams;
+    const { q, page: pageParam, pageSize: pageSizeParam } = await searchParams;
     const { user, spec } = await requireEntityAccess(entity, 'list');
+
+    const page = Math.max(1, parseInt(pageParam || '1'));
+    const pageSize = parseInt(pageSizeParam || String(spec.list?.pageSize || 20));
+
+    let data, pagination;
+    if (q) {
+      data = search(entity, q);
+      pagination = null;
+    } else {
+      const result = listWithPagination(entity, {}, page, pageSize);
+      data = result.items;
+      pagination = result.pagination;
+    }
 
     return (
       <Shell user={user} nav={getNavItems()}>
-        <ListBuilder spec={spec} data={q ? search(entity, q) : list(entity)} searchQuery={q || ''} canCreate={can(user, spec, 'create')} />
+        <ListBuilder
+          spec={spec}
+          data={data}
+          searchQuery={q || ''}
+          canCreate={can(user, spec, 'create')}
+          pagination={pagination}
+        />
       </Shell>
     );
   };

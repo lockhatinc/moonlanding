@@ -2,19 +2,27 @@
 
 import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
-import { Table, Button, Group, Stack, Text, Badge, TextInput } from '@mantine/core';
-import { useSelectionState, useSearchState, useSortState } from '@/lib/use-entity-state';
+import { Table, Button, Group, Stack, Text, Badge, TextInput, Pagination, Select } from '@mantine/core';
+import { useSearch, useSort, useSelection } from '@/lib/hooks';
 import { buildListColumns } from '@/config';
 import { Search, Plus, ChevronDown, ChevronRight } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { renderCellValue } from './list-cell-renderer';
 import { filterByQuery, groupByField, sortGroups } from '@/lib/list-data-transform';
 
-export function ListBuilder({ spec, data = [], onCreateClick, canCreate = true }) {
+export function ListBuilder({
+  spec,
+  data = [],
+  onCreateClick,
+  canCreate = true,
+  pagination = null,
+  onPageChange = null,
+  onPageSizeChange = null,
+}) {
   const router = useRouter();
-  const { query, setQuery } = useSearchState();
-  const { selected, expanded, toggle, isSelected, isExpanded } = useSelectionState(null, false);
-  const { field: sortField, dir: sortDir, setSortField } = useSortState(spec.list?.defaultSort?.field);
+  const { query, setQuery } = useSearch();
+  const { selected: expandedGroups, toggle: toggleGroup } = useSelection([], true);
+  const { field: sortField, dir: sortDir, setSortField } = useSort(spec.list?.defaultSort?.field);
 
   const columns = useMemo(() => buildListColumns(spec), [spec]);
   const Icon = Icons[spec.icon] || Icons.File;
@@ -27,8 +35,22 @@ export function ListBuilder({ spec, data = [], onCreateClick, canCreate = true }
     return sorted;
   }, [data, query, groupBy, sortField, sortDir]);
 
-  const toggleGroup = (g) => toggle(g);
   const handleRowClick = (row) => router.push(`/${spec.name}/${row.id}`);
+
+  const handlePageChange = (newPage) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set('page', String(newPage));
+    router.push(`${window.location.pathname}?${params.toString()}`);
+    onPageChange?.(newPage);
+  };
+
+  const handlePageSizeChange = (newPageSize) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set('pageSize', String(newPageSize));
+    params.set('page', '1');
+    router.push(`${window.location.pathname}?${params.toString()}`);
+    onPageSizeChange?.(newPageSize);
+  };
 
   return (
     <Stack gap="md">
@@ -85,7 +107,7 @@ export function ListBuilder({ spec, data = [], onCreateClick, canCreate = true }
                     onClick={() => toggleGroup(group)}
                   >
                     <Table.Td style={{ width: 40 }}>
-                      {isExpanded(group) ? (
+                      {expandedGroups.includes(group) ? (
                         <ChevronDown size={16} />
                       ) : (
                         <ChevronRight size={16} />
@@ -99,13 +121,12 @@ export function ListBuilder({ spec, data = [], onCreateClick, canCreate = true }
                     </Table.Td>
                   </Table.Tr>
                 )}
-                {(!groupBy || isExpanded(group)) &&
+                {(!groupBy || expandedGroups.includes(group)) &&
                   rows.map(row => (
                     <Table.Tr
                       key={row.id}
                       style={{
                         cursor: 'pointer',
-                        backgroundColor: isSelected(row.id) ? 'var(--mantine-color-blue-0)' : undefined,
                       }}
                       onClick={() => handleRowClick(row)}
                     >
@@ -129,6 +150,38 @@ export function ListBuilder({ spec, data = [], onCreateClick, canCreate = true }
           </Table.Tbody>
         </Table>
       </div>
+
+      {pagination && (
+        <Group justify="space-between" align="center">
+          <Group gap="xs">
+            <Text size="sm" c="dimmed">
+              Showing {pagination.page * pagination.pageSize - pagination.pageSize + 1}-
+              {Math.min(pagination.page * pagination.pageSize, pagination.total)} of{' '}
+              {pagination.total}
+            </Text>
+            <Select
+              placeholder="Page size"
+              value={String(pagination.pageSize)}
+              onChange={(value) => handlePageSizeChange(parseInt(value))}
+              data={[
+                { value: '10', label: '10 per page' },
+                { value: '20', label: '20 per page' },
+                { value: '50', label: '50 per page' },
+                { value: '100', label: '100 per page' },
+              ]}
+              style={{ width: 140 }}
+            />
+          </Group>
+
+          <Pagination
+            value={pagination.page}
+            onChange={handlePageChange}
+            total={pagination.totalPages}
+            siblings={1}
+            boundaries={1}
+          />
+        </Group>
+      )}
     </Stack>
   );
 }
