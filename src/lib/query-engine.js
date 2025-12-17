@@ -176,3 +176,8 @@ export const withTransaction = async (callback) => {
     throw e;
   }
 };
+
+export const getChildren = (parentEntity, parentId, childDef) => {
+  const foreignKey = childDef.foreignKey || `${parentEntity}_id`;
+  return list(childDef.entity, { [foreignKey]: parentId });
+};

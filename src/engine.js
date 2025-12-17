@@ -1,8 +1,8 @@
 import { migrate, genId, now, getDatabase } from '@/lib/database-core';
-import { list, listWithPagination, search, count, get, getBy, create, update, remove, withTransaction } from '@/lib/query-engine';
+import { list, listWithPagination, search, count, get, getBy, create, update, remove, withTransaction, getChildren } from '@/lib/query-engine';
 import { validateField, validateEntity, validateUpdate, hasErrors } from '@/lib/validate';
 
-export { migrate, genId, now, getDatabase, list, listWithPagination, search, count, get, getBy, create, update, remove, withTransaction, validateField, validateEntity, validateUpdate, hasErrors };
+export { migrate, genId, now, getDatabase, list, listWithPagination, search, count, get, getBy, create, update, remove, withTransaction, getChildren, validateField, validateEntity, validateUpdate, hasErrors };
 
 export default getDatabase();
 
