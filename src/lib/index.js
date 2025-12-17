@@ -3,7 +3,6 @@ export * from '@/lib/validate';
 export * from '@/lib/hooks';
 export { renderingEngine, renderFormField, renderCellValue, renderDisplayValue, renderEditField } from '@/lib/rendering-engine';
 export { serverDataLayer, clientDataLayer, createDataLayer } from '@/lib/data-layer';
-export { default as QueryBuilder, createQueryBuilder } from '@/lib/query-builder';
 export {
   AppError,
   ValidationError,
