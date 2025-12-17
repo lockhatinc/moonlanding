@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 import { Button, Paper, Title, Group, Stack, Text, Box } from '@mantine/core';
 import { useFormState } from '@/lib/hooks';
 import { buildFormFields } from '@/config';
-import { renderFormField } from './form-field-renderer';
+import { renderFormField } from '@/lib/rendering-engine';
 
 function SubmitButton({ label, isSubmitting }) {
   const { pending } = useFormStatus();

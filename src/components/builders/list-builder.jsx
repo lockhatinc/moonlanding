@@ -7,7 +7,7 @@ import { useSearch, useSort, useSelection } from '@/lib/hooks';
 import { buildListColumns } from '@/config';
 import { Search, Plus, ChevronDown, ChevronRight } from 'lucide-react';
 import * as Icons from 'lucide-react';
-import { renderCellValue } from './list-cell-renderer';
+import { renderCellValue } from '@/lib/rendering-engine';
 import { filterByQuery, groupByField, sortGroups } from '@/lib/list-data-transform';
 
 export function ListBuilder({
