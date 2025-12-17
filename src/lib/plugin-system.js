@@ -1,107 +1,41 @@
+import { hookEngine } from './hook-engine.js';
+
 class PluginSystem {
   constructor() {
-    this.plugins = new Map();
-    this.hooks = new Map();
-    this.middleware = new Map();
-    this.eventHandlers = new Map();
+    this.engine = hookEngine;
   }
 
   register(name, plugin) {
-    if (this.plugins.has(name)) {
-      console.warn(`[PluginSystem] Plugin "${name}" already registered, overwriting`);
-    }
-
-    this.plugins.set(name, {
-      name,
-      ...plugin,
-      hooks: plugin.hooks || {},
-      middleware: plugin.middleware || {},
-      handlers: plugin.handlers || {},
-    });
-
-    if (plugin.hooks) {
-      Object.entries(plugin.hooks).forEach(([hookName, callback]) => {
-        this.registerHook(hookName, 0, callback);
-      });
-    }
-
-    if (plugin.middleware) {
-      Object.entries(plugin.middleware).forEach(([mwName, mwFn]) => {
-        this.registerMiddleware(mwName, mwFn);
-      });
-    }
-
-    if (plugin.handlers) {
-      Object.entries(plugin.handlers).forEach(([eventName, handler]) => {
-        this.on(eventName, handler);
-      });
-    }
-
-    return this;
+    return this.engine.registerPlugin(name, plugin);
   }
 
   unregister(name) {
-    if (this.plugins.has(name)) {
-      this.plugins.delete(name);
-      for (const [hookName, callbacks] of this.hooks.entries()) {
-        this.hooks.set(
-          hookName,
-          callbacks.filter((cb) => cb.plugin !== name)
-        );
-      }
-    }
-    return this;
+    return this.engine.unregisterPlugin(name);
   }
 
   getPlugin(name) {
-    return this.plugins.get(name);
+    return this.engine.getPlugin(name);
   }
 
   listPlugins() {
-    return Array.from(this.plugins.values()).map((p) => ({ name: p.name }));
+    return this.engine.listPlugins();
   }
 
   registerHook(name, priority = 0, callback, pluginName = 'core') {
-    if (!this.hooks.has(name)) {
-      this.hooks.set(name, []);
-    }
-
-    const hook = { callback, priority, plugin: pluginName };
-    const hooks = this.hooks.get(name);
-    hooks.push(hook);
-    hooks.sort((a, b) => b.priority - a.priority);
-
-    return this;
+    return this.engine.register(name, callback, { priority, plugin: pluginName });
   }
 
   unregisterHook(name, pluginName) {
-    if (this.hooks.has(name)) {
-      this.hooks.set(
-        name,
-        this.hooks.get(name).filter((h) => h.plugin !== pluginName)
-      );
-    }
+    const hooks = this.engine.listeners(name);
+    hooks.filter(h => h.plugin === pluginName).forEach(h => {
+      this.engine.off(name, h.callback);
+    });
     return this;
   }
 
   async executeHook(name, context = {}) {
-    if (!this.hooks.has(name)) {
-      return context;
-    }
-
-    const hooks = this.hooks.get(name);
-    let result = context;
-
-    for (const { callback } of hooks) {
-      try {
-        result = await callback(result);
-      } catch (e) {
-        console.error(`[PluginSystem] Hook "${name}" failed:`, e);
-        throw e;
-      }
-    }
-
-    return result;
+    const result = await this.engine.executeSerial(name, context, { fallthrough: false });
+    return result.data;
   }
 
   async executeHookSafe(name, context = {}) {
@@ -114,12 +48,12 @@ class PluginSystem {
   }
 
   registerMiddleware(name, middleware) {
-    this.middleware.set(name, middleware);
-    return this;
+    return this.engine.register(name, middleware, { phase: 'middleware' });
   }
 
   getMiddleware(name) {
-    return this.middleware.get(name);
+    const hooks = this.engine.listeners(name, 'middleware');
+    return hooks.length > 0 ? hooks[0].callback : null;
   }
 
   async applyMiddleware(name, context = {}) {
@@ -128,7 +62,6 @@ class PluginSystem {
       console.warn(`[PluginSystem] Middleware "${name}" not found`);
       return context;
     }
-
     try {
       return await mw(context);
     } catch (e) {
@@ -138,77 +71,33 @@ class PluginSystem {
   }
 
   on(event, handler) {
-    if (!this.eventHandlers.has(event)) {
-      this.eventHandlers.set(event, []);
-    }
-    this.eventHandlers.get(event).push(handler);
-    return this;
+    return this.engine.on(event, handler);
   }
 
   off(event, handler) {
-    if (this.eventHandlers.has(event)) {
-      this.eventHandlers.set(
-        event,
-        this.eventHandlers.get(event).filter((h) => h !== handler)
-      );
-    }
-    return this;
+    return this.engine.off(event, handler);
   }
 
   async emit(event, ...args) {
-    if (!this.eventHandlers.has(event)) {
-      return;
-    }
-
-    const handlers = this.eventHandlers.get(event);
-    for (const handler of handlers) {
-      try {
-        await handler(...args);
-      } catch (e) {
-        console.error(`[PluginSystem] Event handler for "${event}" failed:`, e);
-      }
-    }
+    const data = args.length === 1 ? args[0] : args;
+    await this.engine.execute(event, data, { fallthrough: true });
   }
 
   async emitSerial(event, ...args) {
-    if (!this.eventHandlers.has(event)) {
-      return;
-    }
-
-    const handlers = this.eventHandlers.get(event);
-    let result = args[0];
-
-    for (const handler of handlers) {
-      try {
-        result = await handler(result, ...args.slice(1));
-      } catch (e) {
-        console.error(`[PluginSystem] Event handler for "${event}" failed:`, e);
-        throw e;
-      }
-    }
-
-    return result;
+    const data = args.length === 1 ? args[0] : args;
+    const result = await this.engine.executeSerial(event, data, { fallthrough: true });
+    return result.data;
   }
 
   createPluginAPI() {
-    return {
-      registerHook: this.registerHook.bind(this),
-      registerMiddleware: this.registerMiddleware.bind(this),
-      on: this.on.bind(this),
-      emit: this.emit.bind(this),
-      getPlugin: this.getPlugin.bind(this),
-      executeHook: this.executeHook.bind(this),
-    };
+    return this.engine.createPluginAPI();
   }
 }
 
 export const pluginSystem = new PluginSystem();
 
 export function createPlugin(name, definition) {
-  return {
-    name,
-    ...definition,
-  };
+  return { name, ...definition };
 }
 
 export async function loadPlugin(name, definition) {

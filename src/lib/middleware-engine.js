@@ -1,37 +1,29 @@
+import { hookEngine } from './hook-engine.js';
+
 export class MiddlewareEngine {
   constructor() {
-    this.hooks = new Map();
-    this.handlers = new Map();
+    this.engine = hookEngine;
   }
 
   register(entity, action, phase, callback) {
-    const key = `${entity}:${action}:${phase}`;
-    if (!this.hooks.has(key)) this.hooks.set(key, []);
-    this.hooks.get(key).push(callback);
+    const name = `${entity}:${action}`;
+    this.engine.register(name, callback, { phase });
   }
 
   registerHandler(entity, action, callback) {
-    const key = `${entity}:${action}`;
-    this.handlers.set(key, callback);
+    const name = `${entity}:${action}`;
+    this.engine.registerHandler(name, callback);
   }
 
   async execute(entity, action, phase, context) {
-    const key = `${entity}:${action}:${phase}`;
-    const hooks = this.hooks.get(key) || [];
-    for (const hook of hooks) {
-      context = await hook(context);
-    }
-    return context;
+    const name = `${entity}:${action}`;
+    const result = await this.engine.executeSerial(name, context, { phase });
+    return result.data;
   }
 
   async handle(entity, action, context) {
-    context = await this.execute(entity, action, 'before', context);
-    const handler = this.handlers.get(`${entity}:${action}`);
-    if (handler) {
-      context.result = await handler(context);
-    }
-    context = await this.execute(entity, action, 'after', context);
-    return context.result;
+    const name = `${entity}:${action}`;
+    return this.engine.executePhases(name, context, ['before', 'handle', 'after']);
   }
 }
 
