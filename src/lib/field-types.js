@@ -1,5 +1,5 @@
 import { DISPLAY } from '@/config/constants';
-import { secondsToDate, dateToSeconds, formatDate } from './date-utils';
+import { secondsToDate, dateToSeconds, formatDate } from './utils';
 
 function truncateText(text, limit = DISPLAY.TEXT_PREVIEW) {
   if (!text) return '';

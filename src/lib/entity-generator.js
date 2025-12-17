@@ -2,7 +2,7 @@ import { specs, getSpec } from '@/config';
 import { list, search, get, getChildren, listWithPagination, create, update, remove } from '@/engine';
 import { getUser } from '@/engine.server';
 import { can } from '@/lib/permissions';
-import { loadOptions } from '@/lib/form-utils';
+import { loadFormOptions } from '@/lib/utils';
 import { requireEntityAccess, listMetadata, detailMetadata, newMetadata, editMetadata } from '@/lib/route-helpers';
 import { Entity } from '@/lib/entity-component';
 import { EntityDetail } from '@/components/entity-detail';
@@ -94,7 +94,7 @@ export class EntityGenerator {
     const CreatePage = async ({ params }) => {
       const { entity } = await params;
       const { user, spec } = await requireEntityAccess(entity, 'create');
-      const options = await loadOptions(spec);
+      const options = await loadFormOptions(spec);
 
       return (
         <Shell user={user} nav={getNavItems()}>
@@ -112,7 +112,7 @@ export class EntityGenerator {
       const { user, spec } = await requireEntityAccess(entity, 'edit');
       const data = get(entity, id);
       if (!data) notFound();
-      const options = await loadOptions(spec);
+      const options = await loadFormOptions(spec);
 
       return (
         <Shell user={user} nav={getNavItems()}>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { TextInput, Textarea, NumberInput, Checkbox, Select, DateInput, Badge, Text, Group, Image as MImage } from '@mantine/core';
-import { formatDate } from '@/lib/date-utils';
+import { formatDate } from '@/lib/utils';
 
 const RENDERERS = {
   text: {
