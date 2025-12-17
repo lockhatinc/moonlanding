@@ -1,7 +1,5 @@
 import { spec } from './spec-builder';
 import { ROLES, ENGAGEMENT_STATUS, ENGAGEMENT_STAGE, REVIEW_STATUS, HIGHLIGHT_STATUS, RFI_CLIENT_STATUS, RFI_AUDITOR_STATUS } from './constants';
-import * as gmail from '@/engine/gmail';
-import * as drive from '@/engine/drive';
 
 export const userSpec = spec('user')
   .label('User', 'Users')
