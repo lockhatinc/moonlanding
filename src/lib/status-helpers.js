@@ -48,18 +48,10 @@ export function isReviewClosed(review) {
   return review.status === REVIEW_STATUS.CLOSED;
 }
 
-const STAGE_TRANSITION_MAP = {
-  [ENGAGEMENT_STAGE.INFO_GATHERING]: ENGAGEMENT_STAGE.COMMENCEMENT,
-  [ENGAGEMENT_STAGE.COMMENCEMENT]: ENGAGEMENT_STAGE.TEAM_EXECUTION,
-  [ENGAGEMENT_STAGE.TEAM_EXECUTION]: ENGAGEMENT_STAGE.PARTNER_REVIEW,
-  [ENGAGEMENT_STAGE.PARTNER_REVIEW]: ENGAGEMENT_STAGE.FINALIZATION,
-  [ENGAGEMENT_STAGE.FINALIZATION]: ENGAGEMENT_STAGE.CLOSE_OUT,
-};
-
 export function canTransitionStage(fromStage, toStage) {
-  return STAGE_TRANSITION_MAP[fromStage] === toStage;
+  return STAGE_TRANSITIONS[fromStage] === toStage;
 }
 
 export function getNextStage(currentStage) {
-  return STAGE_TRANSITION_MAP[currentStage];
+  return STAGE_TRANSITIONS[currentStage];
 }

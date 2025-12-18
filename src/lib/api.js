@@ -5,21 +5,9 @@ import { list, get, create, update, remove, listWithPagination, search } from '@
 import { validateEntity, validateUpdate, hasErrors } from '@/lib/validate';
 import { broadcastUpdate } from '@/lib/realtime-server';
 import { UnauthorizedError, PermissionError, NotFoundError, ValidationError, AppError, createErrorLogger } from '@/lib/error-handler';
+import { ok, created, apiError } from '@/lib/response-formatter';
 
 const logger = createErrorLogger('API');
-
-const ok = (data, status = 200) => new Response(
-  JSON.stringify({ status: 'success', data }),
-  { status, headers: { 'Content-Type': 'application/json' } }
-);
-
-const apiError = (error) => {
-  const statusCode = error.statusCode || 500;
-  return new Response(
-    JSON.stringify(error.toJSON?.() || { status: 'error', message: error.message, code: 'ERROR' }),
-    { status: statusCode, headers: { 'Content-Type': 'application/json' } }
-  );
-};
 
 const createHandler = (entity, action) => async (request, { params, searchParams }) => {
   const user = await getUser();

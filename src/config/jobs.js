@@ -3,6 +3,7 @@ import { queueEmail, sendQueuedEmails, generateChecklistPdf } from '@/engine/ema
 import { recreateEngagement } from '@/engine/recreation';
 import { exportDatabase } from '@/engine/backup';
 import { createJob, forEachRecord, activityLog, getDeadlineRange, getDaysUntil, shouldRunNow, runJob, runDueJobs } from '@/lib/job-framework';
+import { ROLES, USER_TYPES, ENGAGEMENT_STAGE, REVIEW_STATUS, RFI_STATUS, RFI_CLIENT_STATUS } from '@/config/constants';
 
 const createRecreationJob = (interval, schedule, desc) => createJob(
   `${interval}_engagement_recreation`, schedule, desc,
@@ -17,23 +18,23 @@ export const SCHEDULED_JOBS = {
     const scriptUrl = process.env.USER_SYNC_SCRIPT_URL, syncKey = process.env.USER_SYNC_KEY;
     if (!scriptUrl || !syncKey) return;
     const wsUsers = await (await fetch(`${scriptUrl}?key=${syncKey}`)).json();
-    const existing = new Set(list('user', { type: 'auditor' }).map(u => u.email.toLowerCase()));
+    const existing = new Set(list('user', { type: USER_TYPES.AUDITOR }).map(u => u.email.toLowerCase()));
     for (const u of wsUsers) {
       if (!existing.has(u.email.trim().toLowerCase())) {
-        create('user', { email: u.email.trim().toLowerCase(), name: u.name, avatar: u.photo, type: 'auditor', role: 'clerk', auth_provider: 'google', status: 'active' });
+        create('user', { email: u.email.trim().toLowerCase(), name: u.name, avatar: u.photo, type: USER_TYPES.AUDITOR, role: ROLES.CLERK, auth_provider: 'google', status: 'active' });
       }
     }
     const wsEmails = new Set(wsUsers.map(u => u.email.trim().toLowerCase()));
-    for (const u of list('user', { type: 'auditor', status: 'active' })) {
+    for (const u of list('user', { type: USER_TYPES.AUDITOR, status: 'active' })) {
       if (!wsEmails.has(u.email.toLowerCase())) update('user', u.id, { status: 'inactive' });
     }
   }),
 
   daily_engagement_check: createJob('daily_engagement_check', '0 4 * * *', 'Auto-transition engagements', async () => {
     const now = Math.floor(Date.now() / 1000);
-    await forEachRecord('engagement', { stage: 'info_gathering', status: 'active' }, async (e) => {
+    await forEachRecord('engagement', { stage: ENGAGEMENT_STAGE.INFO_GATHERING, status: 'active' }, async (e) => {
       if (e.commencement_date && e.commencement_date <= now) {
-        update('engagement', e.id, { stage: 'commencement' });
+        update('engagement', e.id, { stage: ENGAGEMENT_STAGE.COMMENCEMENT });
         activityLog('engagement', e.id, 'stage_change', 'Auto-transitioned to commencement');
       }
     });
@@ -42,7 +43,7 @@ export const SCHEDULED_JOBS = {
   daily_rfi_notifications: createJob('daily_rfi_notifications', '0 5 * * *', 'RFI deadline notifications', async (cfg) => {
     for (const days of cfg.days_before) {
       const { start, end } = getDeadlineRange(days);
-      for (const rfi of list('rfi').filter(r => r.deadline >= start && r.deadline < end && r.status !== 1 && r.client_status !== 'completed')) {
+      for (const rfi of list('rfi').filter(r => r.deadline >= start && r.deadline < end && r.status !== RFI_STATUS.COMPLETED && r.client_status !== RFI_CLIENT_STATUS.COMPLETED)) {
         await queueEmail('rfi_deadline', { rfi, daysUntil: days, recipients: 'assigned_users' });
       }
     }
@@ -61,7 +62,7 @@ export const SCHEDULED_JOBS = {
   }),
 
   daily_tender_notifications: createJob('daily_tender_notifications', '0 9 * * *', 'Tender deadline notifications', async () => {
-    await forEachRecord('review', { is_tender: true, status: 'open' }, async (r) => {
+    await forEachRecord('review', { is_tender: true, status: REVIEW_STATUS.OPEN }, async (r) => {
       if (r.deadline) {
         const days = getDaysUntil(r.deadline);
         if (days === 7 || days === 0) await queueEmail(days === 0 ? 'tender_deadline_today' : 'tender_deadline_7days', { review: r, daysUntil: days, recipients: 'team_partners' });
@@ -71,7 +72,7 @@ export const SCHEDULED_JOBS = {
 
   daily_tender_missed: createJob('daily_tender_missed', '0 10 * * *', 'Mark missed tender deadlines', async () => {
     const now = Math.floor(Date.now() / 1000);
-    await forEachRecord('review', { is_tender: true, status: 'open' }, async (r) => {
+    await forEachRecord('review', { is_tender: true, status: REVIEW_STATUS.OPEN }, async (r) => {
       if (r.deadline && r.deadline < now) {
         const flags = JSON.parse(r.tender_flags || '[]');
         if (!flags.includes('missed')) update('review', r.id, { tender_flags: JSON.stringify([...flags, 'missed']) });
@@ -87,7 +88,7 @@ export const SCHEDULED_JOBS = {
   }),
 
   weekly_checklist_pdfs: createJob('weekly_checklist_pdfs', '0 8 * * 1', 'Weekly checklist PDF reports', async () => {
-    await forEachRecord('user', { role: 'partner', status: 'active' }, async (p) => {
+    await forEachRecord('user', { role: ROLES.PARTNER, status: 'active' }, async (p) => {
       try {
         const url = await generateChecklistPdf(p);
         if (url) await queueEmail('weekly_checklist_pdf', { user: p, pdfUrl: url, date: new Date().toISOString().split('T')[0], recipients: 'user' });
