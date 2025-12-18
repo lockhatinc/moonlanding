@@ -1,4 +1,5 @@
 import { ROLES, SQL_TYPES } from './constants';
+import { PERMISSION_DEFAULTS } from './permission-defaults';
 
 export class SpecBuilder {
   constructor(name) {
@@ -12,13 +13,7 @@ export class SpecBuilder {
         updated_at: { type: 'timestamp', auto: 'update', hidden: true, label: 'Updated' },
       },
       options: {},
-      access: {
-        list: Object.values(ROLES),
-        view: Object.values(ROLES),
-        create: [ROLES.PARTNER, ROLES.MANAGER],
-        edit: [ROLES.PARTNER, ROLES.MANAGER],
-        delete: [ROLES.PARTNER],
-      },
+      access: { ...PERMISSION_DEFAULTS },
     };
   }
 
@@ -115,6 +110,9 @@ export class SpecBuilder {
     this.spec.list = {
       defaultSort: { field: 'created_at', dir: 'desc' },
       pageSize: 20,
+      pageSizeOptions: [10, 20, 50, 100],
+      searchFields: [],
+      filters: [],
       ...config,
     };
     return this;

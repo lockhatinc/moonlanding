@@ -162,12 +162,10 @@ export function ListBuilder({
               placeholder="Page size"
               value={String(pagination.pageSize)}
               onChange={(value) => handlePageSizeChange(parseInt(value))}
-              data={[
-                { value: '10', label: '10 per page' },
-                { value: '20', label: '20 per page' },
-                { value: '50', label: '50 per page' },
-                { value: '100', label: '100 per page' },
-              ]}
+              data={(spec.list?.pageSizeOptions || [10, 20, 50, 100]).map((size) => ({
+                value: String(size),
+                label: `${size} per page`,
+              }))}
               style={{ width: 140 }}
             />
           </Group>

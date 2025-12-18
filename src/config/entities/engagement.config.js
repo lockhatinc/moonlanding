@@ -46,7 +46,21 @@ export const engagementSpec = spec('engagement')
       fk: 'engagement_id',
     },
   })
-  .list({ groupBy: 'status', defaultSort: { field: 'created_at', dir: 'desc' } })
+  .list({
+    groupBy: 'status',
+    defaultSort: { field: 'created_at', dir: 'desc' },
+    pageSizeOptions: [10, 20, 50, 100],
+    searchFields: ['title', 'description'],
+    displayRules: {
+      title: { truncate: 50 },
+      description: { truncate: 100 },
+      status: { renderAs: 'badge', colorMapping: 'engagement_status' },
+      stage: { renderAs: 'badge', colorMapping: 'engagement_stage' },
+      year: { format: 'number' },
+      start_date: { format: 'date' },
+      end_date: { format: 'date' },
+    },
+  })
   .transitions({
     pending: ['active', 'archived'],
     active: ['completed', 'archived'],
