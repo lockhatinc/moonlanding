@@ -51,5 +51,4 @@ export * from '@/lib/middleware-engine';
 export * from '@/lib/page-factory';
 export * from '@/lib/entity-generator';
 export * from '@/lib/render';
-export * from '@/lib/template-engine';
 export * from '@/lib/workflow-engine';

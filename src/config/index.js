@@ -19,10 +19,11 @@ export {
   VALIDATION,
 } from './constants';
 
+import { getFormFields, getListFields } from '@/lib/field-iterator';
 export { getFormFields, getListFields, getDisplayFields, getEditableFields, getRequiredFields, getSearchFields, getFilterableFields, getRefFields, getField, getFieldType, forEachField, iterateCreateFields, iterateUpdateFields } from '@/lib/field-iterator';
 
-export const buildFormFields = (spec) => getFormFields(spec);
-export const buildListColumns = (spec) => getListFields(spec);
+export const buildFormFields = getFormFields;
+export const buildListColumns = getListFields;
 
 export { checkPermission } from './permissions';
 export { specs, getSpec, getNavItems, buildNavigation, getChildEntities, getParentEntity, getDefaultSort, getAvailableFilters, getPageSize, getEntityLabel, getInitialState, isEmbeddedEntity, isParentEntity, hasChildRelationships, isSoftDeleted, getOptions, getOptionLabel, getOptionColor, getNextEngagementStage } from './spec-helpers';

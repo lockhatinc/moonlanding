@@ -151,3 +151,11 @@ console.error('[DATABASE] Transaction failed:', error.message);
 - **200-line limit:** All files ≤200 lines except entity-component.jsx (244L, complex React component)
 - **Dead code removal:** Orphaned components removed; unused exports eliminated; all comments deleted
 - **Build artifacts:** Project compiles successfully to .next/; runtime page collection errors in API routes require entity config verification
+
+## Code Cleanup (Dec 2024 - Phase 2)
+
+- **Duplication elimination:** ListMode component removed (124L duplicate of ListBuilder); entity-component.jsx reduced from 243L to ~119L (100% ≤200L compliance achieved)
+- **Orphaned files removed:** Empty re-exports (form-field-renderer.jsx, list-cell-renderer.jsx) and unused template-engine.js (70L) eliminated
+- **Entity configuration clarity:** *.spec.js renamed to *.config.js (11 files) to prevent confusion with test files
+- **List rendering:** Single canonical ListBuilder component with proper groupBy support, empty states, and column-level sortable flags
+- **Bundle size impact:** ~193 LOC reduction (2.3% codebase reduction); no runtime behavior changes
