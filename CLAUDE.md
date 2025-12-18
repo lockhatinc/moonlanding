@@ -142,3 +142,12 @@ console.error('[DATABASE] Transaction failed:', error.message);
 - **Specs**: Dynamic entity schemas with field definitions, permissions, computed fields
 - **Zero hardcoding**: All behavior defined in configuration
 - **Result**: Change config = automatic app updates (forms, lists, validation, permissions)
+
+## Code Refactoring (Dec 2024)
+
+- **Module splitting:** hook-engine split into HookRegistry/HookExecutor/HookHistory/PluginRegistry; data-layer into DataCache/DataOpsServer/DataOpsClient; constants into entity-statuses/api-constants/data-constants/domain-constants
+- **Deduplication:** EventEmitter namespace API via factory; event-emitter.js reduced 12x→2x duplications
+- **Client/Server separation:** utils-client.js created for date utilities (prevents fs import in browser bundle); field-types.js imports from utils-client only
+- **200-line limit:** All files ≤200 lines except entity-component.jsx (244L, complex React component)
+- **Dead code removal:** Orphaned components removed; unused exports eliminated; all comments deleted
+- **Build artifacts:** Project compiles successfully to .next/; runtime page collection errors in API routes require entity config verification
