@@ -5,11 +5,9 @@ import { requireAuth, requirePermission } from '@/lib/auth-middleware';
 import { broadcastUpdate } from '@/lib/realtime-server';
 import { executeHook } from '@/lib/hook-registry';
 import { AppError, NotFoundError, ValidationError, createErrorLogger } from '@/lib/error-handler';
+import { ok, created, apiError } from '@/lib/response-formatter';
 
 const logger = createErrorLogger('CRUD');
-
-const ok = (data, status = 200) => new Response(JSON.stringify({ status: 'success', data }), { status, headers: { 'Content-Type': 'application/json' } });
-const apiError = (e) => new Response(JSON.stringify(e.toJSON?.() || { status: 'error', message: e.message, code: 'ERROR' }), { status: e.statusCode || 500, headers: { 'Content-Type': 'application/json' } });
 
 const parseUrl = (request) => {
   const { searchParams } = new URL(request.url);
@@ -57,7 +55,7 @@ export const createCrudHandlers = (entityName) => {
       const result = create(ctx.entity || entityName, ctx.data || data, user);
       await executeHook(`create:${entityName}:after`, { entity: entityName, data: result, user });
       broadcastUpdate(`/api/${entityName}`, 'create', result);
-      return ok(result, 201);
+      return created(result);
     },
 
     update: async (user, id, data) => {

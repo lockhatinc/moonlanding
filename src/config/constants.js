@@ -6,6 +6,7 @@ export const ROLES = {
   CLERK: 'clerk',
   AUDITOR: 'auditor',
   CLIENT: 'client',
+  ADMIN: 'admin',
 };
 
 export const USER_TYPES = {
@@ -57,6 +58,39 @@ export const HIGHLIGHT_STATUS = {
   UNRESOLVED: 'unresolved',
   PARTIALLY_RESOLVED: 'partially_resolved',
   RESOLVED: 'resolved',
+};
+
+export const USER_STATUS = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+};
+
+export const LETTER_AUDITOR_STATUS = {
+  REQUESTED: 'requested',
+  REVIEWING: 'reviewing',
+  ACCEPTED: 'accepted',
+  REJECTED: 'rejected',
+};
+
+export const NOTIFICATION_STATUS = {
+  PENDING: 'pending',
+  SENT: 'sent',
+  FAILED: 'failed',
+};
+
+export const CHECKLIST_STATUS = {
+  PENDING: 'pending',
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+};
+
+export const CLIENT_STATUS = {
+  ACTIVE: 'active',
+  INACTIVE: 'inactive',
+};
+
+export const RECORD_STATUS = {
+  DELETED: 'deleted',
 };
 
 export const REPEAT_INTERVALS = {

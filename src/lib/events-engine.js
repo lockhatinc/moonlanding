@@ -1,7 +1,7 @@
 import { hookEngine } from './hook-engine.js';
 import { list, get, update, create, remove } from '../engine.js';
 import { queueEmail } from '../engine/email-templates.js';
-import { RFI_STATUS } from './status-helpers.js';
+import { RFI_STATUS, RFI_CLIENT_STATUS, ENGAGEMENT_STAGE, REPEAT_INTERVALS, LETTER_AUDITOR_STATUS } from './status-helpers.js';
 
 const logActivity = (t, id, act, msg, u, d) =>
   create('activity_log', { entity_type: t, entity_id: id, action: act, message: msg, details: d ? JSON.stringify(d) : null, user_email: u?.email }, u);
@@ -9,7 +9,7 @@ const logActivity = (t, id, act, msg, u, d) =>
 const updateEngagementProgress = (eid) => {
   const rfis = list('rfi', { engagement_id: eid });
   if (rfis.length > 0) {
-    const comp = rfis.filter(r => r.status === 1 || r.client_status === 'completed');
+    const comp = rfis.filter(r => r.status === RFI_STATUS.COMPLETED || r.client_status === RFI_CLIENT_STATUS.COMPLETED);
     update('engagement', eid, { progress: Math.round((comp.length / rfis.length) * 100) });
   }
 };
@@ -20,7 +20,7 @@ export const registerEntityHandlers = () => {
       const cnt = list('engagement', { client_id: engagement.client_id }).length;
       update('client', engagement.client_id, { engagement_count: cnt });
     }
-    if (engagement.stage === 'info_gathering') {
+    if (engagement.stage === ENGAGEMENT_STAGE.INFO_GATHERING) {
       await queueEmail('engagement_info_gathering', { engagement, recipients: 'client_users' });
     }
     logActivity('engagement', engagement.id, 'create', `Engagement "${engagement.name}" created`, user);
@@ -33,7 +33,7 @@ export const registerEntityHandlers = () => {
         commencement: () => queueEmail('engagement_commencement', { engagement, recipients: 'client_users' }),
         finalization: () => queueEmail('engagement_finalization', { engagement, recipients: 'client_admin' }),
         close_out: () => {
-          if (engagement.letter_auditor_status !== 'accepted' && engagement.progress > 0)
+          if (engagement.letter_auditor_status !== LETTER_AUDITOR_STATUS.ACCEPTED && engagement.progress > 0)
             throw new Error('Cannot close out: Letter must be accepted or progress must be 0%');
         },
       };
@@ -58,8 +58,8 @@ export const registerEntityHandlers = () => {
     if (changes.status === 'inactive' && prev.status !== 'inactive') {
       const engagements = list('engagement', { client_id: client.id });
       for (const e of engagements) {
-        if (e.repeat_interval !== 'once') update('engagement', e.id, { repeat_interval: 'once' });
-        if (e.stage === 'info_gathering' && e.progress === 0) remove('engagement', e.id);
+        if (e.repeat_interval !== REPEAT_INTERVALS.ONCE) update('engagement', e.id, { repeat_interval: REPEAT_INTERVALS.ONCE });
+        if (e.stage === ENGAGEMENT_STAGE.INFO_GATHERING && e.progress === 0) remove('engagement', e.id);
       }
       logActivity('client', client.id, 'status_change', `Client inactive. Updated ${engagements.length} engagements.`, user);
     }
@@ -67,7 +67,7 @@ export const registerEntityHandlers = () => {
 
   hookEngine.on('rfi:afterUpdate', async (rfi, changes, prev, user) => {
     if (changes.status !== undefined && changes.status !== prev.status) {
-      if (changes.status === 1 && !rfi.date_resolved) {
+      if (changes.status === RFI_STATUS.COMPLETED && !rfi.date_resolved) {
         update('rfi', rfi.id, { date_resolved: Math.floor(Date.now() / 1000) });
       }
       if (changes.client_status && changes.client_status !== prev.client_status) {
