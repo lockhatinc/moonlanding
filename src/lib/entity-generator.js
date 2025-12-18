@@ -81,30 +81,15 @@ export class EntityGenerator {
 
     const { ListBuilder } = require('@/components/builders/list-builder');
     const { FormBuilder } = require('@/components/builders/form-builder');
-    const { EntityDetail: ED } = require('@/components/entity-detail/entity-detail');
-    const { SearchInput } = require('@/components/search-input');
-    const { FilterPanel } = require('@/components/filter-panel');
-    const { Dialog } = require('@/components/dialogs/dialog');
+    const { EntityDetail: ED } = require('@/components/entity-detail');
 
     const createFormComp = (mode) => createComp(FormBuilder, `${mode.charAt(0).toUpperCase() + mode.slice(1)}${spec.label}`, { mode });
-    const createDialogComp = (mode) => {
-      const Form = createFormComp(mode);
-      const DialogComp = forwardRef(({ isOpen, onClose, data, onSubmit, ...props }, ref) => (
-        <Dialog isOpen={isOpen} onClose={onClose} title={`${mode === 'create' ? 'New' : 'Edit'} ${spec.label}`}><Form data={data} onSubmit={onSubmit} {...props} /></Dialog>
-      ));
-      DialogComp.displayName = `${mode.charAt(0).toUpperCase() + mode.slice(1)}${spec.label}Dialog`;
-      return DialogComp;
-    };
 
     return {
       List: createComp(ListBuilder, `List${spec.label}`),
       Detail: createComp(ED, `Detail${spec.label}`),
       Create: createFormComp('create'),
       Edit: createFormComp('edit'),
-      Search: createComp(SearchInput, `Search${spec.label}`),
-      Filter: createComp(FilterPanel, `Filter${spec.label}`),
-      CreateDialog: createDialogComp('create'),
-      EditDialog: createDialogComp('edit'),
     };
   }
 

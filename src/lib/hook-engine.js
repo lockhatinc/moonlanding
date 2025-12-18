@@ -1,29 +1,18 @@
+import { HookRegistry } from './hook-registry';
+import { HookHistory } from './hook-history';
+import { HookExecutor } from './hook-executor';
+import { PluginRegistry } from './hook-plugins';
+
 export class HookEngine {
   constructor() {
-    this.hooks = new Map();
-    this.handlers = new Map();
-    this.plugins = new Map();
-    this.maxListeners = 10;
-    this.history = [];
+    this.registry = new HookRegistry();
+    this.history = new HookHistory();
+    this.executor = new HookExecutor(this.registry);
+    this.plugins = new PluginRegistry(this.registry, this.executor);
   }
 
   register(name, callback, options = {}) {
-    const { priority = 0, plugin = 'core', phase = null } = options;
-    const key = phase ? `${name}:${phase}` : name;
-
-    if (!this.hooks.has(key)) {
-      this.hooks.set(key, []);
-    }
-
-    const hook = { callback, priority, plugin, name, phase, once: options.once };
-    const hooks = this.hooks.get(key);
-    hooks.push(hook);
-    hooks.sort((a, b) => b.priority - a.priority);
-
-    if (hooks.length >= this.maxListeners) {
-      console.warn(`[HookEngine] MaxListenersExceeded: "${key}" has ${hooks.length} listeners`);
-    }
-
+    this.registry.register(name, callback, options);
     return this;
   }
 
@@ -35,20 +24,8 @@ export class HookEngine {
     return this.register(name, callback, { ...options, once: true });
   }
 
-  registerHandler(name, callback) {
-    this.handlers.set(name, callback);
-    return this;
-  }
-
-  getHandler(name) {
-    return this.handlers.get(name);
-  }
-
   unregister(name, callback, phase = null) {
-    const key = phase ? `${name}:${phase}` : name;
-    if (!this.hooks.has(key)) return this;
-
-    this.hooks.set(key, this.hooks.get(key).filter(h => h.callback !== callback));
+    this.registry.unregister(name, callback, phase);
     return this;
   }
 
@@ -57,51 +34,26 @@ export class HookEngine {
   }
 
   removeAllHooks(name = null, phase = null) {
-    if (name) {
-      const key = phase ? `${name}:${phase}` : name;
-      this.hooks.delete(key);
-    } else {
-      this.hooks.clear();
-    }
+    this.registry.removeAll(name, phase);
     return this;
   }
 
+  registerHandler(name, callback) {
+    this.executor.registerHandler(name, callback);
+    return this;
+  }
+
+  getHandler(name) {
+    return this.executor.getHandler(name);
+  }
+
   registerPlugin(name, definition = {}) {
-    if (this.plugins.has(name)) {
-      console.warn(`[HookEngine] Plugin "${name}" already registered, overwriting`);
-    }
-
-    const plugin = { name, ...definition };
-    this.plugins.set(name, plugin);
-
-    if (definition.hooks) {
-      Object.entries(definition.hooks).forEach(([hookName, callback]) => {
-        this.register(hookName, callback, { plugin: name, priority: definition.priority || 0 });
-      });
-    }
-
-    if (definition.handlers) {
-      Object.entries(definition.handlers).forEach(([handlerName, callback]) => {
-        this.registerHandler(handlerName, callback);
-      });
-    }
-
-    if (definition.middleware) {
-      Object.entries(definition.middleware).forEach(([mwName, callback]) => {
-        this.register(mwName, callback, { plugin: name, phase: 'middleware' });
-      });
-    }
-
+    this.plugins.register(name, definition);
     return this;
   }
 
   unregisterPlugin(name) {
-    if (this.plugins.has(name)) {
-      this.plugins.delete(name);
-      for (const [key, hooks] of this.hooks.entries()) {
-        this.hooks.set(key, hooks.filter(h => h.plugin !== name));
-      }
-    }
+    this.plugins.unregister(name);
     return this;
   }
 
@@ -110,143 +62,49 @@ export class HookEngine {
   }
 
   listPlugins() {
-    return Array.from(this.plugins.values()).map(p => ({ name: p.name }));
+    return this.plugins.list();
   }
 
   async execute(name, data = {}, options = {}) {
-    const { phase = null, serial = false, fallthrough = true, context = {} } = options;
-    const key = phase ? `${name}:${phase}` : name;
-
-    this._recordEvent(key, data);
-
-    if (!this.hooks.has(key)) {
-      return { success: true, data, context };
-    }
-
-    const hooks = Array.from(this.hooks.get(key));
-    let result = data;
-    let errors = [];
-
-    for (const hook of hooks) {
-      try {
-        if (serial) {
-          result = await hook.callback(result, context);
-        } else {
-          await hook.callback(result, context);
-        }
-
-        if (hook.once) {
-          this.unregister(name, hook.callback, phase);
-        }
-      } catch (error) {
-        console.error(`[HookEngine] Hook "${key}" error:`, error.message);
-        errors.push(error);
-        if (!fallthrough) throw error;
-      }
-    }
-
-    return { success: errors.length === 0, data: serial ? result : data, errors, context };
+    this.history.record(name, data);
+    return this.executor.execute(name, data, options);
   }
 
   async executeSerial(name, data = {}, options = {}) {
-    return this.execute(name, data, { ...options, serial: true });
+    return this.executor.executeSerial(name, data, options);
   }
 
   async executePhases(name, data, phases = ['before', 'handle', 'after'], context = {}) {
-    let result = data;
-
-    for (const phase of phases) {
-      if (phase === 'handle') {
-        const handler = this.getHandler(name);
-        if (handler) {
-          try {
-            result = await handler(result, context);
-          } catch (error) {
-            console.error(`[HookEngine] Handler "${name}" error:`, error.message);
-            throw error;
-          }
-        }
-      } else {
-        const res = await this.executeSerial(name, result, { phase, context, fallthrough: phase !== 'after' });
-        result = res.data;
-        if (!res.success && phase !== 'after') throw new Error(`Phase "${phase}" failed`);
-      }
-    }
-
-    return result;
+    return this.executor.executePhases(name, data, phases, context);
   }
 
   async transition(name, fromState, toState, data, context = {}) {
-    const transitionKey = `${name}.${toState}`;
-
-    const guards = this.hooks.get(`${transitionKey}:guard`) || [];
-    for (const guard of guards) {
-      try {
-        const result = await guard.callback(data, context);
-        if (!result) {
-          throw new Error(`Guard failed for transition to "${toState}"`);
-        }
-      } catch (error) {
-        console.error(`[HookEngine] Guard "${transitionKey}" failed:`, error.message);
-        throw error;
-      }
-    }
-
-    const res = await this.executeSerial(name, { ...data, toState }, {
-      phase: 'before',
-      context: { ...context, transition: transitionKey }
-    });
-
-    const result = { ...res.data, stage: toState };
-
-    await this.executeSerial(name, result, {
-      phase: 'after',
-      context: { ...context, transition: transitionKey }
-    });
-
-    return result;
+    return this.executor.transition(name, fromState, toState, data, context);
   }
 
   listenerCount(name, phase = null) {
-    const key = phase ? `${name}:${phase}` : name;
-    return this.hooks.has(key) ? this.hooks.get(key).length : 0;
+    return this.registry.count(name, phase);
   }
 
   listeners(name, phase = null) {
-    const key = phase ? `${name}:${phase}` : name;
-    return this.hooks.has(key) ? Array.from(this.hooks.get(key)) : [];
+    return this.registry.get(name, phase);
   }
 
   hookNames() {
-    return Array.from(this.hooks.keys());
-  }
-
-  _recordEvent(name, data) {
-    this.history.push({
-      timestamp: Date.now(),
-      hook: name,
-      data: typeof data === 'object' ? { ...data } : data,
-    });
-
-    if (this.history.length > 100) {
-      this.history.shift();
-    }
+    return this.registry.names();
   }
 
   getHistory(name = null) {
-    if (name) {
-      return this.history.filter(h => h.hook === name);
-    }
-    return Array.from(this.history);
+    return this.history.get(name);
   }
 
   clearHistory() {
-    this.history = [];
+    this.history.clear();
     return this;
   }
 
   setMaxListeners(n) {
-    this.maxListeners = n;
+    this.registry.setMaxListeners(n);
     return this;
   }
 
@@ -264,3 +122,11 @@ export class HookEngine {
 }
 
 export const hookEngine = new HookEngine();
+
+export async function executeHook(name, data = {}, options = {}) {
+  return hookEngine.execute(name, data, options);
+}
+
+export async function executeHookSerial(name, data = {}, options = {}) {
+  return hookEngine.executeSerial(name, data, options);
+}

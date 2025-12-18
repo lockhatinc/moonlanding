@@ -1,5 +1,5 @@
 import { COLORS, BADGE_COLORS_MANTINE } from '@/config/constants';
-export { secondsToDate, dateToSeconds, formatDate, parseDate } from './utils';
+export { secondsToDate, dateToSeconds, formatDate, parseDate } from './utils-client';
 export { fieldRegistry, getFieldHandler, coerceFieldValue, formatFieldValue, validateFieldValue } from './field-types';
 
 export function getEnumOption(spec, optionsKey, value) {

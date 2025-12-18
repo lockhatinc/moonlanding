@@ -24,7 +24,7 @@ export { getFormFields, getListFields, getDisplayFields, getEditableFields, getR
 export const buildFormFields = getFormFields;
 export const buildListColumns = getListFields;
 
-export { PERMISSIONS, canUserAction, canUserPerformAction, checkPermission } from './permissions';
+export { checkPermission } from './permissions';
 export { specs, getSpec, getNavItems, buildNavigation, getChildEntities, getParentEntity, getDefaultSort, getAvailableFilters, getPageSize, getEntityLabel, getInitialState, isEmbeddedEntity, isParentEntity, hasChildRelationships, isSoftDeleted, getOptions, getOptionLabel, getOptionColor, getNextEngagementStage } from './spec-helpers';
 export { HTTP_RESPONSES, RESPONSE_MAPPERS } from './responses';
 export { config, VALIDATORS, hasGoogleAuth, hasDriveConfig, hasEmailConfig, EMAIL_RESOLVERS } from './env';

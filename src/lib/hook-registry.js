@@ -1,59 +1,75 @@
 export class HookRegistry {
   constructor() {
     this.hooks = new Map();
-    this.plugins = new Map();
+    this.maxListeners = 10;
   }
 
-  register(hookName, callback, priority = 10) {
-    if (!this.hooks.has(hookName)) this.hooks.set(hookName, []);
-    this.hooks.get(hookName).push({ callback, priority });
-    this.hooks.get(hookName).sort((a, b) => b.priority - a.priority);
+  makeKey(name, phase = null) {
+    return phase ? `${name}:${phase}` : name;
   }
 
-  registerPlugin(name, plugin) {
-    this.plugins.set(name, plugin);
-  }
+  register(name, callback, options = {}) {
+    const { priority = 0, plugin = 'core', phase = null, once = false } = options;
+    const key = this.makeKey(name, phase);
 
-  async execute(hookName, context = {}) {
-    const hooks = this.hooks.get(hookName) || [];
-    for (const { callback } of hooks) {
-      context = await callback(context);
+    if (!this.hooks.has(key)) {
+      this.hooks.set(key, []);
     }
-    return context;
-  }
 
-  async executePlugin(pluginName, action, context = {}) {
-    const plugin = this.plugins.get(pluginName);
-    if (!plugin) throw new Error(`Unknown plugin: ${pluginName}`);
-    if (typeof plugin[action] === 'function') {
-      return await plugin[action](context);
+    const hook = { callback, priority, plugin, name, phase, once };
+    const list = this.hooks.get(key);
+    list.push(hook);
+    list.sort((a, b) => b.priority - a.priority);
+
+    if (list.length >= this.maxListeners) {
+      console.warn(`[HookRegistry] MaxListenersExceeded: "${key}" has ${list.length} listeners`);
     }
-    return context;
+
+    return this;
   }
 
-  getPlugin(name) {
-    return this.plugins.get(name);
+  unregister(name, callback, phase = null) {
+    const key = this.makeKey(name, phase);
+    if (!this.hooks.has(key)) return this;
+    this.hooks.set(key, this.hooks.get(key).filter(h => h.callback !== callback));
+    return this;
   }
 
-  getHooks(hookName) {
-    return this.hooks.get(hookName) || [];
+  removeAll(name = null, phase = null) {
+    if (name) {
+      const key = this.makeKey(name, phase);
+      this.hooks.delete(key);
+    } else {
+      this.hooks.clear();
+    }
+    return this;
+  }
+
+  removeByPlugin(plugin) {
+    for (const [key, hooks] of this.hooks.entries()) {
+      this.hooks.set(key, hooks.filter(h => h.plugin !== plugin));
+    }
+    return this;
+  }
+
+  get(name, phase = null) {
+    const key = this.makeKey(name, phase);
+    return this.hooks.has(key) ? Array.from(this.hooks.get(key)) : [];
+  }
+
+  count(name, phase = null) {
+    const key = this.makeKey(name, phase);
+    return this.hooks.has(key) ? this.hooks.get(key).length : 0;
+  }
+
+  names() {
+    return Array.from(this.hooks.keys());
+  }
+
+  setMaxListeners(n) {
+    this.maxListeners = n;
+    return this;
   }
 }
 
-export const registry = new HookRegistry();
-
-export function registerHook(hookName, callback, priority = 10) {
-  registry.register(hookName, callback, priority);
-}
-
-export function registerPlugin(name, plugin) {
-  registry.registerPlugin(name, plugin);
-}
-
-export async function executeHook(hookName, context) {
-  return registry.execute(hookName, context);
-}
-
-export async function executePluginAction(pluginName, action, context) {
-  return registry.executePlugin(pluginName, action, context);
-}
+export { executeHook, executeHookSerial } from './hook-engine';

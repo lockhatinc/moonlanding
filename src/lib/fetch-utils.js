@@ -1,7 +1,4 @@
-/**
- * Fetch utilities for common patterns
- * Consolidates URLSearchParams building and fetch patterns
- */
+
 
 export const buildParams = (obj = {}) => {
   const params = new URLSearchParams();
@@ -24,14 +21,12 @@ export const formHeaders = {
   'Content-Type': 'multipart/form-data',
 };
 
-// Common fetch options factory
 export const createFetchOptions = (method = 'GET', body = null, headers = {}) => ({
   method,
   headers: { ...jsonHeaders, ...headers },
   ...(body && { body: typeof body === 'string' ? body : JSON.stringify(body) }),
 });
 
-// Handle response parsing with error checking
 export const parseResponse = async (response, expectJson = true) => {
   if (!response.ok) {
     const contentType = response.headers.get('content-type');
@@ -52,7 +47,6 @@ export const parseResponse = async (response, expectJson = true) => {
   return response.json();
 };
 
-// Consolidated fetch wrapper
 export const fetchJson = async (url, options = {}) => {
   const { method = 'GET', body = null, headers = {}, signal = null } = options;
   const response = await fetch(url, {

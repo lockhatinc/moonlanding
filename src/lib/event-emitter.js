@@ -69,47 +69,24 @@ class EventEmitter {
 
 export const eventEmitter = new EventEmitter();
 
-export async function onEntity(action, handler) {
-  const eventName = `entity:${action}`;
-  eventEmitter.on(eventName, handler);
-}
+const createNamespaceAPI = (namespace) => ({
+  on: (action, handler) => eventEmitter.on(`${namespace}:${action}`, handler),
+  off: (action, handler) => eventEmitter.off(`${namespace}:${action}`, handler),
+  emit: (action, data) => eventEmitter.emit(`${namespace}:${action}`, data),
+});
 
-export async function offEntity(action, handler) {
-  const eventName = `entity:${action}`;
-  eventEmitter.off(eventName, handler);
-}
+export const entity = createNamespaceAPI('entity');
+export const workflow = createNamespaceAPI('workflow');
+export const sync = createNamespaceAPI('sync');
 
-export async function emitEntity(action, data) {
-  const eventName = `entity:${action}`;
-  return eventEmitter.emit(eventName, data);
-}
+export const onEntity = (action, handler) => entity.on(action, handler);
+export const offEntity = (action, handler) => entity.off(action, handler);
+export const emitEntity = (action, data) => entity.emit(action, data);
 
-export async function onWorkflow(action, handler) {
-  const eventName = `workflow:${action}`;
-  eventEmitter.on(eventName, handler);
-}
+export const onWorkflow = (action, handler) => workflow.on(action, handler);
+export const offWorkflow = (action, handler) => workflow.off(action, handler);
+export const emitWorkflow = (action, data) => workflow.emit(action, data);
 
-export async function offWorkflow(action, handler) {
-  const eventName = `workflow:${action}`;
-  eventEmitter.off(eventName, handler);
-}
-
-export async function emitWorkflow(action, data) {
-  const eventName = `workflow:${action}`;
-  return eventEmitter.emit(eventName, data);
-}
-
-export async function onSync(entity, handler) {
-  const eventName = `sync:${entity}`;
-  eventEmitter.on(eventName, handler);
-}
-
-export async function offSync(entity, handler) {
-  const eventName = `sync:${entity}`;
-  eventEmitter.off(eventName, handler);
-}
-
-export async function emitSync(entity, data) {
-  const eventName = `sync:${entity}`;
-  return eventEmitter.emit(eventName, data);
-}
+export const onSync = (entity, handler) => sync.on(entity, handler);
+export const offSync = (entity, handler) => sync.off(entity, handler);
+export const emitSync = (entity, data) => sync.emit(entity, data);
