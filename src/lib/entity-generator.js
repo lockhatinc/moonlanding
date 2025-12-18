@@ -65,14 +65,14 @@ export class EntityGenerator {
 
       CreatePage: Object.assign(createPage('create', async ({ user, spec }) => {
         const options = await loadFormOptions(spec);
-        return <Shell user={user} nav={getNavItems()}><Entity spec={spec} mode="create" options={options} /></Shell>;
+        return <Shell user={user} nav={getNavItems()}><Entity spec={spec} mode="create" options={options} entityName={spec.name} /></Shell>;
       }), { generateMetadata: ({ params }) => createMetadata('new', params.entity) }),
 
       EditPage: Object.assign(createPage('edit', async ({ user, spec, params }) => {
         const data = get(spec.name, params.id);
         if (!data) notFound();
         const options = await loadFormOptions(spec);
-        return <Shell user={user} nav={getNavItems()}><Entity spec={spec} data={data} mode="edit" options={options} /></Shell>;
+        return <Shell user={user} nav={getNavItems()}><Entity spec={spec} data={data} mode="edit" options={options} entityName={spec.name} /></Shell>;
       }), { generateMetadata: ({ params }) => createMetadata('edit', params.entity, params.id) }),
     };
   }

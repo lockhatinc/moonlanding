@@ -12,6 +12,9 @@ export const rfiSpec = spec('rfi')
     client_status: { type: 'enum', options: 'rfi_client_status', required: true, list: true, default: 'pending' },
     auditor_status: { type: 'enum', options: 'rfi_auditor_status', required: true, list: true, default: 'requested' },
     due_date: { type: 'date' },
+    created_at: { type: 'int', auto: 'now', hidden: true },
+    updated_at: { type: 'int', auto: 'update', hidden: true },
+    created_by: { type: 'ref', ref: 'user', display: 'user.name', auto: 'user', hidden: true },
   })
   .options('rfi_client_status', {
     pending: { label: 'Pending', color: 'yellow' },

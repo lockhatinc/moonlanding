@@ -99,47 +99,46 @@ export function ListBuilder({
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {Object.entries(transformed).map(([group, rows], idx) => (
-              <div key={`group-${idx}-${group}`}>
-                {groupBy && (
+            {Object.entries(transformed).map(([group, rows], idx) => [
+              groupBy && (
+                <Table.Tr
+                  key={`group-${idx}-${group}`}
+                  style={{ backgroundColor: 'var(--mantine-color-gray-1)', cursor: 'pointer' }}
+                  onClick={() => toggleGroup(group)}
+                >
+                  <Table.Td style={{ width: 40 }}>
+                    {expandedGroups.includes(group) ? (
+                      <ChevronDown size={16} />
+                    ) : (
+                      <ChevronRight size={16} />
+                    )}
+                  </Table.Td>
+                  <Table.Td colSpan={columns.length}>
+                    <Group gap="xs">
+                      <Text fw={500}>{group}</Text>
+                      <Badge>{rows.length}</Badge>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ),
+              (!groupBy || expandedGroups.includes(group)) &&
+                rows.map(row => (
                   <Table.Tr
-                    style={{ backgroundColor: 'var(--mantine-color-gray-1)', cursor: 'pointer' }}
-                    onClick={() => toggleGroup(group)}
+                    key={row.id}
+                    style={{
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => handleRowClick(row)}
                   >
-                    <Table.Td style={{ width: 40 }}>
-                      {expandedGroups.includes(group) ? (
-                        <ChevronDown size={16} />
-                      ) : (
-                        <ChevronRight size={16} />
-                      )}
-                    </Table.Td>
-                    <Table.Td colSpan={columns.length}>
-                      <Group gap="xs">
-                        <Text fw={500}>{group}</Text>
-                        <Badge>{rows.length}</Badge>
-                      </Group>
-                    </Table.Td>
+                    {groupBy && <Table.Td style={{ width: 40 }} />}
+                    {columns.map(col => (
+                      <Table.Td key={col.key}>
+                        {renderCellValue(row[col.key], col, spec, row)}
+                      </Table.Td>
+                    ))}
                   </Table.Tr>
-                )}
-                {(!groupBy || expandedGroups.includes(group)) &&
-                  rows.map(row => (
-                    <Table.Tr
-                      key={row.id}
-                      style={{
-                        cursor: 'pointer',
-                      }}
-                      onClick={() => handleRowClick(row)}
-                    >
-                      {groupBy && <Table.Td style={{ width: 40 }} />}
-                      {columns.map(col => (
-                        <Table.Td key={col.key}>
-                          {renderCellValue(row[col.key], col, spec, row)}
-                        </Table.Td>
-                      ))}
-                    </Table.Tr>
-                  ))}
-              </div>
-            ))}
+                )),
+            ]).flat().filter(Boolean)}
             {data.length === 0 && (
               <Table.Tr>
                 <Table.Td colSpan={columns.length + (groupBy ? 1 : 0)} style={{ textAlign: 'center', padding: 32, color: 'var(--mantine-color-gray-6)' }}>

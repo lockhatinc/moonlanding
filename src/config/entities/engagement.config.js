@@ -13,6 +13,10 @@ export const engagementSpec = spec('engagement')
     description: { type: 'textarea' },
     start_date: { type: 'date' },
     end_date: { type: 'date' },
+    assigned_to: { type: 'ref', ref: 'user', display: 'user.name' },
+    created_at: { type: 'int', auto: 'now', hidden: true },
+    updated_at: { type: 'int', auto: 'update', hidden: true },
+    created_by: { type: 'ref', ref: 'user', display: 'user.name', auto: 'user', hidden: true },
   })
   .options('engagement_status', {
     pending: { label: 'Pending', color: 'yellow' },

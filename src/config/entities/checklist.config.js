@@ -10,5 +10,8 @@ export const checklistSpec = spec('checklist')
     review_id: { type: 'ref', ref: 'review', required: true },
     title: { type: 'text', required: true, list: true },
     items: { type: 'json', default: [] },
+    created_at: { type: 'int', auto: 'now', hidden: true },
+    updated_at: { type: 'int', auto: 'update', hidden: true },
+    created_by: { type: 'ref', ref: 'user', display: 'user.name', auto: 'user', hidden: true },
   })
   .build();

@@ -11,6 +11,10 @@ export const reviewSpec = spec('review')
     document_url: { type: 'text' },
     status: { type: 'enum', options: 'review_status', required: true, list: true, default: 'open' },
     reviewer_id: { type: 'ref', ref: 'user', display: 'user.name' },
+    assigned_to: { type: 'ref', ref: 'user', display: 'user.name' },
+    created_at: { type: 'int', auto: 'now', hidden: true },
+    updated_at: { type: 'int', auto: 'update', hidden: true },
+    created_by: { type: 'ref', ref: 'user', display: 'user.name', auto: 'user', hidden: true },
   })
   .options('review_status', {
     open: { label: 'Open', color: 'yellow' },

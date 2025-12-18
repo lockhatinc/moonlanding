@@ -11,13 +11,14 @@ import { useFormStatus } from 'react-dom';
 import { Search, Plus, ChevronDown, ChevronRight } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { ListBuilder } from '@/components/builders/list-builder';
+import { serverCreateEntity, serverUpdateEntity } from '@/lib/action-factory';
 
 function SubmitButton({ label, isSubmitting }) {
   const { pending } = useFormStatus();
   return <Button type="submit" loading={pending || isSubmitting}>{label}</Button>;
 }
 
-function FormMode({ spec, data = {}, options = {}, onSubmit, sections = null }) {
+function FormMode({ spec, data = {}, options = {}, entityName = null, sections = null }) {
   const router = useRouter();
   const { values, setValue, errors, setError, hasErrors } = useFormState(spec, data);
   const formFields = useMemo(() => buildFormFields(spec), [spec]);
@@ -53,12 +54,16 @@ function FormMode({ spec, data = {}, options = {}, onSubmit, sections = null }) 
       console.error('[FORM] Validation errors');
       return;
     }
-    if (onSubmit) {
-      try {
-        await onSubmit(values);
-      } catch (err) {
-        console.error('[FORM] Submission error:', err);
+    try {
+      const name = entityName || spec.name;
+      if (data.id) {
+        await serverUpdateEntity(name, data.id, values);
+      } else {
+        await serverCreateEntity(name, values);
       }
+      router.push(`/${name}`);
+    } catch (err) {
+      console.error('[FORM] Submission error:', err);
     }
   };
 
@@ -106,13 +111,13 @@ function FormMode({ spec, data = {}, options = {}, onSubmit, sections = null }) 
   );
 }
 
-export function Entity({ spec, data, mode = 'list', options = {}, pagination = null, onPageChange, onPageSizeChange, onCreateClick, onSubmit, canCreate = true, sections = null }) {
+export function Entity({ spec, data, mode = 'list', options = {}, pagination = null, onPageChange, onPageSizeChange, onCreateClick, entityName = null, canCreate = true, sections = null }) {
   if (mode === 'list') {
     return <ListBuilder spec={spec} data={data || []} pagination={pagination} onPageChange={onPageChange} onPageSizeChange={onPageSizeChange} onCreateClick={onCreateClick} canCreate={canCreate} />;
   }
 
   if (mode === 'form' || mode === 'edit' || mode === 'create') {
-    return <FormMode spec={spec} data={data} options={options} onSubmit={onSubmit} sections={sections} />;
+    return <FormMode spec={spec} data={data} options={options} entityName={entityName} sections={sections} />;
   }
 
   return <Text c="red">Unknown mode: {mode}</Text>;
