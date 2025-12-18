@@ -1,5 +1,6 @@
 import { getDatabase, genId, now } from '@/lib/database-core';
 import { getSpec } from '@/config';
+import { RECORD_STATUS } from '@/config/constants';
 import { iterateCreateFields, iterateUpdateFields } from '@/lib/field-iterator';
 import { coerceFieldValue } from '@/lib/field-registry';
 import { execGet, execQuery, execRun, withTransaction } from '@/lib/query-wrapper';
@@ -18,7 +19,7 @@ function buildSpecQuery(spec, where = {}, options = {}) {
   });
   const wc = [], p = [];
   Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${table}.${k} = ?`); p.push(v); } });
-  if (spec.fields.status && !where.status && !options.includeDeleted) wc.push(`${table}.status != 'deleted'`);
+  if (spec.fields.status && !where.status && !options.includeDeleted) wc.push(`${table}.status != '${RECORD_STATUS.DELETED}'`);
   let sql = `SELECT ${selects.join(', ')} FROM ${table}`;
   if (joins.length) sql += ' ' + joins.join(' ');
   if (wc.length) sql += ' WHERE ' + wc.join(' AND ');
@@ -67,7 +68,7 @@ export const search = (entity, query, where = {}) => {
 export const count = (entity, where = {}) => {
   const spec = getSpec(entity);
   const wc = Object.entries(where).filter(([,v]) => v !== undefined).map(([k]) => `${k}=?`);
-  if (spec.fields.status) wc.push(`status!='deleted'`);
+  if (spec.fields.status) wc.push(`status!='${RECORD_STATUS.DELETED}'`);
   const sql = `SELECT COUNT(*) as c FROM ${spec.name}${wc.length ? ' WHERE ' + wc.join(' AND ') : ''}`;
   try { return execGet(sql, Object.values(where).filter(v => v !== undefined), { entity, operation: 'Count' }).c || 0; } catch { return 0; }
 };
@@ -107,7 +108,7 @@ export const remove = (entity, id) => {
   const spec = getSpec(entity);
   if (spec.fields.status) {
     const hasUpdatedAt = spec.fields.updated_at;
-    execRun(hasUpdatedAt ? `UPDATE ${spec.name} SET status='deleted', updated_at=? WHERE id=?` : `UPDATE ${spec.name} SET status='deleted' WHERE id=?`, hasUpdatedAt ? [now(), id] : [id], { entity, operation: 'SoftDelete' });
+    execRun(hasUpdatedAt ? `UPDATE ${spec.name} SET status='${RECORD_STATUS.DELETED}', updated_at=? WHERE id=?` : `UPDATE ${spec.name} SET status='${RECORD_STATUS.DELETED}' WHERE id=?`, hasUpdatedAt ? [now(), id] : [id], { entity, operation: 'SoftDelete' });
   } else {
     execRun(`DELETE FROM ${spec.name} WHERE id=?`, [id], { entity, operation: 'HardDelete' });
   }

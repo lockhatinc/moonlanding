@@ -1,12 +1,12 @@
 import { get } from '@/engine';
-import { ENGAGEMENT_STAGE, ENGAGEMENT_STATUS, RFI_STATUS, ROLES, USER_TYPES } from '@/config/constants';
+import { ENGAGEMENT_STAGE, ENGAGEMENT_STATUS, RFI_STATUS, ROLES, USER_TYPES, LETTER_AUDITOR_STATUS } from '@/config/constants';
 import { canTransitionStage } from '@/lib/status-helpers';
 
 export const validateStageTransition = (engagement, newStage, user) => {
   if (![ROLES.PARTNER, ROLES.MANAGER].includes(user.role)) throw new Error('Only partners and managers can change stage');
   if (engagement.status === ENGAGEMENT_STATUS.PENDING) throw new Error('Cannot change stage while pending');
   if (newStage === ENGAGEMENT_STAGE.CLOSE_OUT && user.role !== ROLES.PARTNER) throw new Error('Only partners can close out');
-  if (newStage === ENGAGEMENT_STAGE.CLOSE_OUT && engagement.letter_auditor_status !== 'accepted' && engagement.progress > 0)
+  if (newStage === ENGAGEMENT_STAGE.CLOSE_OUT && engagement.letter_auditor_status !== LETTER_AUDITOR_STATUS.ACCEPTED && engagement.progress > 0)
     throw new Error('Cannot close out: Letter must be accepted or progress must be 0%');
   if (!canTransitionStage(engagement.stage, newStage)) throw new Error(`Cannot go backward from ${engagement.stage} to ${newStage}`);
   return true;

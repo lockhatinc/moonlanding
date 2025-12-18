@@ -1,7 +1,7 @@
 import { hookEngine } from './hook-engine.js';
 import { list, get, update, create, remove } from '../engine.js';
 import { queueEmail } from '../engine/email-templates.js';
-import { RFI_STATUS, RFI_CLIENT_STATUS, ENGAGEMENT_STAGE, REPEAT_INTERVALS } from './status-helpers.js';
+import { RFI_STATUS, RFI_CLIENT_STATUS, ENGAGEMENT_STAGE, REPEAT_INTERVALS, LETTER_AUDITOR_STATUS } from './status-helpers.js';
 
 const logActivity = (t, id, act, msg, u, d) =>
   create('activity_log', { entity_type: t, entity_id: id, action: act, message: msg, details: d ? JSON.stringify(d) : null, user_email: u?.email }, u);
@@ -33,7 +33,7 @@ export const registerEntityHandlers = () => {
         commencement: () => queueEmail('engagement_commencement', { engagement, recipients: 'client_users' }),
         finalization: () => queueEmail('engagement_finalization', { engagement, recipients: 'client_admin' }),
         close_out: () => {
-          if (engagement.letter_auditor_status !== 'accepted' && engagement.progress > 0)
+          if (engagement.letter_auditor_status !== LETTER_AUDITOR_STATUS.ACCEPTED && engagement.progress > 0)
             throw new Error('Cannot close out: Letter must be accepted or progress must be 0%');
         },
       };
