@@ -1,3 +1,3 @@
-import { createCreatePage } from '@/lib/page-factory';
+import { createNewPage } from '@/lib/page-factory';
 
-export default createCreatePage();
+export default createNewPage();

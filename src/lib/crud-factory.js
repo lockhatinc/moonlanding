@@ -3,7 +3,7 @@ import { list, get, create, update, remove, listWithPagination, search, getChild
 import { validateEntity, validateUpdate, hasErrors } from '@/lib/validate';
 import { requireAuth, requirePermission } from '@/lib/auth-middleware';
 import { broadcastUpdate } from '@/lib/realtime-server';
-import { executeHook } from '@/lib/hook-registry';
+import { executeHook } from '@/lib/hook-engine';
 import { AppError, NotFoundError, ValidationError, createErrorLogger } from '@/lib/error-handler';
 import { ok, created, apiError } from '@/lib/response-formatter';
 

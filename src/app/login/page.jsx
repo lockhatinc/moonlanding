@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation';
 import { LoginForm } from './login-form';
 import { Center, Paper, Box, Title, Text, Code, ThemeIcon } from '@mantine/core';
 
+export const dynamic = 'force-dynamic';
+
 export default async function LoginPage() {
   const user = await getUser();
   if (user) redirect('/');

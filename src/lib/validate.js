@@ -1,5 +1,5 @@
 import { VALIDATION } from '@/config/constants';
-import { executeHook } from './hook-registry';
+import { executeHook } from './hook-engine';
 
 const validators = {
   email: (v) => !v || VALIDATION.EMAIL_REGEX.test(v) ? null : 'Invalid email',

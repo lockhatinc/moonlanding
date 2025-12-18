@@ -9,6 +9,8 @@ import { QuickActions } from '@/components/dashboard/quick-actions';
 import { RecentActivity } from '@/components/dashboard/recent-activity';
 import { AllEntities } from '@/components/dashboard/all-entities';
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardPage() {
   const user = await getUser();
   if (!user) redirect('/login');

@@ -1,4 +1,4 @@
-import { executeHook } from './hook-registry';
+import { executeHook } from './hook-engine';
 
 export async function withHooks(hookName, context, operation) {
   const beforeCtx = await executeHook(`${hookName}:before`, context);

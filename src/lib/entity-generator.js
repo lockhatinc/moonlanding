@@ -27,6 +27,12 @@ export class EntityGenerator {
   constructor(entityName, spec = null) {
     this.entityName = entityName;
     this.spec = spec || getSpec(entityName);
+    const pages = this.generatePages();
+    this.ListPage = pages.ListPage;
+    this.DetailPage = pages.DetailPage;
+    this.CreatePage = pages.CreatePage;
+    this.EditPage = pages.EditPage;
+    this.NewPage = pages.CreatePage;
   }
 
   generatePages() {

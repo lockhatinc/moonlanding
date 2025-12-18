@@ -12,7 +12,6 @@ const nextConfig = {
     }
     return config;
   },
-  staticPageGenerationTimeout: 0,
   onDemandEntries: {
     maxInactiveAge: 60 * 1000,
     pagesBufferLength: 5,
