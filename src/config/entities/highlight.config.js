@@ -6,6 +6,8 @@ export const highlightSpec = spec('highlight')
   .order(5)
   .parent('review')
   .embedded()
+  .computedField('created_by_display', '(SELECT name FROM user WHERE user.id = highlight.created_by LIMIT 1)')
+  .computedField('resolved_by_display', '(SELECT name FROM user WHERE user.id = highlight.resolved_by LIMIT 1)')
   .fields({
     review_id: { type: 'ref', ref: 'review', required: true },
     page_number: { type: 'int', required: true },
@@ -35,5 +37,25 @@ export const highlightSpec = spec('highlight')
       label: 'Responses',
       fk: 'highlight_id',
     },
+  })
+  .validate({
+    text: [
+      { type: 'required', message: 'Highlight text is required' },
+      { type: 'minLength', value: 1, message: 'Highlight text cannot be empty' },
+    ],
+    review_id: [
+      { type: 'required', message: 'Review is required' },
+    ],
+    page_number: [
+      { type: 'required', message: 'Page number is required' },
+      { type: 'range', min: 1, max: 9999, message: 'Page number must be positive' },
+    ],
+    status: [
+      { type: 'required', message: 'Status is required' },
+    ],
+  })
+  .components({
+    detail: 'HighlightDetailView',
+    list: 'HighlightListView',
   })
   .build();

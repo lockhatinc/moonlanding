@@ -4,6 +4,8 @@ export const engagementSpec = spec('engagement')
   .label('Engagement', 'Engagements')
   .icon('Briefcase')
   .order(2)
+  .computedField('created_by_display', '(SELECT name FROM user WHERE user.id = engagement.created_by LIMIT 1)')
+  .computedField('assigned_to_display', '(SELECT name FROM user WHERE user.id = engagement.assigned_to LIMIT 1)')
   .fields({
     client_id: { type: 'ref', ref: 'client', display: 'client.name', required: true, list: true },
     year: { type: 'int', required: true, list: true },
@@ -45,4 +47,60 @@ export const engagementSpec = spec('engagement')
     },
   })
   .list({ groupBy: 'status', defaultSort: { field: 'created_at', dir: 'desc' } })
+  .transitions({
+    pending: ['active', 'archived'],
+    active: ['completed', 'archived'],
+    completed: ['archived'],
+    archived: [],
+  })
+  .fieldPermissions({
+    assigned_to: { view: 'all', edit: ['partner', 'manager'] },
+    created_by: { view: 'all', edit: [] },
+  })
+  .validate({
+    title: [
+      { type: 'required', message: 'Title is required' },
+      { type: 'minLength', value: 3, message: 'Title must be at least 3 characters' },
+      { type: 'maxLength', value: 255, message: 'Title must not exceed 255 characters' },
+    ],
+    year: [
+      { type: 'required', message: 'Year is required' },
+      { type: 'range', min: 2020, max: 2099, message: 'Year must be between 2020 and 2099' },
+    ],
+    client_id: [
+      { type: 'required', message: 'Client is required' },
+    ],
+    status: [
+      { type: 'required', message: 'Status is required' },
+    ],
+    stage: [
+      { type: 'required', message: 'Stage is required' },
+    ],
+    start_date: [
+      { type: 'custom', validator: 'validateDateRange', message: 'Start date must be before end date' },
+    ],
+  })
+  .onLifecycle({
+    onCreate: { action: 'notify', template: 'engagement_created', recipients: 'assigned_to' },
+    onStatusChange: { action: 'notify', template: 'engagement_status_changed', recipients: 'assigned_to' },
+    onStageChange: { action: 'log', level: 'info', message: 'Engagement stage transitioned' },
+  })
+  .formSections({
+    general: {
+      label: 'General Information',
+      fields: ['client_id', 'title', 'year'],
+    },
+    timeline: {
+      label: 'Timeline',
+      fields: ['start_date', 'end_date'],
+    },
+    workflow: {
+      label: 'Workflow',
+      fields: ['status', 'stage', 'assigned_to'],
+    },
+    details: {
+      label: 'Details',
+      fields: ['description'],
+    },
+  })
   .build();

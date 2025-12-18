@@ -150,6 +150,36 @@ export class SpecBuilder {
     return this;
   }
 
+  transitions(rules = {}) {
+    this.spec.transitions = rules;
+    return this;
+  }
+
+  fieldPermissions(permissions = {}) {
+    this.spec.fieldPermissions = permissions;
+    return this;
+  }
+
+  validate(rules = {}) {
+    this.spec.validations = rules;
+    return this;
+  }
+
+  onLifecycle(events = {}) {
+    this.spec.lifecycle = events;
+    return this;
+  }
+
+  formSections(sections = {}) {
+    this.spec.formSections = sections;
+    return this;
+  }
+
+  components(components = {}) {
+    this.spec.components = components;
+    return this;
+  }
+
   build() {
     this.validateSpec();
     return this.spec;

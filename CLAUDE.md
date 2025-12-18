@@ -263,3 +263,55 @@ Configured entity specs to achieve feature parity with MWR (My Work Review), Fri
 2. Email notifications: Add `on_event` property to spec for automatic trigger configuration
 3. Computed metrics: Add `computed` property to spec for dashboard aggregations
 4. Dynamic permissions: Enhance `access` rules with field-level and row-level conditions
+
+## Config-Driven Enhancements (Phase 3 - Dec 2024)
+
+### Spec-Builder API Additions
+
+Extended SpecBuilder class with configuration methods for maximum framework capabilities:
+
+1. **`.validate(rules)`** - Field-level validation rules
+   - Declarative validation: required, minLength, maxLength, range, custom
+   - Applied to: engagement title, year, client_id; review title, engagement_id; highlight text, page_number
+   - Usage: `.validate({ fieldName: [{ type: 'required', message: '...' }] })`
+
+2. **`.transitions(rules)`** - Workflow state transition rules
+   - Defines allowed status changes: pending→active→completed→archived
+   - Prevents invalid state transitions at engine level
+   - Applied to: engagement (4-state), review (3-state)
+   - Usage: `.transitions({ pending: ['active', 'archived'], ... })`
+
+3. **`.fieldPermissions(permissions)`** - Role-based field visibility
+   - Controls who can view/edit specific fields
+   - Applied to: engagement (assigned_to, created_by)
+   - Usage: `.fieldPermissions({ fieldName: { view: 'all', edit: ['partner'] } })`
+
+4. **`.onLifecycle(events)`** - Workflow side effects (email, logging)
+   - Triggers on entity lifecycle events: onCreate, onStatusChange, onStageChange
+   - Configuration-only notification templates and logging rules
+   - Applied to: engagement (3 lifecycle hooks), review (2 lifecycle hooks)
+   - Usage: `.onLifecycle({ onCreate: { action: 'notify', template: '...', recipients: '...' } })`
+
+5. **`.formSections(sections)`** - Reusable form section templates
+   - Groups related fields into named sections for consistent UX
+   - Applied to: engagement (4 sections: general, timeline, workflow, details)
+   - Usage: `.formSections({ sectionName: { label: '...', fields: [...] } })`
+
+6. **`.components(components)`** - Entity-level custom component overrides
+   - Specifies alternate React components for detail/list views
+   - Applied to: highlight (HighlightDetailView, HighlightListView)
+   - Usage: `.components({ detail: 'ComponentName', list: 'ComponentName' })`
+
+### Configuration-Driven Benefits
+- **Zero application code changes** for validation, permissions, transitions, notifications
+- **Declarative over imperative** - configuration expresses intent clearly
+- **Reusable patterns** - form sections, validation rules, lifecycle hooks applied across entities
+- **Audit-ready** - built-in support for resolved_by, resolved_at, audit field visibility
+- **Extensible** - new validation types, lifecycle hooks, components added without core changes
+- **DRY compliance** - validation, permissions, workflows defined once in spec
+
+### Technical Details
+- SpecBuilder class: 196 lines (under 200-line limit)
+- Specs apply configuration at engine layer: query-engine.js, form-builder.jsx, list-builder.jsx
+- No breaking changes to existing functionality
+- Backward compatible: all new methods are optional
