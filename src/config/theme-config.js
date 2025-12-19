@@ -16,6 +16,13 @@ export const THEME = {
     amber: { bg: '#fff8e1', text: '#ff6b35' },
   },
 
+  highlightColors: {
+    default: '#B0B0B0',
+    scrolled_to: '#7F7EFF',
+    partner_note: '#FF4141',
+    resolved: '#44BBA4',
+  },
+
   colorMappings: {
     'engagement_status.pending': 'yellow',
     'engagement_status.active': 'blue',
@@ -29,17 +36,78 @@ export const THEME = {
     'engagement_stage.finalization': 'green',
     'engagement_stage.close_out': 'green',
 
+    'review_status.active': 'blue',
     'review_status.open': 'yellow',
     'review_status.closed': 'green',
     'review_status.archived': 'gray',
+
+    'letter_status.requested': 'blue',
+    'letter_status.reviewing': 'amber',
+    'letter_status.accepted': 'green',
+    'letter_status.rejected': 'red',
 
     'highlight_status.unresolved': 'red',
     'highlight_status.partially_resolved': 'yellow',
     'highlight_status.resolved': 'green',
 
+    'flag_status.open': 'red',
+    'flag_status.in_progress': 'blue',
+    'flag_status.resolved': 'green',
+
+    'flag_type.query': 'blue',
+    'flag_type.issue': 'red',
+    'flag_type.missed_deadline': 'orange',
+    'flag_type.high_priority': 'red',
+    'flag_type.note': 'gray',
+
+    'flag_severity.low': 'green',
+    'flag_severity.medium': 'yellow',
+    'flag_severity.high': 'red',
+
+    'rfi_status.waiting': 'yellow',
+    'rfi_status.completed': 'green',
+
+    'rfi_client_status.pending': 'yellow',
+    'rfi_client_status.sent': 'blue',
+    'rfi_client_status.responded': 'amber',
+    'rfi_client_status.completed': 'green',
+
+    'rfi_auditor_status.requested': 'red',
+    'rfi_auditor_status.reviewing': 'blue',
+    'rfi_auditor_status.queries': 'amber',
+    'rfi_auditor_status.received': 'green',
+
+    'post_rfi_status.pending': 'yellow',
+    'post_rfi_status.sent': 'blue',
+    'post_rfi_status.queries': 'amber',
+    'post_rfi_status.accepted': 'green',
+
     'severity.low': 'green',
     'severity.medium': 'yellow',
     'severity.high': 'red',
+
+    'template_status.active': 'green',
+    'template_status.archived': 'gray',
+
+    'collaborator_role.owner': 'red',
+    'collaborator_role.reviewer': 'blue',
+    'collaborator_role.viewer': 'gray',
+
+    'collaborator_type.permanent': 'green',
+    'collaborator_type.temporary': 'amber',
+
+    'roles.partner': 'red',
+    'roles.manager': 'blue',
+    'roles.clerk': 'gray',
+    'roles.auditor': 'amber',
+    'roles.client': 'green',
+
+    'user_status.active': 'green',
+    'user_status.inactive': 'gray',
+
+    'repeat_interval.once': 'gray',
+    'repeat_interval.monthly': 'blue',
+    'repeat_interval.yearly': 'green',
   },
 
   styles: {

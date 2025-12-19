@@ -11,7 +11,28 @@ const defineJob = (config, handler) => createJob(config.name, config.schedule, c
 const createRecreationJob = (interval) => {
   const config = interval === 'yearly' ? JOBS_CONFIG.yearlyEngagementRecreation : JOBS_CONFIG.monthlyEngagementRecreation;
   return defineJob(config, async () => forEachRecord('engagement', { repeat_interval: interval, status: 'active' },
-    async (e) => recreateEngagement(e.id).catch(err => create('recreation_log', { engagement_id: e.id, client_id: e.client_id, status: 'failed', error: err.message })))
+    async (e) => {
+      try {
+        const newEngagementId = await recreateEngagement(e.id);
+        // Lock original engagement to prevent infinite loops
+        await update('engagement', e.id, { repeat_interval: 'once' });
+        // Reset RFI dates on new engagement
+        const rfis = list('rfi', { engagement_id: newEngagementId });
+        for (const rfi of rfis) {
+          await update('rfi', rfi.id, {
+            date_requested: null,
+            date_resolved: null,
+            status: 'waiting',
+            client_status: 'pending',
+            auditor_status: 'requested'
+          });
+        }
+        await create('recreation_log', { engagement_id: e.id, new_engagement_id: newEngagementId, client_id: e.client_id, status: 'success' });
+      } catch (err) {
+        console.error(`[JOB] Recreation error for engagement ${e.id}:`, err.message);
+        await create('recreation_log', { engagement_id: e.id, client_id: e.client_id, status: 'failed', error: err.message });
+      }
+    })
   );
 };
 
@@ -119,6 +140,48 @@ export const SCHEDULED_JOBS = {
   yearly_engagement_recreation: createRecreationJob('yearly'),
   monthly_engagement_recreation: createRecreationJob('monthly'),
   hourly_email_processing: defineJob(JOBS_CONFIG.hourlyEmailProcessing, sendQueuedEmails),
+
+  review_checklist_inheritance: defineJob(JOBS_CONFIG.reviewChecklistInheritance, async (review) => {
+    if (!review.template_id) return;
+    const template = get('template', review.template_id);
+    if (!template) return;
+    try {
+      const defaultChecklists = typeof template.default_checklists === 'string'
+        ? JSON.parse(template.default_checklists)
+        : template.default_checklists || [];
+      const sections = typeof template.sections === 'string'
+        ? JSON.parse(template.sections)
+        : template.sections || [];
+      if (defaultChecklists.length > 0) {
+        for (const checklist of defaultChecklists) {
+          await create('checklist', { review_id: review.id, ...checklist });
+        }
+      }
+      if (sections.length > 0) {
+        await update('review', review.id, { sections: JSON.stringify(sections) });
+      }
+    } catch (err) {
+      console.error(`[JOB] Checklist inheritance error for review ${review.id}:`, err.message);
+    }
+  }),
+
+  rfi_info_gathering_zero_out: (rfi, engagement) => {
+    if (engagement?.stage === ENGAGEMENT_STAGE.INFO_GATHERING) {
+      return { ...rfi, days_outstanding: 0 };
+    }
+    return rfi;
+  },
+
+  client_access_filter: (rfis, user) => {
+    if (user.role === ROLES.CLIENT && user.client_access) {
+      const allowedClientIds = JSON.parse(typeof user.client_access === 'string' ? user.client_access : JSON.stringify(user.client_access || []));
+      return rfis.filter(rfi => {
+        const rfiClientIds = JSON.parse(typeof rfi.client_ids === 'string' ? rfi.client_ids : JSON.stringify(rfi.client_ids || []));
+        return rfiClientIds.some(cid => allowedClientIds.includes(cid));
+      });
+    }
+    return rfis;
+  },
 };
 
 export { shouldRunNow };

@@ -20,7 +20,17 @@ export const engagementSpec = withComputedAssignee(
     description: { type: 'textarea' },
     start_date: { type: 'date' },
     end_date: { type: 'date' },
+    commencement_date: { type: 'int', hidden: true },
     assigned_to: { type: 'ref', ref: 'user', display: 'user.name' },
+    partner_id: { type: 'ref', ref: 'user', display: 'user.name' },
+    manager_id: { type: 'ref', ref: 'user', display: 'user.name' },
+    team_id: { type: 'ref', ref: 'team' },
+    engagement_letter_id: { type: 'ref', ref: 'engagement_letter' },
+    repeat_interval: { type: 'enum', options: 'repeat_interval', default: 'once' },
+    recreate_with_attachments: { type: 'bool', default: false, hidden: true },
+    progress: { type: 'int', min: 0, max: 100, default: 0 },
+    review_link: { type: 'text', hidden: true },
+    clerksCanApprove: { type: 'bool', default: false, hidden: true },
   })
   .options('engagement_status', {
     pending: { label: 'Pending', color: 'yellow' },
@@ -36,6 +46,11 @@ export const engagementSpec = withComputedAssignee(
     finalization: { label: 'Finalization', color: 'green' },
     close_out: { label: 'Close Out', color: 'green' },
   })
+  .options('repeat_interval', {
+    once: { label: 'Once', color: 'gray' },
+    monthly: { label: 'Monthly', color: 'blue' },
+    yearly: { label: 'Yearly', color: 'green' },
+  })
   .children({
     reviews: {
       entity: 'review',
@@ -45,6 +60,11 @@ export const engagementSpec = withComputedAssignee(
     rfis: {
       entity: 'rfi',
       label: 'RFIs',
+      fk: 'engagement_id',
+    },
+    letters: {
+      entity: 'engagement_letter',
+      label: 'Engagement Letters',
       fk: 'engagement_id',
     },
   })
@@ -70,7 +90,14 @@ export const engagementSpec = withComputedAssignee(
   })
   .fieldPermissions({
     assigned_to: { view: 'all', edit: ['partner', 'manager'] },
+    partner_id: { view: 'all', edit: ['partner'] },
+    manager_id: { view: 'all', edit: ['partner', 'manager'] },
+    team_id: { view: 'all', edit: ['partner', 'manager'] },
+    engagement_letter_id: { view: 'all', edit: ['partner', 'manager'] },
     created_by: { view: 'all', edit: [] },
+    progress: { view: 'all', edit: ['partner', 'manager', 'clerk'] },
+    repeat_interval: { view: ['partner', 'manager'], edit: ['partner'] },
+    recreate_with_attachments: { view: ['partner'], edit: ['partner'] },
   })
   .rowAccess({
     scope: 'assigned_or_team'
@@ -92,11 +119,19 @@ export const engagementSpec = withComputedAssignee(
     },
     timeline: {
       label: 'Timeline',
-      fields: ['start_date', 'end_date'],
+      fields: ['start_date', 'end_date', 'commencement_date'],
+    },
+    team: {
+      label: 'Team Assignment',
+      fields: ['partner_id', 'manager_id', 'team_id', 'assigned_to'],
     },
     workflow: {
       label: 'Workflow',
-      fields: ['status', 'stage', 'assigned_to'],
+      fields: ['status', 'stage', 'engagement_letter_id', 'progress', 'clerksCanApprove'],
+    },
+    automation: {
+      label: 'Automation & Recreation',
+      fields: ['repeat_interval', 'recreate_with_attachments'],
     },
     details: {
       label: 'Details',

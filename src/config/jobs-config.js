@@ -80,4 +80,23 @@ export const JOBS_CONFIG = {
     schedule: '0 * * * *',
     description: 'Process email queue',
   },
+
+  reviewChecklistInheritance: {
+    name: 'review_checklist_inheritance',
+    schedule: 'on_event',
+    event: 'review:created',
+    description: 'Auto-populate review sections from template checklists',
+  },
+
+  rfiInfoGatheringZeroOut: {
+    name: 'rfi_info_gathering_zero_out',
+    schedule: 'on_query',
+    description: 'Zero out RFI days outstanding when engagement in info_gathering',
+  },
+
+  clientAccessFilter: {
+    name: 'client_access_filter',
+    schedule: 'on_query',
+    description: 'Filter RFIs based on client user access claims',
+  },
 };
