@@ -2,16 +2,15 @@
 
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
-import { Box, Button, Group, Paper, Stack, Text, Title, Badge, Table, TextInput, Pagination, Select, ActionIcon, Menu } from '@mantine/core';
-import { useSearch, useSort, useSelection, useFormState } from '@/lib/hooks';
-import { buildFormFields, buildListColumns } from '@/config';
-import { renderFormField, renderCellValue } from '@/lib/rendering-engine';
-import { filterByQuery, groupByField, sortGroups } from '@/lib/list-data-transform';
+import { Box, Button, Group, Text, Title } from '@mantine/core';
+import { useFormState } from '@/lib/hooks';
+import { buildFormFields } from '@/config';
+import { renderFormField } from '@/lib/rendering-engine';
 import { useFormStatus } from 'react-dom';
-import { Search, Plus, ChevronDown, ChevronRight } from 'lucide-react';
-import * as Icons from 'lucide-react';
 import { ListBuilder } from '@/components/builders/list-builder';
 import { serverCreateEntity, serverUpdateEntity } from '@/lib/action-factory';
+import { showNotification } from './notification-helpers';
+import { FormSections } from '@/components/form-sections';
 
 function SubmitButton({ label, isSubmitting }) {
   const { pending } = useFormStatus();
@@ -51,6 +50,11 @@ function FormMode({ spec, data = {}, options = {}, entityName = null, sections =
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (hasErrors) {
+      const errorMessages = Object.entries(errors)
+        .filter(([, msg]) => msg)
+        .map(([field, msg]) => `${field}: ${msg}`)
+        .join('; ');
+      showNotification.error(errorMessages || 'Please fix all errors before submitting', 'Validation Error');
       console.error('[FORM] Validation errors');
       return;
     }
@@ -58,12 +62,15 @@ function FormMode({ spec, data = {}, options = {}, entityName = null, sections =
       const name = entityName || spec.name;
       if (data.id) {
         await serverUpdateEntity(name, data.id, values);
+        showNotification.success(`${spec.label} updated successfully`);
       } else {
         await serverCreateEntity(name, values);
+        showNotification.success(`${spec.label} created successfully`);
       }
       router.push(`/${name}`);
     } catch (err) {
       console.error('[FORM] Submission error:', err);
+      showNotification.error(err.message || 'Failed to submit form');
     }
   };
 
@@ -73,35 +80,12 @@ function FormMode({ spec, data = {}, options = {}, entityName = null, sections =
         <Group gap="xs" mb="lg">
           <Title order={2}>{data.id ? `Edit ${spec.label}` : `New ${spec.label}`}</Title>
         </Group>
-        <Stack gap="md">
-          {formSections.map((section, i) => {
-            const sectionFields = section.fields
-              .map(fk => formFields.find(f => f.key === fk))
-              .filter(Boolean);
-
-            if (!sectionFields.length) return null;
-
-            return (
-              <Paper key={i} p="md" withBorder>
-                {section.label && <Title order={4} mb="md">{section.label}</Title>}
-                <Stack gap="sm">
-                  {sectionFields.map(field => (
-                    <Box key={field.key}>
-                      {field.type !== 'bool' && (
-                        <Text size="sm" fw={500} mb={4}>
-                          {field.label}
-                          {field.required && <Text span c="red" ml={4}>*</Text>}
-                        </Text>
-                      )}
-                      {renderField(field)}
-                      {errors[field.key] && <Text size="xs" c="red" mt={4}>{errors[field.key]}</Text>}
-                    </Box>
-                  ))}
-                </Stack>
-              </Paper>
-            );
-          })}
-        </Stack>
+        <FormSections
+          sections={formSections}
+          formFields={formFields}
+          renderField={renderField}
+          errors={errors}
+        />
         <Group justify="flex-end" mt="lg">
           <Button variant="outline" onClick={() => router.back()}>Cancel</Button>
           <SubmitButton label={data.id ? 'Update' : 'Create'} />

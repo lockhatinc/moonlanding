@@ -1,4 +1,5 @@
 import { DataCache } from './data-cache';
+import { PAGINATION } from '@/config/pagination-constants';
 import * as serverOps from './data-ops-server';
 import * as clientOps from './data-ops-client';
 
@@ -22,7 +23,7 @@ class DataAccessLayer {
       : clientOps.listClient(entity, where, options);
   }
 
-  async listWithPagination(entity, where = {}, page = 1, pageSize = 20) {
+  async listWithPagination(entity, where = {}, page = 1, pageSize = PAGINATION.defaultPageSize) {
     return this.isServer
       ? serverOps.listWithPaginationServer(entity, where, page, pageSize)
       : clientOps.listWithPaginationClient(entity, where, page, pageSize);

@@ -1,22 +1,24 @@
 import { spec } from '../spec-builder.js';
+import { withAuditFields, withComputedCreator, withComputedReviewer } from '../spec-templates.js';
 
-export const reviewSpec = spec('review')
-  .label('Review', 'Reviews')
-  .icon('FileText')
-  .order(4)
-  .parent('engagement')
-  .computedField('reviewer_display', '(SELECT name FROM user WHERE user.id = review.reviewer_id LIMIT 1)')
-  .computedField('created_by_display', '(SELECT name FROM user WHERE user.id = review.created_by LIMIT 1)')
+export const reviewSpec = withComputedReviewer(
+  withComputedCreator(
+    withAuditFields(
+      spec('review')
+        .label('Review', 'Reviews')
+        .icon('FileText')
+        .order(4)
+        .parent('engagement')
+    )
+  )
+)
   .fields({
     engagement_id: { type: 'ref', ref: 'engagement', required: true },
-    title: { type: 'text', required: true, list: true, search: true },
+    title: { type: 'text', required: true, list: true, search: true, minLength: 3 },
     document_url: { type: 'text' },
     status: { type: 'enum', options: 'review_status', required: true, list: true, default: 'open' },
     reviewer_id: { type: 'ref', ref: 'user', display: 'user.name' },
     assigned_to: { type: 'ref', ref: 'user', display: 'user.name' },
-    created_at: { type: 'int', auto: 'now', hidden: true },
-    updated_at: { type: 'int', auto: 'update', hidden: true },
-    created_by: { type: 'ref', ref: 'user', display: 'user.name', auto: 'user', hidden: true },
   })
   .options('review_status', {
     open: { label: 'Open', color: 'yellow' },
@@ -44,18 +46,6 @@ export const reviewSpec = spec('review')
     open: ['closed', 'archived'],
     closed: ['archived'],
     archived: [],
-  })
-  .validate({
-    title: [
-      { type: 'required', message: 'Title is required' },
-      { type: 'minLength', value: 3, message: 'Title must be at least 3 characters' },
-    ],
-    engagement_id: [
-      { type: 'required', message: 'Engagement is required' },
-    ],
-    status: [
-      { type: 'required', message: 'Status is required' },
-    ],
   })
   .onLifecycle({
     onCreate: { action: 'notify', template: 'review_created', recipients: 'reviewer_id' },

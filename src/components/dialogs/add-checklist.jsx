@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Button, Stack, Group, Select, Text, Loader, Center, Alert } from '@mantine/core';
 import { AlertCircle } from 'lucide-react';
 import { useFormState } from '@/lib/hooks';
+import { API_ENDPOINTS } from '@/config';
 
 export function AddChecklistDialog({ review, onClose, onSuccess }) {
   const [checklists, setChecklists] = useState([]);
@@ -16,7 +17,7 @@ export function AddChecklistDialog({ review, onClose, onSuccess }) {
   useEffect(() => {
     const loadChecklists = async () => {
       try {
-        const res = await fetch('/api/checklist');
+        const res = await fetch(API_ENDPOINTS.list('checklist'));
         if (!res.ok) throw new Error('Failed to load checklists');
         const data = await res.json();
         setChecklists(data.map(c => ({ value: c.id, label: c.name })));
@@ -38,10 +39,10 @@ export function AddChecklistDialog({ review, onClose, onSuccess }) {
 
     setSubmitting(true);
     try {
-      const checklistRes = await fetch(`/api/checklist/${values.selected}`);
+      const checklistRes = await fetch(API_ENDPOINTS.get('checklist', values.selected));
       const checklistData = await checklistRes.json();
 
-      const res = await fetch('/api/review_checklist', {
+      const res = await fetch(API_ENDPOINTS.create('review_checklist'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

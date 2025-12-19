@@ -1,3 +1,5 @@
+import { TOKEN } from './auth-config';
+
 export const config = {
   db: {
     path: process.env.DATABASE_PATH || './data/app.db',
@@ -20,7 +22,7 @@ export const config = {
     rootFolderId: process.env.DRIVE_ROOT_FOLDER_ID,
     cache: {
       enabled: true,
-      ttl: 24 * 60 * 60,
+      ttl: TOKEN.ttl,
       bucket: process.env.CACHE_BUCKET || 'cached_reviews',
     },
   },
@@ -75,10 +77,17 @@ export const hasDriveConfig = () => !!config.drive.rootFolderId;
 export const hasEmailConfig = () => !!(config.email.smtp.user && config.email.smtp.password);
 
 export const EMAIL_RESOLVERS = {
-  team: { type: 'team', role: 'all' },
+  team_members: { type: 'team', role: 'all' },
   team_partners: { type: 'team', role: 'partners' },
+  client_users: { type: 'client' },
+  client_user: { type: 'client' },
   client_admin: { type: 'client', role: 'admin' },
-  client_all: { type: 'client' },
+  collaborator: { type: 'collaborator' },
+  assigned_users: { type: 'single', field: 'rfi.assigned_to' },
+  partners: { type: 'static', emails: [] },
+  developers: { type: 'static', emails: [] },
+  user: { type: 'single', field: 'user' },
+  new_client_user: { type: 'single', field: 'user' },
 };
 
 export default config;

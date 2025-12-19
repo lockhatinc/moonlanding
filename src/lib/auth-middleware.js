@@ -8,13 +8,13 @@ const actionMap = { list: 'list', get: 'view', view: 'view', create: 'create', u
 
 export const requireAuth = async () => {
   const user = await getUser();
-  if (!user) throw new UnauthorizedError('Authentication required');
+  if (!user) throw UnauthorizedError('Authentication required');
   return user;
 };
 
 export const requirePermission = (user, spec, action) => {
   const mapped = actionMap[action] || action;
-  if (!can(user, spec, mapped)) throw new PermissionError(`Cannot ${action} ${spec.name}`);
+  if (!can(user, spec, mapped)) throw PermissionError(`Cannot ${action} ${spec.name}`);
 };
 
 export const withAuth = (handler, action = 'view') => async (request, context) => {

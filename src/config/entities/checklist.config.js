@@ -1,17 +1,15 @@
-import { spec } from '../spec-builder.js';
+import { createSimpleEntity } from '../spec-builder.js';
 
-export const checklistSpec = spec('checklist')
-  .label('Checklist', 'Checklists')
-  .icon('CheckCircle')
-  .order(7)
-  .parent('review')
-  .embedded()
-  .fields({
-    review_id: { type: 'ref', ref: 'review', required: true },
-    title: { type: 'text', required: true, list: true },
-    items: { type: 'json', default: [] },
-    created_at: { type: 'int', auto: 'now', hidden: true },
-    updated_at: { type: 'int', auto: 'update', hidden: true },
-    created_by: { type: 'ref', ref: 'user', display: 'user.name', auto: 'user', hidden: true },
-  })
-  .build();
+export const checklistSpec = createSimpleEntity('checklist', {
+  review_id: { type: 'ref', ref: 'review', required: true },
+  title: { type: 'text', required: true, list: true },
+  items: { type: 'json', default: [] },
+}, {
+  label: 'Checklist',
+  labelPlural: 'Checklists',
+  icon: 'CheckCircle',
+  order: 7,
+  parent: 'review',
+  embedded: true,
+  auditFields: true,
+});

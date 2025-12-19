@@ -1,6 +1,8 @@
 import React from 'react';
-import { TextInput, Textarea, Select, Checkbox, NumberInput, Stack, Avatar, Badge, Text, Image as MImage } from '@mantine/core';
-import { secondsToDate, dateToSeconds, getBadgeStyle } from '@/lib/field-registry';
+import { TextInput, Textarea, Select, Checkbox, NumberInput, Avatar, Badge, Text, Image as MImage, Tooltip } from '@mantine/core';
+import { fieldRegistry } from './field-types';
+import { secondsToDate, dateToSeconds, getBadgeStyle } from '@/lib/utils-client';
+import { showNotification } from './notification-helpers';
 
 const FORM_FIELD_RENDERERS = {
   textarea: (f, v, s) => <Textarea name={f.key} value={v} onChange={(e) => s(f.key, e.target.value)} rows={3} required={f.required} />,
@@ -8,109 +10,135 @@ const FORM_FIELD_RENDERERS = {
   int: (f, v, s) => <NumberInput name={f.key} value={v} onChange={(x) => s(f.key, x)} required={f.required} step={1} />,
   decimal: (f, v, s) => <NumberInput name={f.key} value={v} onChange={(x) => s(f.key, x)} required={f.required} decimalScale={2} />,
   bool: (f, v, s) => <Checkbox name={f.key} label={f.label} checked={!!v} onChange={(e) => s(f.key, e.currentTarget.checked)} />,
-  enum: (f, v, s, d) => <Select name={f.key} value={v ? String(v) : null} onChange={(x) => s(f.key, x)} data={d?.[f.key] || []} placeholder={`Select ${f.label}`} required={f.required} clearable />,
-  ref: (f, v, s, d, r) => <Select name={f.key} value={v || null} onChange={(x) => s(f.key, x)} data={r?.[f.key] || []} placeholder={`Select ${f.label}`} searchable clearable required={f.required} />,
-  email: (f, v, s) => <TextInput type="email" name={f.key} value={v} onChange={(e) => s(f.key, e.target.value)} required={f.required} />,
-  image: (f, v, s) => <Stack gap="xs"><TextInput name={f.key} value={v} onChange={(e) => s(f.key, e.target.value)} placeholder="Image URL" required={f.required} />{v && <Avatar src={v} size="lg" />}</Stack>,
   text: (f, v, s) => <TextInput name={f.key} value={v} onChange={(e) => s(f.key, e.target.value)} required={f.required} />,
-  json: (f, v, s) => <Textarea name={f.key} value={typeof v === 'string' ? v : JSON.stringify(v, null, 2)} onChange={(e) => s(f.key, e.target.value)} required={f.required} rows={5} />,
+  email: (f, v, s) => <TextInput name={f.key} type="email" value={v} onChange={(e) => s(f.key, e.target.value)} required={f.required} />,
+  enum: (f, v, s, en) => <Select name={f.key} value={v} data={en?.[f.options]?.map(o => ({ value: String(o.value), label: o.label })) || []} onChange={(val) => s(f.key, val)} required={f.required} />,
+  ref: (f, v, s, en, rd) => <Select name={f.key} value={v} data={rd?.[f.ref]?.map(o => ({ value: o.id, label: o.name })) || []} onChange={(val) => s(f.key, val)} required={f.required} />,
+  json: (f, v, s) => <Textarea name={f.key} value={typeof v === 'string' ? v : JSON.stringify(v || {})} onChange={(e) => s(f.key, e.target.value)} rows={4} required={f.required} />,
+  image: (f, v, s) => <TextInput name={f.key} value={v} onChange={(e) => s(f.key, e.target.value)} placeholder="Image URL" />,
 };
 
 const LIST_RENDERERS = {
-  enum: (v, f, spec) => !v ? '—' : <Badge style={{ backgroundColor: getBadgeStyle(spec.options?.[f.options]?.find(o => o.value === v)?.color)?.bg }}>{spec.options?.[f.options]?.find(o => o.value === v)?.label}</Badge>,
+  textarea: (v) => <Text truncate>{v}</Text>,
+  json: (v) => <Text truncate size="xs">{typeof v === 'string' ? v : JSON.stringify(v)}</Text>,
   bool: (v) => v ? '✓' : '—',
-  date: (v) => !v ? '—' : secondsToDate(v).toLocaleDateString(),
-  timestamp: (v) => !v ? '—' : secondsToDate(v).toLocaleDateString(),
-  image: (v, f, s, r) => <Avatar src={v} size="sm">{r.name?.[0] || '?'}</Avatar>,
-  json: (v) => <code style={{ fontSize: 12 }}>{JSON.stringify(v).substring(0, 30)}</code>,
-  text: (v) => !v ? '—' : String(v),
-  textarea: (v) => !v ? '—' : String(v).substring(0, 50),
-  email: (v) => !v ? '—' : String(v),
-  int: (v) => !v ? '—' : String(v),
-  decimal: (v) => !v ? '—' : Number(v).toFixed(2),
-  ref: (v) => !v ? '—' : String(v),
+  date: (v) => v ? secondsToDate(v).toLocaleDateString() : '—',
+  timestamp: (v) => v ? secondsToDate(v).toLocaleString() : '—',
+  enum: (v, c, spec, row) => {
+    const options = spec?.options?.[c.options];
+    if (!options) return v;
+    const opt = options.find(o => String(o.value) === String(v));
+    return opt ? <Badge color={opt.color || 'gray'}>{opt.label}</Badge> : v;
+  },
+  ref: (v, c, spec, row) => {
+    if (!c.display) return v;
+    if (c.display === 'avatars' && Array.isArray(v)) return <Avatar.Group size="xs">{v.map(uid => <Avatar key={uid} src="" />)}</Avatar.Group>;
+    return row?.[`${c.key}_display`] || v;
+  },
+  image: (v) => v ? <MImage src={v} height={40} width={40} /> : '—',
 };
 
 const DISPLAY_RENDERERS = {
-  text: (v) => <Text size="sm" truncate>{v || '-'}</Text>,
-  email: (v) => v ? <a href={`mailto:${v}`}><Text size="sm" color="blue">{v}</Text></a> : <Text size="sm">-</Text>,
-  textarea: (v) => <Text size="sm" style={{ whiteSpace: 'pre-wrap' }} truncate>{v || '-'}</Text>,
-  int: (v) => <Text size="sm">{v || '-'}</Text>,
-  decimal: (v) => <Text size="sm">{v ? Number(v).toFixed(2) : '-'}</Text>,
-  date: (v) => <Text size="sm">{v ? secondsToDate(v).toLocaleDateString() : '-'}</Text>,
-  timestamp: (v) => <Text size="sm">{v ? secondsToDate(v).toLocaleString() : '-'}</Text>,
-  bool: (v) => <Badge color={v ? 'green' : 'gray'}>{v ? 'Yes' : 'No'}</Badge>,
-  enum: (v, f, spec) => <Badge color={spec?.options?.[f.options]?.find(o => String(o.value) === String(v))?.color || 'gray'}>{spec?.options?.[f.options]?.find(o => String(o.value) === String(v))?.label || v}</Badge>,
-  ref: (v) => <Text size="sm" truncate>{v || '-'}</Text>,
-  image: (v) => v ? <MImage src={v} alt="img" height={40} width={40} fit="cover" /> : <Text size="sm">-</Text>,
-  json: (v) => <Text size="xs" style={{ fontFamily: 'monospace' }} truncate>{typeof v === 'string' ? v : JSON.stringify(v)}</Text>,
+  textarea: (v) => <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>{v}</Text>,
+  json: (v) => <Text size="xs" c="dimmed">{typeof v === 'string' ? v : JSON.stringify(v, null, 2)}</Text>,
+  bool: (v) => v ? 'Yes' : 'No',
+  date: (v) => v ? secondsToDate(v).toLocaleDateString() : '—',
+  timestamp: (v) => v ? secondsToDate(v).toLocaleString() : '—',
+  enum: (v, field, spec) => {
+    const options = spec?.options?.[field.options];
+    if (!options) return v;
+    const opt = options.find(o => String(o.value) === String(v));
+    return opt ? <Badge color={opt.color || 'gray'}>{opt.label}</Badge> : v;
+  },
+  ref: (v, field, spec) => spec?.entities?.[field.ref]?.name || v,
+  image: (v) => v ? <MImage src={v} height={200} /> : '—',
 };
 
 const EDIT_RENDERERS = {
-  text: (f, v, s) => <TextInput label={f.label} value={v || ''} onChange={(e) => s(e.target.value)} />,
-  email: (f, v, s) => <TextInput label={f.label} type="email" value={v || ''} onChange={(e) => s(e.target.value)} />,
-  textarea: (f, v, s) => <Textarea label={f.label} value={v || ''} onChange={(e) => s(e.target.value)} />,
-  int: (f, v, s) => <NumberInput label={f.label} value={v} onChange={s} step={1} />,
-  decimal: (f, v, s) => <NumberInput label={f.label} value={v} onChange={s} precision={2} />,
-  date: (f, v, s) => <input type="date" value={v ? secondsToDate(v).toISOString().split('T')[0] : ''} onChange={(e) => s(e.target.value ? dateToSeconds(new Date(e.target.value)) : '')} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: 4 }} />,
-  bool: (f, v, s) => <Checkbox label={f.label} checked={!!v} onChange={(e) => s(e.currentTarget.checked)} />,
-  enum: (f, v, s, spec) => <Select label={f.label} data={spec?.options?.[f.options]?.map((op) => ({ label: op.label, value: String(op.value) })) || []} value={v ? String(v) : ''} onChange={s} searchable clearable />,
-  ref: (f, v, s, spec) => <Select label={f.label} data={spec?.options?.[f.key]?.map((op) => ({ label: op.label || op.value, value: op.value })) || []} value={v ? String(v) : ''} onChange={s} searchable />,
-  image: (f, v, s) => <TextInput label={f.label} type="file" accept="image/*" />,
-  json: (f, v, s) => <Textarea label={f.label} value={typeof v === 'string' ? v : JSON.stringify(v, null, 2)} onChange={(e) => s(e.target.value)} />,
+  textarea: (f, v, s) => <Textarea value={v} onChange={(e) => s(f.key, e.target.value)} rows={3} required={f.required} />,
+  date: (f, v, s) => <input type="date" value={v ? secondsToDate(v).toISOString().split('T')[0] : ''} onChange={(e) => s(f.key, e.target.value ? dateToSeconds(new Date(e.target.value)) : '')} required={f.required} style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--mantine-color-gray-4)', borderRadius: 4 }} />,
+  int: (f, v, s) => <NumberInput value={v} onChange={(x) => s(f.key, x)} required={f.required} step={1} />,
+  decimal: (f, v, s) => <NumberInput value={v} onChange={(x) => s(f.key, x)} required={f.required} decimalScale={2} />,
+  bool: (f, v, s) => <Checkbox label={f.label} checked={!!v} onChange={(e) => s(f.key, e.currentTarget.checked)} />,
+  text: (f, v, s) => <TextInput value={v} onChange={(e) => s(f.key, e.target.value)} required={f.required} />,
+  email: (f, v, s) => <TextInput type="email" value={v} onChange={(e) => s(f.key, e.target.value)} required={f.required} />,
+  enum: (f, v, s, en) => <Select value={v} data={en?.[f.options]?.map(o => ({ value: String(o.value), label: o.label })) || []} onChange={(val) => s(f.key, val)} required={f.required} />,
+  ref: (f, v, s, en, rd) => <Select value={v} data={rd?.[f.ref]?.map(o => ({ value: o.id, label: o.name })) || []} onChange={(val) => s(f.key, val)} required={f.required} />,
+  json: (f, v, s) => <Textarea value={typeof v === 'string' ? v : JSON.stringify(v || {})} onChange={(e) => s(f.key, e.target.value)} rows={4} required={f.required} />,
+  image: (f, v, s) => <TextInput value={v} onChange={(e) => s(f.key, e.target.value)} placeholder="Image URL" />,
 };
 
-const RENDERERS = { form: FORM_FIELD_RENDERERS, list: LIST_RENDERERS, display: DISPLAY_RENDERERS, edit: EDIT_RENDERERS };
+const FIELD_RENDERERS = {
+  text: { form: FORM_FIELD_RENDERERS.text, list: (v) => <Text truncate>{v}</Text>, display: (v) => v, edit: EDIT_RENDERERS.text },
+  email: { form: FORM_FIELD_RENDERERS.email, list: (v) => <Text truncate>{v}</Text>, display: (v) => v, edit: EDIT_RENDERERS.email },
+  textarea: { form: FORM_FIELD_RENDERERS.textarea, list: LIST_RENDERERS.textarea, display: DISPLAY_RENDERERS.textarea, edit: EDIT_RENDERERS.textarea },
+  date: { form: FORM_FIELD_RENDERERS.date, list: LIST_RENDERERS.date, display: DISPLAY_RENDERERS.date, edit: EDIT_RENDERERS.date },
+  timestamp: { form: FORM_FIELD_RENDERERS.date, list: LIST_RENDERERS.timestamp, display: DISPLAY_RENDERERS.timestamp, edit: EDIT_RENDERERS.date },
+  int: { form: FORM_FIELD_RENDERERS.int, list: (v) => String(v ?? ''), display: (v) => v, edit: EDIT_RENDERERS.int },
+  decimal: { form: FORM_FIELD_RENDERERS.decimal, list: (v) => (typeof v === 'number' ? v.toFixed(2) : v), display: (v) => v, edit: EDIT_RENDERERS.decimal },
+  bool: { form: FORM_FIELD_RENDERERS.bool, list: LIST_RENDERERS.bool, display: DISPLAY_RENDERERS.bool, edit: EDIT_RENDERERS.bool },
+  enum: { form: FORM_FIELD_RENDERERS.enum, list: LIST_RENDERERS.enum, display: DISPLAY_RENDERERS.enum, edit: EDIT_RENDERERS.enum },
+  ref: { form: FORM_FIELD_RENDERERS.ref, list: LIST_RENDERERS.ref, display: DISPLAY_RENDERERS.ref, edit: EDIT_RENDERERS.ref },
+  json: { form: FORM_FIELD_RENDERERS.json, list: LIST_RENDERERS.json, display: DISPLAY_RENDERERS.json, edit: EDIT_RENDERERS.json },
+  image: { form: FORM_FIELD_RENDERERS.image, list: LIST_RENDERERS.image, display: DISPLAY_RENDERERS.image, edit: EDIT_RENDERERS.image },
+};
 
-export function renderFormField(field, values, setField, enumData, refData) {
-  const v = values[field.key] ?? '';
-  const r = FORM_FIELD_RENDERERS[field.type] || FORM_FIELD_RENDERERS.text;
-  try {
-    if (field.type === 'enum') return r(field, v, setField, enumData);
-    if (field.type === 'ref') return r(field, v, setField, enumData, refData);
-    return r(field, v, setField);
-  } catch (e) {
-    console.error(`[Renderer] Form field error for ${field.key}:`, e);
-    return <span>Error</span>;
-  }
+function renderField(fieldType, mode, ...args) {
+  const renderer = FIELD_RENDERERS[fieldType]?.[mode] || FIELD_RENDERERS.text[mode];
+  return renderer(...args);
 }
 
-export function renderCellValue(value, column, spec, row) {
-  const r = LIST_RENDERERS[column.type] || LIST_RENDERERS.text;
-  try {
-    return r(value, column, spec, row);
-  } catch (e) {
-    console.error(`[Renderer] List cell error for ${column.key}:`, e);
-    return <span>—</span>;
-  }
+function createSafeRenderer(mode, config = {}) {
+  const { title = `${capitalize(mode)} Error`, textSize = 'sm', autoClose = 3000 } = config;
+  return (...args) => {
+    try {
+      if (mode === 'form') {
+        const [field, values, setField, enumData, refData] = args;
+        const v = values[field.key] ?? '';
+        if (field.type === 'enum') return renderField(field.type, 'form', field, v, setField, enumData);
+        if (field.type === 'ref') return renderField(field.type, 'form', field, v, setField, enumData, refData);
+        return renderField(field.type, 'form', field, v, setField);
+      }
+      if (mode === 'list') {
+        const [value, column, spec, row] = args;
+        return renderField(column.type, 'list', value, column, spec, row);
+      }
+      if (mode === 'display') {
+        const [value, field, spec] = args;
+        return renderField(field.type, 'display', value, field, spec);
+      }
+      if (mode === 'edit') {
+        const [field, value, setField, spec] = args;
+        return renderField(field.type, 'edit', field, value, setField, spec);
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const field = mode === 'list' ? args[1] : args[0];
+      const fieldKey = field?.key || 'unknown';
+      const fieldLabel = field?.label || fieldKey;
+      console.error(`[Renderer] ${capitalize(mode)} error for ${fieldKey}:`, { field: fieldKey, type: field?.type, error: msg });
+      showNotification.warning(`Failed to render ${fieldLabel}: ${msg}`, title, autoClose);
+      return <Tooltip label={`Error: ${msg}`}><Text size={textSize} c="gray">—</Text></Tooltip>;
+    }
+  };
 }
 
-export function renderDisplayValue(value, field, spec) {
-  const r = DISPLAY_RENDERERS[field.type] || DISPLAY_RENDERERS.text;
-  try {
-    return r(value, field, spec);
-  } catch (e) {
-    console.error(`[Renderer] Display error for ${field.key}:`, e);
-    return <span>—</span>;
-  }
+function capitalize(str) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-export function renderEditField(field, value, setField, spec) {
-  const r = EDIT_RENDERERS[field.type] || EDIT_RENDERERS.text;
-  try {
-    return r(field, value, setField, spec);
-  } catch (e) {
-    console.error(`[Renderer] Edit field error for ${field.key}:`, e);
-    return <span>Error</span>;
-  }
-}
+export const renderFormField = createSafeRenderer('form', { title: 'Form Field Error', autoClose: 4000 });
+export const renderCellValue = createSafeRenderer('list', { title: 'Render Error' });
+export const renderDisplayValue = createSafeRenderer('display', { title: 'Display Error' });
+export const renderEditField = createSafeRenderer('edit', { title: 'Edit Field Error', autoClose: 4000 });
 
 export class RenderingEngine {
   register(mode, fieldType, renderer) {
-    if (RENDERERS[mode]) RENDERERS[mode][fieldType] = renderer;
+    if (!FIELD_RENDERERS[fieldType]) FIELD_RENDERERS[fieldType] = {};
+    FIELD_RENDERERS[fieldType][mode] = renderer;
   }
   getRenderer(mode, fieldType) {
-    return RENDERERS[mode]?.[fieldType];
+    return FIELD_RENDERERS[fieldType]?.[mode];
   }
 }
 

@@ -1,24 +1,26 @@
 import { spec } from '../spec-builder.js';
+import { withAuditFields, withComputedCreator, withComputedAssignee } from '../spec-templates.js';
 
-export const engagementSpec = spec('engagement')
-  .label('Engagement', 'Engagements')
-  .icon('Briefcase')
-  .order(2)
-  .computedField('created_by_display', '(SELECT name FROM user WHERE user.id = engagement.created_by LIMIT 1)')
-  .computedField('assigned_to_display', '(SELECT name FROM user WHERE user.id = engagement.assigned_to LIMIT 1)')
+export const engagementSpec = withComputedAssignee(
+  withComputedCreator(
+    withAuditFields(
+      spec('engagement')
+        .label('Engagement', 'Engagements')
+        .icon('Briefcase')
+        .order(2)
+    )
+  )
+)
   .fields({
     client_id: { type: 'ref', ref: 'client', display: 'client.name', required: true, list: true },
-    year: { type: 'int', required: true, list: true },
+    year: { type: 'int', required: true, list: true, min: 2020, max: 2099 },
     status: { type: 'enum', options: 'engagement_status', required: true, list: true, default: 'pending' },
     stage: { type: 'enum', options: 'engagement_stage', required: true, list: true, default: 'info_gathering' },
-    title: { type: 'text', required: true, list: true, search: true },
+    title: { type: 'text', required: true, list: true, search: true, minLength: 3, maxLength: 255 },
     description: { type: 'textarea' },
     start_date: { type: 'date' },
     end_date: { type: 'date' },
     assigned_to: { type: 'ref', ref: 'user', display: 'user.name' },
-    created_at: { type: 'int', auto: 'now', hidden: true },
-    updated_at: { type: 'int', auto: 'update', hidden: true },
-    created_by: { type: 'ref', ref: 'user', display: 'user.name', auto: 'user', hidden: true },
   })
   .options('engagement_status', {
     pending: { label: 'Pending', color: 'yellow' },
@@ -49,7 +51,6 @@ export const engagementSpec = spec('engagement')
   .list({
     groupBy: 'status',
     defaultSort: { field: 'created_at', dir: 'desc' },
-    pageSizeOptions: [10, 20, 50, 100],
     searchFields: ['title', 'description'],
     displayRules: {
       title: { truncate: 50 },
@@ -71,25 +72,10 @@ export const engagementSpec = spec('engagement')
     assigned_to: { view: 'all', edit: ['partner', 'manager'] },
     created_by: { view: 'all', edit: [] },
   })
+  .rowAccess({
+    scope: 'assigned_or_team'
+  })
   .validate({
-    title: [
-      { type: 'required', message: 'Title is required' },
-      { type: 'minLength', value: 3, message: 'Title must be at least 3 characters' },
-      { type: 'maxLength', value: 255, message: 'Title must not exceed 255 characters' },
-    ],
-    year: [
-      { type: 'required', message: 'Year is required' },
-      { type: 'range', min: 2020, max: 2099, message: 'Year must be between 2020 and 2099' },
-    ],
-    client_id: [
-      { type: 'required', message: 'Client is required' },
-    ],
-    status: [
-      { type: 'required', message: 'Status is required' },
-    ],
-    stage: [
-      { type: 'required', message: 'Stage is required' },
-    ],
     start_date: [
       { type: 'custom', validator: 'validateDateRange', message: 'Start date must be before end date' },
     ],

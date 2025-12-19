@@ -2,18 +2,20 @@
 
 import { useFormStatus } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { useMemo } from 'react';
-import { Button, Paper, Title, Group, Stack, Text, Box } from '@mantine/core';
+import { useMemo, useCallback } from 'react';
+import { Button, Title, Group, Box } from '@mantine/core';
 import { useFormState } from '@/lib/hooks';
 import { buildFormFields } from '@/config';
 import { renderFormField } from '@/lib/rendering-engine';
+import { FormSections } from '@/components/form-sections';
+import { showNotification } from '@/lib/notification-helpers';
 
 function SubmitButton({ label, isSubmitting }) {
   const { pending } = useFormStatus();
   return <Button type="submit" loading={pending || isSubmitting}>{label}</Button>;
 }
 
-export function FormBuilder({ spec, data = {}, options = {}, onSubmit, sections = null }) {
+export function FormBuilder({ spec, data = {}, options = {}, onSubmit, onSuccess, onError, sections = null }) {
   const router = useRouter();
   const { values, setValue, errors, setError, hasErrors } = useFormState(spec, data);
   const formFields = useMemo(() => buildFormFields(spec), [spec]);
@@ -44,15 +46,24 @@ export function FormBuilder({ spec, data = {}, options = {}, onSubmit, sections 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (hasErrors) {
-      console.error('Form has errors');
+      const errorMessages = Object.entries(errors)
+        .filter(([, msg]) => msg)
+        .map(([field, msg]) => `${field}: ${msg}`)
+        .join('; ');
+      showNotification.error(errorMessages || 'Please fix all errors before submitting', 'Validation Error');
+      onError?.({ type: 'validation', errors });
       return;
     }
 
     if (onSubmit) {
       try {
         await onSubmit(values);
+        showNotification.success(`${spec.label} ${data.id ? 'updated' : 'created'} successfully`);
+        onSuccess?.({ values });
       } catch (err) {
         console.error('Form submission error:', err);
+        showNotification.error(err.message || 'Failed to submit form');
+        onError?.({ type: 'submission', error: err });
       }
     }
   };
@@ -63,35 +74,12 @@ export function FormBuilder({ spec, data = {}, options = {}, onSubmit, sections 
         <Group gap="xs" mb="lg">
           <Title order={2}>{data.id ? `Edit ${spec.label}` : `New ${spec.label}`}</Title>
         </Group>
-        <Stack gap="md">
-          {formSections.map((section, i) => {
-            const sectionFields = section.fields
-              .map(fk => formFields.find(f => f.key === fk))
-              .filter(Boolean);
-
-            if (!sectionFields.length) return null;
-
-            return (
-              <Paper key={i} p="md" withBorder>
-                {section.label && <Title order={4} mb="md">{section.label}</Title>}
-                <Stack gap="sm">
-                  {sectionFields.map(field => (
-                    <Box key={field.key}>
-                      {field.type !== 'bool' && (
-                        <Text size="sm" fw={500} mb={4}>
-                          {field.label}
-                          {field.required && <Text span c="red" ml={4}>*</Text>}
-                        </Text>
-                      )}
-                      {renderField(field)}
-                      {errors[field.key] && <Text size="xs" c="red" mt={4}>{errors[field.key]}</Text>}
-                    </Box>
-                  ))}
-                </Stack>
-              </Paper>
-            );
-          })}
-        </Stack>
+        <FormSections
+          sections={formSections}
+          formFields={formFields}
+          renderField={renderField}
+          errors={errors}
+        />
         <Group justify="flex-end" mt="lg">
           <Button variant="outline" onClick={() => router.back()}>Cancel</Button>
           <SubmitButton label={data.id ? 'Update' : 'Create'} />

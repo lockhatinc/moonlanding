@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server';
 import { google } from '@/engine.server';
 import { generateState, generateCodeVerifier } from 'arctic';
-import { cookies } from 'next/headers';
+import { validateOAuthProvider, setOAuthCookie, buildOAuthErrorResponse } from '@/lib/auth-route-helpers';
 
 export async function GET() {
-  if (!google) {
-    return NextResponse.json(
-      { error: 'Google OAuth not configured' },
-      { status: 500 }
-    );
+  const { valid, error } = validateOAuthProvider(google);
+  if (!valid) {
+    return buildOAuthErrorResponse(error);
   }
 
   const state = generateState();
@@ -18,23 +16,8 @@ export async function GET() {
     scopes: ['profile', 'email'],
   });
 
-  const cookieStore = await cookies();
-
-  cookieStore.set('google_oauth_state', state, {
-    path: '/',
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 60 * 10,
-    sameSite: 'lax',
-  });
-
-  cookieStore.set('google_code_verifier', codeVerifier, {
-    path: '/',
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 60 * 10,
-    sameSite: 'lax',
-  });
+  await setOAuthCookie('google_oauth_state', state);
+  await setOAuthCookie('google_code_verifier', codeVerifier);
 
   return NextResponse.redirect(url);
 }

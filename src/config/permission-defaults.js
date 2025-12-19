@@ -1,4 +1,4 @@
-import { ROLES } from './constants';
+import { ROLES } from './constants.js';
 
 export const PERMISSION_DEFAULTS = {
   list: Object.values(ROLES),

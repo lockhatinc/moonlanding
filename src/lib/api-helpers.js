@@ -5,11 +5,12 @@ import { migrate } from '@/engine';
 import { getUser } from '@/engine.server';
 import { can } from '@/lib/permissions';
 import { logger } from '@/lib/logger';
+import { HTTP } from '@/config/api-constants';
 
 let dbInit = false;
 export function ensureDb() { if (!dbInit) { migrate(); dbInit = true; } }
 
-const withMetadata = (data, status = 200, type = 'success') => ({
+const withMetadata = (data, status = HTTP.OK, type = 'success') => ({
   status,
   type,
   timestamp: new Date().toISOString(),
@@ -17,12 +18,12 @@ const withMetadata = (data, status = 200, type = 'success') => ({
   ...(!data.error && { success: true }),
 });
 
-export const ok = (data) => NextResponse.json(withMetadata(data, 200, 'success'));
-export const created = (data) => NextResponse.json(withMetadata(data, 201, 'created'), { status: 201 });
-export const notFound = (msg = 'Not found') => NextResponse.json(withMetadata({ error: msg }, 404, 'error'), { status: 404 });
-export const badRequest = (msg = 'Bad request') => NextResponse.json(withMetadata({ error: msg }, 400, 'error'), { status: 400 });
-export const unauthorized = (msg = 'Unauthorized') => NextResponse.json(withMetadata({ error: msg }, 403, 'error'), { status: 403 });
-export const serverError = (msg = 'Internal server error') => NextResponse.json(withMetadata({ error: msg }, 500, 'error'), { status: 500 });
+export const ok = (data) => NextResponse.json(withMetadata(data, HTTP.OK, 'success'));
+export const created = (data) => NextResponse.json(withMetadata(data, HTTP.CREATED, 'created'), { status: HTTP.CREATED });
+export const notFound = (msg = 'Not found') => NextResponse.json(withMetadata({ error: msg }, HTTP.NOT_FOUND, 'error'), { status: HTTP.NOT_FOUND });
+export const badRequest = (msg = 'Bad request') => NextResponse.json(withMetadata({ error: msg }, HTTP.BAD_REQUEST, 'error'), { status: HTTP.BAD_REQUEST });
+export const unauthorized = (msg = 'Unauthorized') => NextResponse.json(withMetadata({ error: msg }, HTTP.FORBIDDEN, 'error'), { status: HTTP.FORBIDDEN });
+export const serverError = (msg = 'Internal server error') => NextResponse.json(withMetadata({ error: msg }, HTTP.INTERNAL_ERROR, 'error'), { status: HTTP.INTERNAL_ERROR });
 
 export async function withEntityAccess(entity, action, handler) {
   ensureDb();

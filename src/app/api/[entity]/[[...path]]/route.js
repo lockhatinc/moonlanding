@@ -1,31 +1,5 @@
-import { createUniversalHandler } from '@/lib/universal-handler';
+import { createHttpMethods } from '@/lib/http-methods-factory';
 
-export async function GET(request, { params }) {
-  const { entity } = await params;
-  const handler = createUniversalHandler(entity);
-  return handler(request, { params: await params });
-}
-
-export async function POST(request, { params }) {
-  const { entity } = await params;
-  const handler = createUniversalHandler(entity);
-  return handler(request, { params: await params });
-}
-
-export async function PUT(request, { params }) {
-  const { entity } = await params;
-  const handler = createUniversalHandler(entity);
-  return handler(request, { params: await params });
-}
-
-export async function PATCH(request, { params }) {
-  const { entity } = await params;
-  const handler = createUniversalHandler(entity);
-  return handler(request, { params: await params });
-}
-
-export async function DELETE(request, { params }) {
-  const { entity } = await params;
-  const handler = createUniversalHandler(entity);
-  return handler(request, { params: await params });
-}
+export const { GET, POST, PUT, PATCH, DELETE } = createHttpMethods(
+  async (context) => (await context.params).entity
+);

@@ -1,16 +1,15 @@
-import { spec } from '../spec-builder.js';
+import { createSimpleEntity } from '../spec-builder.js';
 
-export const messageSpec = spec('message')
-  .label('Message', 'Messages')
-  .icon('MessageCircle')
-  .order(9)
-  .parent('rfi')
-  .embedded()
-  .fields({
-    rfi_id: { type: 'ref', ref: 'rfi', required: true },
-    author_id: { type: 'ref', ref: 'user', display: 'user.name', required: true },
-    text: { type: 'textarea', required: true },
-    created_at: { type: 'int', auto: 'now', hidden: true },
-    updated_at: { type: 'int', auto: 'update', hidden: true },
-  })
-  .build();
+export const messageSpec = createSimpleEntity('message', {
+  rfi_id: { type: 'ref', ref: 'rfi', required: true },
+  author_id: { type: 'ref', ref: 'user', display: 'user.name', required: true },
+  text: { type: 'textarea', required: true },
+}, {
+  label: 'Message',
+  labelPlural: 'Messages',
+  icon: 'MessageCircle',
+  order: 9,
+  parent: 'rfi',
+  embedded: true,
+  timestamps: true,
+});

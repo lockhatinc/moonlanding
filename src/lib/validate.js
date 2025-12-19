@@ -1,26 +1,25 @@
-import { VALIDATION } from '@/config/constants';
+import { VALIDATION_RULES } from '@/config/validation-rules';
+import { getValidationRules } from './validation-generator';
 import { executeHook } from './hook-engine';
-
-const validators = {
-  email: (v) => !v || VALIDATION.EMAIL_REGEX.test(v) ? null : 'Invalid email',
-  text: (v, f) => (f.required && !v) ? `${f.label} required` : (f.minLength && v?.length < f.minLength) ? `Min ${f.minLength}` : (f.maxLength && v?.length > f.maxLength) ? `Max ${f.maxLength}` : null,
-  int: (v, f) => (f.required && (v === undefined || v === null || v === '')) ? `${f.label} required` : (v !== undefined && v !== null && v !== '' && (isNaN(v) || !Number.isInteger(Number(v)))) ? 'Must be integer' : (f.min !== undefined && Number(v) < f.min) ? `Min ${f.min}` : (f.max !== undefined && Number(v) > f.max) ? `Max ${f.max}` : null,
-  decimal: (v, f) => (f.required && (v === undefined || v === null || v === '')) ? `${f.label} required` : (v !== undefined && v !== null && v !== '' && isNaN(v)) ? 'Must be number' : (f.min !== undefined && Number(v) < f.min) ? `Min ${f.min}` : (f.max !== undefined && Number(v) > f.max) ? `Max ${f.max}` : null,
-  date: (v, f) => (f.required && !v) ? `${f.label} required` : (v && isNaN(new Date(v).getTime())) ? 'Invalid date' : null,
-  timestamp: (v, f) => (f.required && !v) ? `${f.label} required` : (v && isNaN(new Date(v).getTime())) ? 'Invalid date/time' : null,
-  bool: (v, f) => (f.required && v === undefined) ? `${f.label} required` : null,
-  enum: (v, f, opts) => (f.required && !v) ? `${f.label} required` : (v && f.options && !opts?.[f.options]?.find(o => String(o.value) === String(v))) ? `Invalid ${f.label}` : null,
-  ref: (v, f) => (f.required && !v) ? `${f.label} required` : null,
-  json: (v, f) => (f.required && !v) ? `${f.label} required` : (v && typeof v === 'string') ? (() => { try { JSON.parse(v); return null; } catch { return 'Invalid JSON'; } })() : null,
-  textarea: (v, f) => (f.required && !v) ? `${f.label} required` : (f.minLength && v?.length < f.minLength) ? `Min ${f.minLength}` : (f.maxLength && v?.length > f.maxLength) ? `Max ${f.maxLength}` : null,
-};
+import { validators } from './validator-helpers';
 
 export const validateField = async (spec, fieldName, value) => {
   const field = spec.fields[fieldName];
   if (!field) return null;
 
-  const validator = validators[field.type];
+  const validator = VALIDATION_RULES[field.type];
   let error = validator ? validator(value, field, spec.options) : null;
+
+  if (!error) {
+    const validationRules = getValidationRules(spec);
+    const rules = validationRules[fieldName];
+    if (rules) {
+      for (const rule of rules) {
+        error = applyValidationRule(rule, value);
+        if (error) break;
+      }
+    }
+  }
 
   if (!error) {
     const hook = await executeHook(`validate:${spec.name}:${fieldName}`, { value, field, error });
@@ -28,6 +27,31 @@ export const validateField = async (spec, fieldName, value) => {
   }
 
   return error;
+};
+
+const applyValidationRule = (rule, value) => {
+  switch (rule.type) {
+    case 'required':
+      return validators.required(value, rule.message);
+    case 'minLength':
+      return validators.minLength(value, rule.value, rule.message);
+    case 'maxLength':
+      return validators.maxLength(value, rule.value, rule.message);
+    case 'min':
+      return validators.min(value, rule.value, rule.message);
+    case 'max':
+      return validators.max(value, rule.value, rule.message);
+    case 'range':
+      return validators.range(value, rule.min, rule.max, rule.message);
+    case 'pattern':
+      return validators.pattern(value, rule.value, rule.message);
+    case 'email':
+      return validators.email(value, rule.message);
+    case 'custom':
+      return null;
+    default:
+      return null;
+  }
 };
 
 export const validateEntity = async (spec, data) => {

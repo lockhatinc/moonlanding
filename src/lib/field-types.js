@@ -16,74 +16,68 @@ function truncateTextarea(text) {
   return truncateText(text, DISPLAY.TEXTAREA_PREVIEW);
 }
 
-export const fieldRegistry = {
-  text: {
-    sqlType: 'TEXT',
+function createSimpleType(sqlType, overrides = {}) {
+  return {
+    sqlType,
     coerce: (val) => val,
-    format: (val) => String(val ?? ''),
+    format: (val) => val,
     isValid: () => true,
-  },
+    ...overrides,
+  };
+}
 
-  email: {
-    sqlType: 'TEXT',
-    coerce: (val) => val,
+function createNumberType(sqlType, coerceFn, formatFn) {
+  return {
+    sqlType,
+    coerce: coerceFn,
+    format: formatFn,
+    isValid: () => true,
+  };
+}
+
+function createDateType(sqlType, formatType) {
+  return {
+    sqlType,
+    coerce: (val) => (!val || typeof val !== 'string' ? val : dateToSeconds(new Date(val))),
+    format: (val) => formatDate(val, formatType),
+    isValid: (val) => !isNaN(new Date(val).getTime()),
+  };
+}
+
+export const fieldRegistry = {
+  text: createSimpleType('TEXT', {
+    format: (val) => String(val ?? ''),
+  }),
+
+  email: createSimpleType('TEXT', {
     format: (val) => String(val ?? ''),
     isValid: (val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
-  },
+  }),
 
-  textarea: {
-    sqlType: 'TEXT',
-    coerce: (val) => val,
+  textarea: createSimpleType('TEXT', {
     format: (val) => truncateTextarea(String(val ?? '')),
-    isValid: () => true,
-  },
+  }),
 
-  int: {
-    sqlType: 'INTEGER',
-    coerce: (val) => {
-      if (val === undefined || val === '' || val === null) return null;
-      return parseInt(val, 10) || 0;
-    },
-    format: (val) => String(val ?? ''),
-    isValid: () => true,
-  },
+  int: createNumberType(
+    'INTEGER',
+    (val) => (val === undefined || val === '' || val === null ? null : parseInt(val, 10) || 0),
+    (val) => String(val ?? '')
+  ),
 
-  decimal: {
-    sqlType: 'REAL',
-    coerce: (val) => {
-      if (val === undefined || val === '' || val === null) return null;
-      return parseFloat(val) || 0;
-    },
-    format: (val) => (typeof val === 'number' ? val.toFixed(2) : val),
-    isValid: () => true,
-  },
+  decimal: createNumberType(
+    'REAL',
+    (val) => (val === undefined || val === '' || val === null ? null : parseFloat(val) || 0),
+    (val) => (typeof val === 'number' ? val.toFixed(2) : val)
+  ),
 
-  bool: {
-    sqlType: 'INTEGER',
+  bool: createSimpleType('INTEGER', {
     coerce: (val) => (val === true || val === 'true' || val === 'on' || val === 1 ? 1 : 0),
     format: (val) => (val ? 'Yes' : 'No'),
-    isValid: () => true,
-  },
+  }),
 
-  date: {
-    sqlType: 'INTEGER',
-    coerce: (val) => {
-      if (!val || typeof val !== 'string') return val;
-      return dateToSeconds(new Date(val));
-    },
-    format: (val) => formatDate(val, 'locale'),
-    isValid: (val) => !isNaN(new Date(val).getTime()),
-  },
+  date: createDateType('INTEGER', 'locale'),
 
-  timestamp: {
-    sqlType: 'INTEGER',
-    coerce: (val) => {
-      if (!val || typeof val !== 'string') return val;
-      return dateToSeconds(new Date(val));
-    },
-    format: (val) => formatDate(val, 'datetime'),
-    isValid: (val) => !isNaN(new Date(val).getTime()),
-  },
+  timestamp: createDateType('INTEGER', 'datetime'),
 
   enum: {
     sqlType: 'TEXT',
@@ -109,29 +103,17 @@ export const fieldRegistry = {
     isValid: () => true,
   },
 
-  json: {
-    sqlType: 'TEXT',
+  json: createSimpleType('TEXT', {
     coerce: (val) => {
       if (val === undefined || val === '' || val === null) return null;
       return typeof val === 'string' ? val : JSON.stringify(val);
     },
     format: (val) => truncateJson(val),
-    isValid: () => true,
-  },
+  }),
 
-  image: {
-    sqlType: 'TEXT',
-    coerce: (val) => val,
-    format: (val) => val,
-    isValid: () => true,
-  },
+  image: createSimpleType('TEXT'),
 
-  id: {
-    sqlType: 'TEXT PRIMARY KEY',
-    coerce: (val) => val,
-    format: (val) => val,
-    isValid: () => true,
-  },
+  id: createSimpleType('TEXT PRIMARY KEY'),
 };
 
 export function getFieldHandler(type) {

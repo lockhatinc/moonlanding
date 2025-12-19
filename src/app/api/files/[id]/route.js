@@ -4,6 +4,8 @@ import { can } from '@/lib/permissions';
 import { get } from '@/engine';
 import { getSpec } from '@/config';
 import * as drive from '@/engine/drive';
+import { HTTP } from '@/config/api-constants';
+import { notFound } from '@/lib/response-formatter';
 
 export async function GET(request, { params }) {
   try {
@@ -12,12 +14,12 @@ export async function GET(request, { params }) {
 
     const spec = getSpec('file');
     if (!can(user, spec, 'view')) {
-      return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
+      return NextResponse.json({ error: 'Permission denied' }, { status: HTTP.FORBIDDEN });
     }
 
     const fileRecord = get('file', id);
     if (!fileRecord) {
-      return NextResponse.json({ error: 'File not found' }, { status: 404 });
+      return notFound('File not found');
     }
 
     const content = await drive.downloadFile(fileRecord.drive_file_id);
@@ -30,6 +32,6 @@ export async function GET(request, { params }) {
     });
   } catch (error) {
     console.error('File download error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: HTTP.INTERNAL_ERROR });
   }
 }

@@ -1,24 +1,31 @@
-import { NextResponse } from 'next/server';
 import { google, createSession } from '@/engine.server';
 import { getBy, create } from '@/engine';
-import { cookies } from 'next/headers';
 import { GOOGLE_APIS } from '@/config/constants';
+import {
+  validateOAuthProvider,
+  getOAuthCookie,
+  deleteOAuthCookie,
+  buildOAuthErrorResponse,
+  buildOAuthSuccessRedirect,
+  validateOAuthState,
+} from '@/lib/auth-route-helpers';
 
 export async function GET(request) {
-  if (!google) {
-    return NextResponse.redirect(new URL('/login?error=oauth_not_configured', request.url));
+  const { valid, error } = validateOAuthProvider(google);
+  if (!valid) {
+    return buildOAuthErrorResponse(error, request);
   }
 
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
 
-  const cookieStore = await cookies();
-  const storedState = cookieStore.get('google_oauth_state')?.value;
-  const storedCodeVerifier = cookieStore.get('google_code_verifier')?.value;
+  const storedState = await getOAuthCookie('google_oauth_state');
+  const storedCodeVerifier = await getOAuthCookie('google_code_verifier');
 
-  if (!code || !state || !storedState || !storedCodeVerifier || state !== storedState) {
-    return NextResponse.redirect(new URL('/login?error=invalid_state', request.url));
+  const stateValidation = validateOAuthState(code, state, storedState, storedCodeVerifier);
+  if (!stateValidation.valid) {
+    return buildOAuthErrorResponse(stateValidation.error, request);
   }
 
   try {
@@ -50,12 +57,12 @@ export async function GET(request) {
 
     await createSession(user.id);
 
-    cookieStore.delete('google_oauth_state');
-    cookieStore.delete('google_code_verifier');
+    await deleteOAuthCookie('google_oauth_state');
+    await deleteOAuthCookie('google_code_verifier');
 
-    return NextResponse.redirect(new URL('/', request.url));
+    return buildOAuthSuccessRedirect('/', request);
   } catch (error) {
     console.error('Google OAuth error:', error);
-    return NextResponse.redirect(new URL('/login?error=oauth_failed', request.url));
+    return buildOAuthErrorResponse('oauth_failed', request);
   }
 }

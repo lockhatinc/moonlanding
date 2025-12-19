@@ -1,85 +1,32 @@
-export async function listServer(entity, where = {}, options = {}) {
-  try {
-    const { list } = await import('@/lib/query-engine');
-    return list(entity, where, options);
-  } catch (e) {
-    console.error(`[DataLayer] List error for ${entity}:`, e);
-    throw e;
-  }
-}
+import { PAGINATION } from '@/config/pagination-constants';
 
-export async function listWithPaginationServer(entity, where = {}, page = 1, pageSize = 20) {
+const wrap = (fn, getName) => async (...args) => {
   try {
-    const { listWithPagination } = await import('@/lib/query-engine');
-    return listWithPagination(entity, where, page, pageSize);
+    return await fn(...args);
   } catch (e) {
-    console.error(`[DataLayer] ListWithPagination error for ${entity}:`, e);
+    console.error(`[DataLayer] ${getName(...args)} error:`, e);
     throw e;
   }
-}
+};
 
-export async function getServer(entity, id) {
-  try {
-    const { get } = await import('@/lib/query-engine');
-    return get(entity, id);
-  } catch (e) {
-    console.error(`[DataLayer] Get error for ${entity}:${id}:`, e);
-    throw e;
-  }
-}
+const createOps = (qe) => ({
+  listServer: wrap((e, w = {}, o = {}) => qe.list(e, w, o), (e) => `List for ${e}`),
+  listWithPaginationServer: wrap((e, w = {}, p = 1, ps = PAGINATION.defaultPageSize) => qe.listWithPagination(e, w, p, ps), (e) => `ListWithPagination for ${e}`),
+  getServer: wrap((e, id) => qe.get(e, id), (e, id) => `Get for ${e}:${id}`),
+  getByServer: wrap((e, f, v) => qe.getBy(e, f, v), (e, f, v) => `GetBy for ${e}.${f}=${v}`),
+  createServer: wrap(async (e, d) => { const { getUser } = await import('@/engine.server'); return qe.create(e, d, await getUser()); }, (e) => `Create for ${e}`),
+  updateServer: wrap(async (e, id, d) => { const { getUser } = await import('@/engine.server'); await qe.update(e, id, d, await getUser()); return qe.get(e, id); }, (e, id) => `Update for ${e}:${id}`),
+  deleteServer: wrap(async (e, id) => { await qe.remove(e, id); return { success: true }; }, (e, id) => `Delete for ${e}:${id}`),
+  searchServer: wrap((e, q, w = {}) => qe.search(e, q, w), (e) => `Search for ${e}`)
+});
 
-export async function getByServer(entity, field, value) {
-  try {
-    const { getBy } = await import('@/lib/query-engine');
-    return getBy(entity, field, value);
-  } catch (e) {
-    console.error(`[DataLayer] GetBy error for ${entity}.${field}=${value}:`, e);
-    throw e;
-  }
-}
+const ops = import('@/lib/query-engine').then(createOps);
 
-export async function createServer(entity, data) {
-  try {
-    const { create } = await import('@/lib/query-engine');
-    const { getUser } = await import('@/engine.server');
-    const user = await getUser();
-    return create(entity, data, user);
-  } catch (e) {
-    console.error(`[DataLayer] Create error for ${entity}:`, e);
-    throw e;
-  }
-}
-
-export async function updateServer(entity, id, data) {
-  try {
-    const { update, get } = await import('@/lib/query-engine');
-    const { getUser } = await import('@/engine.server');
-    const user = await getUser();
-    await update(entity, id, data, user);
-    return get(entity, id);
-  } catch (e) {
-    console.error(`[DataLayer] Update error for ${entity}:${id}:`, e);
-    throw e;
-  }
-}
-
-export async function deleteServer(entity, id) {
-  try {
-    const { remove } = await import('@/lib/query-engine');
-    await remove(entity, id);
-    return { success: true };
-  } catch (e) {
-    console.error(`[DataLayer] Delete error for ${entity}:${id}:`, e);
-    throw e;
-  }
-}
-
-export async function searchServer(entity, query, where = {}) {
-  try {
-    const { search } = await import('@/lib/query-engine');
-    return search(entity, query, where);
-  } catch (e) {
-    console.error(`[DataLayer] Search error for ${entity}:`, e);
-    throw e;
-  }
-}
+export const listServer = async (...args) => (await ops).listServer(...args);
+export const listWithPaginationServer = async (...args) => (await ops).listWithPaginationServer(...args);
+export const getServer = async (...args) => (await ops).getServer(...args);
+export const getByServer = async (...args) => (await ops).getByServer(...args);
+export const createServer = async (...args) => (await ops).createServer(...args);
+export const updateServer = async (...args) => (await ops).updateServer(...args);
+export const deleteServer = async (...args) => (await ops).deleteServer(...args);
+export const searchServer = async (...args) => (await ops).searchServer(...args);

@@ -1,6 +1,7 @@
 import { getDatabase, genId, now } from '@/lib/database-core';
 import { getSpec } from '@/config';
 import { RECORD_STATUS } from '@/config/constants';
+import { PAGINATION } from '@/config/pagination-constants';
 import { iterateCreateFields, iterateUpdateFields } from '@/lib/field-iterator';
 import { coerceFieldValue } from '@/lib/field-registry';
 import { execGet, execQuery, execRun, withTransaction } from '@/lib/query-wrapper';
@@ -35,12 +36,19 @@ export const list = (entity, where = {}, opts = {}) => {
   return execQuery(sql, params, { entity, operation: 'List' });
 };
 
-export const listWithPagination = (entity, where = {}, page = 1, pageSize = 20) => {
+export const listWithPagination = (entity, where = {}, page = 1, pageSize = null) => {
   const spec = getSpec(entity);
-  const wc = Object.keys(where).length ? ' WHERE ' + Object.keys(where).map(k => `${k}=?`).join(' AND ') : '';
-  const total = execGet(`SELECT COUNT(*) as c FROM ${spec.name}${wc}`, Object.values(where), { entity, operation: 'Count' }).c;
-  const items = list(entity, where, { limit: pageSize, offset: (page - 1) * pageSize });
-  return { items, pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize), hasMore: page < Math.ceil(total / pageSize) } };
+  const defaultPageSize = spec.list?.pageSize || PAGINATION.defaultPageSize;
+  const maxPageSize = PAGINATION.maxPageSize;
+  const finalPageSize = pageSize ? Math.min(parseInt(pageSize), maxPageSize) : defaultPageSize;
+  const finalPage = Math.max(1, parseInt(page));
+  const wc = [], p = [];
+  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${spec.name}.${k}=?`); p.push(v); } });
+  if (spec.fields.status && !where.status) wc.push(`${spec.name}.status!='${RECORD_STATUS.DELETED}'`);
+  const whereClause = wc.length ? ' WHERE ' + wc.join(' AND ') : '';
+  const total = execGet(`SELECT COUNT(*) as c FROM ${spec.name}${whereClause}`, p, { entity, operation: 'Count' }).c;
+  const items = list(entity, where, { limit: finalPageSize, offset: (finalPage - 1) * finalPageSize });
+  return { items, pagination: { page: finalPage, pageSize: finalPageSize, total, totalPages: Math.ceil(total / finalPageSize), hasMore: finalPage < Math.ceil(total / finalPageSize) } };
 };
 
 export const get = (entity, id) => {
@@ -55,14 +63,33 @@ export const getBy = (entity, field, value) => {
   try { return execGet(sql, params, { entity, operation: 'GetBy' }) || null; } catch { return null; }
 };
 
-export const search = (entity, query, where = {}) => {
+export const search = (entity, query, where = {}, opts = {}) => {
   const spec = getSpec(entity);
-  const searchFields = spec.fields ? Object.entries(spec.fields).filter(([,f]) => f.search).map(([k]) => k) : [];
-  if (!searchFields.length || !query) return list(entity, where);
-  const { sql: baseSql, params: baseParams } = buildSpecQuery(spec, where);
+  const searchFields = spec.list?.searchFields || spec.fields ? Object.entries(spec.fields).filter(([,f]) => f.search).map(([k]) => k) : [];
+  if (!searchFields.length || !query) return list(entity, where, opts);
+  const { sql: baseSql, params: baseParams } = buildSpecQuery(spec, where, opts);
   const table = spec.name, searchClauses = searchFields.map(f => `${table}.${f} LIKE ?`).join(' OR ');
   const sql = baseSql.includes('WHERE') ? baseSql.replace(' WHERE ', ` WHERE (${searchClauses}) AND `) : `${baseSql} WHERE (${searchClauses})`;
   return execQuery(sql, [...searchFields.map(() => `%${query}%`), ...baseParams], { entity, operation: 'Search' });
+};
+
+export const searchWithPagination = (entity, query, where = {}, page = 1, pageSize = null) => {
+  const spec = getSpec(entity);
+  const searchFields = spec.list?.searchFields || spec.fields ? Object.entries(spec.fields).filter(([,f]) => f.search).map(([k]) => k) : [];
+  if (!searchFields.length || !query) return listWithPagination(entity, where, page, pageSize);
+  const defaultPageSize = spec.list?.pageSize || PAGINATION.defaultPageSize;
+  const maxPageSize = PAGINATION.maxPageSize;
+  const finalPageSize = pageSize ? Math.min(parseInt(pageSize), maxPageSize) : defaultPageSize;
+  const finalPage = Math.max(1, parseInt(page));
+  const table = spec.name, searchClauses = searchFields.map(f => `${table}.${f} LIKE ?`).join(' OR ');
+  const wc = [], p = [];
+  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${table}.${k}=?`); p.push(v); } });
+  if (spec.fields.status && !where.status) wc.push(`${table}.status!='${RECORD_STATUS.DELETED}'`);
+  const whereClause = wc.length ? ` AND (${wc.join(' AND ')})` : '';
+  const countSql = `SELECT COUNT(*) as c FROM ${table} WHERE (${searchClauses})${whereClause}`;
+  const total = execGet(countSql, [...searchFields.map(() => `%${query}%`), ...p], { entity, operation: 'Count' }).c;
+  const items = search(entity, query, where, { limit: finalPageSize, offset: (finalPage - 1) * finalPageSize });
+  return { items, pagination: { page: finalPage, pageSize: finalPageSize, total, totalPages: Math.ceil(total / finalPageSize), hasMore: finalPage < Math.ceil(total / finalPageSize) } };
 };
 
 export const count = (entity, where = {}) => {
@@ -119,4 +146,14 @@ export { withTransaction };
 export const getChildren = (parentEntity, parentId, childDef) => {
   const foreignKey = childDef.foreignKey || `${parentEntity}_id`;
   return list(childDef.entity, { [foreignKey]: parentId });
+};
+
+export const batchGetChildren = (parentEntity, parentId, childSpecs) => {
+  const childEntries = Array.isArray(childSpecs) ? childSpecs : Object.entries(childSpecs);
+  const queries = childEntries.map(async ([key, def]) => {
+    const foreignKey = def.foreignKey || `${parentEntity}_id`;
+    const results = list(def.entity, { [foreignKey]: parentId });
+    return [key, results];
+  });
+  return Promise.all(queries).then(results => Object.fromEntries(results));
 };

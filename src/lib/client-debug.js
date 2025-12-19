@@ -51,6 +51,7 @@ export function initDebug() {
     },
     getErrors: () => errors,
     clearErrors: () => { errors = []; },
+    getPermissionCacheStats: null,
     tables: {
       apiCalls: () => console.table(appState.api.calls),
       entities: () => console.table(appState.entities),

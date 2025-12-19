@@ -1,15 +1,14 @@
 'use server';
 
 import { list, get, remove, create, update } from '@/engine';
-import { requireUser, check } from '@/engine.server';
-import { getSpec } from '@/config';
 import { dateToSeconds } from '@/lib/field-registry';
 import { revalidatePath } from 'next/cache';
-import { createCRUDActions, createEntityAction } from '@/lib/action-factory';
+import { createCRUDActions, createEntityAction } from '@/lib/action-utils';
+
+import { serverDeleteEntity } from '@/lib/action-factory';
 
 export const deleteAction = async (entityName, id) => {
-  const { delete: deleteEntity } = createCRUDActions(entityName);
-  return deleteEntity(id);
+  return serverDeleteEntity(entityName, id);
 };
 
 export const mlConsolidateQueries = createEntityAction('review', 'mlConsolidateQueries', 'edit',

@@ -1,23 +1,3 @@
-import { createUniversalHandler } from '@/lib/universal-handler';
+import { createHttpMethods } from '@/lib/http-methods-factory';
 
-const handler = createUniversalHandler('email');
-
-export async function POST(request) {
-  return handler(request, { params: { entity: 'email' } });
-}
-
-export async function PUT(request) {
-  return handler(request, { params: { entity: 'email' } });
-}
-
-export async function GET(request) {
-  return handler(request, { params: { entity: 'email' } });
-}
-
-export async function DELETE(request) {
-  return handler(request, { params: { entity: 'email' } });
-}
-
-export async function PATCH(request) {
-  return handler(request, { params: { entity: 'email' } });
-}
+export const { GET, POST, PUT, PATCH, DELETE } = createHttpMethods('email');

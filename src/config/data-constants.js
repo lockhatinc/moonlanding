@@ -36,6 +36,4 @@ export const DISPLAY = {
 export const VALIDATION = {
   EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   PASSWORD_MIN_LENGTH: 8,
-  PAGE_SIZE: 20,
-  MAX_PAGE_SIZE: 100,
 };

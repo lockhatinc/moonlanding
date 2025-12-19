@@ -1,17 +1,7 @@
+import { build as buildQuery, buildUrl as buildUrlQuery } from '@/lib/query-string-adapter';
 
-
-export const buildParams = (obj = {}) => {
-  const params = new URLSearchParams();
-  Object.entries(obj)
-    .filter(([, v]) => v !== undefined && v !== null && v !== '')
-    .forEach(([k, v]) => params.append(k, v));
-  return params;
-};
-
-export const buildUrl = (baseUrl, params) => {
-  const queryString = buildParams(params).toString();
-  return queryString ? `${baseUrl}?${queryString}` : baseUrl;
-};
+export const buildParams = buildQuery;
+export const buildUrl = buildUrlQuery;
 
 export const jsonHeaders = {
   'Content-Type': 'application/json',

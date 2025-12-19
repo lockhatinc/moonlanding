@@ -111,3 +111,61 @@ export const useSelection = (defaultValue = null, isMultiple = true) => {
     isSelected: (id) => isMultiple ? selected?.includes(id) : selected === id,
   };
 };
+
+export const usePageState = (initialPage = 1) => {
+  const [page, setPage] = useState(initialPage);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+
+  const pagination = useMemo(() => ({
+    totalPages: Math.ceil(total / pageSize),
+    hasMore: page < Math.ceil(total / pageSize),
+  }), [page, pageSize, total]);
+
+  return { page, setPage, pageSize, setPageSize, total, setTotal, pagination };
+};
+
+export const useSortState = (defaultField = 'created_at', defaultDir = 'ASC') => {
+  const [field, setField] = useState(defaultField);
+  const [dir, setDir] = useState(defaultDir);
+
+  const handleSort = useCallback((newField) => {
+    if (field === newField) {
+      setDir(dir === 'ASC' ? 'DESC' : 'ASC');
+    } else {
+      setField(newField);
+      setDir('ASC');
+    }
+  }, [field, dir]);
+
+  return { field, dir, setField, setDir, handleSort };
+};
+
+export const useSearchState = () => {
+  const [query, setQuery] = useState('');
+  const handleQueryChange = useCallback((value) => setQuery(value), []);
+  return { query, setQuery, handleQueryChange };
+};
+
+export const useLoadingState = () => {
+  const [loading, setLoading] = useState(false);
+  const startLoading = useCallback(() => setLoading(true), []);
+  const stopLoading = useCallback(() => setLoading(false), []);
+  return { loading, setLoading, startLoading, stopLoading };
+};
+
+export const useFilterState = () => {
+  const [filters, setFilters] = useState({});
+
+  const handleFilterChange = useCallback((filterKey, filterValue) => {
+    setFilters(prev => {
+      const updated = { ...prev, [filterKey]: filterValue };
+      if (!filterValue) delete updated[filterKey];
+      return updated;
+    });
+  }, []);
+
+  const resetFilters = useCallback(() => setFilters({}), []);
+
+  return { filters, setFilters, handleFilterChange, resetFilters };
+};

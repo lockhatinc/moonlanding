@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   outputFileTracingRoot: __dirname,
   experimental: {
     serverActions: {
@@ -16,6 +17,7 @@ const nextConfig = {
     maxInactiveAge: 60 * 1000,
     pagesBufferLength: 5,
   },
+  poweredByHeader: false,
 };
 
 module.exports = nextConfig;

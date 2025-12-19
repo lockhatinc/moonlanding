@@ -1,43 +1,50 @@
-
-
-function getFieldsByFilter(spec, filter) {
-  const fields = [];
+export function fieldQuery(spec, predicates, options = {}) {
+  const preds = Array.isArray(predicates) ? predicates : [predicates];
+  const results = [];
   for (const [key, field] of Object.entries(spec.fields)) {
-    if (filter(field)) fields.push({ key, ...field });
+    if (preds.every(pred => pred(field, key))) {
+      results.push(options.keysOnly ? key : { key, ...field });
+    }
   }
-  return fields;
+  return results;
 }
 
-function getFieldKeysByFilter(spec, filter) {
-  const keys = [];
-  for (const [key, field] of Object.entries(spec.fields)) {
-    if (filter(field)) keys.push(key);
-  }
-  return keys;
-}
+export const is = {
+  notId: f => f.type !== 'id',
+  notHidden: f => !f.hidden,
+  notReadOnly: f => !f.readOnly,
+  required: f => f.required,
+  searchable: f => f.search,
+  listable: f => f.list === true,
+  ref: f => f.type === 'ref' && f.ref,
+  editable: f => !f.hidden && !f.readOnly && f.type !== 'id',
+  displayable: f => !f.hidden && f.type !== 'id',
+  ofType: type => f => f.type === type,
+  hasProperty: prop => f => f[prop] !== undefined,
+};
 
 export function getFormFields(spec) {
-  return getFieldsByFilter(spec, f => !f.hidden && !f.readOnly && f.type !== 'id');
+  return fieldQuery(spec, is.editable);
 }
 
 export function getListFields(spec) {
-  return getFieldsByFilter(spec, f => f.list === true);
+  return fieldQuery(spec, is.listable);
 }
 
 export function getDisplayFields(spec) {
-  return getFieldsByFilter(spec, f => !f.hidden && f.type !== 'id');
+  return fieldQuery(spec, is.displayable);
 }
 
 export function getEditableFields(spec) {
-  return getFieldKeysByFilter(spec, f => !f.hidden && !f.readOnly && f.type !== 'id');
+  return fieldQuery(spec, is.editable, { keysOnly: true });
 }
 
 export function getRequiredFields(spec) {
-  return getFieldKeysByFilter(spec, f => f.required);
+  return fieldQuery(spec, is.required, { keysOnly: true });
 }
 
 export function getSearchFields(spec) {
-  return getFieldKeysByFilter(spec, f => f.search);
+  return fieldQuery(spec, is.searchable, { keysOnly: true });
 }
 
 export function getFilterableFields(spec) {
@@ -47,7 +54,7 @@ export function getFilterableFields(spec) {
 }
 
 export function getRefFields(spec) {
-  return getFieldsByFilter(spec, f => f.type === 'ref' && f.ref);
+  return fieldQuery(spec, is.ref);
 }
 
 export function getField(spec, fieldKey) {
@@ -65,9 +72,9 @@ export function forEachField(spec, callback, filter = () => true) {
 }
 
 export function iterateCreateFields(spec, callback) {
-  forEachField(spec, callback, f => !f.hidden && !f.readOnly && f.type !== 'id');
+  forEachField(spec, callback, is.editable);
 }
 
 export function iterateUpdateFields(spec, callback) {
-  forEachField(spec, callback, f => !f.hidden && !f.readOnly && f.type !== 'id');
+  forEachField(spec, callback, is.editable);
 }

@@ -21,7 +21,7 @@ export const JOBS_CONFIG = {
     name: 'daily_rfi_notifications',
     schedule: '0 5 * * *',
     description: 'RFI deadline notifications',
-    config: { daysBeforeNotifications: [7, 3, 1, 0] },
+    config: { days_before: [7, 3, 1, 0] },
   },
 
   dailyConsolidatedNotifications: {
@@ -58,7 +58,7 @@ export const JOBS_CONFIG = {
     name: 'weekly_client_emails',
     schedule: '0 9 * * 1',
     description: 'Weekly client engagement summaries',
-    config: { includeIndividual: true, includeAdminMaster: true },
+    config: { include_individual: true, include_admin_master: true },
   },
 
   yearlyEngagementRecreation: {

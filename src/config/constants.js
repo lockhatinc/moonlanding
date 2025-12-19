@@ -4,7 +4,7 @@ export {
   REPEAT_INTERVALS,
   COLORS,
   BADGE_COLORS_MANTINE,
-} from './domain-constants';
+} from './domain-constants.js';
 
 export {
   RFI_STATUS,
@@ -21,17 +21,17 @@ export {
   CLIENT_STATUS,
   RECORD_STATUS,
   STAGE_TRANSITIONS,
-} from './entity-statuses';
+} from './entity-statuses.js';
 
 export {
   HTTP,
   ERRORS,
   GOOGLE_SCOPES,
   GOOGLE_APIS,
-} from './api-constants';
+} from './api-constants.js';
 
 export {
   SQL_TYPES,
   DISPLAY,
   VALIDATION,
-} from './data-constants';
+} from './data-constants.js';

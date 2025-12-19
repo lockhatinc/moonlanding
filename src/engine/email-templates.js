@@ -7,49 +7,47 @@ import { config } from '@/config/env';
 
 export { emailConfig, emailTemplates, generateChecklistPdf };
 
+const RECIPIENT_RESOLVERS = {
+  team: (ctx, spec) => {
+    const teamId = ctx.review?.team_id || ctx.engagement?.team_id;
+    if (!teamId) return [];
+    const team = get('team', teamId);
+    if (!team) return [];
+    const ids = spec.role === 'partners'
+      ? JSON.parse(team.partners || '[]')
+      : [...new Set([...JSON.parse(team.partners || '[]'), ...JSON.parse(team.users || '[]')])];
+    return ids.map(id => get('user', id)).filter(Boolean);
+  },
+
+  collaborator: (ctx) =>
+    ctx.collaborator?.email ? [ctx.collaborator] : (ctx.collaborator?.user_id ? [get('user', ctx.collaborator.user_id)].filter(Boolean) : []),
+
+  client: (ctx, spec) => {
+    const clientId = ctx.engagement?.client_id || ctx.client?.id;
+    if (!clientId) return [];
+    const users = list('client_user', { client_id: clientId, status: 'active' });
+    return (spec.role ? users.filter(u => u.role === spec.role) : users).map(cu => get('user', cu.user_id)).filter(Boolean);
+  },
+
+  single: (ctx, spec) => {
+    const val = spec.field.split('.').reduce((obj, key) => obj?.[key], ctx);
+    return val ? [val] : [];
+  },
+
+  json: (ctx, spec) => {
+    const arr = JSON.parse(spec.field.split('.').reduce((obj, key) => obj?.[key], ctx) || '[]');
+    return arr.map(id => get('user', id)).filter(Boolean);
+  },
+
+  list: (ctx, spec) => list(spec.entity, spec.filter || {}),
+
+  static: (ctx, spec) => spec.emails || [],
+};
+
 function resolveRecipients(spec, ctx) {
   if (!spec) return [];
-
-  switch (spec.type) {
-    case 'team': {
-      const teamId = ctx.review?.team_id || ctx.engagement?.team_id;
-      if (!teamId) return [];
-      const team = get('team', teamId);
-      if (!team) return [];
-      const ids = spec.role === 'partners'
-        ? JSON.parse(team.partners || '[]')
-        : [...new Set([...JSON.parse(team.partners || '[]'), ...JSON.parse(team.users || '[]')])];
-      return ids.map(id => get('user', id)).filter(Boolean);
-    }
-
-    case 'collaborator':
-      return ctx.collaborator?.email ? [ctx.collaborator] : (ctx.collaborator?.user_id ? [get('user', ctx.collaborator.user_id)].filter(Boolean) : []);
-
-    case 'client': {
-      const clientId = ctx.engagement?.client_id || ctx.client?.id;
-      if (!clientId) return [];
-      const users = list('client_user', { client_id: clientId, status: 'active' });
-      return (spec.role ? users.filter(u => u.role === spec.role) : users).map(cu => get('user', cu.user_id)).filter(Boolean);
-    }
-
-    case 'single': {
-      const val = spec.field.split('.').reduce((obj, key) => obj?.[key], ctx);
-      return val ? [val] : [];
-    }
-
-    case 'json': {
-      const arr = JSON.parse(spec.field.split('.').reduce((obj, key) => obj?.[key], ctx) || '[]');
-      return arr.map(id => get('user', id)).filter(Boolean);
-    }
-
-    case 'list':
-      return list(spec.entity, spec.filter || {});
-
-    case 'static':
-      return spec.emails || [];
-
-    default: return [];
-  }
+  const resolver = RECIPIENT_RESOLVERS[spec.type];
+  return resolver ? resolver(ctx, spec) : [];
 }
 
 export async function queueEmail(key, context) {

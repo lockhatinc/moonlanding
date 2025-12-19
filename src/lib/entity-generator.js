@@ -1,5 +1,5 @@
 import { specs, getSpec } from '@/config';
-import { list, search, get, getChildren, listWithPagination, create, update, remove } from '@/engine';
+import { list, search, searchWithPagination, get, getChildren, batchGetChildren, listWithPagination, create, update, remove } from '@/engine';
 import { can } from '@/lib/permissions';
 import { loadFormOptions } from '@/lib/utils';
 import { withPageAuth } from '@/lib/auth-middleware';
@@ -12,6 +12,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { forwardRef } from 'react';
 import { getNavItems } from '@/config';
+import { QueryAdapter } from '@/lib/query-string-adapter';
 
 const generatorCache = new Map();
 
@@ -48,17 +49,15 @@ export class EntityGenerator {
 
     return {
       ListPage: Object.assign(createPage('list', async ({ user, spec, searchParams }) => {
-        const { q, page: pageParam, pageSize: pageSizeParam } = searchParams;
-        const page = Math.max(1, parseInt(pageParam || '1'));
-        const pageSize = parseInt(pageSizeParam || String(spec.list?.pageSize || 20));
-        const result = q ? { items: search(spec.name, q), pagination: null } : listWithPagination(spec.name, {}, page, pageSize);
+        const { q, page, pageSize } = QueryAdapter.fromSearchParams(searchParams, spec);
+        const result = q ? searchWithPagination(spec.name, q, {}, page, pageSize) : listWithPagination(spec.name, {}, page, pageSize);
         return <Shell user={user} nav={getNavItems()}><Entity spec={spec} data={result.items} mode="list" pagination={result.pagination} canCreate={can(user, spec, 'create')} /></Shell>;
       }), { generateMetadata: ({ params }) => createMetadata('list', params.entity) }),
 
       DetailPage: Object.assign(createPage('view', async ({ user, spec, params }) => {
         const data = get(spec.name, params.id);
         if (!data) notFound();
-        const children = spec.children ? Object.fromEntries(await Promise.all(Object.entries(spec.children).map(async ([k, def]) => [k, getChildren(spec.name, params.id, def)]))) : {};
+        const children = spec.children ? await batchGetChildren(spec.name, params.id, spec.children) : {};
         const Comp = spec.detail?.component === 'review-detail' ? (await import('@/components/domain')).ReviewDetail : EntityDetail;
         return <Shell user={user} nav={getNavItems()}><Comp spec={spec} data={data} children={children} user={user} canEdit={can(user, spec, 'edit')} canDelete={can(user, spec, 'delete')} /></Shell>;
       }), { generateMetadata: ({ params }) => createMetadata('detail', params.entity, params.id) }),

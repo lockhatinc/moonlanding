@@ -1,6 +1,6 @@
 import { COLORS, BADGE_COLORS_MANTINE } from '@/config/constants';
 export { secondsToDate, dateToSeconds, formatDate, parseDate } from './utils-client';
-export { fieldRegistry, getFieldHandler, coerceFieldValue, formatFieldValue, validateFieldValue } from './field-types';
+export { fieldRegistry, getFieldHandler, coerceFieldValue, formatFieldValue } from './field-types';
 
 export function getEnumOption(spec, optionsKey, value) {
   return spec.options?.[optionsKey]?.find(o => String(o.value) === String(value));

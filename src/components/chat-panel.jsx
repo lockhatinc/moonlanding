@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Paper, Stack, Group, Text, ActionIcon, Avatar, Textarea, Box, Title, ScrollArea, Checkbox } from '@mantine/core';
 import { Send, Lock } from 'lucide-react';
 import { secondsToDate } from '@/lib/field-registry';
+import { API_ENDPOINTS } from '@/config';
 
 export function ChatPanel({ entityType, entityId, messages = [], user, onSendMessage }) {
   const [displayMessages, setDisplayMessages] = useState(messages);
@@ -17,7 +18,7 @@ export function ChatPanel({ entityType, entityId, messages = [], user, onSendMes
 
   const loadMessages = async () => {
     try {
-      const res = await fetch(`/api/chat?entity_type=${entityType}&entity_id=${entityId}`);
+      const res = await fetch(API_ENDPOINTS.chat(entityType, entityId));
       if (res.ok) {
         const msgs = await res.json();
         setDisplayMessages(msgs);
