@@ -15,8 +15,11 @@ import { engagementLetterSpec } from './engagement-letter.config.js';
 import { collaboratorSpec } from './collaborator.config.js';
 import { templateSpec } from './template.config.js';
 import { flagSpec } from './flag.config.js';
+import { removedHighlightSpec } from './removed-highlight.config.js';
+import { notificationSpec } from './notification.config.js';
+import { recreationLogSpec } from './recreation-log.config.js';
 
-export { userSpec, engagementSpec, clientSpec, clientUserSpec, teamSpec, reviewSpec, highlightSpec, responseSpec, checklistSpec, rfiSpec, messageSpec, fileSpec, emailSpec, engagementLetterSpec, collaboratorSpec, templateSpec, flagSpec };
+export { userSpec, engagementSpec, clientSpec, clientUserSpec, teamSpec, reviewSpec, highlightSpec, responseSpec, checklistSpec, rfiSpec, messageSpec, fileSpec, emailSpec, engagementLetterSpec, collaboratorSpec, templateSpec, flagSpec, removedHighlightSpec, notificationSpec, recreationLogSpec };
 
 export const allSpecs = {
   user: userSpec,
@@ -36,4 +39,7 @@ export const allSpecs = {
   collaborator: collaboratorSpec,
   template: templateSpec,
   flag: flagSpec,
+  removed_highlight: removedHighlightSpec,
+  notification: notificationSpec,
+  recreation_log: recreationLogSpec,
 };
