@@ -55,3 +55,12 @@ export function getMessage(path, ...args) {
   }
   return typeof value === 'function' ? value(...args) : value;
 }
+
+export const ERROR_MESSAGES = MESSAGES;
+export const SUCCESS_MESSAGES = MESSAGES.operation;
+export const LOG_PREFIXES = {
+  ERROR: '[ERROR]',
+  WARN: '[WARN]',
+  INFO: '[INFO]',
+  DEBUG: '[DEBUG]',
+};
