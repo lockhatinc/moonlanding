@@ -75,6 +75,9 @@ export { STATUS_ENUMS, getStatusValues, getEnumStatusColor, getStatusLabel, getS
 export { ENTITY_LIFECYCLE_HOOKS, getLifecycleHooks, getEmailHooks, getAuditHooks, shouldTriggerHook } from './entity-lifecycle-hooks-config';
 export { TimelineEngine, timelineEngine } from '@/lib/timeline-engine';
 export { ExtendedQueryAdapter } from '@/lib/query-adapter-extended';
+export { EDITABLE_FIELD_RENDERERS, LIST_RENDERERS, DISPLAY_RENDERERS, getFieldRenderers } from './field-render-config';
+export { ERROR_TYPES, RECOVERY_STRATEGIES, getErrorType, getRecoveryStrategy, shouldRetry, getRetryDelay } from './error-recovery-config';
+export { FORM_SECTION_TEMPLATES, ENTITY_FORM_SECTIONS, getSectionTemplate, getEntityFormSections, getSectionFields } from './form-section-templates-config';
 
 export const API_ENDPOINTS = {
   entity: (name) => `/api/${name}`,
