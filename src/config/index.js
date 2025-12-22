@@ -68,6 +68,8 @@ export { HTTP_STATUS_CODES, HTTP_STATUS_MESSAGES, ERROR_STATUS_CODES, HTTP_RETRY
 export { DATABASE_LIMITS, MEMORY_LIMITS, QUERY_LIMITS, VALIDATION_LIMITS, FILE_LIMITS, API_LIMITS, SEARCH_LIMITS } from './system-limits-config';
 export { POLLING_CONFIG, RETRY_TIMING, NOTIFICATION_TIMING, CACHE_TTL, DEBOUNCE_TIMING, THROTTLE_TIMING, SESSION_TIMING, ANIMATION_TIMING, API_TIMING, MAINTENANCE_TIMING } from './timing-config';
 export { BasePlugin, BaseService, BaseEngine, PluginManager, globalPluginManager, FieldRendererPlugin, NotificationPlugin, AuditLogPlugin, SearchPlugin, PermissionPlugin } from '@/framework';
+export { ValidationBuilder, field, schema, SchemaValidator, createSchemaValidator } from './validation-dsl';
+export { ENTITY_VALIDATION_RULES, FIELD_VALIDATION_RULES, VALIDATION_SCHEMAS, getValidationRules, getFieldRules } from './entity-validation-config';
 
 export const API_ENDPOINTS = {
   entity: (name) => `/api/${name}`,
