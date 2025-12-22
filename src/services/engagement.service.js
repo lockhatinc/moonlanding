@@ -1,13 +1,8 @@
 import { list, get, create, update, remove } from '@/engine';
-import { ENGAGEMENT_STATUS, ENGAGEMENT_STAGE, RFI_STATUS, RFI_CLIENT_STATUS, RFI_AUDITOR_STATUS } from '@/lib/status-helpers';
+import { recreateEngagement, batchRecreateEngagements } from '@/engine/recreation';
+import { RFI_STATUS, RFI_CLIENT_STATUS, RFI_AUDITOR_STATUS } from '@/lib/status-helpers';
 
 class EngagementService {
-  calcNextPeriod(year, month, interval) {
-    if (interval === 'yearly') return { year: year + 1, month };
-    if (interval === 'monthly') return month === 12 ? { year: year + 1, month: 1 } : { year, month: (month || 0) + 1 };
-    throw new Error('No repeat interval');
-  }
-
   get(id) {
     return get('engagement', id);
   }
@@ -29,55 +24,14 @@ class EngagementService {
   }
 
   async recreate(sourceId) {
-    const src = this.get(sourceId);
-    if (!src) throw new Error('Source engagement not found');
-
-    const { year, month } = this.calcNextPeriod(src.year, src.month, src.repeat_interval);
-
-    const existing = list('engagement', { client_id: src.client_id, engagement_type: src.engagement_type });
-    if (existing.find(e => e.year === year && e.month === month && e.id !== sourceId)) {
-      throw new Error(`Engagement exists for ${year}/${month || 'annual'}`);
-    }
-
-    let newEng = null;
-    try {
-      newEng = this.create({
-        name: src.name,
-        client_id: src.client_id,
-        year,
-        month,
-        stage: ENGAGEMENT_STAGE.INFO_GATHERING,
-        status: ENGAGEMENT_STATUS.PENDING,
-        team_id: src.team_id,
-        template_id: src.template_id,
-        engagement_type: src.engagement_type,
-        progress: 0,
-        repeat_interval: src.repeat_interval,
-        recreate_with_attachments: src.recreate_with_attachments,
-      });
-
-      this.update(sourceId, { repeat_interval: 'once' });
-      return newEng;
-    } catch (e) {
-      if (newEng?.id) {
-        list('rfi', { engagement_id: newEng.id }).forEach(r => remove('rfi', r.id));
-        remove('engagement', newEng.id);
-      }
-      throw e;
-    }
+    return recreateEngagement(sourceId);
   }
 
   async batchRecreate(ids) {
-    const results = [];
-    for (const id of ids) {
-      try {
-        const newEng = await this.recreate(id);
-        results.push({ success: true, sourceId: id, newId: newEng.id });
-      } catch (err) {
-        results.push({ success: false, sourceId: id, error: err.message });
-      }
-    }
-    return results;
+    const result = await batchRecreateEngagements(ids);
+    return result.success.map(item => ({ success: true, ...item })).concat(
+      result.failed.map(item => ({ success: false, ...item }))
+    );
   }
 
   transitionStage(engagementId, toStage) {

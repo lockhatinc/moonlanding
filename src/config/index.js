@@ -70,6 +70,11 @@ export { POLLING_CONFIG, RETRY_TIMING, NOTIFICATION_TIMING, CACHE_TTL, DEBOUNCE_
 export { BasePlugin, BaseService, BaseEngine, PluginManager, globalPluginManager, FieldRendererPlugin, NotificationPlugin, AuditLogPlugin, SearchPlugin, PermissionPlugin } from '@/framework';
 export { ValidationBuilder, field, schema, SchemaValidator, createSchemaValidator } from './validation-dsl';
 export { ENTITY_VALIDATION_RULES, FIELD_VALIDATION_RULES, VALIDATION_SCHEMAS, getValidationRules, getFieldRules } from './entity-validation-config';
+export { ENTITY_OPERATIONS, getEmailEventTemplate, canTransitionStage, canTransitionStatus, canUpdateField, getRecreationFields, getExcludedFields } from './entity-operations-config';
+export { STATUS_ENUMS, getStatusValues, getEnumStatusColor, getStatusLabel, getStatusOptions, isValidStatus } from './status-enum-config';
+export { ENTITY_LIFECYCLE_HOOKS, getLifecycleHooks, getEmailHooks, getAuditHooks, shouldTriggerHook } from './entity-lifecycle-hooks-config';
+export { TimelineEngine, timelineEngine } from '@/lib/timeline-engine';
+export { ExtendedQueryAdapter } from '@/lib/query-adapter-extended';
 
 export const API_ENDPOINTS = {
   entity: (name) => `/api/${name}`,
