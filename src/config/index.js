@@ -67,6 +67,7 @@ export { TABLE_DEFAULTS, TABLE_COLUMN_DEFAULTS, TABLE_GROUP_DEFAULTS, TABLE_PAGI
 export { HTTP_STATUS_CODES, HTTP_STATUS_MESSAGES, ERROR_STATUS_CODES, HTTP_RETRY_CONFIG, HTTP_TIMEOUT_CONFIG } from './http-status-config';
 export { DATABASE_LIMITS, MEMORY_LIMITS, QUERY_LIMITS, VALIDATION_LIMITS, FILE_LIMITS, API_LIMITS, SEARCH_LIMITS } from './system-limits-config';
 export { POLLING_CONFIG, RETRY_TIMING, NOTIFICATION_TIMING, CACHE_TTL, DEBOUNCE_TIMING, THROTTLE_TIMING, SESSION_TIMING, ANIMATION_TIMING, API_TIMING, MAINTENANCE_TIMING } from './timing-config';
+export { BasePlugin, BaseService, BaseEngine, PluginManager, globalPluginManager, FieldRendererPlugin, NotificationPlugin, AuditLogPlugin, SearchPlugin, PermissionPlugin } from '@/framework';
 
 export const API_ENDPOINTS = {
   entity: (name) => `/api/${name}`,
