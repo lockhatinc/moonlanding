@@ -3,18 +3,19 @@ import { TextInput, Textarea, Select, Checkbox, NumberInput, Avatar, Badge, Text
 import { secondsToDate, dateToSeconds } from '@/lib/utils-client';
 import { showNotification } from './notification-helpers';
 import { renderEnumBadge, renderBoolDisplay, renderDateDisplay, renderTimestampDisplay, renderJsonDisplay } from './renderer-helpers';
+import { FORM_FIELD_DEFAULTS } from '@/config/form-rendering-config';
 
 const EDITABLE_FIELD_RENDERERS = {
   text: (f, v, s, _, __, includeNameAttr) => <TextInput {...(includeNameAttr && { name: f.key })} value={v} onChange={(e) => s(f.key, e.target.value)} required={f.required} aria-required={f.required} aria-label={f.label} aria-describedby={`${f.key}-error`} />,
   email: (f, v, s, _, __, includeNameAttr) => <TextInput {...(includeNameAttr && { name: f.key })} type="email" value={v} onChange={(e) => s(f.key, e.target.value)} required={f.required} aria-required={f.required} aria-label={f.label} aria-describedby={`${f.key}-error`} />,
-  textarea: (f, v, s, _, __, includeNameAttr) => <Textarea {...(includeNameAttr && { name: f.key })} value={v} onChange={(e) => s(f.key, e.target.value)} rows={3} required={f.required} aria-required={f.required} aria-label={f.label} aria-describedby={`${f.key}-error`} />,
+  textarea: (f, v, s, _, __, includeNameAttr) => <Textarea {...(includeNameAttr && { name: f.key })} value={v} onChange={(e) => s(f.key, e.target.value)} rows={FORM_FIELD_DEFAULTS.textarea.defaultRows} required={f.required} aria-required={f.required} aria-label={f.label} aria-describedby={`${f.key}-error`} />,
   date: (f, v, s, _, __, includeNameAttr) => <input type="date" {...(includeNameAttr && { name: f.key })} value={v ? secondsToDate(v).toISOString().split('T')[0] : ''} onChange={(e) => s(f.key, e.target.value ? dateToSeconds(new Date(e.target.value)) : '')} required={f.required} aria-required={f.required} aria-label={f.label} aria-describedby={`${f.key}-error`} style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--mantine-color-gray-4)', borderRadius: 4 }} />,
-  int: (f, v, s, _, __, includeNameAttr) => <NumberInput {...(includeNameAttr && { name: f.key })} value={v} onChange={(x) => s(f.key, x)} required={f.required} step={1} aria-required={f.required} aria-label={f.label} aria-describedby={`${f.key}-error`} />,
-  decimal: (f, v, s, _, __, includeNameAttr) => <NumberInput {...(includeNameAttr && { name: f.key })} value={v} onChange={(x) => s(f.key, x)} required={f.required} decimalScale={2} aria-required={f.required} aria-label={f.label} aria-describedby={`${f.key}-error`} />,
+  int: (f, v, s, _, __, includeNameAttr) => <NumberInput {...(includeNameAttr && { name: f.key })} value={v} onChange={(x) => s(f.key, x)} required={f.required} step={FORM_FIELD_DEFAULTS.numberInput.intStep} aria-required={f.required} aria-label={f.label} aria-describedby={`${f.key}-error`} />,
+  decimal: (f, v, s, _, __, includeNameAttr) => <NumberInput {...(includeNameAttr && { name: f.key })} value={v} onChange={(x) => s(f.key, x)} required={f.required} decimalScale={FORM_FIELD_DEFAULTS.numberInput.decimalScale} aria-required={f.required} aria-label={f.label} aria-describedby={`${f.key}-error`} />,
   bool: (f, v, s) => <Checkbox label={f.label} checked={!!v} onChange={(e) => s(f.key, e.currentTarget.checked)} aria-checked={!!v} aria-label={f.label} />,
   enum: (f, v, s, en) => <Select value={v} data={en?.[f.options]?.map(o => ({ value: String(o.value), label: o.label })) || []} onChange={(val) => s(f.key, val)} required={f.required} aria-required={f.required} aria-label={f.label} aria-describedby={`${f.key}-error`} />,
   ref: (f, v, s, en, rd) => <Select value={v} data={rd?.[f.ref]?.map(o => ({ value: o.id, label: o.name })) || []} onChange={(val) => s(f.key, val)} required={f.required} aria-required={f.required} aria-label={f.label} aria-describedby={`${f.key}-error`} />,
-  json: (f, v, s) => <Textarea value={typeof v === 'string' ? v : JSON.stringify(v || {})} onChange={(e) => s(f.key, e.target.value)} rows={4} required={f.required} aria-required={f.required} aria-label={f.label} aria-describedby={`${f.key}-error`} />,
+  json: (f, v, s) => <Textarea value={typeof v === 'string' ? v : JSON.stringify(v || {})} onChange={(e) => s(f.key, e.target.value)} rows={FORM_FIELD_DEFAULTS.jsonField.defaultRows} required={f.required} aria-required={f.required} aria-label={f.label} aria-describedby={`${f.key}-error`} />,
   image: (f, v, s) => <TextInput value={v} onChange={(e) => s(f.key, e.target.value)} placeholder="Image URL" aria-label={f.label} />,
 };
 
@@ -37,7 +38,7 @@ const LIST_RENDERERS = {
     if (c.display === 'avatars' && Array.isArray(v)) return <Avatar.Group size="xs">{v.map(uid => <Avatar key={uid} src="" />)}</Avatar.Group>;
     return row?.[`${c.key}_display`] || String(v ?? '');
   },
-  image: (v) => v ? <MImage src={v} height={40} width={40} /> : '—',
+  image: (v) => v ? <MImage src={v} height={FORM_FIELD_DEFAULTS.imageField.listHeight} width={FORM_FIELD_DEFAULTS.imageField.listWidth} /> : FORM_FIELD_DEFAULTS.imageField.placeholder,
 };
 
 const DISPLAY_RENDERERS = {
@@ -55,7 +56,7 @@ const DISPLAY_RENDERERS = {
     return typeof badge === 'string' ? badge : <Badge color={badge.color}>{badge.label}</Badge>;
   },
   ref: (v, field, spec) => spec?.entities?.[field.ref]?.name || String(v ?? ''),
-  image: (v) => v ? <MImage src={v} height={200} /> : '—',
+  image: (v) => v ? <MImage src={v} height={FORM_FIELD_DEFAULTS.imageField.detailHeight} /> : FORM_FIELD_DEFAULTS.imageField.placeholder,
 };
 
 const FIELD_RENDERERS = {

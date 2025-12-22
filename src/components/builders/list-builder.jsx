@@ -4,7 +4,7 @@ import { useMemo, memo, useCallback } from 'react';
 import { Table, Button, Group, Stack, Text, Badge, TextInput, Pagination, Select } from '@mantine/core';
 import { useSelection } from '@/lib/hooks';
 import { useBuilderState } from '@/lib/builder-hooks';
-import { buildListColumns, LAYOUT } from '@/config';
+import { buildListColumns, LAYOUT, TABLE_DEFAULTS, TABLE_PAGINATION_DEFAULTS } from '@/config';
 import { PAGINATION } from '@/config/pagination-constants';
 import { Icons, UI_ICONS, NAVIGATION_ICONS, ACTION_ICONS } from '@/config/icon-config';
 import { renderCellValue } from '@/lib/rendering-engine';
@@ -108,9 +108,9 @@ export function ListBuilder({
       </div>
 
       {loading ? (
-        <SkeletonTable rowCount={8} columnCount={columns.length + (groupBy ? 1 : 0)} />
+        <SkeletonTable rowCount={TABLE_DEFAULTS.skeleton.rowCount} columnCount={columns.length + (groupBy ? 1 : 0)} />
       ) : (
-        <div style={{ border: '1px solid var(--mantine-color-gray-3)', borderRadius: 8, overflow: 'hidden' }}>
+        <div style={{ border: '1px solid var(--mantine-color-gray-3)', borderRadius: TABLE_DEFAULTS.borderRadius, overflow: 'hidden' }}>
           <Table striped highlightOnHover id="results-table">
             <Table.Thead>
               <Table.Tr>
@@ -214,7 +214,7 @@ export function ListBuilder({
                 value: String(size),
                 label: `${size} per page`,
               }))}
-              style={{ width: 140 }}
+              style={{ width: TABLE_PAGINATION_DEFAULTS.selectWidth }}
               aria-label="Items per page"
               aria-controls="results-table"
             />
