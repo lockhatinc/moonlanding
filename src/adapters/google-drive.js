@@ -1,6 +1,7 @@
 import { getDocsClient, getDriveClient } from './google-auth.js';
 import { GoogleAdapter, createAdapterMethod } from './google-adapter-base.js';
 import { config } from '@/config';
+import { formatDate } from '@/lib/date-utils';
 
 export { getDriveClient };
 
@@ -49,7 +50,7 @@ const getEntityFolder = (entityType, entityId, entityName) => driveAdapter.safeE
 
 const generateEngagementLetter = async (templateId, data, folderId) => {
   const copy = await copyFile(templateId, `${data.client}_${data.year}_Engagement_Letter`, folderId);
-  await replaceInDoc(copy.id, { client: data.client, year: data.year, address: data.address || '', date: data.date || new Date().toLocaleDateString(), email: data.email || '', engagement: data.engagement || '' });
+  await replaceInDoc(copy.id, { client: data.client, year: data.year, address: data.address || '', date: data.date || formatDate(Date.now() / 1000, 'short'), email: data.email || '', engagement: data.engagement || '' });
   return { docId: copy.id, pdf: await exportToPdf(copy.id) };
 };
 

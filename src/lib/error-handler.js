@@ -1,4 +1,8 @@
 import { HTTP } from '@/config/api-constants';
+import { ERROR_MESSAGES, LOG_PREFIXES } from '@/config';
+import { AppError } from '@/lib/errors';
+
+export { AppError };
 
 const ERROR_TYPES = {
   VALIDATION: { code: 'VALIDATION_ERROR', status: HTTP.BAD_REQUEST },
@@ -30,43 +34,23 @@ export function createError(type, message, context = {}) {
   return error;
 }
 
-export class AppError extends Error {
-  constructor(message, code = 'INTERNAL_ERROR', statusCode = HTTP.INTERNAL_ERROR, context = {}) {
-    super(message);
-    this.name = 'AppError';
-    this.code = code;
-    this.statusCode = statusCode;
-    this.context = context;
-  }
-
-  toJSON() {
-    return {
-      status: 'error',
-      message: this.message,
-      code: this.code,
-      statusCode: this.statusCode,
-      context: this.context,
-    };
-  }
-}
-
 export const ValidationError = (message, errors = {}, context = {}) =>
   createError('VALIDATION', message, { ...context, errors });
 
 export const NotFoundError = (entity, id, context = {}) =>
-  createError('NOT_FOUND', `${entity} with id ${id} not found`, { ...context, entity, id });
+  createError('NOT_FOUND', ERROR_MESSAGES.notFound(`${entity} with id ${id}`), { ...context, entity, id });
 
-export const PermissionError = (message = 'Permission denied', context = {}) =>
-  createError('PERMISSION', message, context);
+export const PermissionError = (action = 'access', context = {}) =>
+  createError('PERMISSION', ERROR_MESSAGES.permissionDenied(action), context);
 
-export const UnauthorizedError = (message = 'Unauthorized', context = {}) =>
-  createError('UNAUTHORIZED', message, context);
+export const UnauthorizedError = (context = {}) =>
+  createError('UNAUTHORIZED', ERROR_MESSAGES.unauthorized(), context);
 
-export const ConflictError = (message = 'Conflict', context = {}) =>
-  createError('CONFLICT', message, context);
+export const ConflictError = (field = 'record', context = {}) =>
+  createError('CONFLICT', ERROR_MESSAGES.duplicateEntry(field), context);
 
-export const DatabaseError = (message, originalError = null, context = {}) =>
-  createError('DATABASE', message, { ...context, originalMessage: originalError?.message, originalError });
+export const DatabaseError = (operation, originalError = null, context = {}) =>
+  createError('DATABASE', ERROR_MESSAGES.databaseError(operation), { ...context, originalMessage: originalError?.message, originalError });
 
 export const ExternalAPIError = (service, message, statusCode = HTTP.INTERNAL_ERROR, context = {}) =>
   createError('EXTERNAL_API', message, { statusCode, ...context, service });
@@ -116,14 +100,15 @@ export function normalizeError(error) {
   }
 
   if (error.message?.includes('database is locked')) {
-    return DatabaseError('Database is currently locked. Please try again.', error, { retry: true });
+    return DatabaseError('operation', error, { retry: true });
   }
 
   if (error.message?.includes('UNIQUE constraint failed')) {
-    return ConflictError('Duplicate entry detected', { constraint: error.message });
+    const field = error.message.match(/UNIQUE constraint failed: (.+)/)?.[1] || 'record';
+    return ConflictError(field, { constraint: error.message });
   }
 
-  return new AppError(error.message || 'Unknown error', 'INTERNAL_ERROR', HTTP.INTERNAL_ERROR, {
+  return new AppError(error.message || ERROR_MESSAGES.operationFailed('unknown operation'), 'INTERNAL_ERROR', HTTP.INTERNAL_ERROR, {
     originalMessage: error.message,
     stack: error.stack?.split('\n').slice(0, 3).join('\n'),
   });

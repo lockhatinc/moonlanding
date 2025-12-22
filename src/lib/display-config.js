@@ -1,7 +1,9 @@
 import { DISPLAY } from '@/config/constants';
+import { DISPLAY_LIMITS as LIMITS, FIELD_DISPLAY_RULES, TRUNCATION_INDICATORS } from '@/config';
 
 export const DISPLAY_LIMITS = {
   ...DISPLAY,
+  ...LIMITS,
   DEFAULT_PAGE_SIZE: 20,
   MIN_PASSWORD_LENGTH: 8,
 };
@@ -25,17 +27,17 @@ export const TIMEOUT_CONFIG = {
   polling: DISPLAY_LIMITS.POLLING_INTERVAL_MS,
 };
 
-export function truncate(text, limit = DISPLAY_LIMITS.TEXT_PREVIEW) {
+export function truncate(text, limit = FIELD_DISPLAY_RULES.text.truncate, indicator = TRUNCATION_INDICATORS.text) {
   if (!text) return '';
   const str = String(text);
-  return str.length > limit ? str.substring(0, limit) + '...' : str;
+  return str.length > limit ? str.substring(0, limit) + indicator : str;
 }
 
 export function truncateJson(value) {
   const str = typeof value === 'string' ? value : JSON.stringify(value);
-  return truncate(str, DISPLAY_LIMITS.JSON_PREVIEW);
+  return truncate(str, FIELD_DISPLAY_RULES.json.truncate, TRUNCATION_INDICATORS.json);
 }
 
 export function truncateTextarea(text) {
-  return truncate(text, DISPLAY_LIMITS.TEXTAREA_PREVIEW);
+  return truncate(text, FIELD_DISPLAY_RULES.textarea.truncate, TRUNCATION_INDICATORS.multiline);
 }

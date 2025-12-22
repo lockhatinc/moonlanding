@@ -1,16 +1,19 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
-import { Box, Button, Group, Text, Title } from '@mantine/core';
+import { useMemo } from 'react';
+import dynamic from 'next/dynamic';
+import { Box, Button, Group, Text, Title, Loader } from '@mantine/core';
 import { useFormState } from '@/lib/hooks';
-import { buildFormFields } from '@/config';
+import { useNavigation } from '@/lib/hooks';
+import { buildFormFields, LOG_PREFIXES, SUCCESS_MESSAGES } from '@/config';
 import { renderFormField } from '@/lib/rendering-engine';
 import { useFormStatus } from 'react-dom';
-import { ListBuilder } from '@/components/builders/list-builder';
 import { serverCreateEntity, serverUpdateEntity } from '@/lib/action-factory';
 import { showNotification } from './notification-helpers';
 import { FormSections } from '@/components/form-sections';
+import { ErrorBoundary } from '@/lib/error-boundary';
+
+const ListBuilder = dynamic(() => import('@/components/builders/list-builder').then(m => ({ default: m.ListBuilder })), { loading: () => <Loader />, ssr: false });
 
 function SubmitButton({ label, isSubmitting }) {
   const { pending } = useFormStatus();
@@ -18,7 +21,7 @@ function SubmitButton({ label, isSubmitting }) {
 }
 
 function FormMode({ spec, data = {}, options = {}, entityName = null, sections = null }) {
-  const router = useRouter();
+  const { goBack, router } = useNavigation(entityName || spec.name);
   const { values, setValue, errors, setError, hasErrors } = useFormState(spec, data);
   const formFields = useMemo(() => buildFormFields(spec), [spec]);
   const formSections = useMemo(() => sections || spec.form?.sections || [{ label: 'Details', fields: formFields.map(f => f.key) }], [sections, spec, formFields]);
@@ -55,21 +58,21 @@ function FormMode({ spec, data = {}, options = {}, entityName = null, sections =
         .map(([field, msg]) => `${field}: ${msg}`)
         .join('; ');
       showNotification.error(errorMessages || 'Please fix all errors before submitting', 'Validation Error');
-      console.error('[FORM] Validation errors');
+      console.error(`${LOG_PREFIXES.validation} Validation errors`);
       return;
     }
     try {
       const name = entityName || spec.name;
       if (data.id) {
         await serverUpdateEntity(name, data.id, values);
-        showNotification.success(`${spec.label} updated successfully`);
+        showNotification.success(SUCCESS_MESSAGES.updated(spec.label));
       } else {
         await serverCreateEntity(name, values);
-        showNotification.success(`${spec.label} created successfully`);
+        showNotification.success(SUCCESS_MESSAGES.created(spec.label));
       }
       router.push(`/${name}`);
     } catch (err) {
-      console.error('[FORM] Submission error:', err);
+      console.error(`${LOG_PREFIXES.validation} Submission error:`, err);
       showNotification.error(err.message || 'Failed to submit form');
     }
   };
@@ -87,7 +90,7 @@ function FormMode({ spec, data = {}, options = {}, entityName = null, sections =
           errors={errors}
         />
         <Group justify="flex-end" mt="lg">
-          <Button variant="outline" onClick={() => router.back()}>Cancel</Button>
+          <Button variant="outline" onClick={goBack}>Cancel</Button>
           <SubmitButton label={data.id ? 'Update' : 'Create'} />
         </Group>
       </Box>
@@ -96,13 +99,17 @@ function FormMode({ spec, data = {}, options = {}, entityName = null, sections =
 }
 
 export function Entity({ spec, data, mode = 'list', options = {}, pagination = null, onPageChange, onPageSizeChange, onCreateClick, entityName = null, canCreate = true, sections = null }) {
-  if (mode === 'list') {
-    return <ListBuilder spec={spec} data={data || []} pagination={pagination} onPageChange={onPageChange} onPageSizeChange={onPageSizeChange} onCreateClick={onCreateClick} canCreate={canCreate} />;
-  }
-
-  if (mode === 'form' || mode === 'edit' || mode === 'create') {
-    return <FormMode spec={spec} data={data} options={options} entityName={entityName} sections={sections} />;
-  }
-
-  return <Text c="red">Unknown mode: {mode}</Text>;
+  return (
+    <ErrorBoundary>
+      {mode === 'list' && (
+        <ListBuilder spec={spec} data={data || []} pagination={pagination} onPageChange={onPageChange} onPageSizeChange={onPageSizeChange} onCreateClick={onCreateClick} canCreate={canCreate} />
+      )}
+      {(mode === 'form' || mode === 'edit' || mode === 'create') && (
+        <FormMode spec={spec} data={data} options={options} entityName={entityName} sections={sections} />
+      )}
+      {!['list', 'form', 'edit', 'create'].includes(mode) && (
+        <Text c="red">Unknown mode: {mode}</Text>
+      )}
+    </ErrorBoundary>
+  );
 }

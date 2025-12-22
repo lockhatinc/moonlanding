@@ -1,5 +1,5 @@
 import { Group, Box, Title, ActionIcon, Button } from '@mantine/core';
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
+import { ACTION_ICONS } from '@/config/icon-config';
 import { useRouter } from 'next/navigation';
 import { FieldRender } from '../field-render';
 
@@ -9,7 +9,7 @@ export function DetailHeader({ spec, data, canEdit, canDelete, onDelete, icon: I
   return (
     <Group justify="space-between">
       <Group>
-        <ActionIcon variant="subtle" onClick={() => router.push(`/${spec.name}`)}><ArrowLeft size={18} /></ActionIcon>
+        <ActionIcon variant="subtle" onClick={() => router.push(`/${spec.name}`)}><ACTION_ICONS.back size={18} /></ActionIcon>
         <Icon size={24} />
         <Box>
           <Title order={2}>{data.name || data.email || data.id}</Title>
@@ -17,8 +17,8 @@ export function DetailHeader({ spec, data, canEdit, canDelete, onDelete, icon: I
         </Box>
       </Group>
       <Group>
-        {canEdit && <Button variant="outline" leftSection={<Pencil size={16} />} onClick={() => router.push(`/${spec.name}/${data.id}/edit`)}>Edit</Button>}
-        {canDelete && onDelete && <form action={onDelete}><Button type="submit" color="red" leftSection={<Trash2 size={16} />}>Delete</Button></form>}
+        {canEdit && <Button variant="outline" leftSection={<ACTION_ICONS.edit size={16} />} onClick={() => router.push(`/${spec.name}/${data.id}/edit`)}>Edit</Button>}
+        {canDelete && onDelete && <form action={onDelete}><Button type="submit" color="red" leftSection={<ACTION_ICONS.delete size={16} />}>Delete</Button></form>}
       </Group>
     </Group>
   );

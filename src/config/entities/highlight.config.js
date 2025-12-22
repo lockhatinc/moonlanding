@@ -1,5 +1,6 @@
 import { spec } from '../spec-builder.js';
 import { withAuditFields, withComputedCreator, withComputedResolver } from '../spec-templates.js';
+import { HIGHLIGHT_STATUS_OPTIONS, SEVERITY_OPTIONS } from '../enum-options.js';
 
 export const highlightSpec = withComputedResolver(
   withComputedCreator(
@@ -23,16 +24,8 @@ export const highlightSpec = withComputedResolver(
     resolved_by: { type: 'ref', ref: 'user', display: 'user.name', hidden: true },
     resolved_at: { type: 'int', hidden: true },
   })
-  .options('highlight_status', {
-    unresolved: { label: 'Unresolved', color: 'red' },
-    partially_resolved: { label: 'Partially Resolved', color: 'yellow' },
-    resolved: { label: 'Resolved', color: 'green' },
-  })
-  .options('severity', {
-    low: { label: 'Low', color: 'green' },
-    medium: { label: 'Medium', color: 'yellow' },
-    high: { label: 'High', color: 'red' },
-  })
+  .options('highlight_status', HIGHLIGHT_STATUS_OPTIONS)
+  .options('severity', SEVERITY_OPTIONS)
   .children({
     responses: {
       entity: 'response',

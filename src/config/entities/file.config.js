@@ -1,5 +1,5 @@
-import { createSimpleEntity } from '../spec-builder.js';
-import { ROLES } from '../constants.js';
+import { createSimpleEntity } from '../spec-factory.js';
+import { ALL_STAFF_ACCESS } from '../permission-defaults.js';
 
 export const fileSpec = createSimpleEntity('file', {
   entity_type: { type: 'text', required: true },
@@ -14,11 +14,5 @@ export const fileSpec = createSimpleEntity('file', {
   label: 'File',
   labelPlural: 'Files',
   icon: 'File',
-  access: {
-    list: [ROLES.PARTNER, ROLES.MANAGER, ROLES.CLERK],
-    view: [ROLES.PARTNER, ROLES.MANAGER, ROLES.CLERK],
-    create: [ROLES.PARTNER, ROLES.MANAGER, ROLES.CLERK],
-    edit: [ROLES.PARTNER],
-    delete: [ROLES.PARTNER],
-  },
+  access: ALL_STAFF_ACCESS,
 });

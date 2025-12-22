@@ -7,21 +7,9 @@ import { executeHook } from '@/lib/hook-engine';
 import { AppError, NotFoundError, ValidationError } from '@/lib/error-handler';
 import { ok, created, paginated } from '@/lib/response-formatter';
 import { HTTP } from '@/config/api-constants';
-import { filterFieldsByAccess, filterRecordsByAccess, canAccessRow } from '@/lib/permissions';
+import { permissionService } from '@/services';
 import { parse as parseQuery } from '@/lib/query-string-adapter';
 import { withErrorHandler } from '@/lib/with-error-handler';
-
-const enforceEditPermissions = (user, spec, data) => {
-  if (!user || !spec.fieldPermissions) return data;
-  const filtered = { ...data };
-  for (const [key, value] of Object.entries(filtered)) {
-    if (!spec.fieldPermissions[key]) continue;
-    const perm = spec.fieldPermissions[key];
-    if (perm.edit === 'all' || (Array.isArray(perm.edit) && perm.edit.includes(user.role))) continue;
-    delete filtered[key];
-  }
-  return filtered;
-};
 
 export const createCrudHandlers = (entityName) => {
   const spec = getSpec(entityName);
@@ -33,12 +21,12 @@ export const createCrudHandlers = (entityName) => {
       const { q, page, pageSize } = parseQuery(request);
       if (q) {
         const results = search(entityName, q);
-        const filtered = filterRecordsByAccess(user, spec, results);
-        return ok({ items: filtered.map(item => filterFieldsByAccess(user, spec, item)) });
+        const filtered = permissionService.filterRecords(user, spec, results);
+        return ok({ items: filtered.map(item => permissionService.filterFields(user, spec, item)) });
       }
       const { items, pagination } = listWithPagination(entityName, {}, page, pageSize);
-      const filtered = filterRecordsByAccess(user, spec, items);
-      return paginated(filtered.map(item => filterFieldsByAccess(user, spec, item)), pagination);
+      const filtered = permissionService.filterRecords(user, spec, items);
+      return paginated(filtered.map(item => permissionService.filterFields(user, spec, item)), pagination);
     },
 
     get: async (user, id) => {
@@ -46,8 +34,8 @@ export const createCrudHandlers = (entityName) => {
       if (!id) throw new AppError('ID required', 'BAD_REQUEST', HTTP.BAD_REQUEST);
       const item = get(entityName, id);
       if (!item) throw NotFoundError(entityName, id);
-      if (!canAccessRow(user, spec, item)) throw new AppError('Access denied', 'FORBIDDEN', HTTP.FORBIDDEN);
-      return ok(filterFieldsByAccess(user, spec, item));
+      if (!permissionService.checkRowAccess(user, spec, item)) throw new AppError('Access denied', 'FORBIDDEN', HTTP.FORBIDDEN);
+      return ok(permissionService.filterFields(user, spec, item));
     },
 
     getChildren: async (user, id, childKey) => {
@@ -59,14 +47,14 @@ export const createCrudHandlers = (entityName) => {
 
     create: async (user, data) => {
       requirePermission(user, spec, 'create');
-      const safeData = enforceEditPermissions(user, spec, data);
-      const errors = await validateEntity(spec, safeData);
+      permissionService.enforceEditPermissions(user, spec, data);
+      const errors = await validateEntity(spec, data);
       if (hasErrors?.(errors) || Object.keys(errors).length) throw ValidationError('Validation failed', errors);
-      const ctx = await executeHook(`create:${entityName}:before`, { entity: entityName, data: safeData, user });
-      const result = create(ctx.entity || entityName, ctx.data || safeData, user);
+      const ctx = await executeHook(`create:${entityName}:before`, { entity: entityName, data, user });
+      const result = create(ctx.entity || entityName, ctx.data || data, user);
       await executeHook(`create:${entityName}:after`, { entity: entityName, data: result, user });
-      broadcastUpdate(API_ENDPOINTS.entity(entityName), 'create', filterFieldsByAccess(user, spec, result));
-      return created(filterFieldsByAccess(user, spec, result));
+      broadcastUpdate(API_ENDPOINTS.entity(entityName), 'create', permissionService.filterFields(user, spec, result));
+      return created(permissionService.filterFields(user, spec, result));
     },
 
     update: async (user, id, data) => {
@@ -74,17 +62,17 @@ export const createCrudHandlers = (entityName) => {
       if (!id) throw new AppError('ID required', 'BAD_REQUEST', HTTP.BAD_REQUEST);
       const prev = get(entityName, id);
       if (!prev) throw NotFoundError(entityName, id);
-      if (!canAccessRow(user, spec, prev)) throw new AppError('Access denied', 'FORBIDDEN', HTTP.FORBIDDEN);
-      const safeData = enforceEditPermissions(user, spec, data);
-      const errors = await validateUpdate(spec, id, safeData);
+      if (!permissionService.checkRowAccess(user, spec, prev)) throw new AppError('Access denied', 'FORBIDDEN', HTTP.FORBIDDEN);
+      permissionService.enforceEditPermissions(user, spec, data);
+      const errors = await validateUpdate(spec, id, data);
       if (hasErrors?.(errors) || Object.keys(errors).length) throw ValidationError('Validation failed', errors);
-      const ctx = await executeHook(`update:${entityName}:before`, { entity: entityName, id, data: safeData, user, prev });
-      update(ctx.entity || entityName, ctx.id || id, ctx.data || safeData, user);
+      const ctx = await executeHook(`update:${entityName}:before`, { entity: entityName, id, data, user, prev });
+      update(ctx.entity || entityName, ctx.id || id, ctx.data || data, user);
       const result = get(entityName, id);
       await executeHook(`update:${entityName}:after`, { entity: entityName, id, data: result, user });
-      broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'update', filterFieldsByAccess(user, spec, result));
-      broadcastUpdate(API_ENDPOINTS.entity(entityName), 'update', filterFieldsByAccess(user, spec, result));
-      return ok(filterFieldsByAccess(user, spec, result));
+      broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'update', permissionService.filterFields(user, spec, result));
+      broadcastUpdate(API_ENDPOINTS.entity(entityName), 'update', permissionService.filterFields(user, spec, result));
+      return ok(permissionService.filterFields(user, spec, result));
     },
 
     delete: async (user, id) => {
@@ -92,7 +80,7 @@ export const createCrudHandlers = (entityName) => {
       if (!id) throw new AppError('ID required', 'BAD_REQUEST', HTTP.BAD_REQUEST);
       const record = get(entityName, id);
       if (!record) throw NotFoundError(entityName, id);
-      if (!canAccessRow(user, spec, record)) throw new AppError('Access denied', 'FORBIDDEN', HTTP.FORBIDDEN);
+      if (!permissionService.checkRowAccess(user, spec, record)) throw new AppError('Access denied', 'FORBIDDEN', HTTP.FORBIDDEN);
       const ctx = await executeHook(`delete:${entityName}:before`, { entity: entityName, id, record, user });
       if (spec.fields.status) update(entityName, ctx.id || id, { status: 'deleted' }, user);
       else remove(entityName, ctx.id || id);

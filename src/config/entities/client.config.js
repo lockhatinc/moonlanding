@@ -1,5 +1,5 @@
 import { spec } from '../spec-builder.js';
-import { ROLES } from '../constants.js';
+import { PERMISSION_DEFAULTS } from '../permission-defaults.js';
 
 export const clientSpec = spec('client')
   .label('Client', 'Clients')
@@ -12,11 +12,5 @@ export const clientSpec = spec('client')
     phone: { type: 'text' },
     address: { type: 'textarea' },
   })
-  .access({
-    list: [ROLES.PARTNER, ROLES.MANAGER, ROLES.CLERK],
-    view: [ROLES.PARTNER, ROLES.MANAGER, ROLES.CLERK],
-    create: [ROLES.PARTNER, ROLES.MANAGER],
-    edit: [ROLES.PARTNER, ROLES.MANAGER],
-    delete: [ROLES.PARTNER],
-  })
+  .access(PERMISSION_DEFAULTS)
   .build();

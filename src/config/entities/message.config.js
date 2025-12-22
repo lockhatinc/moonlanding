@@ -1,4 +1,4 @@
-import { createSimpleEntity } from '../spec-builder.js';
+import { createSimpleEntity } from '../spec-factory.js';
 
 export const messageSpec = createSimpleEntity('message', {
   rfi_id: { type: 'ref', ref: 'rfi', required: true },

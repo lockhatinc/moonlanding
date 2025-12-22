@@ -99,7 +99,9 @@ export const name = '${name}';
         if (field.type === 'ref' || field.sortable || field.search) {
           try {
             this.db.exec(`CREATE INDEX IF NOT EXISTS idx_${spec.name}s_${key} ON ${spec.name}s(${key})`);
-          } catch {}
+          } catch (e) {
+            console.error(`[Migration] Index creation failed for ${spec.name}s.${key}:`, e.message);
+          }
         }
       });
     }

@@ -3,8 +3,9 @@ import { queueEmail, sendQueuedEmails, generateChecklistPdf } from '@/engine/ema
 import { recreateEngagement } from '@/engine/recreation';
 import { exportDatabase } from '@/engine/backup';
 import { createJob, forEachRecord, activityLog, getDeadlineRange, getDaysUntil, shouldRunNow, runJob, runDueJobs } from '@/lib/job-framework';
-import { ROLES, USER_TYPES, ENGAGEMENT_STAGE, REVIEW_STATUS, RFI_STATUS, RFI_CLIENT_STATUS } from '@/config/constants';
+import { ROLES, USER_TYPES, ENGAGEMENT_STAGE, REVIEW_STATUS, RFI_STATUS, RFI_CLIENT_STATUS, LOG_PREFIXES } from '@/config/constants';
 import { JOBS_CONFIG } from '@/config/jobs-config';
+import { safeJsonParse } from '@/lib/safe-json';
 
 const defineJob = (config, handler) => createJob(config.name, config.schedule, config.description, handler, config.config);
 
@@ -78,7 +79,7 @@ export const SCHEDULED_JOBS = {
     const now = Math.floor(Date.now() / 1000);
     await forEachRecord('review', { is_tender: true, status: REVIEW_STATUS.OPEN }, async (r) => {
       if (r.deadline && r.deadline < now) {
-        const flags = JSON.parse(r.tender_flags || '[]');
+        const flags = safeJsonParse(r.tender_flags, []);
         if (!flags.includes('missed')) update('review', r.id, { tender_flags: JSON.stringify([...flags, 'missed']) });
       }
     });
@@ -97,7 +98,7 @@ export const SCHEDULED_JOBS = {
         const url = await generateChecklistPdf(p);
         if (url) await queueEmail('weekly_checklist_pdf', { user: p, pdfUrl: url, date: new Date().toISOString().split('T')[0], recipients: 'user' });
       } catch (e) {
-        console.error(`[JOB] Checklist PDF error for ${p.email}:`, e.message);
+        console.error(`${LOG_PREFIXES.job} Checklist PDF error for ${p.email}:`, e.message);
         await create('notification', { type: 'system_error', recipient_id: p.id, subject: 'Checklist PDF Generation Failed', content: `Error: ${e.message}`, status: 'pending' });
       }
     });

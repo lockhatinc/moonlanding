@@ -1,6 +1,7 @@
 import { get } from '@/engine';
 import { ENGAGEMENT_STAGE, ENGAGEMENT_STATUS, RFI_STATUS, ROLES, USER_TYPES, LETTER_AUDITOR_STATUS } from '@/config/constants';
 import { canTransitionStage } from '@/lib/status-helpers';
+import { safeJsonParse } from '@/lib/safe-json';
 
 export const validateStageTransition = (engagement, newStage, user) => {
   if (![ROLES.PARTNER, ROLES.MANAGER].includes(user.role)) throw new Error('Only partners and managers can change stage');
@@ -18,8 +19,8 @@ export const validateRfiStatusChange = (rfi, newStatus, user) => {
     if (!e?.clerks_can_approve) throw new Error('Only auditors (not clerks) can change RFI status');
   }
   if (newStatus === RFI_STATUS.COMPLETED) {
-    const hasFiles = rfi.files_count > 0 || JSON.parse(rfi.files || '[]').length > 0;
-    const hasResponses = rfi.response_count > 0 || JSON.parse(rfi.responses || '[]').length > 0;
+    const hasFiles = rfi.files_count > 0 || safeJsonParse(rfi.files, []).length > 0;
+    const hasResponses = rfi.response_count > 0 || safeJsonParse(rfi.responses, []).length > 0;
     if (!hasFiles && !hasResponses) throw new Error('RFI must have files or responses before completing');
   }
   return true;

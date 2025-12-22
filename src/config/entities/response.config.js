@@ -1,4 +1,4 @@
-import { createSimpleEntity } from '../spec-builder.js';
+import { createSimpleEntity } from '../spec-factory.js';
 
 export const responseSpec = createSimpleEntity('response', {
   highlight_id: { type: 'ref', ref: 'highlight', required: true },

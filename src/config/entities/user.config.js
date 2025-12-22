@@ -1,5 +1,5 @@
 import { spec } from '../spec-builder.js';
-import { ROLES } from '../constants.js';
+import { PARTNER_MANAGER_ACCESS } from '../permission-defaults.js';
 
 export const userSpec = spec('user')
   .label('User', 'Users')
@@ -17,11 +17,5 @@ export const userSpec = spec('user')
     auditor: { label: 'Auditor', color: 'amber' },
     client: { label: 'Client', color: 'green' },
   })
-  .access({
-    list: [ROLES.PARTNER, ROLES.MANAGER],
-    view: [ROLES.PARTNER, ROLES.MANAGER],
-    create: [ROLES.PARTNER],
-    edit: [ROLES.PARTNER],
-    delete: [ROLES.PARTNER],
-  })
+  .access(PARTNER_MANAGER_ACCESS)
   .build();

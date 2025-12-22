@@ -3,7 +3,7 @@ import { requireUser } from '@/engine.server';
 import { can } from '@/lib/permissions';
 import { get } from '@/engine';
 import { getSpec } from '@/config';
-import * as drive from '@/engine/drive';
+import { fileService } from '@/services';
 import { HTTP } from '@/config/api-constants';
 import { notFound } from '@/lib/response-formatter';
 
@@ -22,7 +22,7 @@ export async function GET(request, { params }) {
       return notFound('File not found');
     }
 
-    const content = await drive.downloadFile(fileRecord.drive_file_id);
+    const content = await fileService.download(fileRecord.drive_file_id);
 
     return new NextResponse(content, {
       headers: {

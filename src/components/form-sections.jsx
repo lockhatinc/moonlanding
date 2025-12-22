@@ -22,7 +22,7 @@ export function FormSections({
               </Text>
             )}
             {renderField(field)}
-            {errors[field.key] && <Text size="xs" c="red" mt={4}>{errors[field.key]}</Text>}
+            {errors[field.key] && <Text size="xs" c="red" mt={4} role="alert" id={`${field.key}-error`}>{errors[field.key]}</Text>}
           </Box>
         ))}
       </Stack>
@@ -51,7 +51,7 @@ export function FormSections({
                     </Text>
                   )}
                   {renderField(field)}
-                  {errors[field.key] && <Text size="xs" c="red" mt={4}>{errors[field.key]}</Text>}
+                  {errors[field.key] && <Text size="xs" c="red" mt={4} role="alert" id={`${field.key}-error`}>{errors[field.key]}</Text>}
                 </Box>
               ))}
             </Stack>

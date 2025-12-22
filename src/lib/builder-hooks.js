@@ -82,36 +82,6 @@ export const useBuilderState = (spec, mode = 'list') => {
   };
 };
 
-export const usePagination = (spec) => {
-  const router = useRouter();
-  const pageState = usePageState(1);
-  const updateUrl = useMemo(() => createUrlUpdater(router), [router]);
-
-  const handlePageChange = useCallback((newPage) => {
-    pageState.setPage(newPage);
-    updateUrl({ page: String(newPage) });
-  }, [pageState, updateUrl]);
-
-  const handlePageSizeChange = useCallback((newPageSize) => {
-    pageState.setPageSize(newPageSize);
-    updateUrl({ pageSize: String(newPageSize), page: '1' });
-  }, [pageState, updateUrl]);
-
-  return {
-    page: pageState.page,
-    pageSize: pageState.pageSize,
-    total: pageState.total,
-    totalPages: pageState.pagination.totalPages,
-    hasMore: pageState.pagination.hasMore,
-    setPage: pageState.setPage,
-    setTotal: pageState.setTotal,
-    handlers: {
-      pageChange: handlePageChange,
-      pageSizeChange: handlePageSizeChange,
-    },
-  };
-};
-
 export { useSortState as useSort } from '@/lib/hooks';
 export { useSearchState as useSearch } from '@/lib/hooks';
 export { useFilterState as useFilters } from '@/lib/hooks';

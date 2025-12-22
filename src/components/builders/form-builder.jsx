@@ -69,10 +69,10 @@ export function FormBuilder({ spec, data = {}, options = {}, onSubmit, onSuccess
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form role="form" aria-labelledby="form-title" onSubmit={handleSubmit}>
       <Box maw={600}>
         <Group gap="xs" mb="lg">
-          <Title order={2}>{data.id ? `Edit ${spec.label}` : `New ${spec.label}`}</Title>
+          <Title order={2} id="form-title">{data.id ? `Edit ${spec.label}` : `New ${spec.label}`}</Title>
         </Group>
         <FormSections
           sections={formSections}
@@ -81,8 +81,8 @@ export function FormBuilder({ spec, data = {}, options = {}, onSubmit, onSuccess
           errors={errors}
         />
         <Group justify="flex-end" mt="lg">
-          <Button variant="outline" onClick={() => router.back()}>Cancel</Button>
-          <SubmitButton label={data.id ? 'Update' : 'Create'} />
+          <Button variant="outline" onClick={() => router.back()} aria-label="Cancel editing">Cancel</Button>
+          <SubmitButton label={data.id ? 'Update' : 'Create'} isSubmitting={false} aria-label={data.id ? `Update ${spec.label}` : `Create ${spec.label}`} aria-disabled={hasErrors} />
         </Group>
       </Box>
     </form>

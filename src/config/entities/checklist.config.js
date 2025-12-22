@@ -1,4 +1,4 @@
-import { createSimpleEntity } from '../spec-builder.js';
+import { createSimpleEntity } from '../spec-factory.js';
 
 export const checklistSpec = createSimpleEntity('checklist', {
   review_id: { type: 'ref', ref: 'review', required: true },

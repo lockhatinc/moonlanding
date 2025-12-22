@@ -1,15 +1,16 @@
 import { getDatabase } from '@/lib/database-core';
 import { createErrorLogger, DatabaseError } from '@/lib/error-handler';
+import { LOG_PREFIXES } from '@/config';
 
 const db = getDatabase();
-const logger = createErrorLogger('DB');
+const logger = createErrorLogger(LOG_PREFIXES.database);
 
 export const execQuery = (sql, params, context = {}) => {
   try {
     return db.prepare(sql).all(...params);
   } catch (e) {
     logger.error(`${context.operation || 'Query'} ${context.entity || ''}`, { sql, error: e.message });
-    throw DatabaseError(`Failed to query ${context.entity || 'database'}`, e);
+    throw DatabaseError(`query ${context.entity || 'database'}`, e);
   }
 };
 
@@ -18,7 +19,7 @@ export const execGet = (sql, params, context = {}) => {
     return db.prepare(sql).get(...params);
   } catch (e) {
     logger.error(`${context.operation || 'Get'} ${context.entity || ''}`, { sql, error: e.message });
-    throw DatabaseError(`Failed to get ${context.entity || 'record'}`, e);
+    throw DatabaseError(`get ${context.entity || 'record'}`, e);
   }
 };
 
@@ -27,7 +28,7 @@ export const execRun = (sql, params, context = {}) => {
     return db.prepare(sql).run(...params);
   } catch (e) {
     logger.error(`${context.operation || 'Run'} ${context.entity || ''}`, { sql, error: e.message });
-    throw DatabaseError(`Failed to execute ${context.entity || 'operation'}`, e);
+    throw DatabaseError(`execute ${context.entity || 'operation'}`, e);
   }
 };
 

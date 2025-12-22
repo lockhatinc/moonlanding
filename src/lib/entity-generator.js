@@ -1,11 +1,10 @@
-import { specs, getSpec } from '@/config';
+import dynamic from 'next/dynamic';
+import { specs, getSpec, ERROR_MESSAGES } from '@/config';
 import { list, search, searchWithPagination, get, getChildren, batchGetChildren, listWithPagination, create, update, remove } from '@/engine';
 import { can } from '@/lib/permissions';
 import { loadFormOptions } from '@/lib/utils';
 import { withPageAuth } from '@/lib/auth-middleware';
 import { createCrudHandlers } from '@/lib/crud-factory';
-import { Entity } from '@/lib/entity-component';
-import { EntityDetail } from '@/components/entity-detail';
 import { Shell } from '@/components/layout';
 import { notFound } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
@@ -13,6 +12,9 @@ import { redirect } from 'next/navigation';
 import { forwardRef } from 'react';
 import { getNavItems } from '@/config';
 import { QueryAdapter } from '@/lib/query-string-adapter';
+
+const Entity = dynamic(() => import('@/lib/entity-component').then(m => ({ default: m.Entity })), { ssr: true });
+const EntityDetail = dynamic(() => import('@/components/entity-detail').then(m => ({ default: m.EntityDetail })), { ssr: true });
 
 const generatorCache = new Map();
 
@@ -108,8 +110,8 @@ export class EntityGenerator {
     const createAction = (action, handler) => async (...args) => {
       const { getUser } = await import('@/engine.server');
       const user = await getUser();
-      if (!user) throw new Error('Not authenticated');
-      if (!can(user, spec, action)) throw new Error('Permission denied');
+      if (!user) throw new Error(ERROR_MESSAGES.authenticationFailed());
+      if (!can(user, spec, action)) throw new Error(ERROR_MESSAGES.permissionDenied(action));
       return handler(user, ...args);
     };
 

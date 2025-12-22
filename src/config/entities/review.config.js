@@ -1,5 +1,6 @@
 import { spec } from '../spec-builder.js';
 import { withAuditFields, withComputedCreator, withComputedReviewer } from '../spec-templates.js';
+import { REVIEW_STATUS_OPTIONS } from '../enum-options.js';
 
 export const reviewSpec = withComputedReviewer(
   withComputedCreator(
@@ -20,10 +21,7 @@ export const reviewSpec = withComputedReviewer(
     reviewer_id: { type: 'ref', ref: 'user', display: 'user.name' },
     assigned_to: { type: 'ref', ref: 'user', display: 'user.name' },
   })
-  .options('review_status', {
-    open: { label: 'Open', color: 'yellow' },
-    closed: { label: 'Closed', color: 'green' },
-  })
+  .options('review_status', REVIEW_STATUS_OPTIONS)
   .children({
     highlights: {
       entity: 'highlight',

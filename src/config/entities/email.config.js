@@ -1,4 +1,4 @@
-import { createSimpleEntity } from '../spec-builder.js';
+import { createSimpleEntity } from '../spec-factory.js';
 import { ROLES } from '../constants.js';
 
 export const emailSpec = createSimpleEntity('email', {

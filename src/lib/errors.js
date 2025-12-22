@@ -1,10 +1,22 @@
 import { HTTP } from '@/config/api-constants';
 
 export class AppError extends Error {
-  constructor(message, code = 'ERROR', statusCode = HTTP.INTERNAL_ERROR) {
+  constructor(message, code = 'ERROR', statusCode = HTTP.INTERNAL_ERROR, context = {}) {
     super(message);
+    this.name = 'AppError';
     this.code = code;
     this.statusCode = statusCode;
+    this.context = context;
+  }
+
+  toJSON() {
+    return {
+      status: 'error',
+      message: this.message,
+      code: this.code,
+      statusCode: this.statusCode,
+      context: this.context,
+    };
   }
 }
 

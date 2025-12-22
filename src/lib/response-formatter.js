@@ -1,4 +1,5 @@
 import { HTTP } from '@/config/constants';
+import { ERROR_MESSAGES } from '@/config';
 
 export const ok = (data, status = HTTP.OK) => new Response(
   JSON.stringify({ status: 'success', data }),
@@ -38,9 +39,9 @@ export const bulkResult = (succeeded = [], failed = [], status = HTTP.OK) => {
   }, status);
 };
 
-export const notFound = (message = 'Resource not found') => {
+export const notFound = (entity = 'Resource') => {
   return new Response(
-    JSON.stringify({ status: 'error', message, code: 'NOT_FOUND' }),
+    JSON.stringify({ status: 'error', message: ERROR_MESSAGES.notFound(entity), code: 'NOT_FOUND' }),
     { status: HTTP.NOT_FOUND, headers: { 'Content-Type': 'application/json' } }
   );
 };

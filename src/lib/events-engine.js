@@ -2,6 +2,7 @@ import { hookEngine } from './hook-engine.js';
 import { list, get, update, create, remove } from '../engine.js';
 import { queueEmail } from '../engine/email-templates.js';
 import { RFI_STATUS, RFI_CLIENT_STATUS, ENGAGEMENT_STAGE, REPEAT_INTERVALS, LETTER_AUDITOR_STATUS } from './status-helpers.js';
+import { safeJsonParse } from './safe-json.js';
 
 const logActivity = (t, id, act, msg, u, d) =>
   create('activity_log', { entity_type: t, entity_id: id, action: act, message: msg, details: d ? JSON.stringify(d) : null, user_email: u?.email }, u);
@@ -86,13 +87,13 @@ export const registerEntityHandlers = () => {
 
   hookEngine.on('team:afterUpdate', async (team, changes, prev) => {
     if (changes.users && prev.users) {
-      const prevUsers = JSON.parse(prev.users || '[]');
-      const newUsers = JSON.parse(changes.users || '[]');
+      const prevUsers = safeJsonParse(prev.users, []);
+      const newUsers = safeJsonParse(changes.users, []);
       const removed = prevUsers.filter(u => !newUsers.includes(u));
       if (removed.length > 0) {
         for (const e of list('engagement', { team_id: team.id })) {
-          const users = JSON.parse(e.users || '[]').filter(u => !removed.includes(u));
-          if (users.length !== JSON.parse(e.users || '[]').length) {
+          const users = safeJsonParse(e.users, []).filter(u => !removed.includes(u));
+          if (users.length !== safeJsonParse(e.users, []).length) {
             update('engagement', e.id, { users: JSON.stringify(users) });
           }
         }
@@ -104,7 +105,7 @@ export const registerEntityHandlers = () => {
     await queueEmail('review_created', { review, recipients: 'team_partners' });
     if (review.template_id) {
       const template = get('template', review.template_id);
-      for (const id of JSON.parse(template?.default_checklists || '[]')) {
+      for (const id of safeJsonParse(template?.default_checklists, [])) {
         const checklist = get('checklist', id);
         if (checklist) create('review_checklist', { review_id: review.id, checklist_id: id, items: checklist.section_items || checklist.items, status: 'pending' }, user);
       }
@@ -118,7 +119,7 @@ export const registerEntityHandlers = () => {
       logActivity('review', review.id, 'status_change', `Status: ${prev.status} → ${changes.status}`, user);
     }
     if (changes.collaborators && changes.collaborators !== prev.collaborators) {
-      const added = JSON.parse(changes.collaborators || '[]').filter(c => !JSON.parse(prev.collaborators || '[]').find(p => p.id === c.id));
+      const added = safeJsonParse(changes.collaborators, []).filter(c => !safeJsonParse(prev.collaborators, []).find(p => p.id === c.id));
       for (const c of added) await queueEmail('collaborator_added', { review, collaborator: c, recipients: 'collaborator' });
     }
   });

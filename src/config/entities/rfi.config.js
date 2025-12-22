@@ -1,5 +1,6 @@
 import { spec } from '../spec-builder.js';
 import { withAuditFields } from '../spec-templates.js';
+import { RFI_CLIENT_STATUS_OPTIONS, RFI_AUDITOR_STATUS_OPTIONS, RFI_STATUS_OPTIONS, LIFECYCLE_STATUS_OPTIONS } from '../enum-options.js';
 
 export const rfiSpec = withAuditFields(
   spec('rfi')
@@ -25,27 +26,10 @@ export const rfiSpec = withAuditFields(
     date_resolved: { type: 'int' },
     assigned_users: { type: 'json', default: '[]' },
   })
-  .options('rfi_client_status', {
-    pending: { label: 'Pending', color: 'yellow' },
-    sent: { label: 'Sent', color: 'blue' },
-    responded: { label: 'Responded', color: 'amber' },
-    completed: { label: 'Completed', color: 'green' },
-  })
-  .options('rfi_auditor_status', {
-    requested: { label: 'Requested', color: 'red' },
-    reviewing: { label: 'Reviewing', color: 'blue' },
-    queries: { label: 'Queries', color: 'amber' },
-    received: { label: 'Received', color: 'green' },
-  })
-  .options('rfi_status', {
-    waiting: { label: 'Waiting', color: 'yellow' },
-    completed: { label: 'Completed', color: 'green' },
-  })
-  .options('rfi_lifecycle_status', {
-    pending: { label: 'Pending', color: 'yellow' },
-    active: { label: 'Active', color: 'blue' },
-    inactive: { label: 'Inactive', color: 'gray' },
-  })
+  .options('rfi_client_status', RFI_CLIENT_STATUS_OPTIONS)
+  .options('rfi_auditor_status', RFI_AUDITOR_STATUS_OPTIONS)
+  .options('rfi_status', RFI_STATUS_OPTIONS)
+  .options('rfi_lifecycle_status', LIFECYCLE_STATUS_OPTIONS)
   .children({
     messages: {
       entity: 'message',

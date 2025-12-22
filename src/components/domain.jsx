@@ -1,18 +1,21 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense, lazy } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { Stack, Group, Box, Title, Tabs, Grid, ScrollArea, Paper, Badge, Text, ActionIcon, Button } from '@mantine/core';
-import { ArrowLeft, FileSearch, Pencil, Trash2, MessageSquare, FileText, ClipboardCheck } from 'lucide-react';
+import { ACTION_ICONS, UI_ICONS } from '@/config/icon-config';
 import { FieldRender } from './field-render';
-import { AddChecklistDialog } from './dialogs/add-checklist';
-import { ChatPanel } from './chat-panel';
-import { PDFViewer } from './pdf-viewer';
 import { HighlightLayer } from './highlight-layer';
 import { useReviewHandlers } from '@/lib/use-review-handlers';
+import { getStatusColor } from '@/config/theme-config';
+
+const AddChecklistDialog = dynamic(() => import('./dialogs/add-checklist').then(m => ({ default: m.AddChecklistDialog })), { loading: () => <div>Loading...</div>, ssr: false });
+const ChatPanel = dynamic(() => import('./chat-panel').then(m => ({ default: m.ChatPanel })), { loading: () => <div>Loading...</div>, ssr: false });
+const PDFViewer = dynamic(() => import('./pdf-viewer').then(m => ({ default: m.PDFViewer })), { loading: () => <div>Loading...</div>, ssr: false });
 
 function ChecklistItem({ checklist }) {
-  const statusColor = checklist.status === 'completed' ? 'green' : checklist.status === 'in_progress' ? 'blue' : 'yellow';
+  const statusColor = getStatusColor('checklist', checklist.status);
   return (
     <Paper key={checklist.id} p="xs" withBorder>
       <Group justify="space-between">
@@ -38,8 +41,8 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
     <Stack gap="md">
       <Group justify="space-between">
         <Group>
-          <ActionIcon variant="subtle" onClick={() => router.push('/review')}><ArrowLeft size={18} /></ActionIcon>
-          <FileSearch size={24} />
+          <ActionIcon variant="subtle" onClick={() => router.push('/review')}><ACTION_ICONS.back size={18} /></ActionIcon>
+          <ACTION_ICONS.search size={24} />
           <Box>
             <Title order={2}>{data.name}</Title>
             <Group gap="xs">
@@ -49,9 +52,9 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
           </Box>
         </Group>
         <Group>
-          {canEdit && <Button variant="outline" leftSection={<ClipboardCheck size={16} />} onClick={() => setShowAddChecklistDialog(true)}>Add Checklist</Button>}
-          {canEdit && <Button variant="outline" leftSection={<Pencil size={16} />} onClick={() => router.push(`/review/${data.id}/edit`)}>Edit</Button>}
-          {canDelete && deleteAction && <form action={deleteAction}><Button type="submit" color="red" leftSection={<Trash2 size={16} />}>Delete</Button></form>}
+          {canEdit && <Button variant="outline" leftSection={<ACTION_ICONS.checklist size={16} />} onClick={() => setShowAddChecklistDialog(true)}>Add Checklist</Button>}
+          {canEdit && <Button variant="outline" leftSection={<ACTION_ICONS.edit size={16} />} onClick={() => router.push(`/review/${data.id}/edit`)}>Edit</Button>}
+          {canDelete && deleteAction && <form action={deleteAction}><Button type="submit" color="red" leftSection={<ACTION_ICONS.delete size={16} />}>Delete</Button></form>}
         </Group>
       </Group>
       <Grid gutter="md">
@@ -61,9 +64,9 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
         <Grid.Col span={{ base: 12, lg: 4 }}>
           <Tabs defaultValue="queries" h="calc(100vh - 200px)">
             <Tabs.List>
-              <Tabs.Tab value="queries" leftSection={<MessageSquare size={14} />}>Queries</Tabs.Tab>
-              <Tabs.Tab value="details" leftSection={<FileText size={14} />}>Details</Tabs.Tab>
-              <Tabs.Tab value="checklists" leftSection={<ClipboardCheck size={14} />}>Checklists</Tabs.Tab>
+              <Tabs.Tab value="queries" leftSection={<UI_ICONS.messageSquare size={14} />}>Queries</Tabs.Tab>
+              <Tabs.Tab value="details" leftSection={<UI_ICONS.file size={14} />}>Details</Tabs.Tab>
+              <Tabs.Tab value="checklists" leftSection={<ACTION_ICONS.checklist size={14} />}>Checklists</Tabs.Tab>
               <Tabs.Tab value="chat">Chat</Tabs.Tab>
             </Tabs.List>
             <ScrollArea h="calc(100% - 40px)" pt="md">

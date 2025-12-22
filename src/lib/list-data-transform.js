@@ -1,7 +1,11 @@
-export function filterByQuery(data, query) {
+export function filterByQuery(data, query, searchFields = ['name', 'title', 'description']) {
   if (!query) return data;
   const lower = query.toLowerCase();
-  return data.filter(row => JSON.stringify(row).toLowerCase().includes(lower));
+  return data.filter(row =>
+    searchFields.some(field =>
+      String(row[field] || '').toLowerCase().includes(lower)
+    )
+  );
 }
 
 export function groupByField(data, field) {

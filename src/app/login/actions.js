@@ -13,10 +13,6 @@ export async function loginAction(formData) {
 
   try {
     let user = getBy('user', 'email', email);
-    if (!user && email === 'admin@example.com' && password === 'password') {
-      const hash = await hashPassword('password');
-      user = create('user', { email: 'admin@example.com', name: 'Admin User', type: 'auditor', role: 'partner', status: 'active', password_hash: hash });
-    }
     if (!user) return { error: 'Invalid email or password' };
     if (user.password_hash && !(await verifyPassword(password, user.password_hash))) return { error: 'Invalid email or password' };
     await createSession(user.id);

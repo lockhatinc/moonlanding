@@ -1,5 +1,5 @@
 import { Paper, Title, Group, Button } from '@mantine/core';
-import * as Icons from 'lucide-react';
+import { Icons } from '@/config/icon-config';
 import { can } from '@/lib/permissions';
 
 export function ActionsPanel({ spec, user, onActionClick }) {
@@ -10,7 +10,7 @@ export function ActionsPanel({ spec, user, onActionClick }) {
       <Title order={4} mb="sm">Actions</Title>
       <Group>
         {spec.actions.map(action => {
-          const ActionIcon = Icons[action.icon] || Icons.File;
+          const ActionIcon = Icons[action.icon] || Icons.file;
           if (!can(user, spec, action.permission)) return null;
           return (
             <Button

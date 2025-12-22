@@ -1,3 +1,6 @@
+import { formatDate } from '@/lib/date-utils';
+import { LOG_PREFIXES } from '@/config';
+
 export async function generateChecklistPdf(user) {
   try {
     const { list } = await import('../engine');
@@ -34,7 +37,7 @@ export async function generateChecklistPdf(user) {
             ${c.items && c.items.length ? `<ul>${c.items.map(i => `<li class="item">${i.question || i.text}</li>`).join('')}</ul>` : '<p>No items</p>'}
           </div>
         `).join('')}
-        <div class="date">Generated: ${new Date().toLocaleDateString()}</div>
+        <div class="date">Generated: ${formatDate(Date.now() / 1000, 'short')}</div>
       </body>
       </html>
     `;
@@ -42,7 +45,7 @@ export async function generateChecklistPdf(user) {
     const Buffer = (await import('buffer')).Buffer;
     return Buffer.from(html, 'utf-8');
   } catch (e) {
-    console.error(`[EMAIL] Checklist PDF error for ${user.email}:`, e.message);
+    console.error(`${LOG_PREFIXES.email} Checklist PDF error for ${user.email}:`, e.message);
     throw e;
   }
 }

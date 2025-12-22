@@ -2,6 +2,7 @@ import { getDatabase, genId, now } from '@/lib/database-core';
 import { getSpec } from '@/config';
 import { RECORD_STATUS } from '@/config/constants';
 import { PAGINATION } from '@/config/pagination-constants';
+import { SQL_OPERATORS, SQL_KEYWORDS, QUERY_BUILDING, SORT_DIRECTIONS } from '@/config/query-config';
 import { iterateCreateFields, iterateUpdateFields } from '@/lib/field-iterator';
 import { coerceFieldValue } from '@/lib/field-registry';
 import { execGet, execQuery, execRun, withTransaction } from '@/lib/query-wrapper';
@@ -10,23 +11,23 @@ const db = getDatabase();
 
 function buildSpecQuery(spec, where = {}, options = {}) {
   const table = spec.name, selects = [`${table}.*`], joins = [];
-  if (spec.computed) Object.entries(spec.computed).forEach(([k, c]) => selects.push(`${c.sql} as ${k}`));
+  if (spec.computed) Object.entries(spec.computed).forEach(([k, c]) => selects.push(`${c.sql} ${SQL_KEYWORDS.as} ${k}`));
   Object.entries(spec.fields).forEach(([k, f]) => {
     if (f.type === 'ref' && f.display) {
       const a = `${f.ref}_${k}`;
-      joins.push(`LEFT JOIN ${f.ref} ${a} ON ${table}.${k} = ${a}.id`);
-      selects.push(`${a}.${f.display.split('.')[1] || 'name'} as ${k}_display`);
+      joins.push(`${SQL_KEYWORDS.leftJoin} ${f.ref} ${a} ON ${table}.${k} ${SQL_OPERATORS.eq} ${a}.id`);
+      selects.push(`${a}.${f.display.split('.')[1] || 'name'} ${SQL_KEYWORDS.as} ${k}_display`);
     }
   });
   const wc = [], p = [];
-  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${table}.${k} = ?`); p.push(v); } });
-  if (spec.fields.status && !where.status && !options.includeDeleted) wc.push(`${table}.status != '${RECORD_STATUS.DELETED}'`);
-  let sql = `SELECT ${selects.join(', ')} FROM ${table}`;
+  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${table}.${k} ${SQL_OPERATORS.eq} ${QUERY_BUILDING.parameterPlaceholder}`); p.push(v); } });
+  if (spec.fields.status && !where.status && !options.includeDeleted) wc.push(`${table}.status ${SQL_OPERATORS.ne} '${RECORD_STATUS.DELETED}'`);
+  let sql = `${SQL_KEYWORDS.select} ${selects.join(`${QUERY_BUILDING.delimiter} `)} ${SQL_KEYWORDS.from} ${table}`;
   if (joins.length) sql += ' ' + joins.join(' ');
-  if (wc.length) sql += ' WHERE ' + wc.join(' AND ');
+  if (wc.length) sql += ` ${SQL_KEYWORDS.where} ` + wc.join(` ${SQL_KEYWORDS.and} `);
   const sort = options.sort || spec.list?.defaultSort;
-  if (sort) sql += ` ORDER BY ${table}.${sort.field} ${(sort.dir || 'ASC').toUpperCase()}`;
-  if (options.limit) { sql += ` LIMIT ${options.limit}`; if (options.offset) sql += ` OFFSET ${options.offset}`; }
+  if (sort) sql += ` ${SQL_KEYWORDS.orderBy} ${table}.${sort.field} ${(sort.dir || SORT_DIRECTIONS.asc).toUpperCase()}`;
+  if (options.limit) { sql += ` ${SQL_KEYWORDS.limit} ${options.limit}`; if (options.offset) sql += ` ${SQL_KEYWORDS.offset} ${options.offset}`; }
   return { sql, params: p };
 }
 
@@ -40,13 +41,15 @@ export const listWithPagination = (entity, where = {}, page = 1, pageSize = null
   const spec = getSpec(entity);
   const defaultPageSize = spec.list?.pageSize || PAGINATION.defaultPageSize;
   const maxPageSize = PAGINATION.maxPageSize;
-  const finalPageSize = pageSize ? Math.min(parseInt(pageSize), maxPageSize) : defaultPageSize;
-  const finalPage = Math.max(1, parseInt(page));
+  const parsedPageSize = pageSize ? parseInt(pageSize, 10) : null;
+  const parsedPage = parseInt(page, 10);
+  const finalPageSize = parsedPageSize && !isNaN(parsedPageSize) ? Math.min(parsedPageSize, maxPageSize) : defaultPageSize;
+  const finalPage = !isNaN(parsedPage) ? Math.max(1, parsedPage) : 1;
   const wc = [], p = [];
-  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${spec.name}.${k}=?`); p.push(v); } });
-  if (spec.fields.status && !where.status) wc.push(`${spec.name}.status!='${RECORD_STATUS.DELETED}'`);
-  const whereClause = wc.length ? ' WHERE ' + wc.join(' AND ') : '';
-  const total = execGet(`SELECT COUNT(*) as c FROM ${spec.name}${whereClause}`, p, { entity, operation: 'Count' }).c;
+  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${spec.name}.${k}${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`); p.push(v); } });
+  if (spec.fields.status && !where.status) wc.push(`${spec.name}.status${SQL_OPERATORS.ne}'${RECORD_STATUS.DELETED}'`);
+  const whereClause = wc.length ? ` ${SQL_KEYWORDS.where} ` + wc.join(` ${SQL_KEYWORDS.and} `) : '';
+  const total = execGet(`${SQL_KEYWORDS.select} ${SQL_KEYWORDS.countAs} c ${SQL_KEYWORDS.from} ${spec.name}${whereClause}`, p, { entity, operation: 'Count' }).c;
   const items = list(entity, where, { limit: finalPageSize, offset: (finalPage - 1) * finalPageSize });
   return { items, pagination: { page: finalPage, pageSize: finalPageSize, total, totalPages: Math.ceil(total / finalPageSize), hasMore: finalPage < Math.ceil(total / finalPageSize) } };
 };
@@ -68,9 +71,9 @@ export const search = (entity, query, where = {}, opts = {}) => {
   const searchFields = spec.list?.searchFields || spec.fields ? Object.entries(spec.fields).filter(([,f]) => f.search).map(([k]) => k) : [];
   if (!searchFields.length || !query) return list(entity, where, opts);
   const { sql: baseSql, params: baseParams } = buildSpecQuery(spec, where, opts);
-  const table = spec.name, searchClauses = searchFields.map(f => `${table}.${f} LIKE ?`).join(' OR ');
-  const sql = baseSql.includes('WHERE') ? baseSql.replace(' WHERE ', ` WHERE (${searchClauses}) AND `) : `${baseSql} WHERE (${searchClauses})`;
-  return execQuery(sql, [...searchFields.map(() => `%${query}%`), ...baseParams], { entity, operation: 'Search' });
+  const table = spec.name, searchClauses = searchFields.map(f => `${table}.${f} ${SQL_OPERATORS.like} ${QUERY_BUILDING.parameterPlaceholder}`).join(` ${SQL_KEYWORDS.or} `);
+  const sql = baseSql.includes(SQL_KEYWORDS.where) ? baseSql.replace(` ${SQL_KEYWORDS.where} `, ` ${SQL_KEYWORDS.where} (${searchClauses}) ${SQL_KEYWORDS.and} `) : `${baseSql} ${SQL_KEYWORDS.where} (${searchClauses})`;
+  return execQuery(sql, [...searchFields.map(() => `${QUERY_BUILDING.wildcard}${query}${QUERY_BUILDING.wildcard}`), ...baseParams], { entity, operation: 'Search' });
 };
 
 export const searchWithPagination = (entity, query, where = {}, page = 1, pageSize = null) => {
@@ -79,24 +82,26 @@ export const searchWithPagination = (entity, query, where = {}, page = 1, pageSi
   if (!searchFields.length || !query) return listWithPagination(entity, where, page, pageSize);
   const defaultPageSize = spec.list?.pageSize || PAGINATION.defaultPageSize;
   const maxPageSize = PAGINATION.maxPageSize;
-  const finalPageSize = pageSize ? Math.min(parseInt(pageSize), maxPageSize) : defaultPageSize;
-  const finalPage = Math.max(1, parseInt(page));
-  const table = spec.name, searchClauses = searchFields.map(f => `${table}.${f} LIKE ?`).join(' OR ');
+  const parsedPageSize = pageSize ? parseInt(pageSize, 10) : null;
+  const parsedPage = parseInt(page, 10);
+  const finalPageSize = parsedPageSize && !isNaN(parsedPageSize) ? Math.min(parsedPageSize, maxPageSize) : defaultPageSize;
+  const finalPage = !isNaN(parsedPage) ? Math.max(1, parsedPage) : 1;
+  const table = spec.name, searchClauses = searchFields.map(f => `${table}.${f} ${SQL_OPERATORS.like} ${QUERY_BUILDING.parameterPlaceholder}`).join(` ${SQL_KEYWORDS.or} `);
   const wc = [], p = [];
-  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${table}.${k}=?`); p.push(v); } });
-  if (spec.fields.status && !where.status) wc.push(`${table}.status!='${RECORD_STATUS.DELETED}'`);
-  const whereClause = wc.length ? ` AND (${wc.join(' AND ')})` : '';
-  const countSql = `SELECT COUNT(*) as c FROM ${table} WHERE (${searchClauses})${whereClause}`;
-  const total = execGet(countSql, [...searchFields.map(() => `%${query}%`), ...p], { entity, operation: 'Count' }).c;
+  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${table}.${k}${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`); p.push(v); } });
+  if (spec.fields.status && !where.status) wc.push(`${table}.status${SQL_OPERATORS.ne}'${RECORD_STATUS.DELETED}'`);
+  const whereClause = wc.length ? ` ${SQL_KEYWORDS.and} (${wc.join(` ${SQL_KEYWORDS.and} `)})` : '';
+  const countSql = `${SQL_KEYWORDS.select} ${SQL_KEYWORDS.countAs} c ${SQL_KEYWORDS.from} ${table} ${SQL_KEYWORDS.where} (${searchClauses})${whereClause}`;
+  const total = execGet(countSql, [...searchFields.map(() => `${QUERY_BUILDING.wildcard}${query}${QUERY_BUILDING.wildcard}`), ...p], { entity, operation: 'Count' }).c;
   const items = search(entity, query, where, { limit: finalPageSize, offset: (finalPage - 1) * finalPageSize });
   return { items, pagination: { page: finalPage, pageSize: finalPageSize, total, totalPages: Math.ceil(total / finalPageSize), hasMore: finalPage < Math.ceil(total / finalPageSize) } };
 };
 
 export const count = (entity, where = {}) => {
   const spec = getSpec(entity);
-  const wc = Object.entries(where).filter(([,v]) => v !== undefined).map(([k]) => `${k}=?`);
-  if (spec.fields.status) wc.push(`status!='${RECORD_STATUS.DELETED}'`);
-  const sql = `SELECT COUNT(*) as c FROM ${spec.name}${wc.length ? ' WHERE ' + wc.join(' AND ') : ''}`;
+  const wc = Object.entries(where).filter(([,v]) => v !== undefined).map(([k]) => `${k}${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`);
+  if (spec.fields.status) wc.push(`status${SQL_OPERATORS.ne}'${RECORD_STATUS.DELETED}'`);
+  const sql = `${SQL_KEYWORDS.select} ${SQL_KEYWORDS.countAs} c ${SQL_KEYWORDS.from} ${spec.name}${wc.length ? ` ${SQL_KEYWORDS.where} ` + wc.join(` ${SQL_KEYWORDS.and} `) : ''}`;
   try { return execGet(sql, Object.values(where).filter(v => v !== undefined), { entity, operation: 'Count' }).c || 0; } catch { return 0; }
 };
 
@@ -113,7 +118,7 @@ export const create = (entity, data, user) => {
     else if (field.default !== undefined) fields[key] = coerceFieldValue(field.default, field.type);
   });
   const keys = Object.keys(fields);
-  execRun(`INSERT INTO ${spec.name} (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`, Object.values(fields), { entity, operation: 'Create' });
+  execRun(`${SQL_KEYWORDS.insert} ${spec.name} (${keys.join(QUERY_BUILDING.delimiter)}) ${SQL_KEYWORDS.values} (${keys.map(() => QUERY_BUILDING.parameterPlaceholder).join(QUERY_BUILDING.delimiter)})`, Object.values(fields), { entity, operation: 'Create' });
   return { id: fields.id, ...fields };
 };
 
@@ -128,16 +133,16 @@ export const update = (entity, id, data, user) => {
     }
   });
   if (!Object.keys(fields).length) return;
-  execRun(`UPDATE ${spec.name} SET ${Object.keys(fields).map(k => `${k}=?`).join(',')} WHERE id=?`, [...Object.values(fields), id], { entity, operation: 'Update' });
+  execRun(`${SQL_KEYWORDS.update} ${spec.name} ${SQL_KEYWORDS.set} ${Object.keys(fields).map(k => `${k}${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`).join(QUERY_BUILDING.delimiter)} ${SQL_KEYWORDS.where} id${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`, [...Object.values(fields), id], { entity, operation: 'Update' });
 };
 
 export const remove = (entity, id) => {
   const spec = getSpec(entity);
   if (spec.fields.status) {
     const hasUpdatedAt = spec.fields.updated_at;
-    execRun(hasUpdatedAt ? `UPDATE ${spec.name} SET status='${RECORD_STATUS.DELETED}', updated_at=? WHERE id=?` : `UPDATE ${spec.name} SET status='${RECORD_STATUS.DELETED}' WHERE id=?`, hasUpdatedAt ? [now(), id] : [id], { entity, operation: 'SoftDelete' });
+    execRun(hasUpdatedAt ? `${SQL_KEYWORDS.update} ${spec.name} ${SQL_KEYWORDS.set} status${SQL_OPERATORS.eq}'${RECORD_STATUS.DELETED}'${QUERY_BUILDING.delimiter} updated_at${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder} ${SQL_KEYWORDS.where} id${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}` : `${SQL_KEYWORDS.update} ${spec.name} ${SQL_KEYWORDS.set} status${SQL_OPERATORS.eq}'${RECORD_STATUS.DELETED}' ${SQL_KEYWORDS.where} id${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`, hasUpdatedAt ? [now(), id] : [id], { entity, operation: 'SoftDelete' });
   } else {
-    execRun(`DELETE FROM ${spec.name} WHERE id=?`, [id], { entity, operation: 'HardDelete' });
+    execRun(`${SQL_KEYWORDS.delete} ${spec.name} ${SQL_KEYWORDS.where} id${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`, [id], { entity, operation: 'HardDelete' });
   }
 };
 

@@ -39,7 +39,9 @@ export const migrate = () => {
   for (const spec of Object.values(specs)) {
     forEachField(spec, (key, field) => {
       if (field.type === 'ref' || field.sortable || field.search) {
-        try { db.exec(`CREATE INDEX IF NOT EXISTS idx_${spec.name}_${key} ON ${spec.name}(${key})`); } catch {}
+        try { db.exec(`CREATE INDEX IF NOT EXISTS idx_${spec.name}_${key} ON ${spec.name}(${key})`); } catch (e) {
+          console.error(`[Database] Index creation failed for ${spec.name}.${key}:`, e.message);
+        }
       }
     });
   }

@@ -1,5 +1,6 @@
 import { spec } from '../spec-builder.js';
 import { withAuditFields, withComputedCreator, withComputedAssignee } from '../spec-templates.js';
+import { STANDARD_STATUS_OPTIONS, ENGAGEMENT_STAGE_OPTIONS } from '../enum-options.js';
 
 export const engagementSpec = withComputedAssignee(
   withComputedCreator(
@@ -22,20 +23,8 @@ export const engagementSpec = withComputedAssignee(
     end_date: { type: 'date' },
     assigned_to: { type: 'ref', ref: 'user', display: 'user.name' },
   })
-  .options('engagement_status', {
-    pending: { label: 'Pending', color: 'yellow' },
-    active: { label: 'Active', color: 'blue' },
-    completed: { label: 'Completed', color: 'green' },
-    archived: { label: 'Archived', color: 'gray' },
-  })
-  .options('engagement_stage', {
-    info_gathering: { label: 'Info Gathering', color: 'blue' },
-    commencement: { label: 'Commencement', color: 'blue' },
-    team_execution: { label: 'Team Execution', color: 'amber' },
-    partner_review: { label: 'Partner Review', color: 'amber' },
-    finalization: { label: 'Finalization', color: 'green' },
-    close_out: { label: 'Close Out', color: 'green' },
-  })
+  .options('engagement_status', STANDARD_STATUS_OPTIONS)
+  .options('engagement_stage', ENGAGEMENT_STAGE_OPTIONS)
   .children({
     reviews: {
       entity: 'review',

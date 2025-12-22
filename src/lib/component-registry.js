@@ -1,7 +1,10 @@
+import { COMPONENT_REGISTRY as COMPONENT_LOADERS } from '@/config/component-paths';
+
 class ComponentRegistry {
   constructor() {
     this.components = new Map();
     this.renders = new Map();
+    this.loaders = COMPONENT_LOADERS;
   }
 
   register(entity, mode, component, priority = 0) {
@@ -110,6 +113,22 @@ class ComponentRegistry {
     registry.components = new Map(this.components);
     registry.renders = new Map(this.renders);
     return registry;
+  }
+
+  loadComponent(componentName) {
+    return this.loaders[componentName] || null;
+  }
+
+  hasLoader(componentName) {
+    return componentName in this.loaders;
+  }
+
+  listLoaders() {
+    return Object.keys(this.loaders);
+  }
+
+  getComponentPath(componentName) {
+    return this.loaders[componentName] || null;
   }
 }
 

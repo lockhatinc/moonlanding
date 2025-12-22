@@ -1,24 +1,33 @@
-import { Tabs } from '@mantine/core';
-import { ListBuilder } from '../builders/list-builder';
-import { ChatPanel } from '../chat-panel';
+'use client';
+
+import { memo } from 'react';
+import dynamic from 'next/dynamic';
+import { Tabs, Loader } from '@mantine/core';
 import { specs } from '@/config';
 import { can } from '@/lib/permissions';
+
+const ListBuilder = dynamic(() => import('../builders/list-builder').then(m => ({ default: m.ListBuilder })), { loading: () => <Loader />, ssr: false });
+const ChatPanel = dynamic(() => import('../chat-panel').then(m => ({ default: m.ChatPanel })), { loading: () => <Loader />, ssr: false });
+
+const TabPanel = memo(function TabPanel({ tab, parentSpec, parentData, user, onSendMessage }) {
+  const childSpec = specs[tab.entity];
+  if (!childSpec) return null;
+  return (
+    <Tabs.Panel key={tab.key} value={tab.key} pt="md">
+      {tab.component === 'chat'
+        ? <ChatPanel entityType={parentSpec.name} entityId={parentData.id} messages={tab.data} user={user} onSendMessage={onSendMessage} />
+        : <ListBuilder spec={childSpec} data={tab.data} canCreate={can(user, childSpec, 'create')} />
+      }
+    </Tabs.Panel>
+  );
+});
 
 export function ChildTabs({ childTabs, parentSpec, parentData, user, onSendMessage }) {
   return (
     <>
-      {childTabs.map(tab => {
-        const childSpec = specs[tab.entity];
-        if (!childSpec) return null;
-        return (
-          <Tabs.Panel key={tab.key} value={tab.key} pt="md">
-            {tab.component === 'chat'
-              ? <ChatPanel entityType={parentSpec.name} entityId={parentData.id} messages={tab.data} user={user} onSendMessage={onSendMessage} />
-              : <ListBuilder spec={childSpec} data={tab.data} canCreate={can(user, childSpec, 'create')} />
-            }
-          </Tabs.Panel>
-        );
-      })}
+      {childTabs.map(tab => (
+        <TabPanel key={tab.key} tab={tab} parentSpec={parentSpec} parentData={parentData} user={user} onSendMessage={onSendMessage} />
+      ))}
     </>
   );
 }

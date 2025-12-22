@@ -1,4 +1,4 @@
-import { createSimpleEntity } from '../spec-builder.js';
+import { createSimpleEntity } from '../spec-factory.js';
 
 export const teamSpec = createSimpleEntity('team', {
   name: { type: 'text', required: true, list: true, search: true },

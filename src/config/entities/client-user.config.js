@@ -1,4 +1,4 @@
-import { createSimpleEntity } from '../spec-builder.js';
+import { createSimpleEntity } from '../spec-factory.js';
 
 export const clientUserSpec = createSimpleEntity('client_user', {
   client_id: { type: 'ref', ref: 'client', required: true },

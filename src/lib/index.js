@@ -1,13 +1,11 @@
 export * from '@/lib/query-engine';
 export * from '@/lib/validate';
-export { httpClient, createHttpClient } from '@/lib/http-client';
 export * from '@/lib/hooks';
 export * from '@/lib/field-types';
 export * from '@/lib/field-iterator';
 export * from '@/lib/list-data-transform';
 export * from '@/lib/use-review-handlers';
 export * from '@/lib/use-realtime';
-export * from '@/lib/use-api-handler';
 export * from '@/lib/api-helpers';
 export * from '@/lib/logger';
 export * from '@/lib/permissions';
@@ -17,7 +15,6 @@ export * from '@/lib/validation-rules';
 export * from '@/lib/route-helpers';
 export * from '@/lib/utils';
 export { renderingEngine, renderFormField, renderCellValue, renderDisplayValue, renderEditField } from '@/lib/rendering-engine';
-export { serverDataLayer, clientDataLayer, createDataLayer } from '@/lib/data-layer';
 export {
   AppError,
   ValidationError,

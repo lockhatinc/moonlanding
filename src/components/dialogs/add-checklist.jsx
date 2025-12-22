@@ -2,34 +2,30 @@
 
 import { useEffect, useState } from 'react';
 import { Modal, Button, Stack, Group, Select, Text, Loader, Center, Alert } from '@mantine/core';
-import { AlertCircle } from 'lucide-react';
+import { STATUS_ICONS } from '@/config/icon-config';
 import { useFormState } from '@/lib/hooks';
-import { API_ENDPOINTS } from '@/config';
+import { useApi } from '@/lib/api-client-unified';
+import { useLoadingError } from '@/lib/hooks/use-loading-error';
 
 export function AddChecklistDialog({ review, onClose, onSuccess }) {
   const [checklists, setChecklists] = useState([]);
-  const [loadError, setLoadError] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { loading, error: loadError, setLoading, setErrorAndStop } = useLoadingError(true);
   const { values, setValue, setError, errors } = useFormState({}, { selected: null });
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
+  const { loading: submitting, error: submitError, startLoading: startSubmitting, setErrorAndStop: setSubmitError } = useLoadingError();
+  const { execute } = useApi();
 
   useEffect(() => {
     const loadChecklists = async () => {
       try {
-        const res = await fetch(API_ENDPOINTS.list('checklist'));
-        if (!res.ok) throw new Error('Failed to load checklists');
-        const data = await res.json();
+        const data = await execute(api => api.list('checklist'));
         setChecklists(data.map(c => ({ value: c.id, label: c.name })));
-        setLoadError(null);
-      } catch (e) {
-        setLoadError(e.message);
-      } finally {
         setLoading(false);
+      } catch (e) {
+        setErrorAndStop(e.message);
       }
     };
     loadChecklists();
-  }, []);
+  }, [execute, setLoading, setErrorAndStop]);
 
   const handleAdd = async () => {
     if (!values.selected) {
@@ -37,29 +33,20 @@ export function AddChecklistDialog({ review, onClose, onSuccess }) {
       return;
     }
 
-    setSubmitting(true);
+    startSubmitting();
     try {
-      const checklistRes = await fetch(API_ENDPOINTS.get('checklist', values.selected));
-      const checklistData = await checklistRes.json();
+      const checklistData = await execute(api => api.get('checklist', values.selected));
 
-      const res = await fetch(API_ENDPOINTS.create('review_checklist'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          review_id: review.id,
-          checklist_id: values.selected,
-          items: checklistData.section_items || checklistData.items || [],
-          status: 'pending',
-        }),
-      });
+      await execute(api => api.create('review_checklist', {
+        review_id: review.id,
+        checklist_id: values.selected,
+        items: checklistData.section_items || checklistData.items || [],
+        status: 'pending',
+      }));
 
-      if (!res.ok) throw new Error('Failed to add checklist');
-      setSubmitError(null);
       onSuccess();
     } catch (e) {
       setSubmitError(e.message);
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -73,7 +60,7 @@ export function AddChecklistDialog({ review, onClose, onSuccess }) {
         </Center>
       ) : (
         <Stack gap="md">
-          {error && <Alert icon={<AlertCircle size={16} />} title="Error" color="red">{typeof error === 'string' ? error : error.message}</Alert>}
+          {error && <Alert icon={<STATUS_ICONS.cancelled size={16} />} title="Error" color="red">{typeof error === 'string' ? error : error.message}</Alert>}
 
           {checklists.length === 0 ? (
             <Text c="dimmed" ta="center" py="xl">No checklists available. Create one first.</Text>

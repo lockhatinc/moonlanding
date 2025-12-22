@@ -1,13 +1,15 @@
+import dynamicImport from 'next/dynamic';
 import { count } from '@/engine';
 import { getUser } from '@/engine.server';
 import { getNavItems } from '@/config';
 import { redirect } from 'next/navigation';
 import { Shell } from '@/components/layout';
 import { Box, Title, Text, SimpleGrid, Stack } from '@mantine/core';
-import { StatsGrid } from '@/components/dashboard/stats-grid';
-import { QuickActions } from '@/components/dashboard/quick-actions';
-import { RecentActivity } from '@/components/dashboard/recent-activity';
 import { AllEntities } from '@/components/dashboard/all-entities';
+
+const StatsGrid = dynamicImport(() => import('@/components/dashboard/stats-grid').then(m => ({ default: m.StatsGrid })), { ssr: true });
+const QuickActions = dynamicImport(() => import('@/components/dashboard/quick-actions').then(m => ({ default: m.QuickActions })), { ssr: true });
+const RecentActivity = dynamicImport(() => import('@/components/dashboard/recent-activity').then(m => ({ default: m.RecentActivity })), { ssr: true });
 
 export const dynamic = 'force-dynamic';
 
@@ -16,11 +18,18 @@ export default async function DashboardPage() {
   if (!user) redirect('/login');
 
   const navItems = getNavItems();
+  const [engagementCount, reviewCount, clientCount, userCount] = await Promise.all([
+    count('engagement'),
+    count('review'),
+    count('client'),
+    count('user'),
+  ]);
+
   const stats = [
-    { name: 'Engagements', icon: 'Briefcase', count: count('engagement'), href: '/engagement', color: 'blue' },
-    { name: 'Reviews', icon: 'FileSearch', count: count('review'), href: '/review', color: 'violet' },
-    { name: 'Clients', icon: 'Building', count: count('client'), href: '/client', color: 'green' },
-    { name: 'Users', icon: 'Users', count: count('user'), href: '/user', color: 'orange' },
+    { name: 'Engagements', icon: 'Briefcase', count: engagementCount, href: '/engagement', color: 'blue' },
+    { name: 'Reviews', icon: 'FileSearch', count: reviewCount, href: '/review', color: 'violet' },
+    { name: 'Clients', icon: 'Building', count: clientCount, href: '/client', color: 'green' },
+    { name: 'Users', icon: 'Users', count: userCount, href: '/user', color: 'orange' },
   ];
 
   const recentItems = [

@@ -69,8 +69,9 @@ export function logApiCall(method, url, status, duration) {
 
 export function logApiError(error) {
   if (window.__DEBUG__) {
+    const { LOG_PREFIXES } = require('@/config');
     window.__DEBUG__.setApiError(error);
-    console.error('[API ERROR]', error);
+    console.error(LOG_PREFIXES.api, error);
   }
 }
 

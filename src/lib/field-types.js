@@ -1,19 +1,20 @@
 import { DISPLAY } from '@/config/constants';
+import { FIELD_DISPLAY_RULES, TRUNCATION_INDICATORS } from '@/config';
 import { secondsToDate, dateToSeconds, formatDate } from './utils-client';
 
-function truncateText(text, limit = DISPLAY.TEXT_PREVIEW) {
+function truncateText(text, limit = FIELD_DISPLAY_RULES.text.truncate, indicator = TRUNCATION_INDICATORS.text) {
   if (!text) return '';
   const str = String(text);
-  return str.length > limit ? str.substring(0, limit) + '...' : str;
+  return str.length > limit ? str.substring(0, limit) + indicator : str;
 }
 
 function truncateJson(val) {
   const str = typeof val === 'string' ? val : JSON.stringify(val);
-  return str.length > DISPLAY.JSON_PREVIEW ? str.substring(0, DISPLAY.JSON_PREVIEW) + '...' : str;
+  return str.length > FIELD_DISPLAY_RULES.json.truncate ? str.substring(0, FIELD_DISPLAY_RULES.json.truncate) + TRUNCATION_INDICATORS.json : str;
 }
 
 function truncateTextarea(text) {
-  return truncateText(text, DISPLAY.TEXTAREA_PREVIEW);
+  return truncateText(text, FIELD_DISPLAY_RULES.textarea.truncate, TRUNCATION_INDICATORS.multiline);
 }
 
 function createSimpleType(sqlType, overrides = {}) {
@@ -60,19 +61,29 @@ export const fieldRegistry = {
 
   int: createNumberType(
     'INTEGER',
-    (val) => (val === undefined || val === '' || val === null ? null : parseInt(val, 10) || 0),
+    (val) => {
+      if (val === undefined || val === '' || val === null) return null;
+      const num = parseInt(val, 10);
+      if (isNaN(num)) throw new Error(`Invalid integer: ${val}`);
+      return num;
+    },
     (val) => String(val ?? '')
   ),
 
   decimal: createNumberType(
     'REAL',
-    (val) => (val === undefined || val === '' || val === null ? null : parseFloat(val) || 0),
+    (val) => {
+      if (val === undefined || val === '' || val === null) return null;
+      const num = parseFloat(val);
+      if (isNaN(num)) throw new Error(`Invalid decimal: ${val}`);
+      return num;
+    },
     (val) => (typeof val === 'number' ? val.toFixed(2) : val)
   ),
 
   bool: createSimpleType('INTEGER', {
     coerce: (val) => (val === true || val === 'true' || val === 'on' || val === 1 ? 1 : 0),
-    format: (val) => (val ? 'Yes' : 'No'),
+    format: (val) => (val ? FIELD_DISPLAY_RULES.boolean.displayTrue : FIELD_DISPLAY_RULES.boolean.displayFalse),
   }),
 
   date: createDateType('INTEGER', 'locale'),

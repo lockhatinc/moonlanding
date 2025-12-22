@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import Database from 'better-sqlite3';
-import { specs } from '@/config';
+import { specs, LOG_PREFIXES } from '@/config';
 
 const DB_PATH = path.resolve(process.cwd(), 'data', 'app.db');
 const db = new Database(DB_PATH);
@@ -28,7 +28,7 @@ export async function exportDatabase() {
       const rows = db.prepare(`SELECT * FROM ${tableName}`).all();
       backup.tables[tableName] = rows;
     } catch (error) {
-      console.error(`[BACKUP] Failed to export ${tableName}:`, error.message);
+      console.error(`${LOG_PREFIXES.system} Failed to export ${tableName}:`, error.message);
     }
   }
 
@@ -60,7 +60,7 @@ export async function importDatabase(backupPath) {
         stmt.run(...columns.map(col => row[col]));
       }
     } catch (error) {
-      console.error(`[RESTORE] Failed to restore ${tableName}:`, error.message);
+      console.error(`${LOG_PREFIXES.system} Failed to restore ${tableName}:`, error.message);
     }
   }
 }
@@ -94,7 +94,7 @@ async function cleanupOldBackups(keepCount = 30) {
     try {
       fs.unlinkSync(backup.path);
     } catch (error) {
-      console.error(`[BACKUP] Failed to delete ${backup.filename}:`, error.message);
+      console.error(`${LOG_PREFIXES.system} Failed to delete ${backup.filename}:`, error.message);
     }
   }
 }
@@ -116,7 +116,7 @@ function exportTables(tableNames) {
       const rows = db.prepare(`SELECT * FROM ${tableName}`).all();
       backup.tables[tableName] = rows;
     } catch (error) {
-      console.error(`[BACKUP] Failed to export ${tableName}:`, error.message);
+      console.error(`${LOG_PREFIXES.system} Failed to export ${tableName}:`, error.message);
     }
   }
 

@@ -1,5 +1,6 @@
 import { list, get, update, create, remove } from '../engine';
 import { ENGAGEMENT_STATUS, ENGAGEMENT_STAGE, RFI_STATUS, RFI_CLIENT_STATUS, RFI_AUDITOR_STATUS } from '@/lib/status-helpers';
+import { safeJsonParse } from '@/lib/safe-json';
 
 const calcNextPeriod = (year, month, interval) => {
   if (interval === 'yearly') return { year: year + 1, month };
@@ -72,11 +73,11 @@ async function copyRfiData(srcId, tgtId) {
   for (const f of list('file', { entity_type: 'rfi', entity_id: srcId })) {
     create('file', { entity_type: 'rfi', entity_id: tgtId, drive_file_id: f.drive_file_id, file_name: f.file_name, file_type: f.file_type, file_size: f.file_size, mime_type: f.mime_type, download_url: f.download_url });
   }
-  if (src?.files) update('rfi', tgtId, { files: src.files, files_count: JSON.parse(src.files || '[]').length });
+  if (src?.files) update('rfi', tgtId, { files: src.files, files_count: safeJsonParse(src.files, []).length });
   for (const r of list('rfi_response', { rfi_id: srcId })) {
     create('rfi_response', { rfi_id: tgtId, content: r.content, attachments: r.attachments, is_client: r.is_client });
   }
-  if (src?.responses) update('rfi', tgtId, { responses: src.responses, response_count: JSON.parse(src.responses || '[]').length });
+  if (src?.responses) update('rfi', tgtId, { responses: src.responses, response_count: safeJsonParse(src.responses, []).length });
 }
 
 export const batchRecreateEngagements = async (ids) => {

@@ -37,6 +37,10 @@ export const THEME = {
     'highlight_status.partially_resolved': 'yellow',
     'highlight_status.resolved': 'green',
 
+    'checklist_status.pending': 'yellow',
+    'checklist_status.in_progress': 'blue',
+    'checklist_status.completed': 'green',
+
     'severity.low': 'green',
     'severity.medium': 'yellow',
     'severity.high': 'red',
@@ -109,3 +113,27 @@ export const THEME = {
     },
   },
 };
+
+export function getStatusColor(entity, status) {
+  return THEME.colorMappings[`${entity}_status.${status}`] || 'gray';
+}
+
+export function getStageColor(entity, stage) {
+  return THEME.colorMappings[`${entity}_stage.${stage}`] || 'gray';
+}
+
+export function getSeverityColor(severity) {
+  return THEME.colorMappings[`severity.${severity}`] || 'gray';
+}
+
+export function getBadgeProps(entity, status) {
+  const color = getStatusColor(entity, status);
+  return {
+    color,
+    variant: 'light',
+  };
+}
+
+export function getColorMapping(key, value) {
+  return THEME.colorMappings[`${key}.${value}`] || 'gray';
+}

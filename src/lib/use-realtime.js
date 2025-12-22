@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { POLLING_CONFIG } from '@/config/polling-config';
-import { API_ENDPOINTS } from '@/config';
+import { useApi, apiClient } from '@/lib/api-client-unified';
 
 const listeners = new Map();
 const pendingRequests = new Map();
@@ -35,12 +35,10 @@ export function useRealtimeData(entity, id, options = {}) {
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   const pollIntervalRef = useRef(null);
-  const urlRef = useRef(null);
   const currentBackoffRef = useRef(POLLING_CONFIG.interval);
+  const { execute } = useApi();
 
-  const url = id ? API_ENDPOINTS.get(entity, id) : API_ENDPOINTS.list(entity, options.queryParams || {});
-  const cacheKey = getCacheKey(url, options.queryParams);
-  urlRef.current = url;
+  const cacheKey = `${entity}:${id || JSON.stringify(options.queryParams || {})}`;
 
   const fetchData = useCallback(async () => {
     if (pendingRequests.has(cacheKey)) {
@@ -49,9 +47,9 @@ export function useRealtimeData(entity, id, options = {}) {
 
     const fetchPromise = (async () => {
       try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const newData = await res.json();
+        const newData = id
+          ? await execute(api => api.get(entity, id))
+          : await execute(api => api.list(entity, options.queryParams || {}));
         setData(newData);
         setError(null);
         setRetryCount(0);
@@ -87,20 +85,20 @@ export function useRealtimeData(entity, id, options = {}) {
 
     pendingRequests.set(cacheKey, fetchPromise);
     return fetchPromise;
-  }, [url, cacheKey, entity, retryCount]);
+  }, [cacheKey, entity, id, options.queryParams, retryCount, execute]);
 
   const subscribe = useCallback(() => {
-    if (!listeners.has(url)) {
-      listeners.set(url, new Set());
+    if (!listeners.has(cacheKey)) {
+      listeners.set(cacheKey, new Set());
     }
-    listeners.get(url).add(setData);
+    listeners.get(cacheKey).add(setData);
 
     return () => {
-      const set = listeners.get(url);
+      const set = listeners.get(cacheKey);
       set.delete(setData);
-      if (set.size === 0) listeners.delete(url);
+      if (set.size === 0) listeners.delete(cacheKey);
     };
-  }, [url]);
+  }, [cacheKey]);
 
   useEffect(() => {
     fetchData();
@@ -114,7 +112,7 @@ export function useRealtimeData(entity, id, options = {}) {
       unsubscribe();
       pendingRequests.delete(cacheKey);
     };
-  }, [url, fetchData, subscribe, options.pollInterval, cacheKey]);
+  }, [cacheKey, fetchData, subscribe, options.pollInterval]);
 
   return { data, loading, error, refetch: fetchData, retryCount, currentBackoff: currentBackoffRef.current };
 }
@@ -127,8 +125,7 @@ export function notifyRealtimeUpdate(entityOrUrl) {
   if (listeners_for_url) {
     listeners_for_url.forEach(async setData => {
       try {
-        const res = await fetch(url);
-        const data = await res.json();
+        const data = await apiClient.request({ method: 'GET', endpoint: url });
         setData(data);
       } catch (err) {
         console.error('Realtime update error:', err);
@@ -142,8 +139,7 @@ export function notifyRealtimeUpdate(entityOrUrl) {
     if (parentListeners) {
       parentListeners.forEach(async setData => {
         try {
-          const res = await fetch(parentUrl);
-          const data = await res.json();
+          const data = await apiClient.request({ method: 'GET', endpoint: parentUrl });
           setData(data);
         } catch (err) {
           console.error('Parent list update error:', err);

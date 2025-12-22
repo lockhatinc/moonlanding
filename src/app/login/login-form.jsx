@@ -2,7 +2,7 @@
 
 import { useFormStatus } from 'react-dom';
 import { Button, TextInput, PasswordInput, Alert, Stack } from '@mantine/core';
-import { AlertCircle } from 'lucide-react';
+import { STATUS_ICONS } from '@/config/icon-config';
 import { loginAction } from './actions';
 import { useState } from 'react';
 
@@ -30,7 +30,7 @@ export function LoginForm() {
     <form action={handleSubmit}>
       <Stack gap="md">
         {error && (
-          <Alert color="red" icon={<AlertCircle size={16} />}>
+          <Alert color="red" icon={<STATUS_ICONS.cancelled size={16} />}>
             {error}
           </Alert>
         )}

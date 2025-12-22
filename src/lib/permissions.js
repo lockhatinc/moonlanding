@@ -1,4 +1,5 @@
 import { CACHE } from '@/config/auth-config';
+import { ERROR_MESSAGES } from '@/config';
 
 const permCache = new Map();
 const cacheStats = { hits: 0, misses: 0, createdAt: Date.now() };
@@ -71,7 +72,7 @@ export const canViewField = createPermissionChecker('view', true);
 export const canEditField = createPermissionChecker('edit', true);
 
 export function check(user, spec, action) {
-  if (!can(user, spec, action)) throw new Error(`Permission denied: ${spec.name}.${action}`);
+  if (!can(user, spec, action)) throw new Error(ERROR_MESSAGES.permissionDenied(`${spec.name}.${action}`));
 }
 
 export function filterFieldsByAccess(user, spec, record) {

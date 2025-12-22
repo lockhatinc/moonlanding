@@ -1,27 +1,27 @@
 import { Paper, Title, Stack, UnstyledButton, Group, ThemeIcon, Box, Text } from '@mantine/core';
 import Link from 'next/link';
-import { Briefcase, FileSearch, Building } from 'lucide-react';
+import { ENTITY_ICONS } from '@/config/icon-config';
 
 const ACTIONS = [
   {
     label: 'New Engagement',
     description: 'Start a new engagement',
     href: '/engagement/new',
-    icon: Briefcase,
+    icon: ENTITY_ICONS.engagement,
     color: 'blue',
   },
   {
     label: 'New Review',
     description: 'Create a new review',
     href: '/review/new',
-    icon: FileSearch,
+    icon: ENTITY_ICONS.review,
     color: 'violet',
   },
   {
     label: 'New Client',
     description: 'Add a new client',
     href: '/client/new',
-    icon: Building,
+    icon: ENTITY_ICONS.client,
     color: 'green',
   },
 ];

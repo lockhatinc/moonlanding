@@ -1,4 +1,5 @@
 import { list, get, update, create, remove } from '@/engine';
+import { LOG_PREFIXES } from '@/config';
 
 const now = () => Math.floor(Date.now() / 1000);
 const DAY = 86400;
@@ -40,14 +41,14 @@ export const runJob = async (jobs, name) => {
   const job = jobs[name];
   if (!job) throw new Error(`Unknown job: ${name}`);
   try { await job.run(job.config); }
-  catch (e) { console.error(`[JOB] ${name} failed:`, e.message); throw e; }
+  catch (e) { console.error(`${LOG_PREFIXES.job} ${name} failed:`, e.message); throw e; }
 };
 
 export const runDueJobs = async (jobs) => {
   for (const [name, job] of Object.entries(jobs)) {
     if (shouldRunNow(job.schedule)) {
       try { await runJob(jobs, name); }
-      catch (e) { console.error(`[JOB] ${name}:`, e.message); }
+      catch (e) { console.error(`${LOG_PREFIXES.job} ${name}:`, e.message); }
     }
   }
 };

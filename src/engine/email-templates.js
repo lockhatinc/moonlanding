@@ -1,11 +1,12 @@
 import { list, get, create, update } from '../engine';
-import { emailConfig, emailTemplates } from './email-config';
-import { EMAIL_RESOLVERS } from '../config';
+import { EMAIL_DEFAULTS, EMAIL_TEMPLATES, EMAIL_RESOLVERS, LOG_PREFIXES } from '../config';
 import { generateChecklistPdf } from './generate-checklist-pdf';
 import { GOOGLE_SCOPES } from '@/config/constants';
 import { config } from '@/config/env';
 
-export { emailConfig, emailTemplates, generateChecklistPdf };
+export { generateChecklistPdf };
+export const emailConfig = EMAIL_DEFAULTS;
+export const emailTemplates = EMAIL_TEMPLATES;
 
 const RECIPIENT_RESOLVERS = {
   team: (ctx, spec) => {
@@ -57,7 +58,7 @@ export async function queueEmail(key, context) {
   const resolverSpec = EMAIL_RESOLVERS[template.recipients];
   const recipients = resolveRecipients(resolverSpec, context);
   if (!recipients.length) {
-    console.warn(`[EMAIL] No recipients found for template "${key}" in context:`, { entity: context.review?.name || context.engagement?.name || context.client?.name || 'unknown' });
+    console.warn(`${LOG_PREFIXES.email} No recipients found for template "${key}" in context:`, { entity: context.review?.name || context.engagement?.name || context.client?.name || 'unknown' });
     return;
   }
 

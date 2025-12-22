@@ -26,7 +26,7 @@ const sendEmail = ({ to, subject, body, html, cc, bcc, from = DEFAULT_SENDER, at
       m.push(Buffer.isBuffer(a.content) ? a.content.toString('base64') : Buffer.from(a.content).toString('base64'));
     }
     if (attachments.length > 0) m.push(`--${boundary}--`);
-    const raw = Buffer.from(m.join('\r\n')).toString('base64').replace(/\+/g, '-').replace(/\
+    const raw = Buffer.from(m.join('\r\n')).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     return (await gmail.users.messages.send({ userId: 'me', requestBody: { raw } })).data;
   }, 'sendEmail');
 
