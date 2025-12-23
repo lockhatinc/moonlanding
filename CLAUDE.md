@@ -179,6 +179,54 @@ Complete config-driven, dynamic system with zero hardcoded values and 91% code r
 
 ## Debugging & Troubleshooting
 
+### QUICK START: Browser Console Cheat Sheet
+
+**Run these commands in browser console when something doesn't work:**
+
+```javascript
+// Check everything is working
+window.__HELPERS__.quickTest()
+
+// Check system status
+window.__CONFIG__.status()
+
+// List all entities
+window.__HELPERS__.listAll('entities')
+
+// Test all entity generation
+window.__HELPERS__.testEntityGeneration()
+
+// Debug specific entity
+window.__HELPERS__.debugEntity('engagement')
+
+// Debug domain mappings
+window.__HELPERS__.debugDomains()
+
+// Debug permission template
+window.__HELPERS__.debugPermissions('standard_auditor')
+
+// Debug thresholds
+window.__HELPERS__.debugThresholds('rfi')
+
+// Debug workflow
+window.__HELPERS__.debugWorkflow('engagement_lifecycle')
+
+// Check API calls
+window.__DEBUG__.api.calls().slice(-5)
+
+// Check last error
+window.__DEBUG__.api.lastError()
+
+// Check config structure
+window.__HELPERS__.inspectMasterConfig()
+
+// Watch API endpoint
+window.__DEBUG__.api.watch('/api/friday/engagement')
+
+// Get user info
+window.__DEBUG__.user.current()
+```
+
 ### System Initialization Debugging
 
 **Problem:** Config not loading or entities not generated
@@ -305,31 +353,149 @@ window.__DEBUG__.entities.get('engagement', id)
 2. **400 Bad Request** - Entity validation failed. Check `validation_rules` in master-config.yml
 3. **Circular reference error** - Check workflow state transitions don't loop infinitely
 
-### Live Debugging with Code Execution
+### Live Debugging with Playwright MCP
 
-**Setup:** Global objects exposed via playwright MCP for real-time inspection
+**Setup:** All debug globals are automatically exposed and accessible via playwright MCP
 
+#### Quick System Check
 ```javascript
-// Playwright MCP: Execute in browser context
-await page.evaluate(() => {
-  window.__CONFIG__.generateEntitySpec('rfi')
-})
+// Run quick test suite
+await page.evaluate(() => window.__HELPERS__.quickTest())
 
-// Watch config changes
-await page.evaluate(() => {
-  window.__DEBUG__.watch('config', () => {
-    console.log('Config changed')
-  })
-})
+// Check system status
+await page.evaluate(() => window.__HELPERS__.status())
 
-// Trace permission check
+// Test all entity generation
+await page.evaluate(() => window.__HELPERS__.testEntityGeneration())
+```
+
+#### Debug Specific Components
+```javascript
+// Debug entity spec
+await page.evaluate(() => window.__HELPERS__.debugEntity('engagement'))
+
+// Debug domain mappings
+await page.evaluate(() => window.__HELPERS__.debugDomains())
+
+// Debug permissions
+await page.evaluate(() => window.__HELPERS__.debugPermissions('standard_auditor'))
+
+// Debug thresholds
+await page.evaluate(() => window.__HELPERS__.debugThresholds('rfi'))
+
+// Debug workflow
+await page.evaluate(() => window.__HELPERS__.debugWorkflow('engagement_lifecycle'))
+```
+
+#### Inspect Live Data
+```javascript
+// Get last 5 API calls
+await page.evaluate(() => window.__DEBUG__.api.calls().slice(-5))
+
+// Get last error
+await page.evaluate(() => window.__DEBUG__.api.lastError())
+
+// Get cached entity
+await page.evaluate(() => window.__DEBUG__.entities.get('engagement', 123))
+
+// Get permission cache
+await page.evaluate(() => window.__DEBUG__.permissions.cache())
+
+// Get current user
+await page.evaluate(() => window.__DEBUG__.user.current())
+```
+
+#### Watch & Monitor
+```javascript
+// Watch API endpoint
+await page.evaluate(() => window.__DEBUG__.api.watch('/api/friday/engagement'))
+
+// Check what's being watched
+await page.evaluate(() => window.__DEBUG__.api.calls())
+
+// Clear permission cache to force recompute
+await page.evaluate(() => window.__DEBUG__.permissions.clearCache())
+
+// Invalidate config cache for fresh generation
+await page.evaluate(() => window.__CONFIG__.invalidateCache())
+```
+
+#### Live Config Inspection
+```javascript
+// Get full master config structure
+await page.evaluate(() => window.__HELPERS__.inspectMasterConfig())
+
+// List all entities
+await page.evaluate(() => window.__HELPERS__.listAll('entities'))
+
+// List all roles
+await page.evaluate(() => window.__HELPERS__.listAll('roles'))
+
+// List all workflows
+await page.evaluate(() => window.__HELPERS__.listAll('workflows'))
+
+// Get raw config section
 await page.evaluate(() => {
-  window.__DEBUG__.permissions.trace({
-    userId: 123,
-    entityName: 'engagement',
-    action: 'edit'
-  })
+  const config = window.__CONFIG__.getConfig()
+  console.log(config.thresholds)
 })
+```
+
+#### Debugging Patterns
+
+**Pattern 1: Test Entity Creation Flow**
+```javascript
+// Check if entity can be created
+const spec = await page.evaluate(() => {
+  const s = window.__HELPERS__.debugEntity('engagement')
+  return { name: s.name, required: s.fields.filter(f => f.required).map(f => f.name) }
+})
+console.log('Required fields:', spec.required)
+```
+
+**Pattern 2: Check Domain Isolation**
+```javascript
+const domainCheck = await page.evaluate(() => ({
+  fridayOk: window.__DOMAINS__.isEntityInDomain('engagement', 'friday'),
+  mwrOk: window.__DOMAINS__.isEntityInDomain('engagement', 'mwr'),
+  fridayEntities: window.__DOMAINS__.getEntitiesForDomain('friday'),
+  mwrEntities: window.__DOMAINS__.getEntitiesForDomain('mwr'),
+}))
+console.log('Domain Check:', domainCheck)
+```
+
+**Pattern 3: Test Full System Health**
+```javascript
+const health = await page.evaluate(() => ({
+  systemStatus: window.__HELPERS__.status(),
+  configReady: window.__CONFIG__.status(),
+  allEntitiesGenerate: window.__HELPERS__.testEntityGeneration().every(r => r.status === '✓'),
+  apiCalls: window.__DEBUG__.api.calls().length,
+  errors: window.__DEBUG__.errors().length,
+}))
+console.log('System Health:', health)
+```
+
+**Pattern 4: Debug Permission Issues**
+```javascript
+const permDebug = await page.evaluate(() => ({
+  templates: window.__CONFIG__.getConfig().permission_templates,
+  standardAuditor: window.__HELPERS__.debugPermissions('standard_auditor'),
+  cache: window.__DEBUG__.permissions.cache(),
+}))
+console.log('Permission Debug:', permDebug)
+```
+
+**Pattern 5: Track API Calls**
+```javascript
+// Watch endpoint
+await page.evaluate(() => window.__DEBUG__.api.watch('/api/friday/engagement'))
+
+// Make your API calls here...
+
+// Check results
+const calls = await page.evaluate(() => window.__DEBUG__.api.table())
+console.table(calls)
 ```
 
 ---
@@ -385,6 +551,21 @@ api.lastError()                             // Last API error with context
 api.watch(endpoint)                         // Start logging endpoint calls
 api.table()                                 // Formatted table of API calls
 user.current()                              // { id, email, role, hierarchy }
+```
+
+### `window.__HELPERS__` - Debug Helper Functions
+
+```javascript
+status()                                    // Quick system status summary
+quickTest()                                 // Run 4 quick tests on core systems
+debugEntity(name)                           // Detailed analysis of entity spec
+debugDomains()                              // Show all domain mappings & features
+debugPermissions(templateName)              // Show permission template details
+debugThresholds(category)                   // Show all thresholds in category
+debugWorkflow(workflowName)                 // Show workflow states & transitions
+listAll(section)                            // List all items in config section
+testEntityGeneration()                      // Test spec generation for all 18 entities
+inspectMasterConfig()                       // Show master-config.yml structure
 ```
 
 ---
