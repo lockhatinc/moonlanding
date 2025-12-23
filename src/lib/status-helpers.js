@@ -1,61 +1,56 @@
-import {
-  RFI_STATUS,
-  RFI_CLIENT_STATUS,
-  ENGAGEMENT_STATUS,
-  ENGAGEMENT_STAGE,
-  REVIEW_STATUS,
-  STAGE_TRANSITIONS,
-  LETTER_AUDITOR_STATUS,
-  REPEAT_INTERVALS,
-} from '@/config/constants';
-
-export {
-  RFI_STATUS,
-  RFI_CLIENT_STATUS,
-  ENGAGEMENT_STATUS,
-  ENGAGEMENT_STAGE,
-  REVIEW_STATUS,
-  STAGE_TRANSITIONS,
-  LETTER_AUDITOR_STATUS,
-  REPEAT_INTERVALS,
+export const ENGAGEMENT_STATUS = {
+  PENDING: 'pending',
+  ACTIVE: 'active',
+  COMPLETED: 'completed',
+  ARCHIVED: 'archived',
 };
 
-export function isRfiCompleted(rfi) {
-  return rfi.status === RFI_STATUS.COMPLETED || rfi.client_status === RFI_CLIENT_STATUS.COMPLETED;
-}
+export const RFI_STATUS = {
+  PENDING: 'pending',
+  COMPLETED: 'completed'
+};
 
-export function isRfiPending(rfi) {
-  return rfi.status === RFI_STATUS.PENDING && rfi.client_status === RFI_CLIENT_STATUS.PENDING;
-}
+export const ENGAGEMENT_STAGE = {
+  INFO_GATHERING: 'info_gathering',
+  COMMENCEMENT: 'commencement',
+  TEAM_EXECUTION: 'team_execution',
+  PARTNER_REVIEW: 'partner_review',
+  FINALIZATION: 'finalization',
+  CLOSE_OUT: 'close_out'
+};
 
-export function isRfiResponded(rfi) {
-  return rfi.client_status === RFI_CLIENT_STATUS.RESPONDED;
-}
+export const STAGE_TRANSITIONS = {
+  'info_gathering': 'commencement',
+  'commencement': 'team_execution',
+  'team_execution': 'partner_review',
+  'partner_review': 'finalization',
+  'finalization': 'close_out'
+};
 
-export function isEngagementCompleted(engagement) {
-  return engagement.status === ENGAGEMENT_STATUS.COMPLETED || engagement.stage === ENGAGEMENT_STAGE.CLOSE_OUT;
-}
+export const RFI_CLIENT_STATUS = {
+  PENDING: 'pending',
+  SENT: 'sent',
+  RESPONDED: 'responded',
+  COMPLETED: 'completed',
+};
 
-export function isEngagementActive(engagement) {
-  return engagement.status === ENGAGEMENT_STATUS.ACTIVE || engagement.stage === ENGAGEMENT_STAGE.TEAM_EXECUTION;
-}
+export const RFI_AUDITOR_STATUS = {
+  REQUESTED: 'requested',
+  REVIEWING: 'reviewing',
+  QUERIES: 'queries',
+  RECEIVED: 'received',
+};
 
-export function isEngagementInReview(engagement) {
-  return engagement.stage === ENGAGEMENT_STAGE.PARTNER_REVIEW;
-}
+export const RFI_CLIENT_STATUS_OPTIONS = {
+  pending: 'Pending',
+  sent: 'Sent',
+  responded: 'Responded',
+  completed: 'Completed'
+};
 
-export function isReviewOpen(review) {
-  return review.status === REVIEW_STATUS.OPEN;
-}
-
-export function isReviewClosed(review) {
-  return review.status === REVIEW_STATUS.CLOSED;
-}
-
-export function canTransitionStage(fromStage, toStage) {
-  return STAGE_TRANSITIONS[fromStage] === toStage;
-}
-
-export function getNextStage(currentStage) {
-  return STAGE_TRANSITIONS[currentStage];
-}
+export const RFI_AUDITOR_STATUS_OPTIONS = {
+  requested: 'Requested',
+  reviewing: 'Reviewing',
+  queries: 'Queries',
+  received: 'Received'
+};

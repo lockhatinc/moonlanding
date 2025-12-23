@@ -10,6 +10,7 @@ import { HTTP } from '@/config/api-constants';
 import { permissionService } from '@/services';
 import { parse as parseQuery } from '@/lib/query-string-adapter';
 import { withErrorHandler } from '@/lib/with-error-handler';
+import { getDomainLoader } from '@/lib/domain-loader';
 
 export const createCrudHandlers = (entityName) => {
   const spec = getSpec(entityName);
@@ -96,6 +97,17 @@ export const createCrudHandlers = (entityName) => {
     const { id, childKey } = context.params || {};
     const { action } = parseQuery(request);
     const method = request.method;
+
+    const domainLoader = getDomainLoader();
+    const domain = domainLoader.getCurrentDomain(request);
+
+    if (!domainLoader.isEntityInDomain(entityName, domain)) {
+      throw new AppError(
+        `Entity ${entityName} not available in domain ${domain}`,
+        'FORBIDDEN',
+        HTTP.FORBIDDEN
+      );
+    }
 
     if (method === 'GET') {
       if (id && childKey) return await handlers.getChildren(user, id, childKey);

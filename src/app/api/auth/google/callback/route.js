@@ -1,6 +1,7 @@
 import { google, createSession } from '@/engine.server';
 import { getBy, create } from '@/engine';
 import { GOOGLE_APIS } from '@/config/constants';
+import { getConfigEngine } from '@/lib/config-generator-engine';
 import {
   validateOAuthProvider,
   getOAuthCookie,
@@ -45,12 +46,16 @@ export async function GET(request) {
     let user = getBy('user', 'email', googleUser.email);
 
     if (!user) {
+      const engine = await getConfigEngine();
+      const roles = engine.getRoles();
+      const defaultRole = Object.keys(roles)[0] || 'clerk';
+
       user = create('user', {
         email: googleUser.email,
         name: googleUser.name,
         avatar: googleUser.picture,
         type: 'auditor',
-        role: 'clerk',
+        role: defaultRole,
         status: 'active',
       });
     }

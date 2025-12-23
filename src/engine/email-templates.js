@@ -106,14 +106,12 @@ async function sendEmail(n) {
   try {
     const { google } = await import('googleapis');
     const fs = await import('fs');
-    const path = await import('path');
+    const { config } = await import('@/config/env');
 
-    const credentialsPath = process.env.GOOGLE_SERVICE_ACCOUNT_PATH ||
-      path.join(process.cwd(), 'service-account.json');
+    const credentialsPath = config.auth.google.credentialsPath;
 
     if (!fs.existsSync(credentialsPath)) {
-      throw new Error(`[API Error] ${'Service account file not found at:', credentialsPath}`);
-      throw new Error('Email service not configured');
+      throw new Error(`[API Error] Service account file not found at: ${credentialsPath}`);
     }
 
     const credentials = JSON.parse(fs.readFileSync(credentialsPath, 'utf8'));

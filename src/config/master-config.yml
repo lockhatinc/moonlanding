@@ -1,0 +1,1471 @@
+# ============================================================================
+# MASTER CONFIGURATION KERNEL
+# Single source of truth for all system behavior
+# Version: 1.0
+# Last updated: 2025-12-22
+# ============================================================================
+
+# ============================================================================
+# SECTION 1: Role Definitions (Hierarchical, Single Definition)
+# ============================================================================
+roles:
+  partner:
+    hierarchy: 0
+    label: "Partner"
+    type: auditor
+    description: "Full system access, exclusive CloseOut permission"
+    permissions_scope: global
+    can_assign_roles: true
+    can_manage_settings: true
+
+  manager:
+    hierarchy: 1
+    label: "Manager"
+    type: auditor
+    description: "Can create/edit entities, cannot delete or access settings"
+    permissions_scope: team
+    can_assign_roles: false
+    can_manage_settings: false
+
+  clerk:
+    hierarchy: 2
+    label: "Clerk"
+    type: auditor
+    description: "Read-only, except assigned entities with approval permission"
+    permissions_scope: assigned
+    can_assign_roles: false
+    can_manage_settings: false
+
+  client_admin:
+    hierarchy: 3
+    label: "Client Admin"
+    type: client
+    description: "Can view all RFIs for their client, rate engagements"
+    permissions_scope: client
+    can_rate_engagement: true
+    can_view_all_client_rfis: true
+
+  client_user:
+    hierarchy: 4
+    label: "Client User"
+    type: client
+    description: "Can only view assigned RFIs, cannot rate"
+    permissions_scope: assigned
+    can_rate_engagement: false
+    can_view_all_client_rfis: false
+
+# ============================================================================
+# SECTION 2: Permission Templates (Reusable Across Entities)
+# ============================================================================
+permission_templates:
+  standard_auditor:
+    description: "Standard entity permissions for auditor team"
+    partner:
+      - list
+      - view
+      - create
+      - edit
+      - delete
+      - manage_settings
+      - manage_team
+      - archive
+      - export
+    manager:
+      - list
+      - view
+      - create
+      - edit
+      - export
+    clerk:
+      - list
+      - view
+    client_admin:
+      - list
+      - view
+    client_user:
+      - view_assigned
+
+  partner_only:
+    description: "Partner-exclusive entities (users, teams, settings)"
+    partner:
+      - list
+      - view
+      - create
+      - edit
+      - delete
+      - manage_settings
+      - manage_team
+      - manage_roles
+    manager: []
+    clerk: []
+    client_admin: []
+    client_user: []
+
+  review_collaboration:
+    description: "Review/highlight collaboration permissions"
+    partner:
+      - list
+      - view
+      - create
+      - edit
+      - delete
+      - manage_collaborators
+      - manage_highlights
+      - manage_flags
+      - archive
+    manager:
+      - list
+      - view
+      - create
+      - edit
+      - manage_collaborators_own
+      - manage_highlights_own
+    clerk:
+      - list
+      - view
+      - view_assigned
+    client_admin: []
+    client_user: []
+
+  client_response:
+    description: "Client-facing RFI response permissions"
+    partner:
+      - list
+      - view
+      - create
+      - edit
+      - delete
+      - change_status
+    manager:
+      - list
+      - view
+      - create
+      - edit
+      - change_status
+    clerk:
+      - list
+      - view
+    client_admin:
+      - list
+      - view
+      - respond
+      - upload_files
+    client_user:
+      - view_assigned
+      - respond_assigned
+      - upload_files_assigned
+
+  admin_only:
+    description: "System admin operations only"
+    partner:
+      - all
+    manager: []
+    clerk: []
+    client_admin: []
+    client_user: []
+
+# ============================================================================
+# SECTION 3: Workflow Definitions
+# ============================================================================
+workflows:
+  engagement_lifecycle:
+    description: "6-stage engagement lifecycle workflow"
+    initial_stage: info_gathering
+    final_stage: close_out
+    stages:
+      - name: info_gathering
+        label: "Info Gathering"
+        color: blue
+        order: 1
+        entry: default
+        auto_transition: true
+        auto_transition_trigger: date_reached(commencement_date)
+        auto_transition_buffer_hours: 1
+        forward:
+          - commencement
+        backward: []
+        locks:
+          - stage
+        validation:
+          - hasBasicInfo
+        description: "Initial data gathering phase before engagement starts"
+
+      - name: commencement
+        label: "Commencement"
+        color: blue
+        order: 2
+        entry: auto|manual
+        auto_transition: false
+        forward:
+          - team_execution
+        backward:
+          - info_gathering
+        locks: []
+        validation:
+          - hasEngagementLetter
+        activates:
+          - engagement_letter
+        description: "Engagement officially begins, letter generation enabled"
+
+      - name: team_execution
+        label: "Team Execution"
+        color: amber
+        order: 3
+        entry: manual
+        auto_transition: false
+        forward:
+          - partner_review
+        backward:
+          - commencement
+        locks: []
+        validation:
+          - hasTeam
+        activates:
+          - rfi_workflow
+        description: "Team performs audit work, RFI workflow active"
+
+      - name: partner_review
+        label: "Partner Review"
+        color: amber
+        order: 4
+        entry: manual
+        auto_transition: false
+        forward:
+          - finalization
+        backward:
+          - team_execution
+        locks: []
+        validation: []
+        requires_role:
+          - partner
+        description: "Partner reviews team work before finalization"
+
+      - name: finalization
+        label: "Finalization"
+        color: green
+        order: 5
+        entry: manual
+        auto_transition: false
+        forward:
+          - close_out
+        backward:
+          - partner_review
+        locks: []
+        validation:
+          - reviewsComplete
+        activates:
+          - client_feedback
+          - post_rfi
+        description: "Final stage before close out, client feedback enabled"
+
+      - name: close_out
+        label: "Close Out"
+        color: green
+        order: 6
+        entry: partner_only
+        auto_transition: false
+        forward: []
+        backward: []
+        locks:
+          - all
+        validation:
+          - letterAcceptedOrCancelled
+        requires_role:
+          - partner
+        readonly: true
+        description: "Engagement complete and locked, partner-only access"
+
+  rfi_type_standard:
+    description: "Standard RFI workflow with escalation"
+    name: "RFI"
+    type: standard
+    internal_states:
+      - pending
+      - sent
+      - responded
+      - completed
+    display_states:
+      auditor:
+        - requested
+        - reviewing
+        - queries
+        - received
+      client:
+        - pending
+        - partially_sent
+        - sent
+        - completed
+    fields:
+      - date_requested
+      - date_resolved
+      - deadline
+      - response_count
+      - files_count
+      - days_outstanding
+    requires_completion: file_upload OR text_response
+    notifications:
+      escalation_thresholds:
+        - 3
+        - 7
+        - 14
+      deadline_warnings:
+        - 7
+        - 3
+        - 1
+        - 0
+
+  rfi_type_post_rfi:
+    description: "Post-RFI workflow (finalization stage)"
+    name: "Post-RFI"
+    type: post_rfi
+    internal_states:
+      - pending
+      - sent
+      - accepted
+    display_states:
+      auditor:
+        - pending
+        - sent
+      client:
+        - pending
+        - queries
+        - accepted
+    fields:
+      - date_requested
+      - date_resolved
+      - response_count
+      - files_count
+    requires_completion: file_upload OR text_response
+    notifications:
+      escalation_thresholds: []
+      deadline_warnings: []
+
+  review_lifecycle:
+    description: "Review status workflow"
+    initial_status: open
+    final_status: closed
+    states:
+      - name: open
+        label: "Open"
+        color: yellow
+        forward:
+          - closed
+        backward: []
+      - name: closed
+        label: "Closed"
+        color: green
+        forward: []
+        backward:
+          - open
+
+# ============================================================================
+# SECTION 4: Numeric Thresholds (All in One Place)
+# ============================================================================
+thresholds:
+  rfi:
+    notification_days:
+      - 7
+      - 3
+      - 1
+      - 0
+    aging_thresholds:
+      - 3
+      - 7
+      - 14
+    escalation_delay_hours: 24
+    max_days_outstanding: 90
+
+  collaborator:
+    default_expiry_days: 7
+    max_expiry_days: 30
+    notify_before_expiry_hours: 24
+    cleanup_after_expiry_hours: 0
+
+  tender:
+    warning_days_before: 7
+    default_deadline_days: 30
+    urgent_threshold_days: 3
+
+  engagement:
+    auto_transition_buffer_hours: 1
+    archive_after_days: 365
+    min_year: 2020
+    max_year: 2099
+
+  workflow:
+    closeout_after_days: 30
+    completion_after_days: 7
+    stage_transition_lockout_minutes: 5
+
+  notification:
+    batch_size: 50
+    retry_attempts: 3
+    retry_delay_minutes: 15
+    consolidation_window_hours: 24
+
+  cache:
+    entity_ttl_seconds: 300
+    list_ttl_seconds: 60
+    session_ttl_seconds: 3600
+    max_entries: 1000
+
+# ============================================================================
+# SECTION 5: Entities (Minimal DSL)
+# ============================================================================
+entities:
+  engagement:
+    label: "Engagement"
+    label_plural: "Engagements"
+    icon: Briefcase
+    order: 2
+    permission_template: standard_auditor
+    workflow: engagement_lifecycle
+    computed_fields:
+      - progress
+      - daysOutstanding
+      - createdBy
+      - assignedTo
+    has_timeline: true
+    has_roles:
+      - partner
+      - manager
+      - clerk
+    parent: null
+    children:
+      - rfi
+      - review
+      - letter
+      - rfi_section
+    recreation_enabled: true
+    recreation_intervals:
+      - once
+      - monthly
+      - yearly
+    field_overrides:
+      stage:
+        type: enum
+        options: engagement_lifecycle.stages[].name
+        validator: lifecycle_stage_transition
+      year:
+        min: $thresholds.engagement.min_year
+        max: $thresholds.engagement.max_year
+
+  rfi:
+    label: "Request For Information"
+    label_plural: "RFIs"
+    icon: HelpCircle
+    order: 8
+    permission_template: client_response
+    workflow: rfi_type_standard
+    computed_fields:
+      - days_outstanding
+      - daysOutstanding
+    parent: engagement
+    children:
+      - message
+      - file
+      - response
+    variants:
+      post_rfi:
+        workflow: rfi_type_post_rfi
+        permission_template: client_response
+        activates_at_stage: finalization
+    state_machine: true
+    has_notifications: true
+
+  review:
+    label: "Review"
+    label_plural: "Reviews"
+    icon: FileText
+    order: 3
+    permission_template: review_collaboration
+    workflow: review_lifecycle
+    computed_fields:
+      - progress
+      - createdBy
+      - assignedTo
+    parent: engagement
+    children:
+      - highlight
+      - collaborator
+      - checklist
+      - flag
+    has_pdf_viewer: true
+    has_collaboration: true
+    has_tender_tracking: true
+
+  highlight:
+    label: "Highlight"
+    label_plural: "Highlights"
+    icon: Highlighter
+    order: 10
+    permission_template: review_collaboration
+    parent: review
+    immutable: true
+    immutable_strategy: move_to_archive
+    has_color_palette: true
+    has_position_data: true
+
+  collaborator:
+    label: "Collaborator"
+    label_plural: "Collaborators"
+    icon: Users
+    order: 11
+    permission_template: partner_only
+    parent: review
+    has_temporary_access: true
+    has_auto_revoke: true
+    default_expiry_days: $thresholds.collaborator.default_expiry_days
+    max_expiry_days: $thresholds.collaborator.max_expiry_days
+
+  checklist:
+    label: "Checklist"
+    label_plural: "Checklists"
+    icon: CheckSquare
+    order: 12
+    permission_template: standard_auditor
+    parent: review
+    auto_complete_when: all_items_done
+    has_pdf_generation: true
+
+  user:
+    label: "User"
+    label_plural: "Users"
+    icon: User
+    order: 1
+    permission_template: partner_only
+    has_authentication: true
+    has_google_sync: true
+    user_types:
+      - auditor
+      - client
+    roles:
+      - partner
+      - manager
+      - clerk
+      - client_admin
+      - client_user
+
+  team:
+    label: "Team"
+    label_plural: "Teams"
+    icon: Users
+    order: 4
+    permission_template: partner_only
+    children:
+      - user
+
+  client:
+    label: "Client"
+    label_plural: "Clients"
+    icon: Building
+    order: 5
+    permission_template: standard_auditor
+    children:
+      - engagement
+      - client_user
+
+  client_user:
+    label: "Client User"
+    label_plural: "Client Users"
+    icon: UserCheck
+    order: 6
+    permission_template: admin_only
+    parent: client
+    linked_entity: user
+
+  tender:
+    label: "Tender"
+    label_plural: "Tenders"
+    icon: Award
+    order: 7
+    permission_template: standard_auditor
+    parent: review
+    default_deadline_days: $thresholds.tender.default_deadline_days
+    warning_threshold_days: $thresholds.tender.warning_days_before
+    has_deadline_tracking: true
+
+  letter:
+    label: "Engagement Letter"
+    label_plural: "Engagement Letters"
+    icon: FileText
+    order: 9
+    permission_template: standard_auditor
+    parent: engagement
+    document_type: engagement_letter
+    has_google_drive_integration: true
+    has_template_variables: true
+
+  rfi_section:
+    label: "RFI Section"
+    label_plural: "RFI Sections"
+    icon: Folder
+    order: 13
+    permission_template: standard_auditor
+    parent: engagement
+    children:
+      - rfi
+
+  flag:
+    label: "Flag"
+    label_plural: "Flags"
+    icon: Flag
+    order: 14
+    permission_template: review_collaboration
+    parent: review
+    flag_types:
+      - review_comment
+      - highlight
+      - priority
+
+  message:
+    label: "Message"
+    label_plural: "Messages"
+    icon: MessageSquare
+    order: 15
+    permission_template: client_response
+    parent: rfi
+    has_email_integration: true
+
+  file:
+    label: "File"
+    label_plural: "Files"
+    icon: Paperclip
+    order: 16
+    permission_template: client_response
+    parent: rfi
+    has_google_drive_integration: true
+
+  response:
+    label: "Response"
+    label_plural: "Responses"
+    icon: Reply
+    order: 17
+    permission_template: client_response
+    parent: rfi
+
+  email:
+    label: "Email"
+    label_plural: "Emails"
+    icon: Mail
+    order: 18
+    permission_template: admin_only
+    has_queue: true
+    has_templates: true
+
+# ============================================================================
+# SECTION 6: Automation Schedules (Config-Driven Jobs)
+# ============================================================================
+automation:
+  schedules:
+    - name: daily_backup
+      trigger: "0 2 * * *"
+      description: "Export database to backup"
+      action: export_database
+      entity: null
+      enabled: true
+      timezone: UTC
+
+    - name: user_sync
+      trigger: "0 2 * * *"
+      description: "Sync users from Google Workspace"
+      action: sync_users_from_google_workspace
+      entity: user
+      enabled: true
+      rule: "user.type == 'auditor'"
+      integration: google_workspace
+
+    - name: engagement_auto_transition
+      trigger: "0 4 * * *"
+      description: "Auto-transition engagements from info_gathering to commencement"
+      action: auto_transition_stages
+      entity: engagement
+      enabled: true
+      rule: "stage == 'info_gathering' AND commencement_date <= now()"
+
+    - name: rfi_notifications
+      trigger: "0 5 * * *"
+      description: "RFI deadline notifications"
+      action: send_rfi_deadline_notifications
+      entity: rfi
+      enabled: true
+      rule: rfi.notifications.deadline_warnings
+      config:
+        days_before: $workflows.rfi_type_standard.notifications.deadline_warnings
+
+    - name: consolidated_notifications
+      trigger: "0 6 * * *"
+      description: "Daily digest to managers/clerks"
+      action: send_consolidated_notifications
+      entity: notification
+      enabled: true
+
+    - name: tender_notifications
+      trigger: "0 9 * * *"
+      description: "Tender deadline notifications"
+      action: send_tender_deadline_warnings
+      entity: tender
+      enabled: true
+      rule: "is_tender == true AND daysUntilDeadline <= $thresholds.tender.warning_days_before"
+
+    - name: tender_missed_deadline
+      trigger: "0 10 * * *"
+      description: "Mark missed tender deadlines"
+      action: mark_missed_tender_deadlines
+      entity: tender
+      enabled: true
+
+    - name: temp_access_cleanup
+      trigger: "0 0 * * *"
+      description: "Remove expired collaborators"
+      action: revoke_expired_collaborators
+      entity: collaborator
+      enabled: true
+      rule: "access_type == 'temporary' AND expires_at <= now()"
+
+    - name: weekly_checklist_pdfs
+      trigger: "0 8 * * 1"
+      description: "Weekly checklist PDF reports"
+      action: generate_weekly_checklist_pdfs
+      entity: checklist
+      enabled: true
+      recipients:
+        - role: partner
+        - status: active
+
+    - name: weekly_client_emails
+      trigger: "0 9 * * 1"
+      description: "Weekly client engagement summaries"
+      action: send_weekly_client_summaries
+      entity: client
+      enabled: true
+      config:
+        include_individual: true
+        include_admin_master: true
+
+    - name: engagement_recreation_yearly
+      trigger: "0 0 1 1 *"
+      description: "Yearly engagement recreation (Jan 1 @ midnight)"
+      action: recreate_engagement
+      entity: engagement
+      enabled: true
+      filter: "engagement.repeat_interval == 'yearly' AND status == 'active'"
+
+    - name: engagement_recreation_monthly
+      trigger: "0 0 1 * *"
+      description: "Monthly engagement recreation (1st of month @ midnight)"
+      action: recreate_engagement
+      entity: engagement
+      enabled: true
+      filter: "engagement.repeat_interval == 'monthly' AND status == 'active'"
+
+    - name: email_queue_processing
+      trigger: "0 * * * *"
+      description: "Process email queue (hourly)"
+      action: send_queued_emails
+      entity: email
+      enabled: true
+
+# ============================================================================
+# SECTION 7: Notifications (Event-Driven Rules)
+# ============================================================================
+notifications:
+  rfi_escalation:
+    description: "RFI outstanding escalation notifications"
+    trigger: "rfi.daysOutstanding reaches threshold"
+    thresholds: $workflows.rfi_type_standard.notifications.escalation_thresholds
+    recipients:
+      - role: partner
+        channels:
+          - email
+          - in_app
+      - role: manager
+        channels:
+          - email
+          - in_app
+    template: "rfi_escalation_{{threshold}}_days"
+    enabled: true
+    batch: false
+
+  rfi_deadline_warning:
+    description: "RFI deadline warning notifications"
+    trigger: "rfi.deadline approaching"
+    thresholds: $workflows.rfi_type_standard.notifications.deadline_warnings
+    recipients:
+      - role: partner
+        channels:
+          - email
+      - role: manager
+        channels:
+          - email
+      - assigned_users:
+        channels:
+          - email
+          - in_app
+    template: "rfi_deadline_{{days}}_days"
+    enabled: true
+    batch: true
+
+  engagement_deadline:
+    description: "Engagement commencement date reached"
+    trigger: "engagement.commencement_date reached"
+    recipients:
+      - roles:
+          - partner
+          - manager
+        channels:
+          - email
+    template: "engagement_auto_transition"
+    enabled: true
+
+  collaborator_expiry:
+    description: "Collaborator access expiring soon"
+    trigger: "collaborator.expires_at - 24h"
+    recipients:
+      - entity: collaborator.user
+        channels:
+          - email
+    template: "collaborator_access_expiring"
+    enabled: true
+
+  collaborator_expired:
+    description: "Collaborator access has expired"
+    trigger: "collaborator.expires_at reached"
+    recipients:
+      - entity: collaborator.user
+        channels:
+          - email
+    template: "collaborator_access_expired"
+    enabled: true
+
+  client_feedback_ready:
+    description: "Engagement ready for client feedback"
+    trigger: "engagement.stage == 'finalization'"
+    recipients:
+      - role: client_admin
+        channels:
+          - email
+    template: "client_feedback_ready"
+    enabled: true
+
+  tender_deadline_warning:
+    description: "Tender deadline approaching"
+    trigger: "tender.daysUntilDeadline <= 7"
+    recipients:
+      - role: partner
+        channels:
+          - email
+          - in_app
+    template: "tender_deadline_warning"
+    enabled: true
+
+  tender_deadline_today:
+    description: "Tender deadline is today"
+    trigger: "tender.daysUntilDeadline == 0"
+    recipients:
+      - role: partner
+        channels:
+          - email
+          - in_app
+    template: "tender_deadline_today"
+    enabled: true
+
+  engagement_created:
+    description: "New engagement created"
+    trigger: "engagement.onCreate"
+    recipients:
+      - entity: assigned_to
+        channels:
+          - in_app
+    template: "engagement_created"
+    enabled: true
+
+  engagement_status_changed:
+    description: "Engagement status changed"
+    trigger: "engagement.onStatusChange"
+    recipients:
+      - entity: assigned_to
+        channels:
+          - in_app
+    template: "engagement_status_changed"
+    enabled: true
+
+# ============================================================================
+# SECTION 8: Document Generation (Template Variables)
+# ============================================================================
+document_generation:
+  templates:
+    engagement_letter:
+      description: "Standard engagement letter template"
+      variables:
+        client: "client.name"
+        client_address: "client.address"
+        client_email: "client.email"
+        year: "engagement.year"
+        engagement: "engagement.name"
+        engagement_title: "engagement.title"
+        period: "engagement.period"
+        date: "now()"
+        fee: "engagement.fee"
+        scope: "engagement.scope"
+        partner_name: "user.name"
+        partner_email: "user.email"
+        commencement_date: "engagement.commencement_date"
+        completion_date: "engagement.end_date"
+      google_drive:
+        template_folder_env: DRIVE_ENGAGEMENT_LETTER_FOLDER
+        output_type: pdf
+        cleanup_intermediate_docs: true
+        share_with_client: true
+
+  google_drive:
+    enabled: true
+    template_folder_variable: DRIVE_ENGAGEMENT_LETTER_FOLDER
+    output_type: pdf
+    cleanup_intermediate_docs: true
+    default_sharing:
+      - role: reader
+        type: user
+        emailMessage: "Engagement letter for your review"
+
+# ============================================================================
+# SECTION 9: Highlight Palette (Config-Driven Colors)
+# ============================================================================
+highlights:
+  palette:
+    - color: "#B0B0B0"
+      name: grey
+      status: unresolved
+      label: "Unresolved"
+      description: "Unresolved / Open highlight"
+      default: true
+      order: 1
+
+    - color: "#44BBA4"
+      name: green
+      status: resolved
+      label: "Resolved"
+      description: "Resolved highlight"
+      order: 2
+
+    - color: "#FF4141"
+      name: red
+      status: high_priority
+      label: "High Priority"
+      description: "Partner/High Priority Note"
+      order: 3
+
+    - color: "#7F7EFF"
+      name: purple
+      status: active_focus
+      label: "Active Focus"
+      description: "Scrolled To (active focus state)"
+      order: 4
+      system_only: true
+
+  rendering:
+    opacity: 0.3
+    opacity_hover: 0.5
+    opacity_active: 0.7
+    border_width: 2
+    z_index: 100
+    animation_duration_ms: 200
+
+# ============================================================================
+# SECTION 10: Domain Configuration (Friday vs MWR)
+# ============================================================================
+domains:
+  friday:
+    name: Friday
+    label: "Engagement Management"
+    description: "Engagement lifecycle, RFI workflow, client communication"
+    enabled: true
+    primary_color: "#3B82F6"
+    icon: Briefcase
+    features:
+      engagement_management: true
+      rfi_workflow: true
+      engagement_letter: true
+      client_feedback: true
+      recreation: true
+      team_management: true
+      client_management: true
+    entities:
+      - engagement
+      - rfi
+      - client
+      - client_user
+      - letter
+      - rfi_section
+      - message
+      - file
+      - response
+      - email
+      - user
+      - team
+
+  mwr:
+    name: MWR
+    label: "My Work Review"
+    description: "PDF review collaboration, highlights, checklists, tenders"
+    enabled: true
+    primary_color: "#10B981"
+    icon: FileText
+    features:
+      review_management: true
+      pdf_viewer: true
+      highlight_collaboration: true
+      checklist_management: true
+      tender_tracking: true
+      pdf_comparison: true
+      priority_reviews: true
+      chat_merge: true
+      collaborator_management: true
+    entities:
+      - review
+      - highlight
+      - collaborator
+      - checklist
+      - tender
+      - flag
+      - user
+      - team
+
+  shared:
+    description: "Entities shared across both domains"
+    entities:
+      - user
+      - team
+      - notification
+
+# ============================================================================
+# SECTION 11: Feature Flags (Per-Domain, Config-Driven)
+# ============================================================================
+features:
+  engagement_letter:
+    enabled: true
+    domain: friday
+    workflow_stage: commencement
+    description: "Generate engagement letters via Google Drive"
+    requires:
+      - google_drive
+    entity: letter
+
+  client_feedback:
+    enabled: true
+    domain: friday
+    workflow_stage: finalization
+    description: "Client feedback and rating system"
+    roles:
+      - client_admin
+    entity: engagement
+
+  post_rfi:
+    enabled: true
+    domain: friday
+    workflow_stage: finalization
+    description: "Post-RFI workflow for finalization queries"
+    entity: rfi
+
+  pdf_viewer:
+    enabled: true
+    domain: mwr
+    description: "PDF.js-based PDF viewer with text selection"
+    entity: review
+    min_browser_version:
+      chrome: 90
+      firefox: 88
+      safari: 14
+
+  highlight_collaboration:
+    enabled: true
+    domain: mwr
+    description: "Multi-user highlight collaboration on PDFs"
+    entity: highlight
+    requires:
+      - pdf_viewer
+    realtime_sync: true
+
+  chat_merge:
+    enabled: true
+    domain: mwr
+    description: "Merge Friday engagement with MWR review"
+    integration: friday_mwr
+    requires:
+      - review.review_link
+
+  priority_reviews:
+    enabled: true
+    domain: mwr
+    description: "User-specific priority review lists"
+    entity: user
+    field: priority_reviews
+
+  pdf_comparison:
+    enabled: true
+    domain: mwr
+    description: "Side-by-side PDF comparison with sync scroll"
+    entity: review
+    sync_scroll: true
+
+  temporary_collaborator_access:
+    enabled: true
+    domain: mwr
+    description: "Time-limited collaborator access with auto-revoke"
+    entity: collaborator
+    expiry_days: $thresholds.collaborator.default_expiry_days
+    max_expiry_days: $thresholds.collaborator.max_expiry_days
+
+  tender_deadline_warning:
+    enabled: true
+    domain: mwr
+    description: "Tender deadline tracking and notifications"
+    entity: tender
+    warning_days: $thresholds.tender.warning_days_before
+
+  engagement_recreation:
+    enabled: true
+    domain: friday
+    description: "Automatic engagement recreation (monthly/yearly)"
+    entity: engagement
+    intervals:
+      - once
+      - monthly
+      - yearly
+
+  stage_auto_transition:
+    enabled: true
+    domain: friday
+    description: "Automatic stage transitions on commencement date"
+    entity: engagement
+    workflow: engagement_lifecycle
+
+  rfi_state_unification:
+    enabled: true
+    domain: friday
+    description: "Unified RFI state machine with dual display states"
+    entity: rfi
+
+  offline_mode:
+    enabled: false
+    domain: global
+    description: "Offline caching and sync (DEPRECATED)"
+    deprecated: true
+    removal_version: "2.0"
+
+  user_sync:
+    enabled: true
+    domain: global
+    description: "Google Workspace user sync"
+    integration: google_workspace
+    schedule: "0 3 * * *"
+
+# ============================================================================
+# SECTION 12: Integrations (Config-Driven External Systems)
+# ============================================================================
+integrations:
+  google_workspace:
+    enabled: true
+    description: "Google Workspace user directory sync"
+    schedule: $automation.schedules[user_sync].trigger
+    action: sync_users_from_google_workspace
+    scopes:
+      - https://www.googleapis.com/auth/admin.directory.user.readonly
+    env_vars:
+      - USER_SYNC_SCRIPT_URL
+      - USER_SYNC_KEY
+    rate_limits:
+      requests_per_minute: 300
+      requests_per_day: 10000
+
+  google_drive:
+    enabled: true
+    description: "Google Drive document generation and file storage"
+    actions:
+      - generate_letter
+      - copy_files_on_recreation
+      - upload_rfi_files
+    template_variables: $document_generation.templates
+    scopes:
+      - https://www.googleapis.com/auth/drive.file
+      - https://www.googleapis.com/auth/drive.readonly
+    env_vars:
+      - DRIVE_ENGAGEMENT_LETTER_FOLDER
+      - GOOGLE_SERVICE_ACCOUNT_KEY
+    rate_limits:
+      requests_per_100_seconds: 1000
+      quota_per_user_per_day: 10000000000
+    max_file_size_mb: 25
+
+  google_gmail:
+    enabled: true
+    description: "Gmail API for sending notifications and emails"
+    actions:
+      - send_notifications
+      - receive_email_attachments
+      - send_rfi_emails
+    scopes:
+      - https://www.googleapis.com/auth/gmail.send
+      - https://www.googleapis.com/auth/gmail.readonly
+    rate_limits:
+      per_user_per_minute: 100
+      per_project_per_day: 10000
+    env_vars:
+      - GMAIL_SERVICE_ACCOUNT_KEY
+    max_attachment_size_mb: 25
+
+  google_oauth:
+    enabled: true
+    description: "Google OAuth 2.0 authentication"
+    scopes:
+      - https://www.googleapis.com/auth/userinfo.email
+      - https://www.googleapis.com/auth/userinfo.profile
+    env_vars:
+      - GOOGLE_CLIENT_ID
+      - GOOGLE_CLIENT_SECRET
+      - GOOGLE_REDIRECT_URI
+    token_expiry_hours: 1
+    refresh_token_rotation: true
+
+# ============================================================================
+# SECTION 13: Validation Rules (DSL, Not Code)
+# ============================================================================
+validation:
+  engagement_stage_transition:
+    description: "Validate engagement stage transitions"
+    rule: |
+      if (current_stage == 'info_gathering' && date > commencement_date) {
+        error: "Cannot manually set to InfoGathering after commencement_date"
+      }
+      if (to_stage == 'close_out' && role != 'partner') {
+        error: "Only Partner can transition to CloseOut"
+      }
+      if (to_stage == 'close_out') {
+        require: engagement_letter.status == 'accepted' OR progress == 0
+        error: "Engagement letter must be accepted or engagement cancelled before CloseOut"
+      }
+      if (to_stage NOT IN allowed_forward_transitions[current_stage]) {
+        error: "Invalid stage transition"
+      }
+
+  rfi_completion:
+    description: "Validate RFI completion requirements"
+    rule: |
+      require: files_count > 0 OR response.text_length > 0
+      error: "RFI must have file upload OR text response to mark complete"
+
+  recreation_allowed:
+    description: "Validate engagement recreation eligibility"
+    rule: |
+      require: repeat_interval != 'once'
+      error: "Cannot recreate engagement with repeat_interval='once'"
+      require: status == 'active'
+      error: "Cannot recreate inactive engagement"
+
+  date_range_validation:
+    description: "Validate start and end date ranges"
+    rule: |
+      if (start_date && end_date) {
+        require: start_date < end_date
+        error: "Start date must be before end date"
+      }
+
+  collaborator_expiry_validation:
+    description: "Validate collaborator expiry dates"
+    rule: |
+      if (access_type == 'temporary') {
+        require: expires_at IS NOT NULL
+        error: "Temporary access requires expiry date"
+        require: expires_at > now()
+        error: "Expiry date must be in the future"
+        require: expires_at <= now() + (max_expiry_days * 86400)
+        error: "Expiry date cannot exceed ${max_expiry_days} days"
+      }
+
+  year_validation:
+    description: "Validate engagement year"
+    rule: |
+      require: year >= $thresholds.engagement.min_year
+      require: year <= $thresholds.engagement.max_year
+      error: "Year must be between ${min_year} and ${max_year}"
+
+  tender_deadline_validation:
+    description: "Validate tender deadline"
+    rule: |
+      if (is_tender == true) {
+        require: deadline IS NOT NULL
+        error: "Tender must have a deadline"
+        require: deadline > now()
+        error: "Tender deadline must be in the future"
+      }
+
+# ============================================================================
+# SECTION 14: Status Enums (All Status Options)
+# ============================================================================
+status_enums:
+  standard_status:
+    pending:
+      label: "Pending"
+      color: yellow
+    active:
+      label: "Active"
+      color: blue
+    completed:
+      label: "Completed"
+      color: green
+    archived:
+      label: "Archived"
+      color: gray
+
+  lifecycle_status:
+    pending:
+      label: "Pending"
+      color: yellow
+    active:
+      label: "Active"
+      color: blue
+    inactive:
+      label: "Inactive"
+      color: gray
+
+  rfi_client_status:
+    pending:
+      label: "Pending"
+      color: yellow
+    sent:
+      label: "Sent"
+      color: blue
+    responded:
+      label: "Responded"
+      color: amber
+    completed:
+      label: "Completed"
+      color: green
+
+  rfi_auditor_status:
+    requested:
+      label: "Requested"
+      color: red
+    reviewing:
+      label: "Reviewing"
+      color: blue
+    queries:
+      label: "Queries"
+      color: amber
+    received:
+      label: "Received"
+      color: green
+
+  highlight_status:
+    unresolved:
+      label: "Unresolved"
+      color: red
+    partially_resolved:
+      label: "Partially Resolved"
+      color: yellow
+    resolved:
+      label: "Resolved"
+      color: green
+
+  review_status:
+    open:
+      label: "Open"
+      color: yellow
+    closed:
+      label: "Closed"
+      color: green
+
+  engagement_stage:
+    info_gathering:
+      label: "Info Gathering"
+      color: blue
+    commencement:
+      label: "Commencement"
+      color: blue
+    team_execution:
+      label: "Team Execution"
+      color: amber
+    partner_review:
+      label: "Partner Review"
+      color: amber
+    finalization:
+      label: "Finalization"
+      color: green
+    close_out:
+      label: "Close Out"
+      color: green
+
+  user_status:
+    active:
+      label: "Active"
+      color: green
+    inactive:
+      label: "Inactive"
+      color: gray
+    pending:
+      label: "Pending"
+      color: yellow
+
+  letter_status:
+    draft:
+      label: "Draft"
+      color: gray
+    sent:
+      label: "Sent"
+      color: blue
+    accepted:
+      label: "Accepted"
+      color: green
+    rejected:
+      label: "Rejected"
+      color: red
+
+# ============================================================================
+# SECTION 15: System Configuration
+# ============================================================================
+system:
+  database:
+    type: sqlite
+    path: ./data/database.db
+    backup_path: ./data/backups
+    foreign_keys: false
+    wal_mode: true
+    max_connections: 10
+
+  server:
+    port: 3000
+    host: 0.0.0.0
+    cors_enabled: true
+    session_secret_env: SESSION_SECRET
+    timezone: UTC
+
+  polling:
+    default_interval_ms: 2000
+    max_interval_ms: 10000
+    deduplication_window_ms: 1000
+
+  pagination:
+    default_page_size: 50
+    max_page_size: 500
+
+  logging:
+    level: info
+    format: json
+    log_api_calls: true
+    log_sql_queries: false
+    log_file: ./logs/app.log
+
+  security:
+    bcrypt_rounds: 10
+    session_max_age_hours: 24
+    csrf_protection: true
+    helmet_enabled: true
+
+  performance:
+    enable_compression: true
+    enable_etag: true
+    cache_static_assets: true
+
+# ============================================================================
+# END OF MASTER CONFIGURATION
+# ============================================================================

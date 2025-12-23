@@ -9,4 +9,5 @@ export { usePageState } from './use-page-state';
 export { useSortState } from './use-sort-state';
 export { useSearchState } from './use-search-state';
 export { useFilterState } from './use-filter-state';
+export { useFormSelectData } from './use-form-select-data';
 export { useFormState, useSelection, useLoadingState } from '../hooks.js';

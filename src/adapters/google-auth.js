@@ -1,21 +1,19 @@
 
 import { google } from 'googleapis';
-import path from 'path';
 import fs from 'fs';
 import { GOOGLE_SCOPES } from '@/config/constants';
-
-const SERVICE_ACCOUNT_PATH = process.env.GOOGLE_SERVICE_ACCOUNT_PATH ||
-  path.join(process.cwd(), 'config', 'service-account.json');
+import { config } from '@/config/env';
 
 let credentials = null;
 
 export function getCredentials() {
   if (credentials) return credentials;
-  if (!fs.existsSync(SERVICE_ACCOUNT_PATH)) {
-    console.warn('Service account file not found:', SERVICE_ACCOUNT_PATH);
+  const path = config.auth.google.credentialsPath;
+  if (!fs.existsSync(path)) {
+    console.warn('Service account file not found:', path);
     return null;
   }
-  credentials = JSON.parse(fs.readFileSync(SERVICE_ACCOUNT_PATH, 'utf8'));
+  credentials = JSON.parse(fs.readFileSync(path, 'utf8'));
   return credentials;
 }
 

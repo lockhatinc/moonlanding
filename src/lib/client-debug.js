@@ -1,88 +1,182 @@
-'use client';
+let apiCalls = [];
+let apiErrors = [];
+let entities = new Map();
+let permissionCache = new Map();
+let applicationErrors = [];
+let currentUser = null;
+let watchedEndpoints = new Set();
+const MAX_CALLS = 50;
+const MAX_ERRORS = 100;
 
-let appState = {
-  user: null,
-  currentPage: null,
-  entities: {},
-  api: {
-    calls: [],
-    lastError: null,
-  },
-  ui: {
-    activeTab: null,
-    openModals: [],
-    messages: [],
-  },
-  cache: {},
-};
+function recordApiCall(method, url, status, duration, response, error = null) {
+  apiCalls.push({
+    timestamp: new Date().toISOString(),
+    method,
+    url,
+    status,
+    duration,
+    response: error ? null : response,
+    error: error ? error.message : null,
+  });
+  if (apiCalls.length > MAX_CALLS) apiCalls.shift();
+  if (error) recordApiError({ method, url, status, error, response });
+}
 
-export function initDebug() {
-  if (typeof window === 'undefined') return;
+function recordApiError(error) {
+  apiErrors.push({ ...error, timestamp: new Date().toISOString() });
+  if (apiErrors.length > MAX_ERRORS) apiErrors.shift();
+}
 
-  let errors = [];
+function recordApplicationError(message, context = {}) {
+  applicationErrors.push({
+    timestamp: new Date().toISOString(),
+    message,
+    context,
+    stack: new Error().stack,
+  });
+  if (applicationErrors.length > MAX_ERRORS) applicationErrors.shift();
+}
 
-  window.__DEBUG__ = {
-    getState: () => appState,
-    setState: (key, value) => { appState[key] = value; console.log(`[DEBUG] Set ${key}:`, value); },
-    setUser: (user) => { appState.user = user; },
-    setPage: (page) => { appState.currentPage = page; },
-    setEntity: (name, data) => { appState.entities[name] = data; },
-    addApiCall: (method, url, status, duration) => {
-      appState.api.calls.push({ method, url, status, duration, timestamp: new Date() });
-      if (appState.api.calls.length > 100) appState.api.calls.shift();
-    },
-    setApiError: (error) => { appState.api.lastError = error; },
-    getApiCalls: () => appState.api.calls,
-    getLastApiError: () => appState.api.lastError,
-    clearApiCalls: () => { appState.api.calls = []; },
-    getEntity: (name) => appState.entities[name],
-    getAllEntities: () => appState.entities,
-    setCache: (key, value) => { appState.cache[key] = value; },
-    getCache: (key) => appState.cache[key],
-    clearCache: () => { appState.cache = {}; },
-    getAll: () => appState,
-    log: (msg, data) => console.log(`[APP] ${msg}`, data || ''),
-    error: (msg, context) => {
-      const err = { msg, context, timestamp: new Date(), stack: new Error().stack };
-      errors.push(err);
-      if (errors.length > 50) errors.shift();
-      console.error(`[ERROR] ${msg}`, context || '');
-      return err;
-    },
-    getErrors: () => errors,
-    clearErrors: () => { errors = []; },
-    getPermissionCacheStats: null,
-    tables: {
-      apiCalls: () => console.table(appState.api.calls),
-      entities: () => console.table(appState.entities),
-      cache: () => console.table(appState.cache),
-      errors: () => console.table(errors),
-    },
+function recordEntity(type, data) {
+  if (!entities.has(type)) entities.set(type, new Map());
+  if (Array.isArray(data)) {
+    data.forEach(record => entities.get(type).set(record.id, record));
+  } else {
+    entities.get(type).set(data.id, data);
+  }
+}
+
+function recordPermissionCheck(userId, entityName, action, result) {
+  const key = `${userId}|${entityName}|${action}`;
+  permissionCache.set(key, {
+    timestamp: Date.now(),
+    userId,
+    entityName,
+    action,
+    result,
+  });
+  if (permissionCache.size > 1000) {
+    const first = permissionCache.keys().next().value;
+    permissionCache.delete(first);
+  }
+}
+
+function setCurrentUser(user) {
+  currentUser = {
+    id: user?.id,
+    email: user?.email,
+    role: user?.role,
+    type: user?.type,
+    hierarchy: user?.hierarchy,
   };
 }
 
-export function logApiCall(method, url, status, duration) {
-  if (window.__DEBUG__) {
-    window.__DEBUG__.addApiCall(method, url, status, duration);
+export const DEBUG = {
+  state() {
+    return {
+      user: currentUser,
+      apiCalls: apiCalls.length,
+      apiErrors: apiErrors.length,
+      entities: Array.from(entities.entries()).map(([type, data]) => ({
+        type,
+        count: data.size,
+      })),
+      applicationErrors: applicationErrors.length,
+      permissionCacheSize: permissionCache.size,
+    };
+  },
+
+  errors() {
+    return applicationErrors;
+  },
+
+  entities: {
+    get(type, id) {
+      return entities.get(type)?.get(id);
+    },
+    list(type) {
+      return Array.from(entities.get(type)?.values() || []);
+    },
+    table() {
+      const rows = [];
+      for (const [type, typeMap] of entities) {
+        for (const [id, data] of typeMap) {
+          rows.push({ type, id, record: data });
+        }
+      }
+      return rows;
+    },
+  },
+
+  permissions: {
+    cache() {
+      const entries = [];
+      for (const [key, value] of permissionCache) {
+        const [userId, entityName, action] = key.split('|');
+        entries.push({ userId, entityName, action, result: value.result });
+      }
+      return entries;
+    },
+    clearCache() {
+      permissionCache.clear();
+    },
+    trace(opts) {
+      const cached = permissionCache.get(`${opts.userId}|${opts.entityName}|${opts.action}`);
+      return cached || 'NOT_CACHED - will evaluate on next check';
+    },
+  },
+
+  api: {
+    calls() {
+      return apiCalls;
+    },
+    lastError() {
+      return apiErrors[apiErrors.length - 1] || null;
+    },
+    watch(endpoint) {
+      watchedEndpoints.add(endpoint);
+      console.log(`[DEBUG] Watching endpoint: ${endpoint}`);
+    },
+    table() {
+      return apiCalls.map(call => ({
+        time: call.timestamp,
+        method: call.method,
+        url: call.url,
+        status: call.status,
+        duration: `${call.duration}ms`,
+        error: call.error || 'OK',
+      }));
+    },
+  },
+
+  user: {
+    current() {
+      return currentUser;
+    },
+  },
+
+  record: {
+    apiCall: recordApiCall,
+    apiError: recordApiError,
+    appError: recordApplicationError,
+    entity: recordEntity,
+    permission: recordPermissionCheck,
+    user: setCurrentUser,
+  },
+};
+
+export function initClientDebug() {
+  if (typeof window !== 'undefined') {
+    window.__DEBUG__ = DEBUG;
+    console.log('[DEBUG] Client debug initialized: window.__DEBUG__');
   }
 }
 
-export function logApiError(error) {
-  if (window.__DEBUG__) {
-    const { LOG_PREFIXES } = require('@/config');
-    window.__DEBUG__.setApiError(error);
-    console.error(LOG_PREFIXES.api, error);
-  }
+export function recordApiResponse(method, url, status, duration, response, error = null) {
+  recordApiCall(method, url, status, duration, response, error);
 }
 
-export function setCurrentUser(user) {
-  if (window.__DEBUG__) {
-    window.__DEBUG__.setUser(user);
-  }
-}
-
-export function setCurrentEntity(name, data) {
-  if (window.__DEBUG__) {
-    window.__DEBUG__.setEntity(name, data);
-  }
+export function recordError(message, context = {}) {
+  recordApplicationError(message, context);
+  console.error(`[DEBUG] ${message}`, context);
 }

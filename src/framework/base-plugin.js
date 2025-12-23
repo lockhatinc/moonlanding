@@ -1,10 +1,12 @@
+import { HookRegistry } from './hook-registry.js';
+
 export class BasePlugin {
   constructor(name, version = '1.0.0') {
     this.name = name;
     this.version = version;
     this.enabled = true;
     this.config = {};
-    this.hooks = new Map();
+    this.hookRegistry = new HookRegistry();
     this.metadata = {
       author: 'Framework',
       description: '',
@@ -13,15 +15,12 @@ export class BasePlugin {
   }
 
   register(hook, handler, priority = 10) {
-    if (!this.hooks.has(hook)) {
-      this.hooks.set(hook, []);
-    }
-    this.hooks.get(hook).push({ handler, priority });
-    this.hooks.get(hook).sort((a, b) => b.priority - a.priority);
+    this.hookRegistry.register(hook, handler, priority);
+    return this;
   }
 
   getHooks(hook) {
-    return (this.hooks.get(hook) || []).map(h => h.handler);
+    return this.hookRegistry.getHandlers(hook);
   }
 
   configure(config) {

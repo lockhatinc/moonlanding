@@ -185,6 +185,45 @@ export class SpecBuilder {
     return this;
   }
 
+  permissions(config = {}) {
+    this.spec.permissions = config;
+    return this;
+  }
+
+  stages(config = {}) {
+    this.spec.stages = config;
+    return this;
+  }
+
+  businessRules(rules = {}) {
+    this.spec.businessRules = rules;
+    return this;
+  }
+
+  stateMachine(config) {
+    this.spec.stateMachine = config;
+
+    this.spec.fields.state = {
+      type: 'enum',
+      options: 'state',
+      required: true,
+      list: true,
+      default: Object.keys(config.states)[0],
+      label: 'State',
+    };
+
+    const stateOptions = Object.entries(config.states).reduce((acc, [key, stateConfig]) => {
+      acc[key] = {
+        label: stateConfig.label,
+        color: stateConfig.color || 'gray',
+      };
+      return acc;
+    }, {});
+    this.options('state', stateOptions);
+
+    return this;
+  }
+
   build() {
     validateSpec(this.spec);
     return this.spec;

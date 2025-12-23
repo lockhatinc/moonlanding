@@ -69,20 +69,9 @@ export { DATABASE_LIMITS, MEMORY_LIMITS, QUERY_LIMITS, VALIDATION_LIMITS, FILE_L
 export { POLLING_CONFIG, RETRY_TIMING, NOTIFICATION_TIMING, CACHE_TTL, DEBOUNCE_TIMING, THROTTLE_TIMING, SESSION_TIMING, ANIMATION_TIMING, API_TIMING, MAINTENANCE_TIMING } from './timing-config';
 export { BasePlugin, BaseService, BaseEngine, PluginManager, globalPluginManager, FieldRendererPlugin, NotificationPlugin, AuditLogPlugin, SearchPlugin, PermissionPlugin } from '@/framework';
 export { ValidationBuilder, field, schema, SchemaValidator, createSchemaValidator } from './validation-dsl';
-export { ENTITY_VALIDATION_RULES, FIELD_VALIDATION_RULES, VALIDATION_SCHEMAS, getValidationRules, getFieldRules } from './entity-validation-config';
-export { ENTITY_OPERATIONS, getEmailEventTemplate, canTransitionStage, canTransitionStatus, canUpdateField, getRecreationFields, getExcludedFields } from './entity-operations-config';
 export { STATUS_ENUMS, getStatusValues, getEnumStatusColor, getStatusLabel, getStatusOptions, isValidStatus } from './status-enum-config';
-export { ENTITY_LIFECYCLE_HOOKS, getLifecycleHooks, getEmailHooks, getAuditHooks, shouldTriggerHook } from './entity-lifecycle-hooks-config';
 export { TimelineEngine, timelineEngine } from '@/lib/timeline-engine';
-export { ExtendedQueryAdapter } from '@/lib/query-adapter-extended';
 export { EDITABLE_FIELD_RENDERERS, LIST_RENDERERS, DISPLAY_RENDERERS, getFieldRenderers } from './field-render-config';
-export { ERROR_TYPES, RECOVERY_STRATEGIES, getErrorType, getRecoveryStrategy, shouldRetry, getRetryDelay } from './error-recovery-config';
-export { FORM_SECTION_TEMPLATES, ENTITY_FORM_SECTIONS, getSectionTemplate, getEntityFormSections, getSectionFields } from './form-section-templates-config';
-export { JOB_TEMPLATES, getJobTemplate, getAllJobTemplates, getJobsBySchedule, getAsyncJobs } from './job-templates-config';
-export { DIALOG_REGISTRY, getDialog, getAllDialogs, getDialogsByType, getConfirmDialog, DialogManager, dialogManager } from './dialog-registry-config';
-export { PIPELINE_EMAIL_TEMPLATES, EMAIL_RENDERING_STAGES, EMAIL_FILTERS, getPipelineEmailTemplate, getAllPipelineEmailTemplates, getRenderingStages, getRequiredStages, EmailPipeline, emailPipeline } from './email-rendering-pipeline-config';
-export { COMPONENT_PROPS_SCHEMAS, PROP_TYPES, getComponentSchema, validateProps, getDefaultProps, PropValidator, propValidator } from './component-props-schema';
-export { GLOBAL_STATE_SCHEMA, GlobalStateManager, globalStateManager, useGlobalState, setGlobalState, getGlobalState } from './global-state-management-plugin';
 
 export const API_ENDPOINTS = {
   entity: (name) => `/api/${name}`,

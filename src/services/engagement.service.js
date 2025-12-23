@@ -1,6 +1,7 @@
 import { list, get, create, update, remove } from '@/engine';
 import { recreateEngagement, batchRecreateEngagements } from '@/engine/recreation';
 import { RFI_STATUS, RFI_CLIENT_STATUS, RFI_AUDITOR_STATUS } from '@/lib/status-helpers';
+import { getSystemConfig } from '@/config';
 
 class EngagementService {
   get(id) {
@@ -34,13 +35,28 @@ class EngagementService {
     );
   }
 
-  transitionStage(engagementId, toStage) {
+  async transitionStage(engagementId, toStage, user = null) {
     const engagement = this.get(engagementId);
     if (!engagement) throw new Error('Engagement not found');
+
+    if (user) {
+      const { lifecycleEngine } = await getSystemConfig();
+      const spec = { name: 'engagement' };
+
+      if (!lifecycleEngine.canTransition(spec, engagement.stage, toStage, user)) {
+        throw new Error(`Cannot transition from ${engagement.stage} to ${toStage}`);
+      }
+
+      const validationResult = await lifecycleEngine.validateTransition(spec, engagement.stage, toStage, { entity: engagement, user });
+      if (!validationResult.valid) {
+        throw new Error(`Transition validation failed: ${validationResult.error}`);
+      }
+    }
+
     return this.update(engagementId, { stage: toStage });
   }
 
-  transitionStatus(engagementId, toStatus) {
+  async transitionStatus(engagementId, toStatus, user = null) {
     const engagement = this.get(engagementId);
     if (!engagement) throw new Error('Engagement not found');
     return this.update(engagementId, { status: toStatus });

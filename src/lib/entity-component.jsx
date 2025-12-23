@@ -3,8 +3,7 @@
 import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Box, Button, Group, Text, Title, Loader } from '@mantine/core';
-import { useFormState } from '@/lib/hooks';
-import { useNavigation } from '@/lib/hooks';
+import { useFormState, useNavigation, useFormSelectData } from '@/lib/hooks';
 import { buildFormFields, LOG_PREFIXES, SUCCESS_MESSAGES } from '@/config';
 import { renderFormField } from '@/lib/rendering-engine';
 import { useFormStatus } from 'react-dom';
@@ -25,28 +24,7 @@ function FormMode({ spec, data = {}, options = {}, entityName = null, sections =
   const { values, setValue, errors, setError, hasErrors } = useFormState(spec, data);
   const formFields = useMemo(() => buildFormFields(spec), [spec]);
   const formSections = useMemo(() => sections || spec.form?.sections || [{ label: 'Details', fields: formFields.map(f => f.key) }], [sections, spec, formFields]);
-
-  const enumSelectData = useMemo(() => {
-    const data = {};
-    for (const field of formFields) {
-      if (field.type === 'enum' && field.options) {
-        const enumOptions = spec.options?.[field.options] || [];
-        data[field.key] = enumOptions.map(o => ({ value: String(o.value), label: o.label }));
-      }
-    }
-    return data;
-  }, [spec, formFields]);
-
-  const refSelectData = useMemo(() => {
-    const data = {};
-    for (const field of formFields) {
-      if (field.type === 'ref') {
-        const refOptions = options[field.key] || [];
-        data[field.key] = refOptions.map(o => ({ value: o.value, label: o.label }));
-      }
-    }
-    return data;
-  }, [options, formFields]);
+  const { enumSelectData, refSelectData } = useFormSelectData(formFields, spec, options);
 
   const renderField = (field) => renderFormField(field, values, setValue, enumSelectData, refSelectData);
 

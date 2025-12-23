@@ -1,7 +1,9 @@
+import { HookRegistry } from './hook-registry.js';
+
 export class PluginManager {
   constructor() {
     this.plugins = new Map();
-    this.hooks = new Map();
+    this.hookRegistry = new HookRegistry();
     this.listeners = new Map();
   }
 
@@ -10,9 +12,7 @@ export class PluginManager {
       throw new Error(`Plugin ${plugin.name} already registered`);
     }
     this.plugins.set(plugin.name, plugin);
-    if (typeof plugin.onInit === 'function') {
-      plugin.onInit();
-    }
+    plugin.onInit?.();
     this.emit('plugin:registered', { plugin });
     return this;
   }
@@ -20,9 +20,7 @@ export class PluginManager {
   unregister(name) {
     const plugin = this.plugins.get(name);
     if (!plugin) throw new Error(`Plugin ${name} not found`);
-    if (typeof plugin.onUninstall === 'function') {
-      plugin.onUninstall();
-    }
+    plugin.onUninstall?.();
     this.plugins.delete(name);
     this.emit('plugin:unregistered', { name });
     return this;
@@ -32,9 +30,7 @@ export class PluginManager {
     const plugin = this.plugins.get(name);
     if (!plugin) throw new Error(`Plugin ${name} not found`);
     plugin.enable();
-    if (typeof plugin.onEnable === 'function') {
-      plugin.onEnable();
-    }
+    plugin.onEnable?.();
     this.emit('plugin:enabled', { name });
     return this;
   }
@@ -43,9 +39,7 @@ export class PluginManager {
     const plugin = this.plugins.get(name);
     if (!plugin) throw new Error(`Plugin ${name} not found`);
     plugin.disable();
-    if (typeof plugin.onDisable === 'function') {
-      plugin.onDisable();
-    }
+    plugin.onDisable?.();
     this.emit('plugin:disabled', { name });
     return this;
   }
@@ -66,26 +60,13 @@ export class PluginManager {
     return this.list().filter(p => p.isEnabled());
   }
 
-  hook(hookName, handler) {
-    if (!this.hooks.has(hookName)) {
-      this.hooks.set(hookName, []);
-    }
-    this.hooks.get(hookName).push(handler);
+  hook(hookName, handler, priority = 10) {
+    this.hookRegistry.register(hookName, handler, priority);
     return this;
   }
 
   async executeHook(hookName, data = {}) {
-    const handlers = this.hooks.get(hookName) || [];
-    const results = [];
-    for (const handler of handlers) {
-      try {
-        const result = await handler(data);
-        results.push(result);
-      } catch (error) {
-        console.error(`[PluginManager] Hook ${hookName} error:`, error);
-      }
-    }
-    return results;
+    return this.hookRegistry.execute(hookName, data);
   }
 
   on(event, listener) {

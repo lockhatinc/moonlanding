@@ -82,5 +82,5 @@ export const STAGE_TRANSITIONS = {
   'commencement': 'team_execution',
   'team_execution': 'partner_review',
   'partner_review': 'finalization',
-  'finalization': 'close_out',
+  'finalization': 'close_out'
 };

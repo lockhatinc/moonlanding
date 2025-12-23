@@ -1,4 +1,9 @@
 import { TOKEN } from './auth-config';
+import path from 'path';
+
+const getServiceAccountPath = () =>
+  process.env.GOOGLE_SERVICE_ACCOUNT_PATH ||
+  path.join(process.cwd(), 'config', 'service-account.json');
 
 export const config = {
   db: {
@@ -10,6 +15,7 @@ export const config = {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       redirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/callback/google',
+      credentialsPath: getServiceAccountPath(),
     },
     session: {
       secure: process.env.NODE_ENV === 'production',
@@ -18,7 +24,7 @@ export const config = {
   },
 
   drive: {
-    credentialsPath: process.env.GOOGLE_SERVICE_ACCOUNT_PATH || './serviceAccountCloud.json',
+    credentialsPath: getServiceAccountPath(),
     rootFolderId: process.env.DRIVE_ROOT_FOLDER_ID,
     cache: {
       enabled: true,
@@ -46,7 +52,6 @@ export const config = {
     userSync: {
       scriptUrl: process.env.USER_SYNC_SCRIPT_URL,
       key: process.env.USER_SYNC_KEY,
-      defaultRole: 'clerk',
     },
   },
 
