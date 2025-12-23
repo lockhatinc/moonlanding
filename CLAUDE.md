@@ -628,6 +628,100 @@ window.__DOMAINS__.getEntitiesForDomain('friday')        // List valid entities
 
 ---
 
+## Testing & Verification
+
+### Test Procedure: Manual Verification
+
+**1. Browser Console Quick Validation (2 minutes)**
+```javascript
+// Step 1: Check system initialization
+window.__HELPERS__.quickTest()
+
+// Step 2: Verify all entities generate
+const results = window.__HELPERS__.testEntityGeneration()
+console.log('Passed:', results.filter(r => r.status === '✓').length, '/', results.length)
+
+// Step 3: Verify domain isolation
+window.__HELPERS__.debugDomains()
+
+// Step 4: Verify permissions
+window.__HELPERS__.debugPermissions('standard_auditor')
+```
+
+**Expected Results:**
+- quickTest() shows all 4 tests passing
+- All 18 entities generate successfully
+- Friday has 12 entities, MWR has 8 entities
+- standard_auditor template has 5 roles defined
+
+### Test Procedure: API Route Validation (3 minutes)
+
+**1. Test Friday Domain Routes**
+```bash
+# List all Friday features
+curl http://localhost:3000/api/friday/features
+
+# Get Friday entities
+curl http://localhost:3000/api/domains/friday
+
+# Create engagement (Friday only)
+curl -X POST http://localhost:3000/api/friday/engagement
+```
+
+**2. Test MWR Domain Routes**
+```bash
+# List all MWR features
+curl http://localhost:3000/api/mwr/features
+
+# Get MWR entities
+curl http://localhost:3000/api/domains/mwr
+
+# Create review (MWR only)
+curl -X POST http://localhost:3000/api/mwr/review
+```
+
+**Expected Results:**
+- Friday endpoints return data
+- MWR endpoints return data
+- Cross-domain requests return 403 Forbidden
+
+### Test Procedure: Config Generation (2 minutes)
+
+**1. Test Runtime Entity Spec Generation**
+```javascript
+// Generate engagement spec
+const spec = window.__HELPERS__.debugEntity('engagement')
+console.log('Fields:', spec.fields.length)
+console.log('Required:', spec.fields.filter(f => f.required).length)
+
+// Generate rfi spec
+const rfiSpec = window.__HELPERS__.debugEntity('rfi')
+console.log('RFI Fields:', rfiSpec.fields.length)
+```
+
+**Expected Results:**
+- Specs generate without errors
+- engagement has required fields
+- rfi spec includes all RFI-specific fields
+
+### Test Procedure: Full System Health Check (5 minutes)
+
+Run this in browser console to get complete system status:
+```javascript
+const health = {
+  helpers: window.__HELPERS__.status(),
+  config: window.__CONFIG__.status(),
+  allEntitiesPass: window.__HELPERS__.testEntityGeneration().every(r => r.status === '✓'),
+  domainsOk: window.__DOMAINS__.isEntityInDomain('engagement', 'friday'),
+  apiCalls: window.__DEBUG__.api.calls().length,
+  errors: window.__DEBUG__.errors().length,
+  permissionCache: window.__DEBUG__.permissions.cache().length,
+};
+console.table(health);
+```
+
+---
+
 ## Performance Tuning
 
 ### Config Caching
