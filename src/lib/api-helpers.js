@@ -6,7 +6,7 @@ import { getUser } from '@/engine.server';
 import { can } from '@/lib/permissions';
 import { logger } from '@/lib/logger';
 import { HTTP } from '@/config/api-constants';
-import { ERROR_MESSAGES } from '@/config/spec-helpers';
+import { ERROR_MESSAGES } from '@/config';
 
 let dbInit = false;
 export function ensureDb() { if (!dbInit) { migrate(); dbInit = true; } }

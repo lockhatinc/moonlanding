@@ -1,5 +1,6 @@
 import { getUser } from '@/engine.server';
-import { getSpec, API_ENDPOINTS } from '@/config/spec-helpers';
+import { getSpec } from '@/config/spec-helpers';
+import { API_ENDPOINTS } from '@/config';
 import { can } from '@/lib/permissions';
 import { list, get, create, update, remove, listWithPagination, search } from '@/lib/query-engine';
 import { validateEntity, validateUpdate, hasErrors } from '@/lib/validate';

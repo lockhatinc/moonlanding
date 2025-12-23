@@ -1,3 +1,5 @@
+'use client';
+
 export { useLoadingError } from './use-loading-error';
 export { usePermissions } from './use-permissions';
 export { useModal } from './use-modal';

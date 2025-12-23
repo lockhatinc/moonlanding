@@ -2,13 +2,11 @@
 
 import { useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  usePageState,
-  useSortState,
-  useSearchState,
-  useLoadingState,
-  useFilterState,
-} from '@/lib/hooks';
+import { useLoadingState } from '@/lib/hooks';
+import { usePageState } from '@/lib/hooks/use-page-state';
+import { useSortState } from '@/lib/hooks/use-sort-state';
+import { useSearchState } from '@/lib/hooks/use-search-state';
+import { useFilterState } from '@/lib/hooks/use-filter-state';
 import { buildUrl } from '@/lib/query-string-adapter';
 
 const createUrlUpdater = (router) => (paramUpdates) => {
@@ -82,6 +80,6 @@ export const useBuilderState = (spec, mode = 'list') => {
   };
 };
 
-export { useSortState as useSort } from '@/lib/hooks';
-export { useSearchState as useSearch } from '@/lib/hooks';
-export { useFilterState as useFilters } from '@/lib/hooks';
+export { useSortState as useSort } from '@/lib/hooks/use-sort-state';
+export { useSearchState as useSearch } from '@/lib/hooks/use-search-state';
+export { useFilterState as useFilters } from '@/lib/hooks/use-filter-state';

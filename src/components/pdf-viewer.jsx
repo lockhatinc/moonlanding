@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { Paper, Group, Text, ActionIcon, Box, Button, Center, Loader } from '@mantine/core';
 import { UI_ICONS, NAVIGATION_ICONS } from '@/config/icon-config';
 import { LAYOUT } from '@/config';
-import { useToggle } from '@/lib/hooks';
+import { useToggle } from '@/lib/hooks/use-toggle';
 
 function getHighlightStyle(highlight, isSelected) {
   const resolvedColor = isSelected ? 'var(--mantine-color-blue-6)' : highlight.resolved ? 'var(--mantine-color-green-6)' : 'var(--mantine-color-yellow-6)';

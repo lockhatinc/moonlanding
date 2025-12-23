@@ -5,7 +5,7 @@ export async function loadSpec(entity) {
     return configCache.get(`spec:${entity}`);
   }
   try {
-    const module = await import(`./entities/${entity}.config.js`);
+    const module = await import(/* webpackIgnore: true */`./entities/${entity}.config.js`);
     const spec = module[`${entity}Spec`];
     configCache.set(`spec:${entity}`, spec);
     return spec;
@@ -33,7 +33,7 @@ export async function loadConfig(modulePath) {
     return configCache.get(modulePath);
   }
   try {
-    const module = await import(modulePath);
+    const module = await import(/* webpackIgnore: true */modulePath);
     const config = module.default || Object.values(module)[0];
     configCache.set(modulePath, config);
     return config;

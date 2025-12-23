@@ -127,7 +127,7 @@ export function createComponentLoader(componentName) {
 
   const [filePath, exportName] = path.includes('#') ? path.split('#') : [path, 'default'];
 
-  return () => import(filePath).then((module) => {
+  return () => import(/* webpackIgnore: true */filePath).then((module) => {
     if (exportName === 'default') {
       return module.default;
     }

@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useMemo } from 'react';
 
 export const usePageState = (initialPage = 1) => {

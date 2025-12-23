@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic';
-import { specs, getSpec, ERROR_MESSAGES } from '@/config/spec-helpers';
+import { specs, getSpec } from '@/config/spec-helpers';
+import { ERROR_MESSAGES } from '@/config';
 import { list, search, searchWithPagination, get, getChildren, batchGetChildren, listWithPagination, create, update, remove } from '@/engine';
 import { can } from '@/lib/permissions';
 import { loadFormOptions } from '@/lib/utils';

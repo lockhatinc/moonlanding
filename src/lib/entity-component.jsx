@@ -3,7 +3,9 @@
 import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Box, Button, Group, Text, Title, Loader } from '@mantine/core';
-import { useFormState, useNavigation, useFormSelectData } from '@/lib/hooks';
+import { useFormState } from '@/lib/hooks';
+import { useNavigation } from '@/lib/hooks/use-navigation';
+import { useFormSelectData } from '@/lib/hooks/use-form-select-data';
 import { buildFormFields, LOG_PREFIXES, SUCCESS_MESSAGES } from '@/config';
 import { renderFormField } from '@/lib/rendering-engine';
 import { useFormStatus } from 'react-dom';

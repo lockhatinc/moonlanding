@@ -1,7 +1,6 @@
 import { list, get, update, create, remove } from '../engine';
 import { ENGAGEMENT_STATUS, ENGAGEMENT_STAGE, RFI_STATUS, RFI_CLIENT_STATUS, RFI_AUDITOR_STATUS } from '@/lib/status-helpers';
 import { safeJsonParse } from '@/lib/safe-json';
-import { getSystemConfig } from '@/config';
 
 const calcNextPeriod = (year, month, interval) => {
   if (interval === 'yearly') return { year: year + 1, month };
@@ -18,12 +17,9 @@ export async function recreateEngagement(sourceId) {
   const src = get('engagement', sourceId);
   if (!src) throw new Error('Source engagement not found');
 
-  const { businessRulesEngine } = await getSystemConfig();
   const interval = src.repeat_interval;
-  const recreationConfig = businessRulesEngine.getRecreationConfig(interval);
-
-  if (!businessRulesEngine.evaluateRule('recreationAllowed', { engagement: src, interval, config: recreationConfig })) {
-    throw new Error(`Recreation not allowed for interval: ${interval}`);
+  if (!interval) {
+    throw new Error('Source engagement has no repeat interval');
   }
 
   const { year, month } = calcNextPeriod(src.year, src.month, interval);
