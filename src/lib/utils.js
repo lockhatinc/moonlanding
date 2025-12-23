@@ -1,5 +1,5 @@
 import { list } from '@/engine';
-import { getSpec } from '@/config';
+import { getSpec } from '@/config/spec-helpers';
 
 export { secondsToDate, dateToSeconds, formatDate, parseDate } from './date-utils';
 

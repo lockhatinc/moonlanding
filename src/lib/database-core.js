@@ -1,7 +1,8 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
-import { specs, SQL_TYPES } from '@/config';
+import { specs } from '@/config/spec-helpers';
+// Fallback: import {, SQL_TYPES } from '@/config/spec-helpers';
 import { forEachField } from '@/lib/field-iterator';
 import { nanoid } from 'nanoid';
 

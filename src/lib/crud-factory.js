@@ -1,4 +1,4 @@
-import { getSpec, API_ENDPOINTS } from '@/config';
+import { getSpec, API_ENDPOINTS } from '@/config/spec-helpers';
 import { list, get, create, update, remove, listWithPagination, search, getChildren } from '@/lib/query-engine';
 import { validateEntity, validateUpdate, hasErrors } from '@/lib/validate';
 import { requireAuth, requirePermission } from '@/lib/auth-middleware';

@@ -1,7 +1,8 @@
-import fs from 'fs';
-import path from 'path';
-import yaml from 'js-yaml';
 import { ConfigGeneratorEngine, setConfigEngine } from '@/lib/config-generator-engine';
+
+if (typeof window !== 'undefined') {
+  throw new Error('system-config-loader is server-side only and should not be bundled with client code');
+}
 
 const log = (msg, data) => {
   const prefix = '[SystemConfigLoader]';
@@ -12,6 +13,10 @@ const log = (msg, data) => {
 const logError = (msg, error) => {
   console.error(`[SystemConfigLoader] ERROR ${msg}`, error.message || error);
 };
+
+const fs = require('fs');
+const path = require('path');
+const yaml = require('js-yaml');
 
 export class SystemConfigLoader {
   static async load(customConfig = null) {

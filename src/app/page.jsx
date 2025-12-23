@@ -1,7 +1,7 @@
 import dynamicImport from 'next/dynamic';
 import { count } from '@/engine';
 import { getUser } from '@/engine.server';
-import { getNavItems } from '@/config';
+import { getNavItems } from '@/config/spec-helpers';
 import { redirect } from 'next/navigation';
 import { Shell } from '@/components/layout';
 import { Box, Title, Text, SimpleGrid, Stack } from '@mantine/core';

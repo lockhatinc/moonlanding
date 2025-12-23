@@ -3,14 +3,13 @@
 import { memo } from 'react';
 import dynamic from 'next/dynamic';
 import { Tabs, Loader } from '@mantine/core';
-import { specs } from '@/config';
 import { can } from '@/lib/permissions';
 
 const ListBuilder = dynamic(() => import('../builders/list-builder').then(m => ({ default: m.ListBuilder })), { loading: () => <Loader />, ssr: false });
 const ChatPanel = dynamic(() => import('../chat-panel').then(m => ({ default: m.ChatPanel })), { loading: () => <Loader />, ssr: false });
 
 const TabPanel = memo(function TabPanel({ tab, parentSpec, parentData, user, onSendMessage }) {
-  const childSpec = specs[tab.entity];
+  const childSpec = tab.spec;
   if (!childSpec) return null;
   return (
     <Tabs.Panel key={tab.key} value={tab.key} pt="md">

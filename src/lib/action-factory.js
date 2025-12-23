@@ -2,7 +2,7 @@
 
 import { create, update, remove } from '@/engine';
 import { requireUser, check } from '@/engine.server';
-import { getSpec } from '@/config';
+import { getSpec } from '@/config/spec-helpers';
 import { revalidatePath } from 'next/cache';
 
 export async function serverCreateEntity(entityName, data) {

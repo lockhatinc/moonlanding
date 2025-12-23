@@ -1,12 +1,12 @@
 
 import { NextResponse } from 'next/server';
-import { getSpec } from '@/config';
+import { getSpec } from '@/config/spec-helpers';
 import { migrate } from '@/engine';
 import { getUser } from '@/engine.server';
 import { can } from '@/lib/permissions';
 import { logger } from '@/lib/logger';
 import { HTTP } from '@/config/api-constants';
-import { ERROR_MESSAGES } from '@/config';
+import { ERROR_MESSAGES } from '@/config/spec-helpers';
 
 let dbInit = false;
 export function ensureDb() { if (!dbInit) { migrate(); dbInit = true; } }

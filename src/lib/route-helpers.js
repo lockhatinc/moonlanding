@@ -1,4 +1,4 @@
-import { getSpec, getNavItems } from '@/config';
+import { getSpec, getNavItems } from '@/config/spec-helpers';
 import { get, getChildren } from '@/engine';
 import { can } from '@/lib/permissions';
 import { withPageAuth } from '@/lib/auth-middleware';

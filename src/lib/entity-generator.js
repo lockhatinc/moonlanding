@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic';
-import { specs, getSpec, ERROR_MESSAGES } from '@/config';
+import { specs, getSpec, ERROR_MESSAGES } from '@/config/spec-helpers';
 import { list, search, searchWithPagination, get, getChildren, batchGetChildren, listWithPagination, create, update, remove } from '@/engine';
 import { can } from '@/lib/permissions';
 import { loadFormOptions } from '@/lib/utils';
@@ -10,7 +10,7 @@ import { notFound } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { forwardRef } from 'react';
-import { getNavItems } from '@/config';
+import { getNavItems } from '@/config/spec-helpers';
 import { QueryAdapter } from '@/lib/query-string-adapter';
 
 const Entity = dynamic(() => import('@/lib/entity-component').then(m => ({ default: m.Entity })), { ssr: true });

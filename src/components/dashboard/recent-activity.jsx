@@ -1,10 +1,9 @@
 import { memo } from 'react';
 import { Paper, Group, Title, Stack, Text, ThemeIcon, Box } from '@mantine/core';
 import { Icons, ACTION_ICONS } from '@/config/icon-config';
-import { specs } from '@/config';
 
 const ActivityItem = memo(function ActivityItem({ item, index }) {
-  const ItemIcon = Icons[specs[item.type]?.icon] || Icons.file;
+  const ItemIcon = Icons.file;
   return (
     <Group key={index}>
       <ThemeIcon variant="light" color="gray" radius="xl" size="md">

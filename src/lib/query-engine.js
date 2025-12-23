@@ -1,5 +1,5 @@
 import { getDatabase, genId, now } from '@/lib/database-core';
-import { getSpec } from '@/config';
+import { getSpec } from '@/config/spec-helpers';
 import { RECORD_STATUS } from '@/config/constants';
 import { PAGINATION } from '@/config/pagination-constants';
 import { SQL_OPERATORS, SQL_KEYWORDS, QUERY_BUILDING, SORT_DIRECTIONS } from '@/config/query-config';

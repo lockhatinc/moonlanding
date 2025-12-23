@@ -715,3 +715,10 @@ export function setConfigEngine(engine) {
 export function resetConfigEngine() {
   globalEngine = null;
 }
+
+export function getConfigEngineSync() {
+  if (!globalEngine) {
+    throw new Error('[ConfigGeneratorEngine] Engine not initialized. Call getConfigEngine() first or ensure system-config-loader is initialized during app startup.');
+  }
+  return globalEngine;
+}

@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import Database from 'better-sqlite3';
-import { specs, LOG_PREFIXES } from '@/config';
+import { specs } from '@/config/spec-helpers';
+// Fallback: import {, LOG_PREFIXES } from '@/config/spec-helpers';
 
 const DB_PATH = path.resolve(process.cwd(), 'data', 'app.db');
 const db = new Database(DB_PATH);

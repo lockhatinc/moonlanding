@@ -1,5 +1,5 @@
 import { getUser } from '@/engine.server';
-import { getSpec } from '@/config';
+import { getSpec } from '@/config/spec-helpers';
 import { can } from '@/lib/permissions';
 import { UnauthorizedError, PermissionError } from '@/lib/error-handler';
 import { redirect, notFound } from 'next/navigation';

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireUser } from '@/engine.server';
 import { can } from '@/lib/permissions';
 import { get } from '@/engine';
-import { getSpec } from '@/config';
+import { getSpec } from '@/config/spec-helpers';
 import { fileService } from '@/services';
 import { HTTP } from '@/config/api-constants';
 import { notFound } from '@/lib/response-formatter';

@@ -1,37 +1,73 @@
 import { STAGE_TRANSITIONS } from './constants';
 import { PAGINATION } from './pagination-constants';
-import { allSpecs } from './entities';
 
-export const specs = { ...allSpecs };
+export const specs = {};
+
+function getEngine() {
+  if (typeof window !== 'undefined') {
+    throw new Error('getEngine() should only be called on the server side');
+  }
+  try {
+    const mod = require('@/lib/config-generator-engine');
+    return mod.getConfigEngineSync();
+  } catch (e) {
+    throw new Error(`Failed to get config engine: ${e.message}`);
+  }
+}
 
 export function getSpec(name) {
-  const spec = specs[name];
-  if (!spec) throw new Error(`Unknown entity: ${name}`);
-  return spec;
+  try {
+    const engine = getEngine();
+    return engine.generateEntitySpec(name);
+  } catch (error) {
+    if (error.message.includes('not initialized')) {
+      throw new Error(`ConfigEngine not initialized. System startup may not be complete. Original error: ${error.message}`);
+    }
+    if (error.message.includes('Unknown entity')) {
+      throw new Error(`Unknown entity: ${name}`);
+    }
+    throw error;
+  }
 }
 
 export function getNavItems() {
-  return Object.values(specs)
-    .filter(s => !s.embedded && !s.parent)
-    .map(s => ({
-      name: s.name,
-      label: s.labelPlural || s.label,
-      icon: s.icon,
-      href: `/${s.name}`,
-    }));
+  try {
+    const engine = getEngine();
+    const allEntities = engine.getAllEntities();
+    return allEntities
+      .map(e => engine.generateEntitySpec(e.name))
+      .filter(s => !s.embedded && !s.parent)
+      .map(s => ({
+        name: s.name,
+        label: s.labelPlural || s.label,
+        icon: s.icon,
+        href: `/${s.name}`,
+      }));
+  } catch (error) {
+    console.error('[spec-helpers] getNavItems error:', error.message);
+    return [];
+  }
 }
 
 export function buildNavigation() {
-  return Object.values(specs)
-    .filter(s => !s.embedded && !s.parent)
-    .sort((a, b) => (a.order || 999) - (b.order || 999))
-    .map(s => ({
-      name: s.name,
-      label: s.labelPlural || s.label,
-      icon: s.icon,
-      href: `/${s.name}`,
-      badge: s.badge,
-    }));
+  try {
+    const engine = getEngine();
+    const allEntities = engine.getAllEntities();
+    return allEntities
+      .map(e => engine.generateEntitySpec(e.name))
+      .filter(s => !s.embedded && !s.parent)
+      .sort((a, b) => (a.order || 999) - (b.order || 999))
+      .map(s => ({
+        name: s.name,
+        label: s.labelPlural || s.label,
+        icon: s.icon,
+        href: `/${s.name}`,
+        badge: s.badge,
+      }));
+  } catch (error) {
+    console.error('[spec-helpers] buildNavigation error:', error.message);
+    return [];
+  }
 }
 
 export function getChildEntities(spec) {

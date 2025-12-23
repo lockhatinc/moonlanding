@@ -1,7 +1,8 @@
 import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
-import { specs } from '@/config';
+import { specs } from '@/config/spec-helpers';
+// Fallback: import { } from '@/config/spec-helpers';
 import { SQL_TYPES } from '@/config/constants';
 import { forEachField } from './field-iterator';
 

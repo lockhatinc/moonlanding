@@ -2,7 +2,8 @@
 
 import { getBy, create, hashPassword, verifyPassword, migrate } from '@/engine';
 import { createSession } from '@/engine.server';
-import { specs } from '@/config';
+import { specs } from '@/config/spec-helpers';
+// Fallback: import { } from '@/config/spec-helpers';
 import { redirect } from 'next/navigation';
 
 migrate();
