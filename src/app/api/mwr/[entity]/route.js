@@ -1,4 +1,5 @@
 import { getDomainLoader } from '@/lib/domain-loader';
+import { getConfigEngine } from '@/lib/config-generator-engine';
 import { createCrudHandlers } from '@/lib/crud-factory';
 import { AppError } from '@/lib/error-handler';
 import { HTTP } from '@/config/api-constants';

@@ -281,8 +281,8 @@ let globalDomainLoader = null;
 
 export function getDomainLoader() {
   if (!globalDomainLoader) {
-    const { getConfigEngine } = require('@/lib/config-generator-engine');
-    const engine = getConfigEngine();
+    const { getConfigEngineSync } = require('@/lib/config-generator-engine');
+    const engine = getConfigEngineSync();
     globalDomainLoader = new DomainLoader(engine);
   }
   return globalDomainLoader;
