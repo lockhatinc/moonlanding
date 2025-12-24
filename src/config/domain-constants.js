@@ -1,22 +1,79 @@
-export const ROLES = {
-  PARTNER: 'partner',
-  MANAGER: 'manager',
-  CLERK: 'clerk',
-  AUDITOR: 'auditor',
-  CLIENT: 'client',
-  ADMIN: 'admin',
+// Dynamic constant access from ConfigGeneratorEngine
+// These are now loaded from master-config.yml at runtime
+
+let _cachedConfig = null;
+
+const _getConfigEngine = () => {
+  if (typeof window !== 'undefined') {
+    // Client-side: return static fallback values
+    return null;
+  }
+  // Server-side: attempt to get the config engine
+  try {
+    const { getConfigEngine } = require('@/lib/config-generator-engine');
+    return getConfigEngine();
+  } catch (err) {
+    console.warn('[domain-constants] Config engine not available, using fallback values', err.message);
+    return null;
+  }
 };
+
+const _getRolesFromConfig = () => {
+  try {
+    const engine = _getConfigEngine();
+    if (engine) {
+      return engine.getRoles();
+    }
+  } catch (err) {
+    console.warn('[domain-constants] Failed to get roles from config:', err.message);
+  }
+  // Fallback to hardcoded values if config not available
+  return {
+    partner: 'partner',
+    manager: 'manager',
+    clerk: 'clerk',
+    auditor: 'auditor',
+    client: 'client',
+    admin: 'admin',
+  };
+};
+
+const _getRepeatIntervalsFromConfig = () => {
+  try {
+    const engine = _getConfigEngine();
+    if (engine) {
+      return engine.getRepeatIntervals();
+    }
+  } catch (err) {
+    console.warn('[domain-constants] Failed to get repeat intervals from config:', err.message);
+  }
+  // Fallback to hardcoded values if config not available
+  return {
+    once: 'once',
+    monthly: 'monthly',
+    yearly: 'yearly',
+  };
+};
+
+// Export as getters to maintain interface compatibility
+export const ROLES = new Proxy({}, {
+  get: (target, prop) => {
+    const roles = _getRolesFromConfig();
+    return roles[String(prop).toLowerCase()];
+  }
+});
 
 export const USER_TYPES = {
   AUDITOR: 'auditor',
   CLIENT: 'client',
 };
 
-export const REPEAT_INTERVALS = {
-  ONCE: 'once',
-  MONTHLY: 'monthly',
-  YEARLY: 'yearly',
-};
+export const REPEAT_INTERVALS = new Proxy({}, {
+  get: (target, prop) => {
+    const intervals = _getRepeatIntervalsFromConfig();
+    return intervals[String(prop).toLowerCase()];
+  }
+});
 
 export const COLORS = {
   DEFAULT: '#B0B0B0',

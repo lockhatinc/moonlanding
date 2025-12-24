@@ -1,5 +1,18 @@
-const DEFAULT_CACHE_TTL = 5 * 60 * 1000;
+let DEFAULT_CACHE_TTL = 5 * 60 * 1000;
 let permissionCache = new Map();
+
+async function initializeCacheTTL() {
+  try {
+    const { getConfigEngine } = await import('@/lib/config-generator-engine');
+    const engine = await getConfigEngine();
+    const config = engine.getConfig();
+    DEFAULT_CACHE_TTL = config?.thresholds?.cache?.permission_ttl_ms || 5 * 60 * 1000;
+  } catch (e) {
+    console.warn('[PERMISSIONS] Failed to load cache TTL from config, using default:', e.message);
+  }
+}
+
+initializeCacheTTL();
 
 function getCacheKey(...args) {
   return args.filter(Boolean).join('|');

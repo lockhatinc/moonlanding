@@ -1,4 +1,26 @@
 import { getDatabase } from '@/lib/database-core';
+import { getConfigEngine } from '@/lib/config-generator-engine';
+
+let emailConfig = null;
+
+async function getEmailConfig() {
+  if (!emailConfig) {
+    try {
+      const engine = await getConfigEngine();
+      const masterConfig = engine.getConfig();
+      emailConfig = masterConfig?.thresholds?.email || {};
+    } catch (e) {
+      console.warn('[EMAIL_PARSER] Failed to load email config, using defaults:', e.message);
+      emailConfig = {
+        allocation_confidence_base: 50,
+        allocation_confidence_subject_bonus: 30,
+        allocation_confidence_body_bonus: 20,
+        allocation_min_body_length: 50,
+      };
+    }
+  }
+  return emailConfig;
+}
 
 const ENGAGEMENT_PATTERNS = [
   /engagement[:\s#-]*([a-zA-Z0-9_-]+)/i,
@@ -41,7 +63,7 @@ export function extractRfiId(text) {
   return null;
 }
 
-export function parseEmailForAllocation(email) {
+export async function parseEmailForAllocation(email) {
   const { subject, body, html_body } = email;
   const searchText = `${subject || ''} ${body || ''} ${html_body || ''}`;
 
@@ -51,22 +73,24 @@ export function parseEmailForAllocation(email) {
   return {
     engagement_id: engagementId,
     rfi_id: rfiId,
-    confidence: calculateConfidence(subject, body, engagementId, rfiId),
+    confidence: await calculateConfidence(subject, body, engagementId, rfiId),
   };
 }
 
-function calculateConfidence(subject, body, engagementId, rfiId) {
+async function calculateConfidence(subject, body, engagementId, rfiId) {
   let confidence = 0;
 
   if (engagementId || rfiId) {
-    confidence += 50;
+    const emailCfg = await getEmailConfig();
+
+    confidence += emailCfg.allocation_confidence_base || 50;
 
     if (subject && (engagementId || rfiId)) {
-      confidence += 30;
+      confidence += emailCfg.allocation_confidence_subject_bonus || 30;
     }
 
-    if (body && body.length > 50) {
-      confidence += 20;
+    if (body && body.length > (emailCfg.allocation_min_body_length || 50)) {
+      confidence += emailCfg.allocation_confidence_body_bonus || 20;
     }
   }
 
@@ -163,8 +187,8 @@ export function extractResponseText(emailBody) {
   return responseLines.join('\n').trim() || null;
 }
 
-export function autoAllocateEmail(email) {
-  const parsed = parseEmailForAllocation(email);
+export async function autoAllocateEmail(email) {
+  const parsed = await parseEmailForAllocation(email);
 
   if (!parsed.engagement_id && !parsed.rfi_id) {
     return { success: false, reason: 'no_identifiers', confidence: 0 };

@@ -1,13 +1,23 @@
 import { getDatabase, genId, now } from '@/lib/database-core';
 import { getSpec } from '@/config/spec-helpers';
 import { RECORD_STATUS } from '@/config/constants';
-import { PAGINATION } from '@/config/pagination-constants';
 import { SQL_OPERATORS, SQL_KEYWORDS, QUERY_BUILDING, SORT_DIRECTIONS } from '@/config/query-config';
 import { iterateCreateFields, iterateUpdateFields } from '@/lib/field-iterator';
 import { coerceFieldValue } from '@/lib/field-registry';
 import { execGet, execQuery, execRun, withTransaction } from '@/lib/query-wrapper';
 
 const db = getDatabase();
+
+async function getPaginationConfig() {
+  try {
+    const { getConfigEngine } = await import('@/lib/config-generator-engine');
+    const engine = await getConfigEngine();
+    return engine.getConfig().system.pagination;
+  } catch (error) {
+    console.warn('[query-engine] Failed to load pagination config, using defaults:', error.message);
+    return { default_page_size: 50, max_page_size: 500 };
+  }
+}
 
 function buildSpecQuery(spec, where = {}, options = {}) {
   const table = spec.name, selects = [`${table}.*`], joins = [];
@@ -38,10 +48,11 @@ export const list = (entity, where = {}, opts = {}) => {
   return execQuery(sql, params, { entity, operation: 'List' });
 };
 
-export const listWithPagination = (entity, where = {}, page = 1, pageSize = null) => {
+export const listWithPagination = async (entity, where = {}, page = 1, pageSize = null) => {
   const spec = getSpec(entity);
-  const defaultPageSize = spec.list?.pageSize || PAGINATION.defaultPageSize;
-  const maxPageSize = PAGINATION.maxPageSize;
+  const paginationCfg = await getPaginationConfig();
+  const defaultPageSize = spec.list?.pageSize || paginationCfg.default_page_size;
+  const maxPageSize = paginationCfg.max_page_size;
   const parsedPageSize = pageSize ? parseInt(pageSize, 10) : null;
   const parsedPage = parseInt(page, 10);
   const finalPageSize = parsedPageSize && !isNaN(parsedPageSize) ? Math.min(parsedPageSize, maxPageSize) : defaultPageSize;
@@ -78,12 +89,13 @@ export const search = (entity, query, where = {}, opts = {}) => {
   return execQuery(sql, [...searchFields.map(() => `${QUERY_BUILDING.wildcard}${query}${QUERY_BUILDING.wildcard}`), ...baseParams], { entity, operation: 'Search' });
 };
 
-export const searchWithPagination = (entity, query, where = {}, page = 1, pageSize = null) => {
+export const searchWithPagination = async (entity, query, where = {}, page = 1, pageSize = null) => {
   const spec = getSpec(entity);
   const searchFields = spec.list?.searchFields || spec.fields ? Object.entries(spec.fields).filter(([,f]) => f.search).map(([k]) => k) : [];
-  if (!searchFields.length || !query) return listWithPagination(entity, where, page, pageSize);
-  const defaultPageSize = spec.list?.pageSize || PAGINATION.defaultPageSize;
-  const maxPageSize = PAGINATION.maxPageSize;
+  if (!searchFields.length || !query) return await listWithPagination(entity, where, page, pageSize);
+  const paginationCfg = await getPaginationConfig();
+  const defaultPageSize = spec.list?.pageSize || paginationCfg.default_page_size;
+  const maxPageSize = paginationCfg.max_page_size;
   const parsedPageSize = pageSize ? parseInt(pageSize, 10) : null;
   const parsedPage = parseInt(page, 10);
   const finalPageSize = parsedPageSize && !isNaN(parsedPageSize) ? Math.min(parsedPageSize, maxPageSize) : defaultPageSize;

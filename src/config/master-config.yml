@@ -465,6 +465,15 @@ thresholds:
     rate_limit_delay_ms: 6000
     retry_max_delay_ms: 30000
     default_sender: system@bidwise.app
+    retry_base_delay_ms: 1000
+    failure_rate_window_seconds: 86400
+    high_failure_rate_threshold: 0.5
+    failure_alert_min_emails: 10
+    recent_failures_limit: 10
+    allocation_confidence_base: 50
+    allocation_confidence_subject_bonus: 30
+    allocation_confidence_body_bonus: 20
+    allocation_min_body_length: 50
   retry:
     max_attempts: 3
     max_delay_ms: 30000
@@ -478,6 +487,65 @@ thresholds:
     list_ttl_seconds: 60
     session_ttl_seconds: 3600
     max_entries: 1000
+    permission_ttl_ms: 300000           # 5 minutes
+    field_metadata_ttl_ms: 3600000      # 1 hour
+    session_ttl_ms: 600000              # 10 minutes
+    user_profile_ttl_ms: 300000         # 5 minutes
+    entity_ttl_ms: 1800000              # 30 minutes
+    token_ttl_ms: 86400000              # 24 hours
+    max_size: 100
+    max_age_ms: 86400000                # 24 hours
+
+  cache_advanced:
+    permission_ttl_ms: 300000           # 5 minutes
+    field_metadata_ttl_ms: 3600000      # 1 hour
+    session_ttl_ms: 600000              # 10 minutes
+    user_profile_ttl_ms: 300000         # 5 minutes
+    entity_ttl_ms: 1800000              # 30 minutes
+    token_ttl_ms: 86400000              # 24 hours
+    max_size: 100
+    max_age_ms: 86400000                # 24 hours
+
+  audit:
+    recent_activity_days: 7
+    default_limit: 100
+    user_activity_limit: 50
+    recent_changes_display: 10
+    anomalous_activity_threshold: 10
+    summary_report_days: 30
+    export_max_limit: 10000
+
+  query:
+    default_list_limit: 100
+    default_search_limit: 50
+    export_limit: 1000
+    max_limit: 10000
+    default_page_size: 20
+    default_timeout_ms: 30000
+
+  polling:
+    interval_ms: 3000
+    max_backoff_ms: 30000
+    backoff_multiplier: 2
+    max_retries: 3
+
+  timeline:
+    week_threshold_days: 7
+    month_threshold_days: 30
+
+  ui:
+    debounce_delay_ms: 300
+
+  highlight:
+    min_consolidation_count: 2
+
+  search:
+    max_index_size: 10000
+
+  debug:
+    max_api_calls: 50
+    max_errors: 100
+    max_permission_cache: 1000
 entities:
   engagement:
     label: Engagement

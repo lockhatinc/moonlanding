@@ -606,6 +606,100 @@ export class ConfigGeneratorEngine {
     return this._deepFreeze(this._deepClone(config.roles));
   }
 
+  getWorkflowStages(workflowName) {
+    if (!workflowName || typeof workflowName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] getWorkflowStages: workflowName must be a non-empty string');
+    }
+
+    const config = this._getConfig();
+
+    if (!config.workflows || !config.workflows[workflowName]) {
+      if (this.debugMode) {
+        console.warn(`[ConfigGeneratorEngine] Workflow "${workflowName}" not found`);
+      }
+      return [];
+    }
+
+    const workflow = config.workflows[workflowName];
+
+    if (!workflow.stages || !Array.isArray(workflow.stages)) {
+      return [];
+    }
+
+    const stageNames = workflow.stages.map(s => typeof s === 'string' ? s : s.name);
+
+    if (this.debugMode) {
+      console.log(`[ConfigGeneratorEngine] Retrieved ${stageNames.length} stages for workflow ${workflowName}`);
+    }
+
+    return stageNames;
+  }
+
+  getStageConfig(workflowName, stageName) {
+    if (!workflowName || typeof workflowName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] getStageConfig: workflowName must be a non-empty string');
+    }
+
+    if (!stageName || typeof stageName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] getStageConfig: stageName must be a non-empty string');
+    }
+
+    const config = this._getConfig();
+
+    if (!config.workflows || !config.workflows[workflowName]) {
+      if (this.debugMode) {
+        console.warn(`[ConfigGeneratorEngine] Workflow "${workflowName}" not found`);
+      }
+      return null;
+    }
+
+    const workflow = config.workflows[workflowName];
+
+    if (!workflow.stages || !Array.isArray(workflow.stages)) {
+      return null;
+    }
+
+    const stageConfig = workflow.stages.find(s => (typeof s === 'string' ? s : s.name) === stageName);
+
+    if (!stageConfig) {
+      if (this.debugMode) {
+        console.warn(`[ConfigGeneratorEngine] Stage "${stageName}" not found in workflow "${workflowName}"`);
+      }
+      return null;
+    }
+
+    const result = typeof stageConfig === 'string' ? { name: stageConfig } : this._deepClone(stageConfig);
+    const resolved = this._recursiveResolve(result, config);
+
+    if (this.debugMode) {
+      console.log(`[ConfigGeneratorEngine] Retrieved stage config for ${workflowName}.${stageName}`);
+    }
+
+    return this._deepFreeze(resolved);
+  }
+
+  getRepeatIntervals() {
+    const config = this._getConfig();
+
+    const defaults = {
+      once: 'once',
+      monthly: 'monthly',
+      yearly: 'yearly',
+    };
+
+    if (!config.repeat_intervals) {
+      return defaults;
+    }
+
+    const intervals = this._deepClone(config.repeat_intervals);
+
+    if (this.debugMode) {
+      console.log('[ConfigGeneratorEngine] Retrieved repeat intervals');
+    }
+
+    return this._deepFreeze(intervals);
+  }
+
   getDomains() {
     const config = this._getConfig();
 

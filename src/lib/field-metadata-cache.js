@@ -3,6 +3,21 @@ export class FieldMetadataCache {
     this.ttl = options.ttl || 60 * 60 * 1000;
     this.cache = new Map();
     this.indexes = new Map();
+    this.configInitialized = false;
+    this.initializeFromConfig();
+  }
+
+  async initializeFromConfig() {
+    try {
+      const { getConfigEngine } = await import('@/lib/config-generator-engine');
+      const engine = await getConfigEngine();
+      const config = engine.getConfig();
+      this.ttl = config?.thresholds?.cache?.field_metadata_ttl_ms || 60 * 60 * 1000;
+      this.configInitialized = true;
+    } catch (e) {
+      console.warn('[FIELD_METADATA_CACHE] Failed to load TTL from config, using default:', e.message);
+      this.configInitialized = true;
+    }
   }
 
   set(entityType, fieldKey, metadata) {

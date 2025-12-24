@@ -1,4 +1,5 @@
 import { create } from '@/lib/query-engine';
+import { getConfigEngine } from '@/lib/config-generator-engine';
 
 export async function createActivityLogForAudit({
   auditId,
@@ -108,8 +109,12 @@ export async function getActivityLogsForAudit(auditId) {
   }
 }
 
-export async function getRecentPermissionActivities(limit = 50) {
+export async function getRecentPermissionActivities(limit) {
   try {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    limit = limit || auditCfg.user_activity_limit;
     const { getDatabase } = await import('@/lib/database-core');
     const db = getDatabase();
 

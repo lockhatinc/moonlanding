@@ -1,12 +1,22 @@
-import { PAGINATION } from '@/config/pagination-constants';
+async function getDefaultPageSize() {
+  try {
+    const { getConfigEngine } = await import('@/lib/config-generator-engine');
+    const engine = await getConfigEngine();
+    return engine.getConfig().system.pagination.default_page_size;
+  } catch (error) {
+    console.warn('[query-string-adapter] Failed to load config, using default page size 50');
+    return 50;
+  }
+}
 
 export class QueryAdapter {
-  static parse(request) {
+  static async parse(request) {
     const { searchParams } = new URL(request.url);
+    const defaultPageSize = await getDefaultPageSize();
     return {
       q: searchParams.get('q'),
       page: Math.max(1, parseInt(searchParams.get('page') || '1')),
-      pageSize: parseInt(searchParams.get('pageSize') || String(PAGINATION.defaultPageSize)),
+      pageSize: parseInt(searchParams.get('pageSize') || String(defaultPageSize)),
       action: searchParams.get('action'),
       limit: searchParams.get('limit'),
       offset: searchParams.get('offset'),
@@ -40,10 +50,11 @@ export class QueryAdapter {
     return queryString ? `${baseUrl}?${queryString}` : baseUrl;
   }
 
-  static getDefault(key) {
+  static async getDefault(key) {
+    const defaultPageSize = await getDefaultPageSize();
     const defaults = {
       page: 1,
-      pageSize: PAGINATION.defaultPageSize,
+      pageSize: defaultPageSize,
       sortDir: 'asc',
       limit: null,
       offset: null,
@@ -51,11 +62,12 @@ export class QueryAdapter {
     return defaults[key] ?? null;
   }
 
-  static fromSearchParams(searchParams, spec = null) {
+  static async fromSearchParams(searchParams, spec = null) {
+    const defaultPageSize = await getDefaultPageSize();
     return {
       q: searchParams.get('q'),
       page: Math.max(1, parseInt(searchParams.get('page') || '1')),
-      pageSize: parseInt(searchParams.get('pageSize') || String(spec?.list?.pageSize || PAGINATION.defaultPageSize)),
+      pageSize: parseInt(searchParams.get('pageSize') || String(spec?.list?.pageSize || defaultPageSize)),
     };
   }
 
@@ -68,3 +80,4 @@ export const parse = (request) => QueryAdapter.parse(request);
 export const build = (params) => QueryAdapter.build(params);
 export const buildUrl = (baseUrl, params) => QueryAdapter.buildUrl(baseUrl, params);
 export const getDefault = (key) => QueryAdapter.getDefault(key);
+export const fromSearchParams = (searchParams, spec) => QueryAdapter.fromSearchParams(searchParams, spec);

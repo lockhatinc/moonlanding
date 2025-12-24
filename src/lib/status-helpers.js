@@ -1,3 +1,54 @@
+import { getConfigEngineSync } from './config-generator-engine.js';
+
+let _cachedConfig = null;
+
+function getCachedConfig() {
+  if (!_cachedConfig) {
+    try {
+      const engine = getConfigEngineSync();
+      _cachedConfig = engine.getConfig();
+    } catch (error) {
+      console.warn('[status-helpers] Config engine not available, using fallback enums');
+      return null;
+    }
+  }
+  return _cachedConfig;
+}
+
+function buildEnumFromWorkflow(workflowName) {
+  const config = getCachedConfig();
+  if (!config?.workflows?.[workflowName]?.stages) {
+    return null;
+  }
+
+  const stages = config.workflows[workflowName].stages;
+  const result = {};
+
+  for (const stage of stages) {
+    const stageName = typeof stage === 'string' ? stage : stage.name;
+    result[stageName.toUpperCase()] = stageName;
+  }
+
+  return result;
+}
+
+function buildStateEnumFromWorkflow(workflowName, stateType = 'internal_states') {
+  const config = getCachedConfig();
+  if (!config?.workflows?.[workflowName]?.[stateType]) {
+    return null;
+  }
+
+  const states = config.workflows[workflowName][stateType];
+  const result = {};
+
+  for (const state of states) {
+    const stateValue = typeof state === 'string' ? state : state;
+    result[stateValue.toUpperCase()] = stateValue;
+  }
+
+  return result;
+}
+
 export const ENGAGEMENT_STATUS = {
   PENDING: 'pending',
   ACTIVE: 'active',
@@ -54,3 +105,35 @@ export const RFI_AUDITOR_STATUS_OPTIONS = {
   queries: 'Queries',
   received: 'Received'
 };
+
+export function getEngagementStages() {
+  const fromConfig = buildEnumFromWorkflow('engagement_lifecycle');
+  return fromConfig || ENGAGEMENT_STAGE;
+}
+
+export function getRfiStates(stateType = 'internal_states') {
+  const fromConfig = buildStateEnumFromWorkflow('rfi_type_standard', stateType);
+  return fromConfig || RFI_STATUS;
+}
+
+export function getStageTransitions() {
+  const config = getCachedConfig();
+  if (!config?.workflows?.engagement_lifecycle?.stages) {
+    return STAGE_TRANSITIONS;
+  }
+
+  const result = {};
+  const stages = config.workflows.engagement_lifecycle.stages;
+
+  for (let i = 0; i < stages.length - 1; i++) {
+    const current = typeof stages[i] === 'string' ? stages[i] : stages[i].name;
+    const next = typeof stages[i + 1] === 'string' ? stages[i + 1] : stages[i + 1].name;
+    result[current] = next;
+  }
+
+  return result;
+}
+
+export function clearCachedConfig() {
+  _cachedConfig = null;
+}

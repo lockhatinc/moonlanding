@@ -1,6 +1,5 @@
 import { loadSpec, loadAllSpecs } from './config-loader.js';
 import { STAGE_TRANSITIONS } from './constants.js';
-import { PAGINATION } from './pagination-constants.js';
 
 export async function getSpecAsync(name) {
   const spec = await loadSpec(name);
@@ -62,8 +61,15 @@ export function getAvailableFilters(spec) {
   return spec.list?.filters || [];
 }
 
-export function getPageSize(spec) {
-  return spec.list?.pageSize || PAGINATION.defaultPageSize;
+export async function getPageSize(spec) {
+  try {
+    const { getConfigEngine } = await import('@/lib/config-generator-engine');
+    const engine = await getConfigEngine();
+    return spec.list?.pageSize || engine.getConfig().system.pagination.default_page_size;
+  } catch (error) {
+    console.warn('[spec-helpers-async] Failed to load config, using default page size 50');
+    return spec.list?.pageSize || 50;
+  }
 }
 
 export function getEntityLabel(spec, plural = false) {

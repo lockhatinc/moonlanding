@@ -254,8 +254,10 @@ export const createCrudHandlers = (entityName) => {
     list: async (user, request) => {
       requirePermission(user, spec, 'list');
       const { q, page, pageSize } = parseQuery(request);
-      const DEFAULT_PAGE_SIZE = 50;
-      const MAX_PAGE_SIZE = 100;
+      const config = await (await import('@/lib/config-generator-engine')).getConfigEngine();
+      const paginationCfg = config.getConfig().system.pagination;
+      const DEFAULT_PAGE_SIZE = paginationCfg.default_page_size;
+      const MAX_PAGE_SIZE = paginationCfg.max_page_size;
       const finalPageSize = Math.min(pageSize || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
       const finalPage = page || 1;
 

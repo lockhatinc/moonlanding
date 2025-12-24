@@ -1,7 +1,13 @@
 import { permissionAuditService } from '@/services';
+import { getConfigEngine } from '@/lib/config-generator-engine';
 
 export class AuditDashboard {
-  async getRecentActivity(days = 7, limit = 100) {
+  async getRecentActivity(days, limit) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    days = days || auditCfg.recent_activity_days;
+    limit = limit || auditCfg.default_limit;
     const nowTimestamp = Math.floor(Date.now() / 1000);
     const startTimestamp = nowTimestamp - (days * 24 * 60 * 60);
 
@@ -18,7 +24,11 @@ export class AuditDashboard {
     };
   }
 
-  async getUserActivity(userId, limit = 50) {
+  async getUserActivity(userId, limit) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    limit = limit || auditCfg.user_activity_limit;
     const changes = await permissionAuditService.getAuditTrail({
       userId,
       limit,
@@ -30,11 +40,15 @@ export class AuditDashboard {
       user_id: userId,
       total_changes: changes.length,
       breakdown,
-      recent_changes: changes.slice(0, 10),
+      recent_changes: changes.slice(0, auditCfg.recent_changes_display),
     };
   }
 
-  async getEntityHistory(entityType, entityId, limit = 100) {
+  async getEntityHistory(entityType, entityId, limit) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    limit = limit || auditCfg.default_limit;
     const changes = await permissionAuditService.getAuditTrail({
       entityType,
       entityId,
@@ -64,7 +78,11 @@ export class AuditDashboard {
     };
   }
 
-  async getAffectedUserChanges(userId, limit = 50) {
+  async getAffectedUserChanges(userId, limit) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    limit = limit || auditCfg.user_activity_limit;
     const changes = await permissionAuditService.getAuditTrail({
       affectedUserId: userId,
       limit,
@@ -106,7 +124,11 @@ export class AuditDashboard {
     };
   }
 
-  async getCollaboratorChanges(reviewId, limit = 100) {
+  async getCollaboratorChanges(reviewId, limit) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    limit = limit || auditCfg.default_limit;
     const changes = await permissionAuditService.getAuditTrail({
       entityType: 'review',
       entityId: reviewId,
@@ -130,7 +152,11 @@ export class AuditDashboard {
     };
   }
 
-  async getRoleChangeHistory(limit = 100) {
+  async getRoleChangeHistory(limit) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    limit = limit || auditCfg.default_limit;
     const changes = await permissionAuditService.getChangesByAction('role_change', limit);
 
     const byUser = {};
@@ -155,7 +181,11 @@ export class AuditDashboard {
     };
   }
 
-  async getLifecycleTransitionAudits(entityType, limit = 100) {
+  async getLifecycleTransitionAudits(entityType, limit) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    limit = limit || auditCfg.default_limit;
     const changes = await permissionAuditService.getChangesByReasonCode(
       'lifecycle_transition',
       limit
@@ -183,7 +213,11 @@ export class AuditDashboard {
     };
   }
 
-  async searchAudits(searchTerm, limit = 100) {
+  async searchAudits(searchTerm, limit) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    limit = limit || auditCfg.default_limit;
     const results = await permissionAuditService.searchAuditTrail(searchTerm, limit);
 
     return {
@@ -204,10 +238,13 @@ export class AuditDashboard {
   }
 
   async getComplianceReport(startDate, endDate) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
     const changes = await permissionAuditService.getChangesByDateRange(
       startDate,
       endDate,
-      10000
+      auditCfg.export_max_limit
     );
 
     const critical = changes.filter(c =>
@@ -236,7 +273,11 @@ export class AuditDashboard {
     };
   }
 
-  async getAnomalousActivity(threshold = 10) {
+  async getAnomalousActivity(threshold) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    threshold = threshold || auditCfg.anomalous_activity_threshold;
     const recent = await permissionAuditService.getRecentChanges(1000);
 
     const byUser = {};
@@ -289,7 +330,11 @@ export class AuditDashboard {
     }, {});
   }
 
-  async generateSummaryReport(days = 30) {
+  async generateSummaryReport(days) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    days = days || auditCfg.summary_report_days;
     const nowTimestamp = Math.floor(Date.now() / 1000);
     const startTimestamp = nowTimestamp - (days * 24 * 60 * 60);
 

@@ -5,7 +5,6 @@ import { Table, Button, Group, Stack, Text, Badge, TextInput, Pagination, Select
 import { useSelection } from '@/lib/hooks';
 import { useBuilderState } from '@/lib/builder-hooks';
 import { buildListColumns, LAYOUT, TABLE_DEFAULTS, TABLE_PAGINATION_DEFAULTS } from '@/config';
-import { PAGINATION } from '@/config/pagination-constants';
 import { Icons, UI_ICONS, NAVIGATION_ICONS, ACTION_ICONS } from '@/config/icon-config';
 import { renderCellValue } from '@/lib/rendering-engine';
 import { filterByQuery, groupByField, sortGroups } from '@/lib/list-data-transform';
@@ -210,7 +209,7 @@ export function ListBuilder({
               placeholder="Page size"
               value={String(paginationState.pageSize)}
               onChange={(value) => handlers.pageSizeChange(parseInt(value))}
-              data={(spec.list?.pageSizeOptions || PAGINATION.pageSizeOptions).map((size) => ({
+              data={(spec.list?.pageSizeOptions || [10, 20, 50, 100]).map((size) => ({
                 value: String(size),
                 label: `${size} per page`,
               }))}

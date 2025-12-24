@@ -3,13 +3,14 @@ import { queueEmail, sendQueuedEmails, generateChecklistPdf } from '@/engine/ema
 import { recreateEngagement } from '@/engine/recreation';
 import { exportDatabase } from '@/engine/backup';
 import { createJob, forEachRecord, activityLog, getDeadlineRange, getDaysUntil, shouldRunNow, runJob, runDueJobs } from '@/lib/job-framework';
-import { ROLES, USER_TYPES, ENGAGEMENT_STAGE, REVIEW_STATUS, RFI_STATUS, RFI_CLIENT_STATUS } from '@/config/constants';
+import { ROLES, USER_TYPES, REVIEW_STATUS, LOG_PREFIXES } from '@/config/constants';
 import { JOBS_CONFIG } from '@/config/jobs-config';
 import { safeJsonParse } from '@/lib/safe-json';
 import { autoAllocateEmail } from '@/lib/email-parser';
 import { getDatabase, genId, now } from '@/lib/database-core';
 import { notifyExpiringCollaborators } from '@/services/collaborator-notifier';
 import { getWorkingDaysDiff, dateToSeconds } from '@/lib/date-utils';
+import { getEngagementStages, getRfiStates } from '@/lib/status-helpers';
 
 const defineJob = (config, handler) => createJob(config.name, config.schedule, config.description, handler, config.config);
 
@@ -41,9 +42,10 @@ export const SCHEDULED_JOBS = {
 
   daily_engagement_check: defineJob(JOBS_CONFIG.dailyEngagementCheck, async () => {
     const now = Math.floor(Date.now() / 1000);
-    await forEachRecord('engagement', { stage: ENGAGEMENT_STAGE.INFO_GATHERING, status: 'active' }, async (e) => {
+    const stages = getEngagementStages();
+    await forEachRecord('engagement', { stage: stages.INFO_GATHERING, status: 'active' }, async (e) => {
       if (e.commencement_date && e.commencement_date <= now) {
-        update('engagement', e.id, { stage: ENGAGEMENT_STAGE.COMMENCEMENT });
+        update('engagement', e.id, { stage: stages.COMMENCEMENT });
         activityLog('engagement', e.id, 'stage_change', 'Auto-transitioned to commencement');
       }
     });
@@ -80,9 +82,10 @@ export const SCHEDULED_JOBS = {
   }),
 
   daily_rfi_notifications: defineJob(JOBS_CONFIG.dailyRfiNotifications, async (cfg) => {
+    const rfiStates = getRfiStates('display_states');
     for (const days of cfg.days_before) {
       const { start, end } = getDeadlineRange(days);
-      for (const rfi of list('rfi').filter(r => r.due_date >= start && r.due_date < end && r.client_status !== RFI_CLIENT_STATUS.COMPLETED)) {
+      for (const rfi of list('rfi').filter(r => r.due_date >= start && r.due_date < end && r.client_status !== 'completed')) {
         await queueEmail('rfi_deadline', { rfi, daysUntil: days, recipients: 'assigned_users' });
       }
     }
@@ -90,10 +93,11 @@ export const SCHEDULED_JOBS = {
 
   daily_rfi_escalation: defineJob(JOBS_CONFIG.dailyRfiEscalation, async (cfg) => {
     const nowSeconds = Math.floor(Date.now() / 1000);
+    const stages = getEngagementStages();
 
-    for (const rfi of list('rfi').filter(r => r.client_status !== RFI_CLIENT_STATUS.COMPLETED && r.status !== 'completed')) {
+    for (const rfi of list('rfi').filter(r => r.client_status !== 'completed' && r.status !== 'completed')) {
       const engagement = get('engagement', rfi.engagement_id);
-      if (!engagement || engagement.stage === ENGAGEMENT_STAGE.INFO_GATHERING) continue;
+      if (!engagement || engagement.stage === stages.INFO_GATHERING) continue;
 
       const daysOutstanding = getWorkingDaysDiff(rfi.date_requested || rfi.created_at, nowSeconds);
 
@@ -260,7 +264,7 @@ export const SCHEDULED_JOBS = {
 
     for (const email of unallocatedEmails) {
       try {
-        const result = autoAllocateEmail(email);
+        const result = await autoAllocateEmail(email);
 
         if (result.success && result.confidence >= min_confidence) {
           const logId = genId();

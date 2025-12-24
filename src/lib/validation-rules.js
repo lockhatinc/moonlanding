@@ -1,6 +1,6 @@
 import { get, create } from '@/engine';
-import { ENGAGEMENT_STAGE, ENGAGEMENT_STATUS, RFI_STATUS, ROLES, USER_TYPES, LETTER_AUDITOR_STATUS } from '@/config/constants';
-import { canTransitionStage } from '@/lib/status-helpers';
+import { ROLES, USER_TYPES } from '@/config/constants';
+import { getEngagementStages } from '@/lib/status-helpers';
 import { safeJsonParse } from '@/lib/safe-json';
 
 const logActivity = (t, id, act, msg, u, d) =>
@@ -9,8 +9,9 @@ const logActivity = (t, id, act, msg, u, d) =>
 export const validateStageTransition = (engagement, newStage, user) => {
   const currentStage = engagement.stage;
   const userRole = user.role;
+  const stages = getEngagementStages();
 
-  if (engagement.status === ENGAGEMENT_STATUS.PENDING) {
+  if (engagement.status === 'pending') {
     const error = 'Cannot change stage while engagement is pending';
     logActivity('engagement', engagement.id, 'stage_transition_denied', error, user, {
       from: currentStage,
@@ -25,7 +26,7 @@ export const validateStageTransition = (engagement, newStage, user) => {
   const isClerk = userRole === ROLES.CLERK;
   const clerksCanApprove = engagement.clerks_can_approve === true || engagement.clerks_can_approve === 1;
 
-  if (newStage === ENGAGEMENT_STAGE.PARTNER_REVIEW) {
+  if (newStage === stages.PARTNER_REVIEW) {
     if (!isPartner && !isManager) {
       const error = 'Only partners and managers can move to partner_review stage';
       logActivity('engagement', engagement.id, 'stage_transition_denied', error, user, {
@@ -48,7 +49,7 @@ export const validateStageTransition = (engagement, newStage, user) => {
     }
   }
 
-  if (newStage === ENGAGEMENT_STAGE.FINALIZATION) {
+  if (newStage === stages.FINALIZATION) {
     if (!isPartner) {
       const error = 'Only partners can move to finalization stage';
       logActivity('engagement', engagement.id, 'stage_transition_denied', error, user, {
@@ -61,7 +62,7 @@ export const validateStageTransition = (engagement, newStage, user) => {
     }
   }
 
-  if (newStage === ENGAGEMENT_STAGE.CLOSE_OUT) {
+  if (newStage === stages.CLOSE_OUT) {
     if (!isPartner) {
       const error = 'Only partners can close out engagements';
       logActivity('engagement', engagement.id, 'stage_transition_denied', error, user, {
@@ -72,7 +73,7 @@ export const validateStageTransition = (engagement, newStage, user) => {
       });
       throw new Error(error);
     }
-    if (engagement.letter_auditor_status !== LETTER_AUDITOR_STATUS.ACCEPTED && engagement.progress > 0) {
+    if (engagement.letter_auditor_status !== 'accepted' && engagement.progress > 0) {
       const error = 'Cannot close out: Letter must be accepted or progress must be 0%';
       logActivity('engagement', engagement.id, 'stage_transition_denied', error, user, {
         from: currentStage,
@@ -85,8 +86,8 @@ export const validateStageTransition = (engagement, newStage, user) => {
     }
   }
 
-  if (newStage === ENGAGEMENT_STAGE.COMMENCEMENT ||
-      newStage === ENGAGEMENT_STAGE.TEAM_EXECUTION) {
+  if (newStage === stages.COMMENCEMENT ||
+      newStage === stages.TEAM_EXECUTION) {
     if (isClerk && !clerksCanApprove) {
       const error = `Clerks cannot move to ${newStage} stage unless clerksCanApprove is enabled`;
       logActivity('engagement', engagement.id, 'stage_transition_denied', error, user, {

@@ -1,6 +1,5 @@
 import { list, get, create, update, remove } from '@/engine';
 import { recreateEngagement, batchRecreateEngagements } from '@/engine/recreation';
-import { RFI_STATUS, RFI_CLIENT_STATUS, RFI_AUDITOR_STATUS } from '@/lib/status-helpers';
 
 class EngagementService {
   get(id) {
@@ -51,7 +50,7 @@ class EngagementService {
     if (!engagement) return 0;
     const rfis = list('rfi', { engagement_id: engagementId });
     if (rfis.length === 0) return 0;
-    const completed = rfis.filter(r => r.status === RFI_STATUS.RESOLVED).length;
+    const completed = rfis.filter(r => r.status === 'completed').length;
     return Math.round((completed / rfis.length) * 100);
   }
 }

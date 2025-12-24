@@ -1,6 +1,5 @@
 import { ROLES } from './constants.js';
 import { PERMISSION_DEFAULTS } from './permission-defaults.js';
-import { PAGINATION } from './pagination-constants.js';
 import { validateSpec } from './validation-helpers.js';
 
 export class SpecBuilder {

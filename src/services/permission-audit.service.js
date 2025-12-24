@@ -1,5 +1,6 @@
 import { getDatabase, genId, now } from '@/lib/database-core';
 import { createActivityLogForAudit } from '@/lib/permission-audit-activity';
+import { getConfigEngine } from '@/lib/config-generator-engine';
 
 class PermissionAuditService {
   constructor() {
@@ -97,7 +98,11 @@ class PermissionAuditService {
     }
   }
 
-  async getAuditTrail({ entityType, entityId, userId, affectedUserId, limit = 100, offset = 0 }) {
+  async getAuditTrail({ entityType, entityId, userId, affectedUserId, limit, offset = 0 }) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    limit = limit || auditCfg.default_limit;
     let sql = 'SELECT * FROM permission_audit WHERE 1=1';
     const params = [];
 
@@ -135,7 +140,11 @@ class PermissionAuditService {
     }));
   }
 
-  async getRecentChanges(limit = 100) {
+  async getRecentChanges(limit) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    limit = limit || auditCfg.default_limit;
     const stmt = this.db.prepare(`
       SELECT * FROM permission_audit
       ORDER BY timestamp DESC
@@ -166,7 +175,11 @@ class PermissionAuditService {
     };
   }
 
-  async getChangesByDateRange(startDate, endDate, limit = 100) {
+  async getChangesByDateRange(startDate, endDate, limit) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    limit = limit || auditCfg.default_limit;
     const stmt = this.db.prepare(`
       SELECT * FROM permission_audit
       WHERE timestamp >= ? AND timestamp <= ?
@@ -184,7 +197,11 @@ class PermissionAuditService {
     }));
   }
 
-  async getChangesByAction(action, limit = 100) {
+  async getChangesByAction(action, limit) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    limit = limit || auditCfg.default_limit;
     const stmt = this.db.prepare(`
       SELECT * FROM permission_audit
       WHERE action = ?
@@ -202,7 +219,11 @@ class PermissionAuditService {
     }));
   }
 
-  async getChangesByReasonCode(reasonCode, limit = 100) {
+  async getChangesByReasonCode(reasonCode, limit) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    limit = limit || auditCfg.default_limit;
     const stmt = this.db.prepare(`
       SELECT * FROM permission_audit
       WHERE reason_code = ?
@@ -220,7 +241,11 @@ class PermissionAuditService {
     }));
   }
 
-  async searchAuditTrail(searchTerm, limit = 100) {
+  async searchAuditTrail(searchTerm, limit) {
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    limit = limit || auditCfg.default_limit;
     const stmt = this.db.prepare(`
       SELECT * FROM permission_audit
       WHERE reason LIKE ?
@@ -242,7 +267,10 @@ class PermissionAuditService {
   }
 
   async exportToCSV(filters = {}) {
-    const trail = await this.getAuditTrail({ ...filters, limit: 10000 });
+    const config = await getConfigEngine();
+    const auditCfg = config.getConfig().thresholds.audit;
+
+    const trail = await this.getAuditTrail({ ...filters, limit: auditCfg.export_max_limit });
 
     const headers = [
       'Timestamp',

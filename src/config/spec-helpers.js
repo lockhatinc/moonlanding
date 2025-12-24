@@ -1,5 +1,4 @@
 import { STAGE_TRANSITIONS } from './constants';
-import { PAGINATION } from './pagination-constants';
 
 export const specs = {};
 

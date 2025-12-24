@@ -25,7 +25,7 @@ export async function POST(request) {
 
     for (const email of unallocatedEmails) {
       try {
-        const result = autoAllocateEmail(email);
+        const result = await autoAllocateEmail(email);
 
         if (result.success && result.confidence >= min_confidence) {
           const logId = genId();

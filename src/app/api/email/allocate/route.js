@@ -39,7 +39,7 @@ export async function POST(request) {
     let result;
 
     if (auto) {
-      result = autoAllocateEmail(email);
+      result = await autoAllocateEmail(email);
 
       if (!result.success) {
         return NextResponse.json(
