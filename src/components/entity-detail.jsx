@@ -15,6 +15,7 @@ const DetailHeader = dynamic(() => import('./entity-detail/detail-header').then(
 const DetailFields = dynamic(() => import('./entity-detail/detail-fields').then(m => ({ default: m.DetailFields })), { loading: () => <Loader size="sm" />, ssr: false });
 const ChildTabs = dynamic(() => import('./entity-detail/child-tabs').then(m => ({ default: m.ChildTabs })), { loading: () => <Loader size="sm" />, ssr: false });
 const ActionsPanel = dynamic(() => import('./entity-detail/actions-panel').then(m => ({ default: m.ActionsPanel })), { loading: () => <Loader size="sm" />, ssr: false });
+const ClientRating = dynamic(() => import('./client-rating').then(m => ({ default: m.ClientRating })), { loading: () => <Loader size="sm" />, ssr: false });
 
 const DetailHeaderMemo = memo(DetailHeader);
 const DetailFieldsMemo = memo(DetailFields);
@@ -75,7 +76,12 @@ export function EntityDetail({ spec, data, children = {}, user, canEdit = false,
           </Tabs.List>
 
           <Tabs.Panel value="details" pt="md">
-            <DetailFieldsMemo spec={spec} data={data} fields={displayFields} />
+            <Stack gap="md">
+              <DetailFieldsMemo spec={spec} data={data} fields={displayFields} />
+              {spec.name === 'engagement' && data.stage === 'finalization' && user?.role === 'client_admin' && (
+                <ClientRating engagement={data} user={user} />
+              )}
+            </Stack>
           </Tabs.Panel>
 
           <ChildTabsMemo childTabs={childTabs} parentSpec={spec} parentData={data} user={user} onSendMessage={handleSendMessage} />
