@@ -134,17 +134,22 @@ async function sendSingleEmail(db, emailRecord, attempt = 1) {
     console.error('[EMAIL] Send error:', { id: emailRecord.id, error: error.message, attempt });
 
     const isRateLimitError = error.message?.includes('429') || error.message?.toLowerCase().includes('quota') || error.message?.toLowerCase().includes('rate limit');
-    const isPermanentError = error.message?.includes('400') || error.message?.toLowerCase().includes('invalid') || error.message?.toLowerCase().includes('not found');
+    const isBounceError = error.message?.includes('550') || error.message?.includes('551') || error.message?.toLowerCase().includes('no such user') || error.message?.toLowerCase().includes('user unknown') || error.message?.toLowerCase().includes('mailbox not found');
+    const isPermanentError = error.message?.includes('400') || error.message?.toLowerCase().includes('invalid') || error.message?.toLowerCase().includes('not found') || isBounceError;
 
     if (isPermanentError || attempt >= MAX_RETRIES) {
+      const bounceStatus = isBounceError ? 'bounced' : EMAIL_STATUS.FAILED;
       db.prepare(`
         UPDATE email
         SET status = ?,
             processing_error = ?,
             retry_count = ?,
+            bounce_reason = ?,
+            bounced_at = ?,
+            bounce_permanent = ?,
             updated_at = ?
         WHERE id = ?
-      `).run(EMAIL_STATUS.FAILED, error.message, attempt, now(), emailRecord.id);
+      `).run(bounceStatus, error.message, attempt, isBounceError ? error.message : null, isBounceError ? now() : null, isBounceError ? 1 : 0, now(), emailRecord.id);
 
       logActivity(db, emailRecord.id, 'email_send_failed', {
         error: error.message,

@@ -39,12 +39,22 @@ export const migrate = () => {
   }
 
   for (const spec of Object.values(specs)) {
+    const searchFields = [];
     forEachField(spec, (key, field) => {
       if (field.type === 'ref' || field.sortable || field.search) {
         try { db.exec(`CREATE INDEX IF NOT EXISTS idx_${spec.name}_${key} ON ${spec.name}(${key})`); } catch (e) {
           console.error(`[Database] Index creation failed for ${spec.name}.${key}:`, e.message);
         }
       }
+      if (field.search || key === 'name' || key === 'description') searchFields.push(key);
     });
+
+    if (searchFields.length > 0) {
+      try {
+        db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS ${spec.name}_fts USING fts5(${searchFields.join(', ')}, content=${spec.name}, content_rowid=id)`);
+      } catch (e) {
+        console.error(`[Database] FTS table creation failed for ${spec.name}:`, e.message);
+      }
+    }
   }
 };

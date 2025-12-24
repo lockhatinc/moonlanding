@@ -613,6 +613,31 @@ entities:
       is_active_focus:
         type: bool
         default: false
+
+  highlight_comment:
+    label: Highlight Comment
+    label_plural: Highlight Comments
+    icon: MessageCircle
+    order: 10.5
+    permission_template: review_collaboration
+    parent: highlight
+    field_overrides:
+      text:
+        type: text
+        required: true
+      author_id:
+        type: ref
+        ref: user
+        required: true
+      created_at:
+        type: timestamp
+        required: true
+      thread_id:
+        type: string
+      parent_comment_id:
+        type: ref
+        ref: highlight_comment
+
   collaborator:
     label: Collaborator
     label_plural: Collaborators

@@ -23,6 +23,19 @@ export class LifecycleEngine {
     return { locked: false, timeRemaining: 0 };
   }
 
+  checkConflict(currentStage, newStage, stageMeta = {}) {
+    if (currentStage === newStage) {
+      return { conflict: true, reason: 'already_in_target_stage' };
+    }
+
+    const inTransition = stageMeta.isTransitioning === true;
+    if (inTransition) {
+      return { conflict: true, reason: 'concurrent_transition_detected' };
+    }
+
+    return { conflict: false };
+  }
+
   canTransition(entity, fromStage, toStage, user, engagement = null) {
     const stageConfig = this.lifecycleStages[entity]?.transitions?.[fromStage];
     if (!stageConfig) return false;
@@ -103,7 +116,11 @@ export class LifecycleEngine {
       hasEngagementLetter: (ctx) => !!ctx.letter_status,
       hasTeam: (ctx) => !!ctx.team_id,
       reviewsComplete: (ctx) => !!ctx.reviews_complete,
-      letterAcceptedOrCancelled: (ctx) => ctx.letter_status === 'accepted' || ctx.progress === 0
+      letterAcceptedOrCancelled: (ctx) => ctx.letter_status === 'accepted' || ctx.progress === 0,
+      checklistsComplete: (ctx) => {
+        if (!ctx.checklists || !Array.isArray(ctx.checklists)) return true;
+        return ctx.checklists.every(c => c.all_items_done === true);
+      }
     };
 
     const validator = validators[ruleName];

@@ -155,6 +155,14 @@ export function allocateEmailToEntity(emailId, engagementId = null, rfiId = null
   return db.prepare('SELECT * FROM email WHERE id = ?').get(emailId);
 }
 
+export function extractResponseText(emailBody) {
+  if (!emailBody) return null;
+  const lines = emailBody.split('\n');
+  const quoteIdx = lines.findIndex(l => l.includes('---') || l.includes('wrote:') || l.includes('On '));
+  const responseLines = quoteIdx > 0 ? lines.slice(0, quoteIdx) : lines;
+  return responseLines.join('\n').trim() || null;
+}
+
 export function autoAllocateEmail(email) {
   const parsed = parseEmailForAllocation(email);
 
@@ -178,12 +186,14 @@ export function autoAllocateEmail(email) {
   }
 
   try {
+    const responseText = rfiId ? extractResponseText(email.body) : null;
     const allocated = allocateEmailToEntity(email.id, engagementId, rfiId);
     return {
       success: true,
       email: allocated,
       engagement_id: engagementId,
       rfi_id: rfiId,
+      response_text: responseText,
       confidence: parsed.confidence,
     };
   } catch (error) {
