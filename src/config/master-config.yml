@@ -482,6 +482,8 @@ thresholds:
     database_busy_timeout_ms: 5000
     poll_interval_ms: 3000
     max_active_subscriptions: 100
+    default_page_size: 50
+    max_page_size: 500
   cache:
     entity_ttl_seconds: 300
     list_ttl_seconds: 60
@@ -593,6 +595,14 @@ entities:
       last_transition_at:
         type: timestamp
         description: Timestamp of last manual stage transition (for lockout enforcement)
+      client_rating:
+        type: number
+        min: 0
+        max: 5
+        default: null
+        label: Client Rating
+        description: Client satisfaction rating (0-5 stars)
+        required: false
   rfi:
     label: Request For Information
     label_plural: RFIs
@@ -647,6 +657,10 @@ entities:
     has_pdf_viewer: true
     has_collaboration: true
     has_tender_tracking: true
+    list:
+      component: review-list
+    detail:
+      component: review-detail
   highlight:
     label: Highlight
     label_plural: Highlights
@@ -812,6 +826,12 @@ entities:
     - clerk
     - client_admin
     - client_user
+    field_overrides:
+      priority_reviews:
+        type: json
+        default: []
+        label: Priority Reviews
+        description: Array of review IDs marked as priority by this user
   team:
     label: Team
     label_plural: Teams
@@ -2318,6 +2338,7 @@ system:
     cors_enabled: true
     session_secret_env: SESSION_SECRET
     timezone: UTC
+    default_user_role: clerk
   polling:
     default_interval_ms: 2000
     max_interval_ms: 10000

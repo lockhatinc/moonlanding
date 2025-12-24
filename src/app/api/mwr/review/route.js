@@ -29,10 +29,38 @@ export const GET = withErrorHandler(async (request) => {
 
   const filtered = domainLoader.filterDataByDomain(data, domain, entity);
 
+  const priorityReviews = Array.isArray(user.priority_reviews)
+    ? user.priority_reviews
+    : (typeof user.priority_reviews === 'string'
+        ? JSON.parse(user.priority_reviews)
+        : []);
+
+  const sorted = filtered.sort((a, b) => {
+    const aPriority = priorityReviews.includes(a.id);
+    const bPriority = priorityReviews.includes(b.id);
+
+    if (aPriority && !bPriority) return -1;
+    if (!aPriority && bPriority) return 1;
+
+    if (a.deadline && b.deadline) {
+      const deadlineDiff = a.deadline - b.deadline;
+      if (deadlineDiff !== 0) return deadlineDiff;
+    } else if (a.deadline && !b.deadline) {
+      return -1;
+    } else if (!a.deadline && b.deadline) {
+      return 1;
+    }
+
+    const aDate = a.updated_at || a.created_at || 0;
+    const bDate = b.updated_at || b.created_at || 0;
+    return bDate - aDate;
+  });
+
   return ok({
     entity,
     domain,
-    items: filtered,
-    count: filtered.length
+    items: sorted,
+    count: sorted.length,
+    priority_reviews: priorityReviews
   });
 }, 'MWR:Review:List');

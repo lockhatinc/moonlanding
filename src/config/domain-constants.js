@@ -1,21 +1,27 @@
 // Dynamic constant access from ConfigGeneratorEngine
 // These are now loaded from master-config.yml at runtime
+// This file is server-side only and should not be bundled with client code
 
-let _cachedConfig = null;
+let _cachedEngine = null;
 
 const _getConfigEngine = () => {
+  // Lazy-load config engine on first access (server-side only)
   if (typeof window !== 'undefined') {
-    // Client-side: return static fallback values
+    // Client-side: return null to use fallback values
     return null;
   }
-  // Server-side: attempt to get the config engine
-  try {
-    const { getConfigEngine } = require('@/lib/config-generator-engine');
-    return getConfigEngine();
-  } catch (err) {
-    console.warn('[domain-constants] Config engine not available, using fallback values', err.message);
-    return null;
+
+  if (!_cachedEngine) {
+    try {
+      // This dynamic import pattern works on server-side only
+      // webpackIgnore: true prevents webpack from trying to bundle this on client side
+      const configModule = eval('require')('@/lib/config-generator-engine');
+      _cachedEngine = configModule.getConfigEngine();
+    } catch (err) {
+      // Config engine not available yet, will use fallback values
+    }
   }
+  return _cachedEngine;
 };
 
 const _getRolesFromConfig = () => {

@@ -2,8 +2,15 @@ let DEFAULT_CACHE_TTL = 5 * 60 * 1000;
 let permissionCache = new Map();
 
 async function initializeCacheTTL() {
+  // Client-side: skip config loading, use default
+  if (typeof window !== 'undefined') {
+    return;
+  }
+
   try {
-    const { getConfigEngine } = await import('@/lib/config-generator-engine');
+    // Use eval to prevent webpack from bundling this import on client side
+    const importFunc = eval('import');
+    const { getConfigEngine } = await importFunc('@/lib/config-generator-engine');
     const engine = await getConfigEngine();
     const config = engine.getConfig();
     DEFAULT_CACHE_TTL = config?.thresholds?.cache?.permission_ttl_ms || 5 * 60 * 1000;

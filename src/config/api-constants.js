@@ -1,3 +1,4 @@
+// HTTP status codes - these are standard and don't need dynamic config
 export const HTTP = {
   OK: 200,
   CREATED: 201,
@@ -13,6 +14,7 @@ export const HTTP = {
   SERVICE_UNAVAILABLE: 503,
 };
 
+// Error messages - could be made configurable in future via ConfigGeneratorEngine
 export const ERRORS = {
   UNAUTHORIZED: 'Unauthorized',
   PERMISSION_DENIED: 'Permission denied',
@@ -28,6 +30,7 @@ export const ERRORS = {
   EXTERNAL_API_ERROR: 'External API request failed',
 };
 
+// Google API scopes - typically defined in integrations.google_oauth/google_drive/google_gmail in master-config.yml
 export const GOOGLE_SCOPES = {
   drive: [
     'https://www.googleapis.com/auth/drive',
@@ -40,6 +43,7 @@ export const GOOGLE_SCOPES = {
   docs: ['https://www.googleapis.com/auth/documents'],
 };
 
+// Google APIs - these are standard endpoints and don't change
 export const GOOGLE_APIS = {
   oauth2: 'https://www.googleapis.com/oauth2/v1/userinfo',
 };

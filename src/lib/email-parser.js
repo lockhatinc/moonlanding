@@ -2,6 +2,7 @@ import { getDatabase } from '@/lib/database-core';
 import { getConfigEngine } from '@/lib/config-generator-engine';
 
 let emailConfig = null;
+let emailPatterns = null;
 
 async function getEmailConfig() {
   if (!emailConfig) {
@@ -22,25 +23,50 @@ async function getEmailConfig() {
   return emailConfig;
 }
 
-const ENGAGEMENT_PATTERNS = [
-  /engagement[:\s#-]*([a-zA-Z0-9_-]+)/i,
-  /eng[:\s#-]*([a-zA-Z0-9_-]+)/i,
-  /\[ENG[:\s#-]*([a-zA-Z0-9_-]+)\]/i,
-  /re[:\s]*engagement[:\s]*([a-zA-Z0-9_-]+)/i,
-  /client[:\s]*([a-zA-Z0-9_-]+)[:\s]*engagement/i,
-];
+async function getEmailPatterns() {
+  if (!emailPatterns) {
+    try {
+      const engine = await getConfigEngine();
+      const masterConfig = engine.getConfig();
+      const schedule = masterConfig?.automation?.schedules?.find(s => s.name === 'email_auto_allocation');
+      const patterns = schedule?.config?.patterns;
 
-const RFI_PATTERNS = [
-  /rfi[:\s#-]*([a-zA-Z0-9_-]+)/i,
-  /\[RFI[:\s#-]*([a-zA-Z0-9_-]+)\]/i,
-  /request[:\s]*for[:\s]*information[:\s#-]*([a-zA-Z0-9_-]+)/i,
-  /information[:\s]*request[:\s#-]*([a-zA-Z0-9_-]+)/i,
-];
+      if (patterns && patterns.engagement && patterns.rfi) {
+        emailPatterns = {
+          engagement: patterns.engagement.map(p => new RegExp(p, 'i')),
+          rfi: patterns.rfi.map(p => new RegExp(p, 'i')),
+        };
+      } else {
+        throw new Error('Patterns not found in config');
+      }
+    } catch (e) {
+      console.warn('[EMAIL_PARSER] Failed to load email patterns from config, using defaults:', e.message);
+      emailPatterns = {
+        engagement: [
+          /engagement[:\s#-]*([a-zA-Z0-9_-]+)/i,
+          /eng[:\s#-]*([a-zA-Z0-9_-]+)/i,
+          /\[ENG[:\s#-]*([a-zA-Z0-9_-]+)\]/i,
+          /re[:\s]*engagement[:\s]*([a-zA-Z0-9_-]+)/i,
+          /client[:\s]*([a-zA-Z0-9_-]+)[:\s]*engagement/i,
+        ],
+        rfi: [
+          /rfi[:\s#-]*([a-zA-Z0-9_-]+)/i,
+          /\[RFI[:\s#-]*([a-zA-Z0-9_-]+)\]/i,
+          /request[:\s]*for[:\s]*information[:\s#-]*([a-zA-Z0-9_-]+)/i,
+          /information[:\s]*request[:\s#-]*([a-zA-Z0-9_-]+)/i,
+        ],
+      };
+    }
+  }
+  return emailPatterns;
+}
 
-export function extractEngagementId(text) {
+export async function extractEngagementId(text) {
   if (!text) return null;
 
-  for (const pattern of ENGAGEMENT_PATTERNS) {
+  const patterns = await getEmailPatterns();
+
+  for (const pattern of patterns.engagement) {
     const match = text.match(pattern);
     if (match && match[1]) {
       return match[1].trim();
@@ -50,10 +76,12 @@ export function extractEngagementId(text) {
   return null;
 }
 
-export function extractRfiId(text) {
+export async function extractRfiId(text) {
   if (!text) return null;
 
-  for (const pattern of RFI_PATTERNS) {
+  const patterns = await getEmailPatterns();
+
+  for (const pattern of patterns.rfi) {
     const match = text.match(pattern);
     if (match && match[1]) {
       return match[1].trim();
@@ -67,8 +95,8 @@ export async function parseEmailForAllocation(email) {
   const { subject, body, html_body } = email;
   const searchText = `${subject || ''} ${body || ''} ${html_body || ''}`;
 
-  const engagementId = extractEngagementId(searchText);
-  const rfiId = extractRfiId(searchText);
+  const engagementId = await extractEngagementId(searchText);
+  const rfiId = await extractRfiId(searchText);
 
   return {
     engagement_id: engagementId,

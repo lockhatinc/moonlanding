@@ -1,20 +1,21 @@
-import { ENGAGEMENT_STATUS, ENGAGEMENT_STAGE, RFI_STATUS } from '@/lib/status-helpers';
+import { getEngagementStages } from '@/lib/status-helpers';
 
 class WorkflowService {
   constructor() {
+    const stages = getEngagementStages();
     this.transitions = {
       engagement: {
-        [ENGAGEMENT_STATUS.PENDING]: [ENGAGEMENT_STATUS.ACTIVE, ENGAGEMENT_STATUS.ARCHIVED],
-        [ENGAGEMENT_STATUS.ACTIVE]: [ENGAGEMENT_STATUS.COMPLETED, ENGAGEMENT_STATUS.ON_HOLD, ENGAGEMENT_STATUS.ARCHIVED],
-        [ENGAGEMENT_STATUS.ON_HOLD]: [ENGAGEMENT_STATUS.ACTIVE, ENGAGEMENT_STATUS.ARCHIVED],
-        [ENGAGEMENT_STATUS.COMPLETED]: [ENGAGEMENT_STATUS.ARCHIVED],
-        [ENGAGEMENT_STATUS.ARCHIVED]: [],
+        'pending': ['active', 'archived'],
+        'active': ['completed', 'on_hold', 'archived'],
+        'on_hold': ['active', 'archived'],
+        'completed': ['archived'],
+        'archived': [],
       },
       rfi: {
-        [RFI_STATUS.PENDING]: [RFI_STATUS.REQUESTED, RFI_STATUS.RESPONDED, RFI_STATUS.RESOLVED],
-        [RFI_STATUS.REQUESTED]: [RFI_STATUS.RESPONDED, RFI_STATUS.RESOLVED],
-        [RFI_STATUS.RESPONDED]: [RFI_STATUS.RESOLVED],
-        [RFI_STATUS.RESOLVED]: [],
+        'pending': ['requested', 'responded', 'resolved'],
+        'requested': ['responded', 'resolved'],
+        'responded': ['resolved'],
+        'resolved': [],
       },
     };
   }
@@ -45,9 +46,10 @@ class WorkflowService {
   }
 
   canTransitionStage(entity, record, toStage, user) {
-    const stages = [ENGAGEMENT_STAGE.INFO_GATHERING, ENGAGEMENT_STAGE.TEAM_EXECUTION, ENGAGEMENT_STAGE.FINALIZATION];
-    const currentIndex = stages.indexOf(record.stage);
-    const targetIndex = stages.indexOf(toStage);
+    const stages = getEngagementStages();
+    const stageOrder = [stages.INFO_GATHERING, stages.TEAM_EXECUTION, stages.FINALIZATION];
+    const currentIndex = stageOrder.indexOf(record.stage);
+    const targetIndex = stageOrder.indexOf(toStage);
     return currentIndex < targetIndex || currentIndex === targetIndex;
   }
 
@@ -64,13 +66,13 @@ class WorkflowService {
   }
 
   isCompleted(entity, record) {
-    return record.status === ENGAGEMENT_STATUS.COMPLETED || record.status === ENGAGEMENT_STATUS.ARCHIVED;
+    return record.status === 'completed' || record.status === 'archived';
   }
 
   executeOnTransition(entity, record, fromStatus, toStatus) {
     const handlers = {
-      [`${ENGAGEMENT_STATUS.ACTIVE}_${ENGAGEMENT_STATUS.COMPLETED}`]: (rec) => ({ completedAt: Date.now() }),
-      [`${ENGAGEMENT_STATUS.PENDING}_${ENGAGEMENT_STATUS.ACTIVE}`]: (rec) => ({ startedAt: Date.now() }),
+      'active_completed': (rec) => ({ completedAt: Date.now() }),
+      'pending_active': (rec) => ({ startedAt: Date.now() }),
     };
     const key = `${fromStatus}_${toStatus}`;
     const handler = handlers[key];

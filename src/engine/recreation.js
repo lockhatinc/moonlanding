@@ -30,11 +30,12 @@ export async function recreateEngagement(sourceId) {
 
   let newEng = null;
   try {
+    const stages = getEngagementStages();
     newEng = create('engagement', {
-      name: src.name, client_id: src.client_id, year, month, stage: ENGAGEMENT_STAGE.INFO_GATHERING, status: ENGAGEMENT_STATUS.PENDING,
+      name: src.name, client_id: src.client_id, year, month, stage: stages.INFO_GATHERING, status: 'pending',
       team_id: src.team_id, template_id: src.template_id, engagement_type: src.engagement_type,
-      progress: 0, client_progress: 0, client_status: RFI_CLIENT_STATUS.PENDING, auditor_status: RFI_AUDITOR_STATUS.REQUESTED,
-      letter_client_status: RFI_CLIENT_STATUS.PENDING, letter_auditor_status: RFI_AUDITOR_STATUS.REQUESTED, post_rfi_client_status: RFI_CLIENT_STATUS.PENDING, post_rfi_auditor_status: RFI_AUDITOR_STATUS.REQUESTED,
+      progress: 0, client_progress: 0, client_status: 'pending', auditor_status: 'requested',
+      letter_client_status: 'pending', letter_auditor_status: 'requested', post_rfi_client_status: 'pending', post_rfi_auditor_status: 'requested',
       repeat_interval: src.repeat_interval, recreate_with_attachments: src.recreate_with_attachments, clerks_can_approve: src.clerks_can_approve, is_private: src.is_private, fee: src.fee,
       users: src.users, client_users: src.client_users, previous_year_review_id: src.review_id,
     });
@@ -49,7 +50,7 @@ export async function recreateEngagement(sourceId) {
     for (const r of rfis) {
       const nr = create('rfi', {
         engagement_id: newEng.id, section_id: r.section_id ? sectionMap[r.section_id] : null,
-        key: r.key, name: r.name, question: r.question, status: RFI_STATUS.PENDING, rfi_status: RFI_STATUS.PENDING, client_status: RFI_CLIENT_STATUS.PENDING, auditor_status: RFI_AUDITOR_STATUS.REQUESTED,
+        key: r.key, name: r.name, question: r.question, status: 'pending', rfi_status: 'pending', client_status: 'pending', auditor_status: 'requested',
         date_requested: null, date_resolved: null, deadline: null, deadline_date: null, days_outstanding: 0, response_count: 0, files_count: 0, responses: null, files: null,
         flag: false, ml_query: r.ml_query, assigned_users: r.assigned_users, recreate_with_attachments: r.recreate_with_attachments, sort_order: r.sort_order,
       });
@@ -94,7 +95,10 @@ export const batchRecreateEngagements = async (ids) => {
   return results;
 };
 
-export const getEngagementsDueForRecreation = (interval) => list('engagement', { repeat_interval: interval, status: ENGAGEMENT_STATUS.ACTIVE }).filter(e => e.stage === ENGAGEMENT_STAGE.CLOSE_OUT || e.status === ENGAGEMENT_STATUS.COMPLETED);
+export const getEngagementsDueForRecreation = (interval) => {
+  const stages = getEngagementStages();
+  return list('engagement', { repeat_interval: interval, status: 'active' }).filter(e => e.stage === stages.CLOSE_OUT || e.status === 'completed');
+};
 
 export const previewRecreation = (sourceId) => {
   const src = get('engagement', sourceId);

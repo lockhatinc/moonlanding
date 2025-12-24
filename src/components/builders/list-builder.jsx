@@ -11,9 +11,11 @@ import { filterByQuery, groupByField, sortGroups } from '@/lib/list-data-transfo
 import { SkeletonTable } from '@/components/skeleton';
 
 const TableRow = memo(function TableRow({ row, columns, spec, groupBy, onRowClick }) {
+  const isPriority = row._isPriority === true;
+
   return (
     <Table.Tr
-      style={{ cursor: 'pointer' }}
+      style={{ cursor: 'pointer', backgroundColor: isPriority ? 'var(--mantine-color-yellow-0)' : undefined }}
       onClick={() => onRowClick(row)}
       role="button"
       tabIndex={0}
@@ -26,9 +28,15 @@ const TableRow = memo(function TableRow({ row, columns, spec, groupBy, onRowClic
       }}
     >
       {groupBy && <Table.Td style={{ width: 40 }} />}
-      {columns.map(col => (
+      {columns.map((col, idx) => (
         <Table.Td key={col.key}>
-          {renderCellValue(row[col.key], col, spec, row)}
+          {idx === 0 && isPriority && (
+            <Group gap={4} wrap="nowrap">
+              <UI_ICONS.star size={14} style={{ color: 'var(--mantine-color-yellow-6)', flexShrink: 0 }} />
+              {renderCellValue(row[col.key], col, spec, row)}
+            </Group>
+          )}
+          {(idx !== 0 || !isPriority) && renderCellValue(row[col.key], col, spec, row)}
         </Table.Td>
       ))}
     </Table.Tr>

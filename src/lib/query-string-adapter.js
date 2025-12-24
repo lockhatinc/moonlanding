@@ -1,6 +1,13 @@
 async function getDefaultPageSize() {
+  // Client-side: return default immediately without loading config
+  if (typeof window !== 'undefined') {
+    return 50;
+  }
+
   try {
-    const { getConfigEngine } = await import('@/lib/config-generator-engine');
+    // Use eval to prevent webpack from bundling this import on client side
+    const importFunc = eval('import');
+    const { getConfigEngine } = await importFunc('@/lib/config-generator-engine');
     const engine = await getConfigEngine();
     return engine.getConfig().system.pagination.default_page_size;
   } catch (error) {

@@ -129,7 +129,7 @@ export const validateRfiStatusChange = (rfi, newStatus, user) => {
     const e = get('engagement', rfi.engagement_id);
     if (!e?.clerks_can_approve) throw new Error('Only auditors (not clerks) can change RFI status');
   }
-  if (newStatus === RFI_STATUS.COMPLETED) {
+  if (newStatus === 'completed') {
     const hasFiles = rfi.files_count > 0 || safeJsonParse(rfi.files, []).length > 0;
     const hasResponses = rfi.response_count > 0 || safeJsonParse(rfi.responses, []).length > 0;
     if (!hasFiles && !hasResponses) throw new Error('RFI must have files or responses before completing');

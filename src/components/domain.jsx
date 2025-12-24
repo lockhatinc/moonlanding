@@ -13,6 +13,7 @@ import { getStatusColor } from '@/config/theme-config';
 const AddChecklistDialog = dynamic(() => import('./dialogs/add-checklist').then(m => ({ default: m.AddChecklistDialog })), { loading: () => <div>Loading...</div>, ssr: false });
 const ChatPanel = dynamic(() => import('./chat-panel').then(m => ({ default: m.ChatPanel })), { loading: () => <div>Loading...</div>, ssr: false });
 const PDFWrapper = dynamic(() => import('./pdf-wrapper').then(m => ({ default: m.PDFWrapper })), { loading: () => <div>Loading...</div>, ssr: false });
+const ListBuilder = dynamic(() => import('./builders/list-builder').then(m => ({ default: m.ListBuilder })), { loading: () => <div>Loading...</div>, ssr: false });
 
 function ChecklistItem({ checklist }) {
   const statusColor = getStatusColor('checklist', checklist.status);
@@ -101,4 +102,29 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
       {showAddChecklistDialog && <AddChecklistDialog review={data} onClose={() => setShowAddChecklistDialog(false)} onSuccess={() => { setShowAddChecklistDialog(false); router.refresh(); }} />}
     </Stack>
   );
+}
+
+export function ReviewList({ spec, data, pagination, user, canCreate }) {
+  const priorityReviews = useMemo(() => {
+    if (Array.isArray(user?.priority_reviews)) {
+      return user.priority_reviews;
+    }
+    if (typeof user?.priority_reviews === 'string') {
+      try {
+        return JSON.parse(user.priority_reviews);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }, [user?.priority_reviews]);
+
+  const dataWithPriority = useMemo(() => {
+    return data.map(review => ({
+      ...review,
+      _isPriority: priorityReviews.includes(review.id)
+    }));
+  }, [data, priorityReviews]);
+
+  return <ListBuilder spec={spec} data={dataWithPriority} pagination={pagination} canCreate={canCreate} />;
 }
