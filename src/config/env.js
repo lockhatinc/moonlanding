@@ -93,6 +93,7 @@ export const EMAIL_RESOLVERS = {
   developers: { type: 'static', emails: [] },
   user: { type: 'single', field: 'user' },
   new_client_user: { type: 'single', field: 'user' },
+  partners_and_managers: { type: 'list', entity: 'user', filter: { type: 'auditor', status: 'active' } },
 };
 
 export default config;

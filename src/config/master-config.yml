@@ -652,6 +652,82 @@ entities:
     permission_template: admin_only
     has_queue: true
     has_templates: true
+    fields:
+      sender_email:
+        type: email
+        required: true
+        search: true
+      sender_name:
+        type: text
+        search: true
+      subject:
+        type: text
+        required: true
+        search: true
+      body:
+        type: textarea
+        search: true
+      html_body:
+        type: textarea
+      message_id:
+        type: text
+        unique: true
+      in_reply_to:
+        type: text
+      references:
+        type: text
+      received_at:
+        type: timestamp
+        required: true
+      allocated:
+        type: bool
+        default: false
+      engagement_id:
+        type: ref
+        ref: engagement
+      rfi_id:
+        type: ref
+        ref: rfi
+      attachments:
+        type: json
+      status:
+        type: enum
+        options: [pending, processing, processed, failed]
+        default: pending
+      processed:
+        type: bool
+        default: false
+      processing_error:
+        type: text
+
+  job_execution_log:
+    label: "Job Execution Log"
+    label_plural: "Job Execution Logs"
+    icon: Clock
+    order: 19
+    permission_template: admin_only
+    system_entity: true
+    fields:
+      timestamp:
+        type: timestamp
+        required: true
+      total_jobs:
+        type: number
+        required: true
+      executed_jobs:
+        type: number
+        required: true
+      failed_jobs:
+        type: number
+        required: true
+      duration_ms:
+        type: number
+      status:
+        type: enum
+        options: [success, partial_failure, error]
+        required: true
+      error_details:
+        type: text
 
 # ============================================================================
 # SECTION 6: Automation Schedules (Config-Driven Jobs)
@@ -692,6 +768,17 @@ automation:
       rule: rfi.notifications.deadline_warnings
       config:
         days_before: $workflows.rfi_type_standard.notifications.deadline_warnings
+
+    - name: rfi_escalation
+      trigger: "0 5 * * *"
+      description: "RFI escalation notifications for outstanding RFIs (3, 7, 14 days)"
+      action: send_rfi_escalation_notifications
+      entity: rfi
+      enabled: true
+      rule: "client_status != 'completed' AND status != 'completed' AND engagement.stage != 'info_gathering'"
+      config:
+        escalation_thresholds: $workflows.rfi_type_standard.notifications.escalation_thresholds
+      tracking_field: escalation_notifications_sent
 
     - name: consolidated_notifications
       trigger: "0 6 * * *"

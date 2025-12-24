@@ -25,6 +25,11 @@ export class SystemConfigLoader {
         log('Initializing with custom config');
         const generator = new ConfigGeneratorEngine(customConfig);
         setConfigEngine(generator);
+
+        const { registerEntityHandlers } = await import('@/lib/events-engine.js');
+        registerEntityHandlers();
+        log('Entity event handlers registered');
+
         log('Custom config loaded successfully', {
           entities: Object.keys(customConfig.entities || {}).length,
           roles: Object.keys(customConfig.roles || {}).length,
@@ -62,6 +67,10 @@ export class SystemConfigLoader {
 
       const generator = new ConfigGeneratorEngine(config);
       setConfigEngine(generator);
+
+      const { registerEntityHandlers } = await import('@/lib/events-engine.js');
+      registerEntityHandlers();
+      log('Entity event handlers registered');
 
       log('ConfigGeneratorEngine initialized and set as global');
       log('System config loading complete', {

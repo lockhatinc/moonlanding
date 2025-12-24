@@ -54,6 +54,46 @@ export const SCHEDULED_JOBS = {
     }
   }),
 
+  daily_rfi_escalation: defineJob(JOBS_CONFIG.dailyRfiEscalation, async (cfg) => {
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const DAY_SECONDS = 86400;
+
+    for (const rfi of list('rfi').filter(r => r.client_status !== RFI_CLIENT_STATUS.COMPLETED && r.status !== 'completed')) {
+      const engagement = get('engagement', rfi.engagement_id);
+      if (!engagement || engagement.stage === ENGAGEMENT_STAGE.INFO_GATHERING) continue;
+
+      const daysOutstanding = Math.floor((nowSeconds - (rfi.date_requested || rfi.created_at)) / DAY_SECONDS);
+
+      for (const threshold of cfg.escalation_thresholds) {
+        if (daysOutstanding >= threshold) {
+          const escalationsSent = safeJsonParse(rfi.escalation_notifications_sent, []);
+
+          if (!escalationsSent.includes(threshold)) {
+            const client = get('client', engagement.client_id);
+
+            await queueEmail('rfi_escalation', {
+              rfi,
+              engagement,
+              client,
+              daysOutstanding: threshold,
+              rfi_url: `${process.env.APP_URL || 'http://localhost:3000'}/engagements/${engagement.id}/rfis/${rfi.id}`,
+              recipients: 'partners_and_managers'
+            });
+
+            escalationsSent.push(threshold);
+            update('rfi', rfi.id, {
+              escalation_notifications_sent: JSON.stringify(escalationsSent)
+            });
+
+            activityLog('rfi', rfi.id, 'escalation_sent', `Escalation notification sent for ${threshold} days outstanding`);
+
+            console.log(`${LOG_PREFIXES.job} RFI escalation sent: RFI ${rfi.id} (${threshold} days outstanding)`);
+          }
+        }
+      }
+    }
+  }),
+
   daily_consolidated_notifications: defineJob(JOBS_CONFIG.dailyConsolidatedNotifications, async () => {
     const pending = list('notification', { status: 'pending' });
     const byUser = pending.reduce((acc, n) => ((acc[n.recipient_id] = acc[n.recipient_id] || []).push(n), acc), {});

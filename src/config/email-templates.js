@@ -89,6 +89,12 @@ export const EMAIL_TEMPLATES = {
     html: `<h2>RFI Reminder: ${context.engagement?.name}</h2><ul><li><strong>Question:</strong> ${context.question}</li><li><strong>Engagement:</strong> ${context.engagement?.name}</li><li><strong>Days Outstanding:</strong> ${context.days_outstanding}</li></ul><p><a href="${context.rfi_url}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">Respond</a></p>`,
   }),
 
+  rfi_escalation: (context) => ({
+    subject: `ESCALATION: RFI Outstanding ${context.daysOutstanding} Days - ${context.engagement?.name || 'Untitled'}`,
+    body: `RFI has been outstanding for ${context.daysOutstanding} days.\n\nQuestion: ${context.rfi?.question}\nEngagement: ${context.engagement?.name}\nClient: ${context.client?.name}\nDate Requested: ${context.rfi?.date_requested}\nDays Outstanding: ${context.daysOutstanding}`,
+    html: `<h2 style="color:#dc2626">ESCALATION: RFI Outstanding ${context.daysOutstanding} Days</h2><p>This RFI requires immediate attention.</p><ul><li><strong>Question:</strong> ${context.rfi?.question}</li><li><strong>Engagement:</strong> ${context.engagement?.name}</li><li><strong>Client:</strong> ${context.client?.name}</li><li><strong>Date Requested:</strong> ${context.rfi?.date_requested}</li><li><strong>Days Outstanding:</strong> ${context.daysOutstanding}</li></ul><p><a href="${context.rfi_url}" style="display:inline-block;padding:10px 20px;background:#dc2626;color:#fff;text-decoration:none;border-radius:4px">View RFI</a></p>`,
+  }),
+
   collaborator_added: (context) => ({
     subject: `Collaborator Access: ${context.review?.name || 'Untitled'}`,
     body: `Review: ${context.review?.name}\nType: ${context.access_type}\nExpires: ${context.expires_at}\nAdded By: ${context.added_by}`,

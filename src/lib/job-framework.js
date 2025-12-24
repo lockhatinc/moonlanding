@@ -45,10 +45,30 @@ export const runJob = async (jobs, name) => {
 };
 
 export const runDueJobs = async (jobs) => {
+  const results = {
+    total: 0,
+    executed: 0,
+    failed: 0,
+    details: [],
+    errors: []
+  };
+
   for (const [name, job] of Object.entries(jobs)) {
+    results.total++;
     if (shouldRunNow(job.schedule)) {
-      try { await runJob(jobs, name); }
-      catch (e) { console.error(`${LOG_PREFIXES.job} ${name}:`, e.message); }
+      try {
+        await runJob(jobs, name);
+        results.executed++;
+        results.details.push({ name, status: 'success' });
+        console.log(`${LOG_PREFIXES.job} ${name} executed successfully`);
+      } catch (e) {
+        results.failed++;
+        results.details.push({ name, status: 'failed', error: e.message });
+        results.errors.push({ job: name, error: e.message });
+        console.error(`${LOG_PREFIXES.job} ${name}:`, e.message);
+      }
     }
   }
+
+  return results;
 };

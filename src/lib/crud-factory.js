@@ -12,12 +12,201 @@ import { permissionService } from '@/services';
 import { parse as parseQuery } from '@/lib/query-string-adapter';
 import { withErrorHandler } from '@/lib/with-error-handler';
 import { getDomainLoader } from '@/lib/domain-loader';
+import { now } from '@/lib/database-core';
 
 export const createCrudHandlers = (entityName) => {
   const spec = getSpec(entityName);
   if (!spec) throw new Error(`No spec: ${entityName}`);
 
   const handlers = {
+    customAction: async (user, action, id, data = {}) => {
+      if (!id) throw new AppError('ID required for custom action', 'BAD_REQUEST', HTTP.BAD_REQUEST);
+      const record = get(entityName, id);
+      if (!record) throw NotFoundError(entityName, id);
+
+      const context = {
+        operation: data.operation,
+        fromStatus: record.status,
+        toStatus: data.status || data.toStatus,
+        ...data.context
+      };
+
+      permissionService.requireActionPermission(user, spec, action, record, context);
+
+      if (action === 'respond' || action === 'upload_files') {
+        return await handlers.handleRfiAction(user, id, action, data, record);
+      }
+
+      if (action === 'resolve_highlight') {
+        return await handlers.handleHighlightResolve(user, id, data, record);
+      }
+
+      if (action === 'manage_flags') {
+        return await handlers.handleFlagManagement(user, id, data, record, context);
+      }
+
+      if (action === 'change_status') {
+        return await handlers.handleStatusChange(user, id, data, record, context);
+      }
+
+      if (action.startsWith('manage_collaborators')) {
+        return await handlers.handleCollaboratorAction(user, id, action, data, record);
+      }
+
+      if (action.startsWith('manage_highlights')) {
+        return await handlers.handleHighlightAction(user, id, action, data, record);
+      }
+
+      throw new AppError(`Unknown action: ${action}`, 'BAD_REQUEST', HTTP.BAD_REQUEST);
+    },
+
+    handleRfiAction: async (user, id, action, data, record) => {
+      const ctx = await executeHook(`${action}:${entityName}:before`, {
+        entity: entityName,
+        id,
+        data,
+        user,
+        record
+      });
+
+      let result;
+      if (action === 'respond') {
+        const updateData = {
+          status: 'responded',
+          response: data.response,
+          responded_at: now(),
+          responded_by: user.id
+        };
+        update(entityName, id, updateData, user);
+        result = get(entityName, id);
+      } else if (action === 'upload_files') {
+        const files = Array.isArray(data.files) ? data.files : [data.files];
+        result = { id, uploaded_files: files };
+      }
+
+      await executeHook(`${action}:${entityName}:after`, {
+        entity: entityName,
+        id,
+        data: result,
+        user
+      });
+
+      broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), action, permissionService.filterFields(user, spec, result));
+      return ok(permissionService.filterFields(user, spec, result));
+    },
+
+    handleHighlightResolve: async (user, id, data, record) => {
+      const updateData = {
+        status: 'resolved',
+        resolved_at: now(),
+        resolved_by: user.id,
+        resolution_notes: data.notes || ''
+      };
+
+      await executeHook(`resolve:${entityName}:before`, {
+        entity: entityName,
+        id,
+        data: updateData,
+        user,
+        record
+      });
+
+      update(entityName, id, updateData, user);
+      const result = get(entityName, id);
+
+      await executeHook(`resolve:${entityName}:after`, {
+        entity: entityName,
+        id,
+        data: result,
+        user
+      });
+
+      broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'resolve', permissionService.filterFields(user, spec, result));
+      return ok(permissionService.filterFields(user, spec, result));
+    },
+
+    handleFlagManagement: async (user, id, data, record, context) => {
+      const operation = context.operation || 'create';
+
+      if (operation === 'apply' && user.role === 'manager') {
+        const updateData = {
+          ...data,
+          applied_by: user.id,
+          applied_at: now()
+        };
+
+        await executeHook(`apply_flag:${entityName}:before`, {
+          entity: entityName,
+          id,
+          data: updateData,
+          user,
+          record
+        });
+
+        update(entityName, id, updateData, user);
+        const result = get(entityName, id);
+
+        await executeHook(`apply_flag:${entityName}:after`, {
+          entity: entityName,
+          id,
+          data: result,
+          user
+        });
+
+        broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'apply_flag', permissionService.filterFields(user, spec, result));
+        return ok(permissionService.filterFields(user, spec, result));
+      }
+
+      return await handlers.update(user, id, data);
+    },
+
+    handleStatusChange: async (user, id, data, record, context) => {
+      const updateData = {
+        status: data.status || data.toStatus,
+        status_changed_at: now(),
+        status_changed_by: user.id
+      };
+
+      await executeHook(`status_change:${entityName}:before`, {
+        entity: entityName,
+        id,
+        data: updateData,
+        user,
+        record,
+        fromStatus: context.fromStatus,
+        toStatus: updateData.status
+      });
+
+      update(entityName, id, updateData, user);
+      const result = get(entityName, id);
+
+      await executeHook(`status_change:${entityName}:after`, {
+        entity: entityName,
+        id,
+        data: result,
+        user
+      });
+
+      broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'status_change', permissionService.filterFields(user, spec, result));
+      return ok(permissionService.filterFields(user, spec, result));
+    },
+
+    handleCollaboratorAction: async (user, id, action, data, record) => {
+      if (!permissionService.checkOwnership(user, spec, record, action)) {
+        throw new AppError('Access denied: not owner', 'FORBIDDEN', HTTP.FORBIDDEN);
+      }
+
+      return await handlers.update(user, id, data);
+    },
+
+    handleHighlightAction: async (user, id, action, data, record) => {
+      if (!permissionService.checkOwnership(user, spec, record, action)) {
+        throw new AppError('Access denied: not owner', 'FORBIDDEN', HTTP.FORBIDDEN);
+      }
+
+      return await handlers.update(user, id, data);
+    },
+
     list: async (user, request) => {
       requirePermission(user, spec, 'list');
       const { q, page, pageSize } = parseQuery(request);
@@ -115,8 +304,23 @@ export const createCrudHandlers = (entityName) => {
       if (id || action === 'view') return await handlers.get(user, id || context.params?.id);
       return await handlers.list(user, request);
     }
-    if (method === 'POST') return await handlers.create(user, await request.json());
-    if (method === 'PUT' || method === 'PATCH') return await handlers.update(user, id, await request.json());
+
+    if (method === 'POST') {
+      if (action && id) {
+        const data = await request.json();
+        return await handlers.customAction(user, action, id, data);
+      }
+      return await handlers.create(user, await request.json());
+    }
+
+    if (method === 'PUT' || method === 'PATCH') {
+      if (action && id) {
+        const data = await request.json();
+        return await handlers.customAction(user, action, id, data);
+      }
+      return await handlers.update(user, id, await request.json());
+    }
+
     if (method === 'DELETE') return await handlers.delete(user, id);
 
     throw new AppError(`Unknown action`, 'BAD_REQUEST', HTTP.BAD_REQUEST);

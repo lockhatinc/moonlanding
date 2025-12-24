@@ -24,6 +24,13 @@ export const JOBS_CONFIG = {
     config: { days_before: [7, 3, 1, 0] },
   },
 
+  dailyRfiEscalation: {
+    name: 'daily_rfi_escalation',
+    schedule: '0 5 * * *',
+    description: 'RFI escalation notifications for outstanding RFIs',
+    config: { escalation_thresholds: [3, 7, 14] },
+  },
+
   dailyConsolidatedNotifications: {
     name: 'daily_consolidated_notifications',
     schedule: '0 6 * * *',

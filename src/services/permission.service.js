@@ -108,6 +108,183 @@ class PermissionService {
     if (this.checkAccess(user, spec, 'delete') && this.checkRowAccess(user, spec, record)) actions.push('delete');
     return actions;
   }
+
+  checkActionPermission(user, spec, action, record = null, context = {}) {
+    if (!user) return false;
+
+    if (['list', 'view', 'create', 'edit', 'delete'].includes(action)) {
+      return this.checkAccess(user, spec, action);
+    }
+
+    if (!spec.permissions) return false;
+
+    const rolePermissions = spec.permissions[user.role];
+    if (!rolePermissions) return false;
+
+    if (action.endsWith('_own')) {
+      if (!rolePermissions.includes(action)) return false;
+      if (!record) return false;
+      return this.checkOwnership(user, spec, record, action);
+    }
+
+    if (action.endsWith('_assigned')) {
+      if (!rolePermissions.includes(action)) return false;
+      if (!record) return false;
+      return this.checkAssignment(user, spec, record);
+    }
+
+    if (!rolePermissions.includes(action)) return false;
+
+    if (action === 'respond' || action === 'upload_files') {
+      if (!record) return false;
+      return this.checkRfiResponse(user, spec, record, context);
+    }
+
+    if (action === 'resolve_highlight') {
+      if (!record) return false;
+      return this.checkHighlightResolve(user, spec, record);
+    }
+
+    if (action === 'manage_flags') {
+      return this.checkFlagManagement(user, spec, record, context);
+    }
+
+    if (action === 'change_status') {
+      if (!record) return false;
+      return this.checkStatusChange(user, spec, record, context);
+    }
+
+    return true;
+  }
+
+  checkOwnership(user, spec, record, action) {
+    if (!record) return false;
+
+    const baseAction = action.replace('_own', '');
+
+    if (baseAction === 'manage_collaborators') {
+      return record.created_by === user.id;
+    }
+
+    if (baseAction === 'manage_highlights') {
+      return record.created_by === user.id || record.user_id === user.id;
+    }
+
+    if (record.created_by) {
+      return record.created_by === user.id;
+    }
+
+    if (record.user_id) {
+      return record.user_id === user.id;
+    }
+
+    return false;
+  }
+
+  checkAssignment(user, spec, record) {
+    if (!record) return false;
+
+    if (record.assigned_to && record.assigned_to === user.id) {
+      return true;
+    }
+
+    if (record.assigned_users && Array.isArray(record.assigned_users)) {
+      return record.assigned_users.includes(user.id);
+    }
+
+    if (record.assigned_users && typeof record.assigned_users === 'string') {
+      try {
+        const parsed = JSON.parse(record.assigned_users);
+        if (Array.isArray(parsed)) {
+          return parsed.includes(user.id);
+        }
+      } catch (e) {
+        return false;
+      }
+    }
+
+    return false;
+  }
+
+  checkRfiResponse(user, spec, record, context = {}) {
+    if (!record) return false;
+
+    if (record.status === 'completed' || record.status === 'closed') {
+      return false;
+    }
+
+    if (user.role === 'client_admin' || user.role === 'client_user') {
+      if (record.client_id && user.client_ids && !user.client_ids.includes(record.client_id)) {
+        return false;
+      }
+
+      if (user.role === 'client_user') {
+        return this.checkAssignment(user, spec, record);
+      }
+
+      return true;
+    }
+
+    if (['partner', 'manager'].includes(user.role)) {
+      return true;
+    }
+
+    return false;
+  }
+
+  checkHighlightResolve(user, spec, record) {
+    if (!record) return false;
+
+    if (user.role === 'partner') {
+      return true;
+    }
+
+    if (record.resolver_id && record.resolver_id === user.id) {
+      return true;
+    }
+
+    if (record.created_by === user.id) {
+      return true;
+    }
+
+    return false;
+  }
+
+  checkFlagManagement(user, spec, record = null, context = {}) {
+    if (user.role === 'partner') {
+      return true;
+    }
+
+    if (user.role === 'manager' && context.operation === 'apply') {
+      return true;
+    }
+
+    return false;
+  }
+
+  checkStatusChange(user, spec, record, context = {}) {
+    if (!record) return false;
+
+    if (!this.checkAccess(user, spec, 'edit')) {
+      return false;
+    }
+
+    if (!this.checkRowAccess(user, spec, record)) {
+      return false;
+    }
+
+    if (context.fromStatus && context.toStatus) {
+      return this.canTransition(user, spec, context.fromStatus, context.toStatus);
+    }
+
+    return true;
+  }
+
+  requireActionPermission(user, spec, action, record = null, context = {}) {
+    if (!this.checkActionPermission(user, spec, action, record, context)) {
+      throw new Error(ERROR_MESSAGES.permissionDenied(`${spec.name}.${action}`));
+    }
+  }
 }
 
 export const permissionService = new PermissionService();
