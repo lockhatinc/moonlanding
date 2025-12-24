@@ -38,19 +38,19 @@ export const ValidationError = (message, errors = {}, context = {}) =>
   createError('VALIDATION', message, { ...context, errors });
 
 export const NotFoundError = (entity, id, context = {}) =>
-  createError('NOT_FOUND', ERROR_MESSAGES.notFound(`${entity} with id ${id}`), { ...context, entity, id });
+  createError('NOT_FOUND', ERROR_MESSAGES.operation.notFound(`${entity} with id ${id}`), { ...context, entity, id });
 
 export const PermissionError = (action = 'access', context = {}) =>
-  createError('PERMISSION', ERROR_MESSAGES.permissionDenied(action), context);
+  createError('PERMISSION', ERROR_MESSAGES.permission.denied, context);
 
 export const UnauthorizedError = (context = {}) =>
-  createError('UNAUTHORIZED', ERROR_MESSAGES.unauthorized(), context);
+  createError('UNAUTHORIZED', ERROR_MESSAGES.auth.unauthorized, context);
 
 export const ConflictError = (field = 'record', context = {}) =>
-  createError('CONFLICT', ERROR_MESSAGES.duplicateEntry(field), context);
+  createError('CONFLICT', ERROR_MESSAGES.operation.alreadyExists(field), context);
 
 export const DatabaseError = (operation, originalError = null, context = {}) =>
-  createError('DATABASE', ERROR_MESSAGES.databaseError(operation), { ...context, originalMessage: originalError?.message, originalError });
+  createError('DATABASE', ERROR_MESSAGES.system.error, { ...context, originalMessage: originalError?.message, originalError });
 
 export const ExternalAPIError = (service, message, statusCode = HTTP.INTERNAL_ERROR, context = {}) =>
   createError('EXTERNAL_API', message, { statusCode, ...context, service });
