@@ -49,6 +49,13 @@ export const JOBS_CONFIG = {
     description: 'Mark missed tender deadlines',
   },
 
+  dailyCollaboratorExpiryNotifications: {
+    name: 'daily_collaborator_expiry_notifications',
+    schedule: '0 7 * * *',
+    description: 'Send 7-day expiry warnings to collaborators',
+    config: { days_before_expiry: 7 },
+  },
+
   dailyTempAccessCleanup: {
     name: 'daily_temp_access_cleanup',
     schedule: '0 0 * * *',
@@ -86,5 +93,15 @@ export const JOBS_CONFIG = {
     name: 'hourly_email_processing',
     schedule: '0 * * * *',
     description: 'Process email queue',
+  },
+
+  hourlyEmailAllocation: {
+    name: 'hourly_email_allocation',
+    schedule: '15 * * * *',
+    description: 'Auto-allocate unallocated emails',
+    config: {
+      min_confidence: 70,
+      batch_size: 50,
+    },
   },
 };

@@ -41,6 +41,10 @@ export const createCrudHandlers = (entityName) => {
         return await handlers.handleHighlightResolve(user, id, data, record);
       }
 
+      if (action === 'reopen_highlight') {
+        return await handlers.handleHighlightReopen(user, id, data, record);
+      }
+
       if (action === 'manage_flags') {
         return await handlers.handleFlagManagement(user, id, data, record, context);
       }
@@ -96,11 +100,16 @@ export const createCrudHandlers = (entityName) => {
     },
 
     handleHighlightResolve: async (user, id, data, record) => {
+      if (record.status === 'resolved') {
+        throw new AppError('Highlight already resolved', 'BAD_REQUEST', HTTP.BAD_REQUEST);
+      }
+
       const updateData = {
         status: 'resolved',
         resolved_at: now(),
         resolved_by: user.id,
-        resolution_notes: data.notes || ''
+        resolution_notes: data.notes || data.resolution_notes || '',
+        color: 'green'
       };
 
       await executeHook(`resolve:${entityName}:before`, {
@@ -122,6 +131,41 @@ export const createCrudHandlers = (entityName) => {
       });
 
       broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'resolve', permissionService.filterFields(user, spec, result));
+      return ok(permissionService.filterFields(user, spec, result));
+    },
+
+    handleHighlightReopen: async (user, id, data, record) => {
+      if (record.status !== 'resolved') {
+        throw new AppError('Highlight not resolved', 'BAD_REQUEST', HTTP.BAD_REQUEST);
+      }
+
+      const updateData = {
+        status: 'unresolved',
+        resolved_at: null,
+        resolved_by: null,
+        resolution_notes: null,
+        color: 'grey'
+      };
+
+      await executeHook(`reopen:${entityName}:before`, {
+        entity: entityName,
+        id,
+        data: updateData,
+        user,
+        record
+      });
+
+      update(entityName, id, updateData, user);
+      const result = get(entityName, id);
+
+      await executeHook(`reopen:${entityName}:after`, {
+        entity: entityName,
+        id,
+        data: result,
+        user
+      });
+
+      broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'reopen', permissionService.filterFields(user, spec, result));
       return ok(permissionService.filterFields(user, spec, result));
     },
 
@@ -254,6 +298,15 @@ export const createCrudHandlers = (entityName) => {
       const prev = get(entityName, id);
       if (!prev) throw NotFoundError(entityName, id);
       if (!permissionService.checkRowAccess(user, spec, prev)) throw new AppError('Access denied', 'FORBIDDEN', HTTP.FORBIDDEN);
+
+      if (prev.status === 'resolved' && spec.workflow) {
+        const workflowDef = spec.workflowDef;
+        const resolvedState = workflowDef?.states?.find(s => s.name === 'resolved');
+        if (resolvedState && resolvedState.readonly === true) {
+          throw new AppError('Cannot edit resolved highlight. Use reopen_highlight action first.', 'FORBIDDEN', HTTP.FORBIDDEN);
+        }
+      }
+
       permissionService.enforceEditPermissions(user, spec, data);
       const errors = await validateUpdate(spec, id, data);
       if (hasErrors?.(errors) || Object.keys(errors).length) throw ValidationError('Validation failed', errors);
@@ -272,9 +325,26 @@ export const createCrudHandlers = (entityName) => {
       const record = get(entityName, id);
       if (!record) throw NotFoundError(entityName, id);
       if (!permissionService.checkRowAccess(user, spec, record)) throw new AppError('Access denied', 'FORBIDDEN', HTTP.FORBIDDEN);
+
       const ctx = await executeHook(`delete:${entityName}:before`, { entity: entityName, id, record, user });
-      if (spec.fields.status) update(entityName, ctx.id || id, { status: 'deleted' }, user);
-      else remove(entityName, ctx.id || id);
+
+      const entityDef = spec.entityDef || {};
+      const isImmutable = entityDef.immutable === true;
+      const immutableStrategy = entityDef.immutable_strategy;
+
+      if (isImmutable && immutableStrategy === 'move_to_archive') {
+        const archiveData = {
+          archived: true,
+          archived_at: now(),
+          archived_by: user.id
+        };
+        update(entityName, ctx.id || id, archiveData, user);
+      } else if (spec.fields.status) {
+        update(entityName, ctx.id || id, { status: 'deleted' }, user);
+      } else {
+        remove(entityName, ctx.id || id);
+      }
+
       await executeHook(`delete:${entityName}:after`, { entity: entityName, id, record, user });
       broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'delete', { id });
       broadcastUpdate(API_ENDPOINTS.entity(entityName), 'delete', { id });

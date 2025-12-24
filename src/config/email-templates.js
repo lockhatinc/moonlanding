@@ -101,6 +101,35 @@ export const EMAIL_TEMPLATES = {
     html: `<h2>Collaborator Access: ${context.review?.name}</h2><ul><li><strong>Review:</strong> ${context.review?.name}</li><li><strong>Type:</strong> ${context.access_type}</li><li><strong>Expires:</strong> ${context.expires_at}</li><li><strong>Added By:</strong> ${context.added_by}</li></ul><p><a href="${context.review_url}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">View Review</a></p>`,
   }),
 
+  collaborator_expiry_7day_warning: (context) => ({
+    subject: `Review Collaboration Access Expiring in 7 Days - ${context.review_name || 'Review'}`,
+    body: `Hello ${context.collaborator_name},\n\nYour collaboration access to the review "${context.review_name}" will expire in 7 days on ${context.expires_date}.\n\nPlease complete any outstanding work before your access is automatically revoked.\n\nReview: ${context.review_name}\nExpires: ${context.expires_date}\n\nIf you need extended access, please contact the review owner.`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px">
+        <h2 style="color:#f59e0b;margin-bottom:20px">Collaboration Access Expiring Soon</h2>
+        <p>Hello <strong>${context.collaborator_name}</strong>,</p>
+        <p>Your collaboration access to the review <strong>"${context.review_name}"</strong> will expire in <strong>7 days</strong> on <strong>${context.expires_date}</strong>.</p>
+        <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:15px;margin:20px 0">
+          <p style="margin:0;color:#92400e">
+            <strong>Action Required:</strong> Please complete any outstanding work before your access is automatically revoked.
+          </p>
+        </div>
+        <div style="background:#f9fafb;padding:15px;border-radius:8px;margin:20px 0">
+          <p style="margin:5px 0"><strong>Review:</strong> ${context.review_name}</p>
+          <p style="margin:5px 0"><strong>Access Expires:</strong> ${context.expires_date}</p>
+        </div>
+        <p style="margin:20px 0">
+          <a href="${context.review_url}" style="display:inline-block;padding:12px 24px;background:#10b981;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold">
+            View Review
+          </a>
+        </p>
+        <p style="color:#6b7280;font-size:14px;margin-top:30px;border-top:1px solid #e5e7eb;padding-top:15px">
+          If you need extended access, please contact the review owner.
+        </p>
+      </div>
+    `,
+  }),
+
   tender_deadline_7days: (context) => ({
     subject: `Tender Deadline in 7 Days: ${context.review?.name || 'Untitled'}`,
     body: `Review: ${context.review?.name}\nDeadline: ${context.deadline}\nTeam: ${context.team_name}`,

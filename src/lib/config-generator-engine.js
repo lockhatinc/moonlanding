@@ -219,6 +219,7 @@ export class ConfigGeneratorEngine {
       immutable: entityDef.immutable || false,
       immutable_strategy: entityDef.immutable_strategy || null,
       state_machine: entityDef.state_machine || false,
+      entityDef: entityDef,
     };
 
     if (entityDef.permission_template) {
@@ -229,10 +230,21 @@ export class ConfigGeneratorEngine {
     if (entityDef.workflow) {
       const workflow = this.getWorkflow(entityDef.workflow);
       spec.workflow = workflow;
+      spec.workflowDef = workflow;
     }
 
     if (entityDef.field_overrides) {
       spec.field_overrides = this._recursiveResolve(entityDef.field_overrides, config);
+      spec.fields = this._generateFieldsFromOverrides(spec.field_overrides);
+    }
+
+    if (entityDef.fields) {
+      if (!spec.fields) spec.fields = {};
+      spec.fields = { ...spec.fields, ...this._recursiveResolve(entityDef.fields, config) };
+    }
+
+    if (!spec.fields) {
+      spec.fields = this._generateDefaultFields(entityName);
     }
 
     if (entityDef.variants) {
@@ -684,6 +696,30 @@ export class ConfigGeneratorEngine {
     }
 
     return this._deepFreeze(statusEnum);
+  }
+
+  _generateFieldsFromOverrides(fieldOverrides) {
+    const fields = { id: { type: 'id', required: true } };
+
+    for (const [fieldName, fieldDef] of Object.entries(fieldOverrides)) {
+      fields[fieldName] = { ...fieldDef };
+    }
+
+    fields.created_at = { type: 'timestamp', auto: 'now', required: true };
+    fields.updated_at = { type: 'timestamp', auto: 'update' };
+    fields.created_by = { type: 'ref', ref: 'user', auto: 'user' };
+
+    return fields;
+  }
+
+  _generateDefaultFields(entityName) {
+    return {
+      id: { type: 'id', required: true },
+      name: { type: 'text', required: true },
+      created_at: { type: 'timestamp', auto: 'now', required: true },
+      updated_at: { type: 'timestamp', auto: 'update' },
+      created_by: { type: 'ref', ref: 'user', auto: 'user' },
+    };
   }
 }
 

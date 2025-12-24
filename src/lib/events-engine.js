@@ -4,6 +4,7 @@ import { queueEmail } from '../engine/email-templates.js';
 import { RFI_STATUS, RFI_CLIENT_STATUS, ENGAGEMENT_STAGE, REPEAT_INTERVALS, LETTER_AUDITOR_STATUS } from './status-helpers.js';
 import { safeJsonParse } from './safe-json.js';
 import { registerEngagementStageHooks } from './hooks/engagement-stage-validator.js';
+import { registerChecklistHooks } from './hooks/checklist-hooks.js';
 
 const logActivity = (t, id, act, msg, u, d) =>
   create('activity_log', { entity_type: t, entity_id: id, action: act, message: msg, details: d ? JSON.stringify(d) : null, user_email: u?.email }, u);
@@ -18,6 +19,7 @@ const updateEngagementProgress = (eid) => {
 
 export const registerEntityHandlers = () => {
   registerEngagementStageHooks(hookEngine);
+  registerChecklistHooks(hookEngine);
 
   hookEngine.on('engagement:afterCreate', async (engagement, user) => {
     if (engagement.client_id) {

@@ -77,6 +77,13 @@ export const RECORD_STATUS = {
   DELETED: 'deleted',
 };
 
+export const EMAIL_STATUS = {
+  PENDING: 'pending',
+  PROCESSING: 'processing',
+  PROCESSED: 'processed',
+  FAILED: 'failed',
+};
+
 export const STAGE_TRANSITIONS = {
   'info_gathering': 'commencement',
   'commencement': 'team_execution',

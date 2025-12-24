@@ -22,6 +22,7 @@ function buildSpecQuery(spec, where = {}, options = {}) {
   const wc = [], p = [];
   Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${table}.${k} ${SQL_OPERATORS.eq} ${QUERY_BUILDING.parameterPlaceholder}`); p.push(v); } });
   if (spec.fields.status && !where.status && !options.includeDeleted) wc.push(`${table}.status ${SQL_OPERATORS.ne} '${RECORD_STATUS.DELETED}'`);
+  if (spec.fields.archived && !where.archived && !options.includeArchived) wc.push(`${table}.archived ${SQL_OPERATORS.eq} 0`);
   let sql = `${SQL_KEYWORDS.select} ${selects.join(`${QUERY_BUILDING.delimiter} `)} ${SQL_KEYWORDS.from} ${table}`;
   if (joins.length) sql += ' ' + joins.join(' ');
   if (wc.length) sql += ` ${SQL_KEYWORDS.where} ` + wc.join(` ${SQL_KEYWORDS.and} `);
@@ -48,6 +49,7 @@ export const listWithPagination = (entity, where = {}, page = 1, pageSize = null
   const wc = [], p = [];
   Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${spec.name}.${k}${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`); p.push(v); } });
   if (spec.fields.status && !where.status) wc.push(`${spec.name}.status${SQL_OPERATORS.ne}'${RECORD_STATUS.DELETED}'`);
+  if (spec.fields.archived && !where.archived) wc.push(`${spec.name}.archived${SQL_OPERATORS.eq}0`);
   const whereClause = wc.length ? ` ${SQL_KEYWORDS.where} ` + wc.join(` ${SQL_KEYWORDS.and} `) : '';
   const total = execGet(`${SQL_KEYWORDS.select} ${SQL_KEYWORDS.countAs} c ${SQL_KEYWORDS.from} ${spec.name}${whereClause}`, p, { entity, operation: 'Count' }).c;
   const items = list(entity, where, { limit: finalPageSize, offset: (finalPage - 1) * finalPageSize });
@@ -90,6 +92,7 @@ export const searchWithPagination = (entity, query, where = {}, page = 1, pageSi
   const wc = [], p = [];
   Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${table}.${k}${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`); p.push(v); } });
   if (spec.fields.status && !where.status) wc.push(`${table}.status${SQL_OPERATORS.ne}'${RECORD_STATUS.DELETED}'`);
+  if (spec.fields.archived && !where.archived) wc.push(`${table}.archived${SQL_OPERATORS.eq}0`);
   const whereClause = wc.length ? ` ${SQL_KEYWORDS.and} (${wc.join(` ${SQL_KEYWORDS.and} `)})` : '';
   const countSql = `${SQL_KEYWORDS.select} ${SQL_KEYWORDS.countAs} c ${SQL_KEYWORDS.from} ${table} ${SQL_KEYWORDS.where} (${searchClauses})${whereClause}`;
   const total = execGet(countSql, [...searchFields.map(() => `${QUERY_BUILDING.wildcard}${query}${QUERY_BUILDING.wildcard}`), ...p], { entity, operation: 'Count' }).c;
@@ -101,6 +104,7 @@ export const count = (entity, where = {}) => {
   const spec = getSpec(entity);
   const wc = Object.entries(where).filter(([,v]) => v !== undefined).map(([k]) => `${k}${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`);
   if (spec.fields.status) wc.push(`status${SQL_OPERATORS.ne}'${RECORD_STATUS.DELETED}'`);
+  if (spec.fields.archived && !where.archived) wc.push(`archived${SQL_OPERATORS.eq}0`);
   const sql = `${SQL_KEYWORDS.select} ${SQL_KEYWORDS.countAs} c ${SQL_KEYWORDS.from} ${spec.name}${wc.length ? ` ${SQL_KEYWORDS.where} ` + wc.join(` ${SQL_KEYWORDS.and} `) : ''}`;
   try { return execGet(sql, Object.values(where).filter(v => v !== undefined), { entity, operation: 'Count' }).c || 0; } catch { return 0; }
 };

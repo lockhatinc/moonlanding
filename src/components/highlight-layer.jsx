@@ -6,20 +6,31 @@ import { UI_ICONS, NAVIGATION_ICONS, ACTION_ICONS } from '@/config/icon-config';
 import { formatDate } from '@/lib/utils-client';
 import { getColorMapping } from '@/config/theme-config';
 
-const HighlightItem = memo(({ h, expandedId, setExpandedId, onSelect, onResolve, onAddResponse, canResolve, formatTime, newResponse, setNewResponse }) => {
+const HighlightItem = memo(({ h, expandedId, setExpandedId, onSelect, onResolve, onReopen, onAddResponse, canResolve, formatTime, newResponse, setNewResponse, resolutionNotes, setResolutionNotes }) => {
   const handleSubmitResponse = () => {
     if (!newResponse.trim()) return;
     onAddResponse?.(h.id, newResponse);
     setNewResponse('');
   };
 
+  const handleResolve = () => {
+    if (!resolutionNotes.trim()) return;
+    onResolve?.(h.id, resolutionNotes);
+    setResolutionNotes('');
+  };
+
+  const isResolved = h.status === 'resolved';
+  const statusColor = isResolved ? 'green' : h.is_high_priority ? 'red' : 'gray';
+
   return (
-    <Box style={{ border: '1px solid var(--mantine-color-gray-3)', borderRadius: '8px', padding: '12px' }}>
+    <Box style={{ border: '1px solid var(--mantine-color-gray-3)', borderRadius: '8px', padding: '12px', opacity: h.archived ? 0.5 : 1 }}>
       <Group justify="space-between" align="flex-start" onClick={() => onSelect?.(h.id)} style={{ cursor: 'pointer' }}>
         <Box flex={1}>
           <Group gap="xs" mb={4}>
             <Badge size="sm">Page {h.page_number}</Badge>
-            <Badge size="sm" color={getColorMapping('highlight_status', h.resolved ? 'resolved' : 'unresolved')}>{h.resolved ? 'Resolved' : 'Open'}</Badge>
+            <Badge size="sm" color={statusColor}>{isResolved ? 'Resolved' : 'Unresolved'}</Badge>
+            {h.is_high_priority && !isResolved && <Badge size="sm" color="red">High Priority</Badge>}
+            {h.archived && <Badge size="sm" color="gray">Archived</Badge>}
           </Group>
           <Text size="sm" lineClamp={2}>{h.comment || h.content || 'No comment'}</Text>
         </Box>
@@ -38,6 +49,13 @@ const HighlightItem = memo(({ h, expandedId, setExpandedId, onSelect, onResolve,
               <Text size="sm" fs="italic">"{h.content}"</Text>
             </Box>
           )}
+          {isResolved && h.resolution_notes && (
+            <Box style={{ padding: '8px', backgroundColor: 'var(--mantine-color-green-1)', marginBottom: '12px', borderRadius: '4px', border: '1px solid var(--mantine-color-green-3)' }}>
+              <Text size="xs" fw={500} c="green" mb={4}>Resolution Notes</Text>
+              <Text size="sm">{h.resolution_notes}</Text>
+              <Text size="xs" c="dimmed" mt={4}>{h.resolved_by_display} • {formatTime(h.resolved_at)}</Text>
+            </Box>
+          )}
           {h.responses?.length > 0 && (
             <Stack gap="xs" mb="sm">
               <Text size="xs" fw={500} c="dimmed">Responses</Text>
@@ -49,15 +67,25 @@ const HighlightItem = memo(({ h, expandedId, setExpandedId, onSelect, onResolve,
               ))}
             </Stack>
           )}
-          <Group gap="xs" mb="xs">
-            <Textarea value={newResponse} onChange={(e) => setNewResponse(e.target.value)} placeholder="Add a response..." style={{ flex: 1 }} rows={2} />
-            <ActionIcon onClick={handleSubmitResponse} disabled={!newResponse.trim()}>
-              <ACTION_ICONS.send size={16} />
-            </ActionIcon>
-          </Group>
-          {canResolve && !h.resolved && (
-            <Button variant="outline" size="xs" fullWidth onClick={(e) => onResolve?.(h.id)} leftSection={<UI_ICONS.check size={14} />}>
-              Mark as Resolved
+          {!isResolved && (
+            <Group gap="xs" mb="xs">
+              <Textarea value={newResponse} onChange={(e) => setNewResponse(e.target.value)} placeholder="Add a response..." style={{ flex: 1 }} rows={2} />
+              <ActionIcon onClick={handleSubmitResponse} disabled={!newResponse.trim()}>
+                <ACTION_ICONS.send size={16} />
+              </ActionIcon>
+            </Group>
+          )}
+          {canResolve && !isResolved && !h.archived && (
+            <>
+              <Textarea value={resolutionNotes} onChange={(e) => setResolutionNotes(e.target.value)} placeholder="Resolution notes (required)..." mb="xs" rows={2} />
+              <Button variant="outline" size="xs" fullWidth onClick={handleResolve} disabled={!resolutionNotes.trim()} leftSection={<UI_ICONS.check size={14} />}>
+                Mark as Resolved
+              </Button>
+            </>
+          )}
+          {canResolve && isResolved && !h.archived && (
+            <Button variant="outline" size="xs" fullWidth color="orange" onClick={() => onReopen?.(h.id)} leftSection={<ACTION_ICONS.reopen size={14} />}>
+              Reopen Highlight
             </Button>
           )}
         </Box>
@@ -66,9 +94,10 @@ const HighlightItem = memo(({ h, expandedId, setExpandedId, onSelect, onResolve,
   );
 });
 
-function HighlightLayerComponent({ highlights = [], selectedId, onSelect, onResolve, onAddResponse, user, canResolve = false }) {
+function HighlightLayerComponent({ highlights = [], selectedId, onSelect, onResolve, onReopen, onAddResponse, user, canResolve = false }) {
   const [expandedId, setExpandedId] = useState(null);
   const [newResponse, setNewResponse] = useState('');
+  const [resolutionNotes, setResolutionNotes] = useState('');
   const formatTime = (ts) => formatDate(ts, 'short') || '';
 
   return (
@@ -89,11 +118,14 @@ function HighlightLayerComponent({ highlights = [], selectedId, onSelect, onReso
           setExpandedId={setExpandedId}
           onSelect={onSelect}
           onResolve={onResolve}
+          onReopen={onReopen}
           onAddResponse={onAddResponse}
           canResolve={canResolve}
           formatTime={formatTime}
           newResponse={newResponse}
           setNewResponse={setNewResponse}
+          resolutionNotes={resolutionNotes}
+          setResolutionNotes={setResolutionNotes}
         />
       ))}
     </Stack>

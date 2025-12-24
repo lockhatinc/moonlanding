@@ -83,4 +83,161 @@ export class LifecycleEngine {
   }
 }
 
+export async function checkAndTransitionEngagements(engagements, config = {}) {
+  const { list, get, update, create } = await import('@/engine');
+  const { getConfigEngine } = await import('@/config/system-config-loader');
+
+  const now = Math.floor(Date.now() / 1000);
+  const results = {
+    total: 0,
+    transitioned: 0,
+    failed: 0,
+    skipped: 0,
+    errors: []
+  };
+
+  try {
+    const engine = await getConfigEngine();
+    const masterConfig = engine.getConfig();
+    const lifecycle = masterConfig?.workflows?.engagement_lifecycle;
+
+    if (!lifecycle) {
+      throw new Error('Engagement lifecycle workflow not found in config');
+    }
+
+    const lifecycleEngine = new LifecycleEngine({
+      engagement: {
+        transitions: lifecycle.stages.reduce((acc, stage) => {
+          acc[stage.name] = {
+            forward: stage.forward || [],
+            backward: stage.backward || [],
+            validation: stage.validation || [],
+            requiresRole: stage.requires_role || ['partner', 'manager'],
+            autoTransition: stage.auto_transition || false,
+            autoTransitionOn: stage.auto_transition_trigger
+          };
+          return acc;
+        }, {})
+      }
+    });
+
+    const systemUser = { role: 'partner', email: 'system@auto-transition' };
+
+    for (const engagement of engagements) {
+      results.total++;
+
+      try {
+        const maxAttempts = config.max_attempts || 3;
+        const transitionAttempts = engagement.transition_attempts || 0;
+
+        if (transitionAttempts >= maxAttempts) {
+          results.skipped++;
+          console.log(`[AutoTransition] Skipping engagement ${engagement.id}: max attempts (${maxAttempts}) reached`);
+          continue;
+        }
+
+        let transitioned = false;
+        let targetStage = null;
+
+        if (engagement.stage === 'info_gathering') {
+          if (engagement.commencement_date && engagement.commencement_date <= now) {
+            const canTransition = lifecycleEngine.canTransition('engagement', 'info_gathering', 'commencement', systemUser);
+
+            if (canTransition) {
+              const isValid = await lifecycleEngine.validateTransition('engagement', 'info_gathering', 'commencement', engagement);
+
+              if (isValid) {
+                targetStage = 'commencement';
+                transitioned = true;
+              } else {
+                results.skipped++;
+                console.log(`[AutoTransition] Engagement ${engagement.id} failed validation for commencement`);
+                continue;
+              }
+            }
+          }
+        } else if (engagement.stage === 'commencement') {
+          const rfis = list('rfi', { engagement_id: engagement.id });
+          const allCompleted = rfis.length === 0 || rfis.every(rfi =>
+            rfi.client_status === 'completed' || rfi.status === 'completed'
+          );
+
+          if (allCompleted) {
+            const canTransition = lifecycleEngine.canTransition('engagement', 'commencement', 'team_execution', systemUser);
+
+            if (canTransition) {
+              const engagementContext = { ...engagement, team_id: engagement.team_id };
+              const isValid = await lifecycleEngine.validateTransition('engagement', 'commencement', 'team_execution', engagementContext);
+
+              if (isValid) {
+                targetStage = 'team_execution';
+                transitioned = true;
+              } else {
+                results.skipped++;
+                console.log(`[AutoTransition] Engagement ${engagement.id} failed validation for team_execution`);
+                continue;
+              }
+            }
+          }
+        }
+
+        if (transitioned && targetStage) {
+          update('engagement', engagement.id, {
+            stage: targetStage,
+            last_transition_check: now,
+            transition_attempts: 0
+          });
+
+          await create('activity_log', {
+            entity_type: 'engagement',
+            entity_id: engagement.id,
+            action: 'auto_transition',
+            message: `Auto-transitioned from ${engagement.stage} to ${targetStage}`,
+            details: JSON.stringify({
+              from_stage: engagement.stage,
+              to_stage: targetStage,
+              trigger: engagement.stage === 'info_gathering' ? 'commencement_date_reached' : 'all_rfis_completed',
+              timestamp: now
+            }),
+            user_email: 'system@auto-transition'
+          });
+
+          results.transitioned++;
+          console.log(`[AutoTransition] Successfully transitioned engagement ${engagement.id} from ${engagement.stage} to ${targetStage}`);
+        } else {
+          update('engagement', engagement.id, {
+            last_transition_check: now,
+            transition_attempts: transitionAttempts + 1
+          });
+        }
+
+      } catch (error) {
+        results.failed++;
+        results.errors.push({
+          engagement_id: engagement.id,
+          error: error.message,
+          stage: engagement.stage
+        });
+
+        console.error(`[AutoTransition] Error processing engagement ${engagement.id}:`, error.message);
+
+        try {
+          update('engagement', engagement.id, {
+            last_transition_check: now,
+            transition_attempts: (engagement.transition_attempts || 0) + 1
+          });
+        } catch (updateError) {
+          console.error(`[AutoTransition] Failed to update engagement ${engagement.id} after error:`, updateError.message);
+        }
+      }
+    }
+
+  } catch (error) {
+    console.error('[AutoTransition] Fatal error:', error.message);
+    results.errors.push({ error: error.message, fatal: true });
+  }
+
+  return results;
+}
+
 export default LifecycleEngine;

@@ -37,6 +37,7 @@ import {
   ChevronUp,
   Check,
   Lock,
+  RotateCcw,
 } from 'lucide-react';
 
 export const ENTITY_ICONS = {
@@ -82,6 +83,7 @@ export const ACTION_ICONS = {
   dashboard: LayoutDashboard,
   activity: Activity,
   lock: Lock,
+  reopen: RotateCcw,
 };
 
 export const NAVIGATION_ICONS = {

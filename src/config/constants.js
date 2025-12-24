@@ -20,6 +20,7 @@ export {
   CHECKLIST_STATUS,
   CLIENT_STATUS,
   RECORD_STATUS,
+  EMAIL_STATUS,
   STAGE_TRANSITIONS,
 } from './entity-statuses.js';
 

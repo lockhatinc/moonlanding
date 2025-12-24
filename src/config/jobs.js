@@ -6,6 +6,9 @@ import { createJob, forEachRecord, activityLog, getDeadlineRange, getDaysUntil, 
 import { ROLES, USER_TYPES, ENGAGEMENT_STAGE, REVIEW_STATUS, RFI_STATUS, RFI_CLIENT_STATUS, LOG_PREFIXES } from '@/config/constants';
 import { JOBS_CONFIG } from '@/config/jobs-config';
 import { safeJsonParse } from '@/lib/safe-json';
+import { autoAllocateEmail } from '@/lib/email-parser';
+import { getDatabase, genId, now } from '@/lib/database-core';
+import { notifyExpiringCollaborators } from '@/services/collaborator-notifier';
 
 const defineJob = (config, handler) => createJob(config.name, config.schedule, config.description, handler, config.config);
 
@@ -43,6 +46,36 @@ export const SCHEDULED_JOBS = {
         activityLog('engagement', e.id, 'stage_change', 'Auto-transitioned to commencement');
       }
     });
+  }),
+
+  daily_engagement_auto_transitions: defineJob({
+    name: 'daily_engagement_auto_transitions',
+    schedule: '0 4 * * *',
+    description: 'Auto-transition engagements through lifecycle stages based on conditions',
+    config: {
+      max_attempts: 3
+    }
+  }, async (cfg) => {
+    const { checkAndTransitionEngagements } = await import('@/lib/lifecycle-engine');
+
+    const candidateEngagements = list('engagement').filter(e =>
+      e.status === 'active' && (e.stage === 'info_gathering' || e.stage === 'commencement')
+    );
+
+    if (candidateEngagements.length === 0) {
+      console.log(`${LOG_PREFIXES.job} No engagements require auto-transition check`);
+      return { total: 0, transitioned: 0, failed: 0, skipped: 0 };
+    }
+
+    const results = await checkAndTransitionEngagements(candidateEngagements, cfg);
+
+    console.log(`${LOG_PREFIXES.job} Auto-transition complete: ${results.transitioned}/${results.total} transitioned, ${results.failed} failed, ${results.skipped} skipped`);
+
+    if (results.errors.length > 0) {
+      console.error(`${LOG_PREFIXES.job} Errors during auto-transition:`, results.errors);
+    }
+
+    return results;
   }),
 
   daily_rfi_notifications: defineJob(JOBS_CONFIG.dailyRfiNotifications, async (cfg) => {
@@ -125,6 +158,17 @@ export const SCHEDULED_JOBS = {
     });
   }),
 
+  daily_collaborator_expiry_notifications: defineJob(JOBS_CONFIG.dailyCollaboratorExpiryNotifications, async () => {
+    try {
+      const result = await notifyExpiringCollaborators();
+      console.log(`${LOG_PREFIXES.job} Collaborator expiry notifications: ${result.notified} sent, ${result.failed} failed`);
+      return result;
+    } catch (error) {
+      console.error(`${LOG_PREFIXES.job} Collaborator expiry notifications error:`, error.message);
+      throw error;
+    }
+  }),
+
   daily_temp_access_cleanup: defineJob(JOBS_CONFIG.dailyTempAccessCleanup, async () => {
     const now = Math.floor(Date.now() / 1000);
     await forEachRecord('collaborator', { type: 'temporary' }, async (c) => {
@@ -159,7 +203,97 @@ export const SCHEDULED_JOBS = {
 
   yearly_engagement_recreation: createRecreationJob('yearly'),
   monthly_engagement_recreation: createRecreationJob('monthly'),
-  hourly_email_processing: defineJob(JOBS_CONFIG.hourlyEmailProcessing, sendQueuedEmails),
+  hourly_email_processing: defineJob(JOBS_CONFIG.hourlyEmailProcessing, async () => {
+    try {
+      const baseUrl = process.env.APP_URL || 'http://localhost:3000';
+      const response = await fetch(`${baseUrl}/api/email/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Email processing failed: ${error}`);
+      }
+
+      const result = await response.json();
+      console.log(`${LOG_PREFIXES.job} Email queue processed:`, result);
+      return result;
+    } catch (error) {
+      console.error(`${LOG_PREFIXES.job} Email queue processing error:`, error.message);
+      throw error;
+    }
+  }),
+
+  hourly_email_allocation: defineJob(JOBS_CONFIG.hourlyEmailAllocation, async (cfg) => {
+    const db = getDatabase();
+    const { min_confidence = 70, batch_size = 50 } = cfg;
+
+    const unallocatedEmails = db.prepare(`
+      SELECT * FROM email
+      WHERE allocated = 0 AND status = 'pending'
+      ORDER BY received_at DESC
+      LIMIT ?
+    `).all(batch_size);
+
+    let allocated = 0;
+    let failed = 0;
+    let skipped = 0;
+
+    for (const email of unallocatedEmails) {
+      try {
+        const result = autoAllocateEmail(email);
+
+        if (result.success && result.confidence >= min_confidence) {
+          const logId = genId();
+          const timestamp = now();
+
+          db.prepare(`
+            INSERT INTO activity_log (
+              id, entity_type, entity_id, action, message, details, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+          `).run(
+            logId,
+            'email',
+            email.id,
+            'auto_allocated',
+            `Email auto-allocated to ${result.engagement_id ? 'engagement' : 'RFI'}`,
+            JSON.stringify({
+              engagement_id: result.engagement_id || null,
+              rfi_id: result.rfi_id || null,
+              confidence: result.confidence,
+              method: 'automatic',
+            }),
+            timestamp
+          );
+
+          allocated++;
+
+          console.log(`${LOG_PREFIXES.job} Email ${email.id} allocated (confidence: ${result.confidence}%)`);
+        } else if (result.success && result.confidence < min_confidence) {
+          skipped++;
+          console.log(`${LOG_PREFIXES.job} Email ${email.id} skipped (confidence: ${result.confidence}% < ${min_confidence}%)`);
+        } else {
+          failed++;
+          console.log(`${LOG_PREFIXES.job} Email ${email.id} failed: ${result.reason}`);
+        }
+      } catch (error) {
+        failed++;
+        console.error(`${LOG_PREFIXES.job} Email ${email.id} allocation error:`, error.message);
+
+        db.prepare(`
+          UPDATE email
+          SET processing_error = ?,
+              updated_at = ?
+          WHERE id = ?
+        `).run(error.message, now(), email.id);
+      }
+    }
+
+    console.log(`${LOG_PREFIXES.job} Email allocation complete: ${allocated} allocated, ${skipped} skipped, ${failed} failed`);
+
+    return { allocated, skipped, failed, total: unallocatedEmails.length };
+  }),
 };
 
 export { shouldRunNow };
