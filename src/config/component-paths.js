@@ -11,6 +11,8 @@ export const COMPONENT_PATHS = {
 
   viewers: {
     pdf: 'PDFViewer',
+    pdfComparison: 'PDFComparison',
+    pdfWrapper: 'PDFWrapper',
     highlight: 'HighlightLayer',
     chat: 'ChatPanel',
   },
@@ -60,6 +62,8 @@ export const COMPONENT_REGISTRY = {
   AddChecklistDialog: '@/components/dialogs/add-checklist.jsx',
 
   PDFViewer: '@/components/pdf-viewer.jsx',
+  PDFComparison: '@/components/pdf-comparison.jsx',
+  PDFWrapper: '@/components/pdf-wrapper.jsx',
   HighlightLayer: '@/components/highlight-layer.jsx',
   ChatPanel: '@/components/chat-panel.jsx',
 

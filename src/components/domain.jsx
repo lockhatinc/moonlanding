@@ -12,7 +12,7 @@ import { getStatusColor } from '@/config/theme-config';
 
 const AddChecklistDialog = dynamic(() => import('./dialogs/add-checklist').then(m => ({ default: m.AddChecklistDialog })), { loading: () => <div>Loading...</div>, ssr: false });
 const ChatPanel = dynamic(() => import('./chat-panel').then(m => ({ default: m.ChatPanel })), { loading: () => <div>Loading...</div>, ssr: false });
-const PDFViewer = dynamic(() => import('./pdf-viewer').then(m => ({ default: m.PDFViewer })), { loading: () => <div>Loading...</div>, ssr: false });
+const PDFWrapper = dynamic(() => import('./pdf-wrapper').then(m => ({ default: m.PDFWrapper })), { loading: () => <div>Loading...</div>, ssr: false });
 
 function ChecklistItem({ checklist }) {
   const statusColor = getStatusColor('checklist', checklist.status);
@@ -59,7 +59,7 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
       </Group>
       <Grid gutter="md">
         <Grid.Col span={{ base: 12, lg: 8 }}>
-          <Box h="calc(100vh - 200px)"><PDFViewer fileUrl={data.drive_file_id} highlights={highlights} onHighlight={canEdit ? handleHighlight : undefined} selectedHighlight={selectedHighlight} onSelectHighlight={setSelectedHighlight} /></Box>
+          <Box h="calc(100vh - 200px)"><PDFWrapper review={data} fileUrl={data.drive_file_id} highlights={highlights} onHighlight={canEdit ? handleHighlight : undefined} selectedHighlight={selectedHighlight} onSelectHighlight={setSelectedHighlight} /></Box>
         </Grid.Col>
         <Grid.Col span={{ base: 12, lg: 4 }}>
           <Tabs defaultValue="queries" h="calc(100vh - 200px)">

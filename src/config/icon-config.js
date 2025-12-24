@@ -38,6 +38,9 @@ import {
   Check,
   Lock,
   RotateCcw,
+  Columns,
+  Rows,
+  GripVertical,
 } from 'lucide-react';
 
 export const ENTITY_ICONS = {
@@ -102,6 +105,9 @@ export const UI_ICONS = {
   check: Check,
   plus: Plus,
   file: File,
+  columns: Columns,
+  rows: Rows,
+  gripVertical: GripVertical,
 };
 
 export function getEntityIcon(entityName) {

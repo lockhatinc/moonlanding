@@ -33,7 +33,7 @@
 
 ### PDF Viewer & Highlights
 
-- **PDF.js dependency:** Loaded from CDN. Offline mode only works if cached beforehand.
+- **PDF.js dependency:** Loaded from CDN.
 - **Large PDFs:** 50MB+ files may cause browser memory issues. No chunked/streaming rendering.
 - **Text selection:** Works only with searchable PDFs. Scanned/image-based PDFs cannot be highlighted.
 - **Coordinate system:** Position data uses PDF coordinates (bottom-left origin), not screen coordinates. Zoom/rotate breaks positioning. Must recalculate after display transform.
@@ -44,7 +44,6 @@
 - **Polling-based:** 2-3 second delay between change and notification. Not suitable for <1s sync requirements.
 - **No conflict resolution:** If two users edit simultaneously, last-write-wins. No merge or conflict detection.
 - **Browser memory:** Poll subscriptions kept in memory. With 50+ subscriptions, may cause memory leaks if not properly unsubscribed.
-- **Offline:** Polling stops when offline. Changes made offline will not sync on reconnect without manual intervention.
 - **Deduplication:** Only checks URL, not query parameters. Multiple filters on same entity may cause duplicate fetches.
 
 ### Authentication (Google OAuth)

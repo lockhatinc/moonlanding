@@ -1,5 +1,6 @@
 import { CACHE } from '@/config/auth-config';
 import { ERROR_MESSAGES } from '@/config';
+import { getCollaboratorRole, checkCollaboratorAccess } from '@/services/collaborator-role.service';
 
 class PermissionService {
   constructor() {
@@ -284,6 +285,62 @@ class PermissionService {
     if (!this.checkActionPermission(user, spec, action, record, context)) {
       throw new Error(ERROR_MESSAGES.permissionDenied(`${spec.name}.${action}`));
     }
+  }
+
+  checkCollaboratorPermission(collaboratorId, action, record = null) {
+    if (!collaboratorId) {
+      return false;
+    }
+
+    return checkCollaboratorAccess(collaboratorId, action, record);
+  }
+
+  getCollaboratorRole(collaboratorId) {
+    if (!collaboratorId) {
+      return null;
+    }
+
+    return getCollaboratorRole(collaboratorId);
+  }
+
+  checkMwrAccess(user, spec, action, record = null, collaboratorId = null) {
+    const regularAccess = this.checkAccess(user, spec, action);
+
+    if (regularAccess) {
+      return true;
+    }
+
+    if (!collaboratorId) {
+      return false;
+    }
+
+    return this.checkCollaboratorPermission(collaboratorId, action, record);
+  }
+
+  checkHighlightAccessForCollaborator(collaboratorId, action, highlight = null) {
+    if (!collaboratorId) {
+      return false;
+    }
+
+    const actionMap = {
+      view: 'view_highlights',
+      create: 'create_highlights',
+      edit: 'edit_highlights',
+      resolve: 'resolve_highlights',
+      delete: 'delete_highlights'
+    };
+
+    const mappedAction = actionMap[action] || action;
+
+    return checkCollaboratorAccess(collaboratorId, mappedAction, highlight);
+  }
+
+  canCollaboratorManageRoles(collaboratorId) {
+    if (!collaboratorId) {
+      return false;
+    }
+
+    return checkCollaboratorAccess(collaboratorId, 'assign_roles');
   }
 }
 

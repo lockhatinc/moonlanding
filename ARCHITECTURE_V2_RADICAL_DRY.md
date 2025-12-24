@@ -1,5 +1,5 @@
 # Architecture V2: Radical DRY Configuration System
-## Single Codebase, Multiple Domains (Friday + MWR), Zero Offline Complexity
+## Single Codebase, Multiple Domains (Friday + MWR)
 
 ---
 
@@ -774,13 +774,7 @@ TOTAL: ~3.5 KB config files + runtime generation = 92% reduction
 3. Update UI to show only domain-specific features
 4. Test Friday vs MWR views
 
-### STAGE 6: Offline Strategy Cleanup (2 hours)
-1. Remove offline caching code (cache-strategy-factory.js, etc.)
-2. Simplify to single in-memory cache
-3. Remove offline banner logic
-4. Remove service worker offline support
-
-**Total: ~21 hours (parallel: 12-15 hours)**
+**Total: ~19 hours (parallel: 11-14 hours)**
 
 ---
 
@@ -800,12 +794,10 @@ TOTAL: ~3.5 KB config files + runtime generation = 92% reduction
 
 ### Maintainability
 - **Friday vs MWR:** Toggled by domain flag, same code path
-- **No offline complexity:** Removed 200+ lines of caching strategy code
 - **Single codebase:** All logic config-driven, no hardcoded special cases
 - **Auditability:** Every rule visible in one file, easy to review
 
 ### Testing
-- **No mocking offline/cache states:** Simplifies unit tests
 - **Config validation:** Validate master-config.yml once at startup
 - **Feature flag testing:** Test features on/off from config
 - **Domain testing:** Test Friday and MWR by loading different domain configs

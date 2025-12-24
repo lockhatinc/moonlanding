@@ -273,11 +273,10 @@ const notifications = rfiType.notifications.escalationThresholds;
 ### BATCH 4: Dynamic Systems (Framework)
 1. Create `automation-schedule.js` (config-driven jobs)
 2. Create `feature-variant.js` (Friday vs MWR as decorators)
-3. Create `offline-strategy-config.js` (sync strategies per entity)
-4. Create `notification-trigger-system.js` (event-driven rules)
-5. Create `document-generation-pipeline.js` (template variables)
+3. Create `notification-trigger-system.js` (event-driven rules)
+4. Create `document-generation-pipeline.js` (template variables)
 
-**Output:** 5 new framework files, full config-driven automation
+**Output:** 4 new framework files, full config-driven automation
 
 ---
 
@@ -372,5 +371,4 @@ const notifications = rfiType.notifications.escalationThresholds;
 
 1. Should we make **RFI Type System** part of core data model (rfi.type field) or just config-driven logic?
 2. Should **Feature Toggles** (Friday vs MWR) be per-user or per-system?
-3. Should **Offline Strategies** be per-entity or per-feature?
-4. Do you want **Entity Spec Generator** to support database-driven generation (load from config table)?
+3. Do you want **Entity Spec Generator** to support database-driven generation (load from config table)?

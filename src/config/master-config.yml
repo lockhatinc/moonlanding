@@ -141,6 +141,23 @@ permission_templates:
     clerk: []
     client_admin: []
     client_user: []
+  audit_viewer:
+    description: Permission audit trail viewing
+    partner:
+    - list
+    - view
+    - export
+    - view_stats
+    manager:
+    - list
+    - view
+    - export
+    - view_stats
+    clerk:
+    - list
+    - view_own
+    client_admin: []
+    client_user: []
 workflows:
   engagement_lifecycle:
     description: 6-stage engagement lifecycle workflow
@@ -1039,6 +1056,123 @@ entities:
         required: true
       error_details:
         type: text
+  permission_audit:
+    label: Permission Audit
+    label_plural: Permission Audits
+    icon: Shield
+    order: 20
+    permission_template: audit_viewer
+    parent: null
+    has_timeline: false
+    immutable: true
+    description: Audit trail for all permission-related changes
+    fields:
+      id:
+        type: id
+        required: true
+      user_id:
+        type: ref
+        ref: user
+        required: true
+        search: true
+        label: Changed By
+        description: User who made the permission change
+      entity_type:
+        type: text
+        required: true
+        search: true
+        label: Entity Type
+        description: Type of entity affected (engagement, review, user, etc.)
+      entity_id:
+        type: text
+        required: true
+        search: true
+        label: Entity ID
+        description: ID of specific record affected
+      action:
+        type: enum
+        required: true
+        options:
+          - grant
+          - revoke
+          - modify
+          - role_change
+          - template_applied
+        default: modify
+        label: Action Type
+        description: Type of permission change
+      old_permissions:
+        type: json
+        required: false
+        label: Previous Permissions
+        description: Permission state before change
+      new_permissions:
+        type: json
+        required: false
+        label: New Permissions
+        description: Permission state after change
+      reason:
+        type: textarea
+        required: false
+        search: true
+        label: Reason
+        description: Why the permission change was made
+      reason_code:
+        type: enum
+        required: true
+        options:
+          - user_request
+          - lifecycle_transition
+          - role_change
+          - admin_action
+          - collaborator_added
+          - collaborator_removed
+          - team_assignment
+          - other
+        default: other
+        label: Reason Code
+        description: Categorized reason for change
+      timestamp:
+        type: timestamp
+        required: true
+        default: now()
+        label: Change Time
+        description: When the permission change occurred
+      ip_address:
+        type: text
+        required: false
+        label: IP Address
+        description: IP address of user who made change
+      session_id:
+        type: text
+        required: false
+        label: Session ID
+        description: Session identifier for tracking
+      affected_user_id:
+        type: ref
+        ref: user
+        required: false
+        search: true
+        label: Affected User
+        description: User whose permissions were changed (if applicable)
+      metadata:
+        type: json
+        required: false
+        label: Additional Metadata
+        description: Extra context about the permission change
+      created_at:
+        type: timestamp
+        required: true
+      updated_at:
+        type: timestamp
+        required: true
+      created_by:
+        type: ref
+        ref: user
+      updated_by:
+        type: ref
+        ref: user
+
 automation:
   schedules:
   - name: daily_backup
@@ -1696,12 +1830,6 @@ features:
     domain: friday
     description: Unified RFI state machine with dual display states
     entity: rfi
-  offline_mode:
-    enabled: false
-    domain: global
-    description: Offline caching and sync (DEPRECATED)
-    deprecated: true
-    removal_version: '2.0'
   user_sync:
     enabled: true
     domain: global
