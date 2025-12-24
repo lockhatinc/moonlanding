@@ -25,9 +25,8 @@
 
 ### Database (SQLite)
 
-- **Concurrent writes:** SQLite locks entire database on write. With high concurrency, "database is locked" errors possible. Scale to PostgreSQL when needed.
-- **No transactions:** CRUD operations are single-statement, no multi-statement transactions. Partial failures possible if operation interrupted.
-- **Foreign key enforcement:** Disabled by default. Orphaned records possible if deletion order incorrect.
+- **Concurrent writes:** SQLite locks entire database on write. With high concurrency, "database is locked" errors possible. Scale to PostgreSQL when needed. Configured via `thresholds.system.database_busy_timeout_ms` in master-config.yml.
+- **Foreign key enforcement:** ENABLED via `PRAGMA foreign_keys = ON`. Orphaned records will be rejected. Deletion order must respect referential integrity.
 - **JSON fields:** Stored as TEXT. Cannot filter on nested JSON properties. Use separate normalized tables for complex filtering.
 - **Backup:** Manual exports required. No built-in replication.
 
@@ -63,8 +62,9 @@
 
 ### Email System
 
-- **Rate limiting:** Gmail API has strict rate limits (100 messages/minute per user, 10k/day per project). Bursts cause failures.
-- **Bounce handling:** No automatic bounce detection. Bounced emails remain in queue indefinitely.
+- **Rate limiting:** Gmail API has strict rate limits (100 messages/minute per user, 10k/day per project). Configured via `thresholds.email.rate_limit_delay_ms`. Exponential backoff capped at `thresholds.email.retry_max_delay_ms`.
+- **Bounce handling:** IMPLEMENTED. Automatic bounce detection (550/551 status codes). Bounced emails marked with `status='bounced'` and `bounce_permanent=1`, excluded from retries.
+- **Retry policy:** Configured via `thresholds.email.send_max_retries` and `thresholds.retry.max_attempts`. Batch size via `thresholds.email.send_batch_size`.
 - **Attachments:** Gmail limits attachment size to 25MB. Larger files silently truncated or fail without error.
 - **Templates:** Hardcoded in code. Changes require code redeploy. No dynamic template management.
 - **Delivery:** Emails sent async. No confirmation if email actually delivered. Only confirms if accepted by SMTP.
@@ -79,8 +79,8 @@
 
 ### Performance
 
-- **List views:** No pagination. Loading 1000+ records renders entire table in DOM. Freezes UI on older devices.
-- **Search:** Full table scan (no full-text index). Search on 10k+ records takes 2-5 seconds.
+- **List views:** PAGINATION ENFORCED. Default page size 50 records, max 100. Configured via `thresholds.system.default_page_size` and `thresholds.system.max_page_size` (or from env).
+- **Search:** Full-text search (FTS5) IMPLEMENTED. Virtual tables created for all searchable entities. Significant performance improvement over table scans.
 - **Computed fields:** Calculated via SQL subqueries. Complex formulas with JOINs cause N+1 query patterns.
 - **Bundle size:** PDF.js is 1.2MB. Client bundle likely >2MB uncompressed. ~600KB gzipped.
 - **Image uploads:** No compression. Full-res images (10MB+) can be uploaded. No max size enforcement.
@@ -94,10 +94,11 @@
 
 ### Workflow & Stages
 
-- **Stage transitions:** Not locked. User can go backward (from finalization → team_execution) unless explicitly prevented in code.
-- **Concurrent transitions:** If two managers transition simultaneously, only one succeeds (silent failure for second).
-- **Auto-transition:** Relies on cron job running. If job fails, auto-transitions don't happen. No alerting.
-- **Status mutations:** No audit trail. Original status change lost if updated again.
+- **Stage transitions:** LOCKED between transitions. Transition lockout enforced via `thresholds.workflow.stage_transition_lockout_minutes`. Concurrent transitions detected and rejected.
+- **Field locks:** Fields marked as locked in stage definition are enforced during update. Attempting to edit locked fields returns 403 Forbidden.
+- **Auto-transition:** Relies on cron job running (scheduled via automation.schedules in master-config.yml). Max attempts tracked via `thresholds.workflow.stage_transition_lockout_minutes`.
+- **RFI expiry:** Hard expiry at 90 days (configurable via `thresholds.rfi.max_days_outstanding`). Uses working days calculation.
+- **Checklist blocking:** Finalization blocked unless all checklists have `all_items_done=true`.
 
 ### Engagement Recreation
 
@@ -131,7 +132,8 @@
 ### Other
 
 - **Timezone handling:** Unix timestamps are timezone-agnostic. Display timezone determined by client browser. Ambiguous on DST transitions.
-- **Pagination:** Not implemented. All results returned at once. API endpoints can return 10k+ records.
 - **Sorting:** Only works on primary table columns. Sorting by joined/computed fields not supported.
 - **Deleted records:** Soft deletes set status='deleted'. Hard deletes still visible in removed_highlights and archives.
 - **Comments:** Removed per policy. Code intentionally left comment-free. Use observability tools instead.
+- **RFI response counting:** Auto-incremented via post-create hook when rfi_response entity is created.
+- **Highlight comments:** Support threaded comments via parent_comment_id field. Requires highlight entity as parent.

@@ -459,6 +459,20 @@ thresholds:
     retry_attempts: 3
     retry_delay_minutes: 15
     consolidation_window_hours: 24
+  email:
+    send_batch_size: 10
+    send_max_retries: 3
+    rate_limit_delay_ms: 6000
+    retry_max_delay_ms: 30000
+    default_sender: system@bidwise.app
+  retry:
+    max_attempts: 3
+    max_delay_ms: 30000
+    backoff_multiplier: 2
+  system:
+    database_busy_timeout_ms: 5000
+    poll_interval_ms: 3000
+    max_active_subscriptions: 100
   cache:
     entity_ttl_seconds: 300
     list_ttl_seconds: 60

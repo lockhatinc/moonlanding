@@ -2,7 +2,7 @@ export class LifecycleEngine {
   constructor(config = {}) {
     this.lifecycleStages = config.lifecycleStages || {};
     this.hooks = new Map();
-    this.lockoutMinutes = config.lockoutMinutes || 5;
+    this.lockoutMinutes = config.lockoutMinutes || config.lockout_minutes || 5;
   }
 
   checkTransitionLockout(engagement, toStage) {
@@ -151,6 +151,7 @@ export async function checkAndTransitionEngagements(engagements, config = {}) {
     }
 
     const lifecycleEngine = new LifecycleEngine({
+      lockout_minutes: masterConfig?.thresholds?.workflow?.stage_transition_lockout_minutes || 5,
       engagement: {
         transitions: lifecycle.stages.reduce((acc, stage) => {
           acc[stage.name] = {

@@ -12,7 +12,8 @@ if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
 const db = new Database(DB_PATH);
 db.pragma('journal_mode = WAL');
-db.pragma('busy_timeout = 5000');
+const BUSY_TIMEOUT_MS = process.env.DATABASE_BUSY_TIMEOUT_MS || 5000;
+db.pragma(`busy_timeout = ${BUSY_TIMEOUT_MS}`);
 db.pragma('synchronous = NORMAL');
 db.pragma('foreign_keys = ON');
 

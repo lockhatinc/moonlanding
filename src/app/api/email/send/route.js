@@ -3,10 +3,18 @@ import { getDatabase, now } from '@/lib/database-core';
 import { sendEmail } from '@/adapters/google-gmail';
 import { EMAIL_STATUS } from '@/config/constants';
 import { config } from '@/config/env';
+import { getConfigEngine } from '@/lib/config-generator-engine';
 
-const MAX_RETRIES = 3;
-const BATCH_SIZE = 10;
-const RATE_LIMIT_DELAY = 6000;
+let emailConfig = null;
+
+async function getEmailConfig() {
+  if (!emailConfig) {
+    const engine = await getConfigEngine();
+    const masterConfig = engine.getConfig();
+    emailConfig = masterConfig?.thresholds?.email || {};
+  }
+  return emailConfig;
+}
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -48,8 +56,8 @@ async function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function exponentialBackoff(attempt) {
-  const delay = Math.min(1000 * Math.pow(2, attempt), 30000);
+async function exponentialBackoff(attempt, maxDelayMs) {
+  const delay = Math.min(1000 * Math.pow(2, attempt), maxDelayMs);
   await sleep(delay);
 }
 
@@ -64,7 +72,7 @@ function parseAttachments(attachmentsJson) {
   }
 }
 
-async function sendSingleEmail(db, emailRecord, attempt = 1) {
+async function sendSingleEmail(db, emailRecord, attempt = 1, maxRetries = 3, maxDelayMs = 30000) {
   const validationErrors = validateEmailData(emailRecord);
   if (validationErrors.length > 0) {
     const errorMsg = validationErrors.join('; ');
@@ -137,7 +145,7 @@ async function sendSingleEmail(db, emailRecord, attempt = 1) {
     const isBounceError = error.message?.includes('550') || error.message?.includes('551') || error.message?.toLowerCase().includes('no such user') || error.message?.toLowerCase().includes('user unknown') || error.message?.toLowerCase().includes('mailbox not found');
     const isPermanentError = error.message?.includes('400') || error.message?.toLowerCase().includes('invalid') || error.message?.toLowerCase().includes('not found') || isBounceError;
 
-    if (isPermanentError || attempt >= MAX_RETRIES) {
+    if (isPermanentError || attempt >= maxRetries) {
       const bounceStatus = isBounceError ? 'bounced' : EMAIL_STATUS.FAILED;
       db.prepare(`
         UPDATE email
@@ -155,14 +163,14 @@ async function sendSingleEmail(db, emailRecord, attempt = 1) {
         error: error.message,
         attempt,
         permanent: isPermanentError,
-        maxRetriesReached: attempt >= MAX_RETRIES
+        maxRetriesReached: attempt >= maxRetries
       });
 
       return { success: false, error: error.message, emailId: emailRecord.id, permanent: isPermanentError };
     }
 
     if (isRateLimitError) {
-      await exponentialBackoff(attempt);
+      await exponentialBackoff(attempt, maxDelayMs);
     }
 
     db.prepare(`
@@ -173,7 +181,7 @@ async function sendSingleEmail(db, emailRecord, attempt = 1) {
       WHERE id = ?
     `).run(attempt, error.message, now(), emailRecord.id);
 
-    return sendSingleEmail(db, emailRecord, attempt + 1);
+    return sendSingleEmail(db, emailRecord, attempt + 1, maxRetries, maxDelayMs);
   }
 }
 
@@ -225,6 +233,12 @@ export async function POST(request) {
   const db = getDatabase();
 
   try {
+    const emailCfg = await getEmailConfig();
+    const MAX_RETRIES = emailCfg.send_max_retries || 3;
+    const BATCH_SIZE = emailCfg.send_batch_size || 10;
+    const RATE_LIMIT_DELAY = emailCfg.rate_limit_delay_ms || 6000;
+    const MAX_DELAY_MS = emailCfg.retry_max_delay_ms || 30000;
+
     const pendingEmails = db.prepare(`
       SELECT * FROM email
       WHERE status = ?
@@ -257,7 +271,7 @@ export async function POST(request) {
         WHERE id = ?
       `).run(EMAIL_STATUS.PROCESSING, now(), email.id);
 
-      const result = await sendSingleEmail(db, email, email.retry_count || 1);
+      const result = await sendSingleEmail(db, email, email.retry_count || 1, MAX_RETRIES, MAX_DELAY_MS);
       results.push(result);
 
       if (result.success) {

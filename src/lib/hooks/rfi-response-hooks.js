@@ -1,7 +1,7 @@
-import { get, update } from '@/engine';
+import { get, update } from '../query-engine.js';
 
-export function registerRfiResponseHooks(hookEngine) {
-  hookEngine.registerHook('create:rfi_response:after', async (ctx) => {
+export const registerRfiResponseHooks = (hookEngine) => {
+  hookEngine.on('create:rfi_response:after', async (ctx) => {
     const { data } = ctx;
     if (!data?.rfi_id) return;
 
@@ -14,4 +14,6 @@ export function registerRfiResponseHooks(hookEngine) {
       });
     }
   });
-}
+
+  console.log('[rfi-response-hooks] Registered RFI response hooks');
+};
