@@ -26,6 +26,13 @@ export class SystemConfigLoader {
         const generator = new ConfigGeneratorEngine(customConfig);
         setConfigEngine(generator);
 
+        // Populate specs object for database migration and other uses
+        const { specs } = await import('@/config/spec-helpers');
+        for (const entityName of generator.getAllEntities()) {
+          specs[entityName] = generator.generateEntitySpec(entityName);
+        }
+        log('Specs object populated', { specCount: Object.keys(specs).length });
+
         const { registerEntityHandlers } = await import('@/lib/events-engine.js');
         registerEntityHandlers();
         log('Entity event handlers registered');
@@ -67,6 +74,13 @@ export class SystemConfigLoader {
 
       const generator = new ConfigGeneratorEngine(config);
       setConfigEngine(generator);
+
+      // Populate specs object for database migration and other uses
+      const { specs } = await import('@/config/spec-helpers');
+      for (const entityName of generator.getAllEntities()) {
+        specs[entityName] = generator.generateEntitySpec(entityName);
+      }
+      log('Specs object populated', { specCount: Object.keys(specs).length });
 
       const { registerEntityHandlers } = await import('@/lib/events-engine.js');
       registerEntityHandlers();

@@ -817,10 +817,17 @@ export class ConfigGeneratorEngine {
   }
 }
 
-let globalEngine = null;
+// Use global scope to persist across module instances in Next.js
+const getGlobalScope = () => {
+  if (typeof global === 'undefined') {
+    throw new Error('[ConfigGeneratorEngine] Cannot access global scope outside Node.js');
+  }
+  return global;
+};
 
 export async function getConfigEngine() {
-  if (!globalEngine) {
+  const g = getGlobalScope();
+  if (!g.__configEngine__) {
     try {
       const { initializeSystemConfig } = await import('@/config/system-config-loader');
       await initializeSystemConfig();
@@ -828,27 +835,30 @@ export async function getConfigEngine() {
       console.error('[ConfigGeneratorEngine] Failed to lazy-initialize global engine:', error.message);
       throw error;
     }
-    if (!globalEngine) {
+    if (!g.__configEngine__) {
       throw new Error('[ConfigGeneratorEngine] Global engine still not initialized after lazy init');
     }
   }
-  return globalEngine;
+  return g.__configEngine__;
 }
 
 export function setConfigEngine(engine) {
   if (!engine || !(engine instanceof ConfigGeneratorEngine)) {
     throw new Error('[ConfigGeneratorEngine] setConfigEngine requires a ConfigGeneratorEngine instance');
   }
-  globalEngine = engine;
+  const g = getGlobalScope();
+  g.__configEngine__ = engine;
 }
 
 export function resetConfigEngine() {
-  globalEngine = null;
+  const g = getGlobalScope();
+  g.__configEngine__ = null;
 }
 
 export function getConfigEngineSync() {
-  if (!globalEngine) {
+  const g = getGlobalScope();
+  if (!g.__configEngine__) {
     throw new Error('[ConfigGeneratorEngine] Engine not initialized. Call getConfigEngine() first or ensure system-config-loader is initialized during app startup.');
   }
-  return globalEngine;
+  return g.__configEngine__;
 }

@@ -24,35 +24,69 @@ export const now = () => Math.floor(Date.now() / 1000);
 export const migrate = () => {
   db.exec(`CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id))`);
 
-  for (const spec of Object.values(specs)) {
+  // If specs object is empty, populate it from ConfigEngine
+  const specsToUse = Object.keys(specs).length > 0 ? specs : (() => {
+    try {
+      const { getConfigEngineSync } = require('@/lib/config-generator-engine');
+      const engine = getConfigEngineSync();
+      const allSpecs = {};
+      for (const entityName of engine.getAllEntities()) {
+        allSpecs[entityName] = engine.generateEntitySpec(entityName);
+      }
+      return allSpecs;
+    } catch (e) {
+      console.error('[Database] Failed to get specs from ConfigEngine during migration:', e.message);
+      return specs; // Fall back to empty specs
+    }
+  })();
+
+  for (const spec of Object.values(specsToUse)) {
+    if (!spec) continue;
     const columns = [];
     const foreignKeys = [];
+    if (spec.name === 'user') {
+      console.error('[Database] User spec fields:', Object.keys(spec.fields || {}));
+    }
     forEachField(spec, (key, field) => {
-      let col = `${key} ${SQL_TYPES[field.type] || 'TEXT'}`;
+      let col = `"${key}" ${SQL_TYPES[field.type] || 'TEXT'}`;
       if (field.required && field.type !== 'id') col += ' NOT NULL';
       if (field.unique) col += ' UNIQUE';
-      if (field.default !== undefined) col += ` DEFAULT ${typeof field.default === 'string' ? `'${field.default}'` : field.default}`;
+      if (field.default !== undefined) {
+        // Only add DEFAULT for simple scalar values
+        if (typeof field.default === 'string' || typeof field.default === 'number' || typeof field.default === 'boolean') {
+          const defaultVal = typeof field.default === 'string' ? `'${field.default.replace(/'/g, "''")}'` : field.default;
+          col += ` DEFAULT ${defaultVal}`;
+        }
+        // Skip defaults for complex types like arrays/objects
+      }
       columns.push(col);
-      if (field.type === 'ref' && field.ref) foreignKeys.push(`FOREIGN KEY (${key}) REFERENCES ${field.ref}(id)`);
+      if (field.type === 'ref' && field.ref) foreignKeys.push(`FOREIGN KEY ("${key}") REFERENCES "${field.ref}"(id)`);
     });
-    const fkPart = foreignKeys.length ? ',\n' + foreignKeys.join(',\n') : '';
-    db.exec(`CREATE TABLE IF NOT EXISTS ${spec.name} (${columns.join(',\n')}${fkPart})`);
+    const fkPart = foreignKeys.length ? (',\n' + foreignKeys.join(',\n')) : '';
+    const sql = `CREATE TABLE IF NOT EXISTS "${spec.name}" (${columns.join(',\n')}${fkPart})`;
+    try {
+      db.exec(sql);
+    } catch (e) {
+      console.error(`[Database] Table creation failed for ${spec.name}:`, e.message, '\nSQL:', sql);
+      throw e;
+    }
   }
 
-  for (const spec of Object.values(specs)) {
+  for (const spec of Object.values(specsToUse)) {
+    if (!spec) continue; // Skip undefined specs
     const searchFields = [];
     forEachField(spec, (key, field) => {
       if (field.type === 'ref' || field.sortable || field.search) {
-        try { db.exec(`CREATE INDEX IF NOT EXISTS idx_${spec.name}_${key} ON ${spec.name}(${key})`); } catch (e) {
+        try { db.exec(`CREATE INDEX IF NOT EXISTS idx_${spec.name}_${key} ON "${spec.name}"("${key}")`); } catch (e) {
           console.error(`[Database] Index creation failed for ${spec.name}.${key}:`, e.message);
         }
       }
-      if (field.search || key === 'name' || key === 'description') searchFields.push(key);
+      if (field.search || key === 'name' || key === 'description') searchFields.push(`"${key}"`);
     });
 
     if (searchFields.length > 0) {
       try {
-        db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS ${spec.name}_fts USING fts5(${searchFields.join(', ')}, content=${spec.name}, content_rowid=id)`);
+        db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS ${spec.name}_fts USING fts5(${searchFields.join(', ')}, content="${spec.name}", content_rowid=id)`);
       } catch (e) {
         console.error(`[Database] FTS table creation failed for ${spec.name}:`, e.message);
       }
