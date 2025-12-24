@@ -254,12 +254,21 @@ export const createCrudHandlers = (entityName) => {
     list: async (user, request) => {
       requirePermission(user, spec, 'list');
       const { q, page, pageSize } = parseQuery(request);
+      const DEFAULT_PAGE_SIZE = 50;
+      const MAX_PAGE_SIZE = 100;
+      const finalPageSize = Math.min(pageSize || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
+      const finalPage = page || 1;
+
+      if (finalPageSize > MAX_PAGE_SIZE) {
+        throw new AppError(`Maximum page size is ${MAX_PAGE_SIZE}`, 'BAD_REQUEST', HTTP.BAD_REQUEST);
+      }
+
       if (q) {
         const results = search(entityName, q);
         const filtered = permissionService.filterRecords(user, spec, results);
         return ok({ items: filtered.map(item => permissionService.filterFields(user, spec, item)) });
       }
-      const { items, pagination } = listWithPagination(entityName, {}, page, pageSize);
+      const { items, pagination } = listWithPagination(entityName, {}, finalPage, finalPageSize);
       const filtered = permissionService.filterRecords(user, spec, items);
       return paginated(filtered.map(item => permissionService.filterFields(user, spec, item)), pagination);
     },
@@ -308,6 +317,20 @@ export const createCrudHandlers = (entityName) => {
       }
 
       permissionService.enforceEditPermissions(user, spec, data);
+
+      if (spec.workflow && spec.entityDef?.stages && prev.stage) {
+        const stageConfig = spec.entityDef.stages[prev.stage];
+        const locks = stageConfig?.locks || [];
+        if (locks.includes('all')) {
+          throw new AppError(`Stage ${prev.stage} is locked. No edits allowed.`, 'FORBIDDEN', HTTP.FORBIDDEN);
+        }
+        const lockedFields = locks.filter(l => l !== 'all');
+        const attemptedLocked = lockedFields.filter(f => f in data);
+        if (attemptedLocked.length > 0) {
+          throw new AppError(`Stage ${prev.stage} has locked fields: ${attemptedLocked.join(', ')}`, 'FORBIDDEN', HTTP.FORBIDDEN);
+        }
+      }
+
       const errors = await validateUpdate(spec, id, data);
       if (hasErrors?.(errors) || Object.keys(errors).length) throw ValidationError('Validation failed', errors);
       const ctx = await executeHook(`update:${entityName}:before`, { entity: entityName, id, data, user, prev });

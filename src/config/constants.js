@@ -36,3 +36,7 @@ export {
   DISPLAY,
   VALIDATION,
 } from './data-constants.js';
+
+export {
+  LOG_PREFIXES,
+} from './messages-config.js';

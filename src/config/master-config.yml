@@ -508,6 +508,9 @@ entities:
       last_transition_check:
         type: timestamp
         description: Last time auto-transition was checked for this engagement
+      last_transition_at:
+        type: timestamp
+        description: Timestamp of last manual stage transition (for lockout enforcement)
   rfi:
     label: Request For Information
     label_plural: RFIs

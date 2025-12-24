@@ -28,3 +28,36 @@ export function parseDate(dateString) {
   const date = new Date(dateString);
   return dateToSeconds(date);
 }
+
+export function isWorkingDay(date) {
+  const d = typeof date === 'number' ? secondsToDate(date) : date;
+  if (!d) return false;
+  const day = d.getDay();
+  return day !== 0 && day !== 6;
+}
+
+export function getWorkingDaysDiff(startSeconds, endSeconds) {
+  if (!startSeconds || !endSeconds) return 0;
+  const start = secondsToDate(startSeconds);
+  const end = secondsToDate(endSeconds);
+  let count = 0;
+  const current = new Date(start);
+
+  while (current <= end) {
+    if (isWorkingDay(current)) count++;
+    current.setDate(current.getDate() + 1);
+  }
+  return count;
+}
+
+export function addWorkingDays(startSeconds, numDays) {
+  if (!startSeconds || numDays <= 0) return startSeconds;
+  const date = secondsToDate(startSeconds);
+  let added = 0;
+
+  while (added < numDays) {
+    date.setDate(date.getDate() + 1);
+    if (isWorkingDay(date)) added++;
+  }
+  return dateToSeconds(date);
+}

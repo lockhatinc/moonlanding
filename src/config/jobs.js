@@ -3,12 +3,13 @@ import { queueEmail, sendQueuedEmails, generateChecklistPdf } from '@/engine/ema
 import { recreateEngagement } from '@/engine/recreation';
 import { exportDatabase } from '@/engine/backup';
 import { createJob, forEachRecord, activityLog, getDeadlineRange, getDaysUntil, shouldRunNow, runJob, runDueJobs } from '@/lib/job-framework';
-import { ROLES, USER_TYPES, ENGAGEMENT_STAGE, REVIEW_STATUS, RFI_STATUS, RFI_CLIENT_STATUS, LOG_PREFIXES } from '@/config/constants';
+import { ROLES, USER_TYPES, ENGAGEMENT_STAGE, REVIEW_STATUS, RFI_STATUS, RFI_CLIENT_STATUS } from '@/config/constants';
 import { JOBS_CONFIG } from '@/config/jobs-config';
 import { safeJsonParse } from '@/lib/safe-json';
 import { autoAllocateEmail } from '@/lib/email-parser';
 import { getDatabase, genId, now } from '@/lib/database-core';
 import { notifyExpiringCollaborators } from '@/services/collaborator-notifier';
+import { getWorkingDaysDiff, dateToSeconds } from '@/lib/date-utils';
 
 const defineJob = (config, handler) => createJob(config.name, config.schedule, config.description, handler, config.config);
 
@@ -89,13 +90,12 @@ export const SCHEDULED_JOBS = {
 
   daily_rfi_escalation: defineJob(JOBS_CONFIG.dailyRfiEscalation, async (cfg) => {
     const nowSeconds = Math.floor(Date.now() / 1000);
-    const DAY_SECONDS = 86400;
 
     for (const rfi of list('rfi').filter(r => r.client_status !== RFI_CLIENT_STATUS.COMPLETED && r.status !== 'completed')) {
       const engagement = get('engagement', rfi.engagement_id);
       if (!engagement || engagement.stage === ENGAGEMENT_STAGE.INFO_GATHERING) continue;
 
-      const daysOutstanding = Math.floor((nowSeconds - (rfi.date_requested || rfi.created_at)) / DAY_SECONDS);
+      const daysOutstanding = getWorkingDaysDiff(rfi.date_requested || rfi.created_at, nowSeconds);
 
       for (const threshold of cfg.escalation_thresholds) {
         if (daysOutstanding >= threshold) {
@@ -120,9 +120,27 @@ export const SCHEDULED_JOBS = {
 
             activityLog('rfi', rfi.id, 'escalation_sent', `Escalation notification sent for ${threshold} days outstanding`);
 
-            console.log(`${LOG_PREFIXES.job} RFI escalation sent: RFI ${rfi.id} (${threshold} days outstanding)`);
+            console.log(`[JOB] RFI escalation sent: RFI ${rfi.id} (${threshold} days outstanding)`);
           }
         }
+      }
+    }
+  }),
+
+  daily_rfi_expiry: defineJob({ name: 'daily_rfi_expiry', schedule: '0 2 * * *', description: 'RFI hard expiry at 90 days' }, async (cfg) => {
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const maxDays = cfg.max_days_outstanding || 90;
+
+    for (const rfi of list('rfi').filter(r => r.status !== 'completed' && r.status !== 'expired')) {
+      const daysOutstanding = getWorkingDaysDiff(rfi.date_requested || rfi.created_at, nowSeconds);
+      if (daysOutstanding >= maxDays) {
+        update('rfi', rfi.id, {
+          status: 'expired',
+          expired_at: nowSeconds,
+          expiry_reason: 'max_days_outstanding exceeded'
+        });
+        activityLog('rfi', rfi.id, 'expired', `RFI auto-expired after ${daysOutstanding} days outstanding`);
+        console.log(`[JOB] RFI expired: RFI ${rfi.id} (${daysOutstanding} days outstanding)`);
       }
     }
   }),

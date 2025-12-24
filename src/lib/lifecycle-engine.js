@@ -2,9 +2,28 @@ export class LifecycleEngine {
   constructor(config = {}) {
     this.lifecycleStages = config.lifecycleStages || {};
     this.hooks = new Map();
+    this.lockoutMinutes = config.lockoutMinutes || 5;
   }
 
-  canTransition(entity, fromStage, toStage, user) {
+  checkTransitionLockout(engagement, toStage) {
+    if (!engagement.last_transition_at) {
+      return { locked: false, timeRemaining: 0 };
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    const lastTransitionAt = engagement.last_transition_at;
+    const lockoutSeconds = this.lockoutMinutes * 60;
+    const timeSinceLastTransition = now - lastTransitionAt;
+
+    if (timeSinceLastTransition < lockoutSeconds) {
+      const timeRemaining = lockoutSeconds - timeSinceLastTransition;
+      return { locked: true, timeRemaining };
+    }
+
+    return { locked: false, timeRemaining: 0 };
+  }
+
+  canTransition(entity, fromStage, toStage, user, engagement = null) {
     const stageConfig = this.lifecycleStages[entity]?.transitions?.[fromStage];
     if (!stageConfig) return false;
 
@@ -15,7 +34,16 @@ export class LifecycleEngine {
     if (!allowed) return false;
 
     const hasRole = stageConfig.requiresRole.some(r => user?.role === r);
-    return hasRole;
+    if (!hasRole) return false;
+
+    if (engagement) {
+      const lockout = this.checkTransitionLockout(engagement, toStage);
+      if (lockout.locked) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   async validateTransition(entity, fromStage, toStage, context) {
