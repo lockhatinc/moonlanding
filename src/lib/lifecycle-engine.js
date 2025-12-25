@@ -160,7 +160,8 @@ export async function checkAndTransitionEngagements(engagements, config = {}) {
             validation: stage.validation || [],
             requiresRole: stage.requires_role || ['partner', 'manager'],
             autoTransition: stage.auto_transition || false,
-            autoTransitionOn: stage.auto_transition_trigger
+            autoTransitionOn: stage.auto_transition_trigger,
+            entry: stage.entry || 'default'
           };
           return acc;
         }, {})

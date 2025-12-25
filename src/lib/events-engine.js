@@ -19,6 +19,33 @@ const updateEngagementProgress = (eid) => {
   }
 };
 
+const activateWorkflowsForStage = async (engagementId, stage, user) => {
+  try {
+    const { getConfigEngine } = await import('@/lib/config-generator-engine');
+    const configEngine = await getConfigEngine();
+    const config = configEngine.getConfig();
+
+    const stageConfig = config.workflows?.engagement_lifecycle?.stages?.find(s => s.name === stage);
+    if (!stageConfig || !stageConfig.activates) {
+      return;
+    }
+
+    const activatedFeatures = stageConfig.activates || [];
+
+    for (const feature of activatedFeatures) {
+      if (feature === 'post_rfi') {
+        console.log(`[ACTIVATION] Activating post_rfi workflow for engagement ${engagementId}`);
+        logActivity('engagement', engagementId, 'workflow_activated', `Activated post_rfi workflow`, user, { activated_feature: 'post_rfi' });
+      } else if (feature === 'client_feedback') {
+        console.log(`[ACTIVATION] Activating client_feedback feature for engagement ${engagementId}`);
+        logActivity('engagement', engagementId, 'feature_activated', `Activated client_feedback feature`, user, { activated_feature: 'client_feedback' });
+      }
+    }
+  } catch (error) {
+    console.error(`[ACTIVATION] Error activating workflows for stage ${stage}:`, error.message);
+  }
+};
+
 export const registerEntityHandlers = () => {
   registerEngagementStageHooks(hookEngine);
   registerChecklistHooks(hookEngine);
@@ -41,7 +68,10 @@ export const registerEntityHandlers = () => {
       logActivity('engagement', engagement.id, 'stage_change', `Stage: ${prev.stage} → ${changes.stage}`, user, { from: prev.stage, to: changes.stage });
       const stageActions = {
         commencement: () => queueEmail('engagement_commencement', { engagement, recipients: 'client_users' }),
-        finalization: () => queueEmail('engagement_finalization', { engagement, recipients: 'client_admin' }),
+        finalization: async () => {
+          await queueEmail('engagement_finalization', { engagement, recipients: 'client_admin' });
+          await activateWorkflowsForStage(engagement.id, 'finalization', user);
+        },
         close_out: () => {
           if (engagement.letter_auditor_status !== 'accepted' && engagement.progress > 0)
             throw new Error('Cannot close out: Letter must be accepted or progress must be 0%');

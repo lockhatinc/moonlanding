@@ -26,7 +26,8 @@ function getLifecycleEngine() {
           validation: stage.validation || [],
           readonly: stage.readonly || false,
           autoTransition: stage.auto_transition || false,
-          autoTransitionOn: stage.auto_transition_trigger || null
+          autoTransitionOn: stage.auto_transition_trigger || null,
+          entry: stage.entry || 'default'
         };
       });
     }
@@ -117,6 +118,54 @@ export async function validateEngagementStageTransition(context) {
       'STAGE_TRANSITION_INVALID',
       HTTP.BAD_REQUEST
     );
+  }
+
+  // Validate backward transitions with date constraints
+  const stageOrder = ['info_gathering', 'commencement', 'team_execution', 'partner_review', 'finalization', 'close_out'];
+  const fromIndex = stageOrder.indexOf(fromStage);
+  const toIndex = stageOrder.indexOf(toStage);
+  const isBackwardTransition = toIndex < fromIndex;
+
+  if (isBackwardTransition && toStage === 'info_gathering') {
+    const now = Math.floor(Date.now() / 1000);
+    if (prev.commencement_date && prev.commencement_date <= now) {
+      throw new AppError(
+        `Cannot revert to info_gathering stage after commencement date has passed`,
+        'DATE_CONSTRAINT_VIOLATED',
+        HTTP.BAD_REQUEST
+      );
+    }
+  }
+
+  // Validate entry constraints for target stage
+  // This hook is called for manual user-initiated transitions only
+  const targetStageConfig = lifecycle.lifecycleStages?.engagement?.transitions?.[toStage];
+  if (targetStageConfig?.entry) {
+    const entryField = targetStageConfig.entry;
+
+    // Parse entry field which can be: manual, auto|manual, default, partner_only, etc.
+    const allowsManual = entryField === 'manual' ||
+                        entryField === 'auto|manual' ||
+                        entryField === 'default' ||
+                        entryField === 'default|manual';
+
+    // Check if manual entry is allowed for this stage
+    if (!allowsManual && entryField !== 'partner_only') {
+      throw new AppError(
+        `Stage "${toStage}" does not allow manual entry. Allowed entry modes: ${entryField}`,
+        'STAGE_ENTRY_CONSTRAINT',
+        HTTP.FORBIDDEN
+      );
+    }
+
+    // Check if entry requires partner role
+    if (entryField === 'partner_only' && user?.role !== 'partner') {
+      throw new AppError(
+        `Only partners can manually enter "${toStage}" stage. Current role: ${user?.role}`,
+        'STAGE_ENTRY_CONSTRAINT',
+        HTTP.FORBIDDEN
+      );
+    }
   }
 
   const userRole = user?.role;

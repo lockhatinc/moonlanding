@@ -577,6 +577,51 @@ entities:
     - once
     - monthly
     - yearly
+    fields:
+      id:
+        type: id
+        required: true
+      name:
+        type: text
+        required: true
+        search: true
+        label: Engagement Name
+      client_id:
+        type: ref
+        ref: client
+        required: true
+        search: true
+        label: Client
+      year:
+        type: number
+        required: true
+        search: true
+        label: Year
+      status:
+        type: text
+        default: active
+        label: Status
+      commencement_date:
+        type: timestamp
+        label: Commencement Date
+        description: Date when the engagement officially begins
+      stage:
+        type: enum
+        default: info_gathering
+        required: true
+        label: Stage
+      progress:
+        type: number
+        default: 0
+        label: Progress
+      created_at:
+        type: timestamp
+        required: true
+      updated_at:
+        type: timestamp
+      created_by:
+        type: ref
+        ref: user
     field_overrides:
       stage:
         type: enum
