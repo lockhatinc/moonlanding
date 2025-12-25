@@ -17,7 +17,7 @@ export function FormSections({
           <Box key={field.key}>
             {field.type !== 'bool' && (
               <Text size="sm" fw={500} mb={4}>
-                {field.label}
+                {field.label || field.key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                 {field.required && <Text span c="red" ml={4}>*</Text>}
               </Text>
             )}
@@ -46,7 +46,7 @@ export function FormSections({
                 <Box key={field.key}>
                   {field.type !== 'bool' && (
                     <Text size="sm" fw={500} mb={4}>
-                      {field.label}
+                      {field.label || field.key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       {field.required && <Text span c="red" ml={4}>*</Text>}
                     </Text>
                   )}

@@ -191,15 +191,31 @@ export class ConfigGeneratorEngine {
 
     const config = this._getConfig();
 
-    if (!config.entities || !config.entities[entityName]) {
+    let actualEntityName = entityName;
+    let entityDef = config.entities?.[entityName];
+
+    if (!entityDef) {
+      const match = Object.keys(config.entities || {}).find(key => {
+        const def = config.entities[key];
+        const plural = def.label_plural || def.label || key;
+        return plural.toLowerCase() === entityName.toLowerCase();
+      });
+
+      if (match) {
+        actualEntityName = match;
+        entityDef = config.entities[match];
+      }
+    }
+
+    if (!entityDef) {
       throw new Error(`[ConfigGeneratorEngine] Entity "${entityName}" not found in master config`);
     }
 
-    const entityDef = this._deepClone(config.entities[entityName]);
+    entityDef = this._deepClone(entityDef);
 
     const spec = {
-      name: entityName,
-      label: entityDef.label || entityName,
+      name: actualEntityName,
+      label: entityDef.label || actualEntityName,
       labelPlural: entityDef.label_plural || entityDef.label || entityName,
       icon: entityDef.icon || 'Circle',
       order: entityDef.order || 999,
@@ -241,12 +257,23 @@ export class ConfigGeneratorEngine {
 
     if (entityDef.fields) {
       if (!spec.fields) spec.fields = {};
-      spec.fields = { ...spec.fields, ...this._recursiveResolve(entityDef.fields, config) };
+      const resolvedEntityFields = this._recursiveResolve(entityDef.fields, config);
+      for (const [fieldName, fieldDef] of Object.entries(resolvedEntityFields)) {
+        if (spec.fields[fieldName]) {
+          spec.fields[fieldName] = { ...fieldDef, ...spec.fields[fieldName] };
+        } else {
+          spec.fields[fieldName] = fieldDef;
+        }
+      }
     }
 
     if (!spec.fields) {
       spec.fields = this._generateDefaultFields(entityName);
     }
+
+    spec.fields = this._ensureFieldLabels(spec.fields);
+
+    spec.options = this._buildEnumOptions(spec.fields, spec.workflow, config);
 
     if (entityDef.variants) {
       spec.variants = this._deepClone(entityDef.variants);
@@ -809,12 +836,78 @@ export class ConfigGeneratorEngine {
 
   _generateDefaultFields(entityName) {
     return {
-      id: { type: 'id', required: true },
-      name: { type: 'text', required: true },
-      created_at: { type: 'timestamp', auto: 'now', required: true },
-      updated_at: { type: 'timestamp', auto: 'update' },
-      created_by: { type: 'ref', ref: 'user', auto: 'user' },
+      id: { type: 'id', label: 'ID', required: true, list: true },
+      name: { type: 'text', label: 'Name', required: true, list: true, search: true },
+      created_at: { type: 'timestamp', label: 'Created At', auto: 'now', required: true, list: true },
+      updated_at: { type: 'timestamp', label: 'Updated At', auto: 'update', list: true },
+      created_by: { type: 'ref', label: 'Created By', ref: 'user', auto: 'user' },
     };
+  }
+
+  _buildEnumOptions(fields, workflow, config) {
+    const options = {};
+
+    for (const [fieldKey, fieldDef] of Object.entries(fields || {})) {
+      if (fieldDef.type === 'enum' && fieldDef.options) {
+        const optionsRef = fieldDef.options;
+
+        if (typeof optionsRef === 'string' && (optionsRef.includes('workflow') || optionsRef.includes('stages'))) {
+          if (workflow && workflow.stages && Array.isArray(workflow.stages)) {
+            options[optionsRef] = workflow.stages.map(stage => ({
+              value: stage.name,
+              label: stage.label || stage.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+              color: stage.color || 'blue'
+            }));
+          } else {
+            console.warn(`[ConfigGeneratorEngine] _buildEnumOptions: No workflow.stages found for ${optionsRef}`);
+            options[optionsRef] = [];
+          }
+        } else if (Array.isArray(fieldDef.options)) {
+          options[fieldKey] = fieldDef.options.map(opt => {
+            if (typeof opt === 'string') {
+              return { value: opt, label: opt.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), color: 'blue' };
+            }
+            return { value: opt.value, label: opt.label || opt.value, color: opt.color || 'blue' };
+          });
+        } else if (config.status_enums && config.status_enums[optionsRef]) {
+          const statusEnum = config.status_enums[optionsRef];
+          options[optionsRef] = Object.entries(statusEnum).map(([value, data]) => ({
+            value,
+            label: data.label || value,
+            color: data.color || 'gray'
+          }));
+        } else {
+          console.warn(`[ConfigGeneratorEngine] _buildEnumOptions: Unknown options reference ${optionsRef} for field ${fieldKey}`);
+          options[optionsRef] = [];
+        }
+      }
+    }
+
+    return options;
+  }
+
+  _ensureFieldLabels(fields) {
+    if (!fields || typeof fields !== 'object') {
+      return fields;
+    }
+
+    const result = {};
+    for (const [key, field] of Object.entries(fields)) {
+      if (!field || typeof field !== 'object') {
+        result[key] = field;
+        continue;
+      }
+
+      if (!field.label) {
+        result[key] = {
+          ...field,
+          label: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        };
+      } else {
+        result[key] = field;
+      }
+    }
+    return result;
   }
 }
 

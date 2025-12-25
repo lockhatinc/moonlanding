@@ -22,6 +22,8 @@ export async function recreateEngagement(sourceId) {
     throw new Error('Source engagement has no repeat interval');
   }
 
+  const originalRepeatInterval = src.repeat_interval;
+
   const { year, month } = calcNextPeriod(src.year, src.month, interval);
 
   if (list('engagement', { client_id: src.client_id, engagement_type: src.engagement_type }).find(e => e.year === year && e.month === month && e.id !== sourceId)) {
@@ -37,7 +39,9 @@ export async function recreateEngagement(sourceId) {
       progress: 0, client_progress: 0, client_status: 'pending', auditor_status: 'requested',
       letter_client_status: 'pending', letter_auditor_status: 'requested', post_rfi_client_status: 'pending', post_rfi_auditor_status: 'requested',
       repeat_interval: src.repeat_interval, recreate_with_attachments: src.recreate_with_attachments, clerks_can_approve: src.clerks_can_approve, is_private: src.is_private, fee: src.fee,
-      users: src.users, client_users: src.client_users, previous_year_review_id: src.review_id,
+      users: src.users, client_users: src.client_users,
+      previous_year_review_link: src.review_link,
+      previous_year_review_id: src.review_id,
     });
 
     const sectionMap = {};
@@ -63,12 +67,18 @@ export async function recreateEngagement(sourceId) {
     create('recreation_log', { engagement_id: sourceId, client_id: src.client_id, engagement_type_id: src.engagement_type, status: 'completed', details: JSON.stringify({ source_id: sourceId, new_id: newEng.id, year, month, sections: Object.keys(sectionMap).length, rfis: rfis.length }) });
     return newEng;
   } catch (e) {
+    console.error(`[Recreation Rollback] Error during recreation for engagement ${sourceId}:`, e.message);
+
     if (newEng?.id) {
+      console.log(`[Recreation Rollback] Deleting partial engagement ${newEng.id} and all child records`);
       list('rfi', { engagement_id: newEng.id }).forEach(r => remove('rfi', r.id));
       list('rfi_section', { engagement_id: newEng.id }).forEach(s => remove('rfi_section', s.id));
       remove('engagement', newEng.id);
     }
-    update('engagement', sourceId, { repeat_interval: src.repeat_interval });
+
+    console.log(`[Recreation Rollback] Reverting source engagement ${sourceId} repeat_interval to '${originalRepeatInterval}'`);
+    update('engagement', sourceId, { repeat_interval: originalRepeatInterval });
+
     create('recreation_log', { engagement_id: sourceId, client_id: src.client_id, status: 'failed', error: e.message, details: JSON.stringify({ source_id: sourceId, year, month }) });
     throw e;
   }

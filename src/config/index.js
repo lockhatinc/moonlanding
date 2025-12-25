@@ -58,14 +58,12 @@ export { FIELD_DISPLAY_RULES, LIST_DISPLAY_RULES, DISPLAY_LIMITS, TRUNCATION_IND
 export { SQL_OPERATORS, QUERY_PATTERNS, DEFAULT_LIMITS, QUERY_DEFAULTS, FIELD_TYPES, SQL_KEYWORDS, QUERY_BUILDING, SORT_DIRECTIONS, AGGREGATE_FUNCTIONS } from './query-config';
 export { COMPONENT_PATHS, COMPONENT_REGISTRY, getComponent, getComponentPath, getComponentFilePath, getComponentLoader, createComponentLoader, hasComponent, listComponents, listCategories } from './component-paths';
 export { EMAIL_DEFAULTS, RECIPIENT_RESOLVERS, EMAIL_TEMPLATES, resolveRecipients, getEmailTemplate } from './email-config';
-export { getEmailTemplate as getEmailTemplateAsync, getAllEmailTemplates as getAllEmailTemplatesAsync } from './email-templates-async';
 export { FORM_FIELD_DEFAULTS, FORM_VALIDATION_DISPLAY, FORM_ACCESSIBILITY, FORM_SKELETON } from './form-rendering-config';
 export { TABLE_DEFAULTS, TABLE_COLUMN_DEFAULTS, TABLE_GROUP_DEFAULTS, TABLE_PAGINATION_DEFAULTS, TABLE_SEARCH_DEFAULTS, LIST_EMPTY_STATE, LIST_LOADING_STATE } from './table-rendering-config';
 export { HTTP_STATUS_CODES, HTTP_STATUS_MESSAGES, ERROR_STATUS_CODES, HTTP_RETRY_CONFIG, HTTP_TIMEOUT_CONFIG } from './http-status-config';
 export { DATABASE_LIMITS, MEMORY_LIMITS, QUERY_LIMITS, VALIDATION_LIMITS, FILE_LIMITS, API_LIMITS, SEARCH_LIMITS } from './system-limits-config';
 export { POLLING_CONFIG, RETRY_TIMING, NOTIFICATION_TIMING, CACHE_TTL, DEBOUNCE_TIMING, THROTTLE_TIMING, SESSION_TIMING, ANIMATION_TIMING, API_TIMING, MAINTENANCE_TIMING } from './timing-config';
 export { BasePlugin, BaseService, BaseEngine, PluginManager, globalPluginManager, FieldRendererPlugin, NotificationPlugin, AuditLogPlugin, SearchPlugin, PermissionPlugin } from '@/framework';
-export { ValidationBuilder, field, schema, SchemaValidator, createSchemaValidator } from './validation-dsl';
 export { STATUS_ENUMS, getStatusValues, getEnumStatusColor, getStatusLabel, getStatusOptions, isValidStatus } from './status-enum-config';
 export { TimelineEngine, timelineEngine } from '@/lib/timeline-engine';
 export { EDITABLE_FIELD_RENDERERS, LIST_RENDERERS, DISPLAY_RENDERERS, getFieldRenderers } from './field-render-config';

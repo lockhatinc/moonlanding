@@ -53,7 +53,7 @@ export class EntityGenerator {
     return {
       ListPage: Object.assign(createPage('list', async ({ user, spec, searchParams }) => {
         const { q, page, pageSize } = QueryAdapter.fromSearchParams(searchParams, spec);
-        const result = q ? searchWithPagination(spec.name, q, {}, page, pageSize) : listWithPagination(spec.name, {}, page, pageSize);
+        const result = q ? await searchWithPagination(spec.name, q, {}, page, pageSize) : await listWithPagination(spec.name, {}, page, pageSize);
         const ListComp = spec.list?.component === 'review-list' ? (await import('@/components/domain')).ReviewList : Entity;
         const listProps = spec.list?.component === 'review-list'
           ? { spec, data: result.items, pagination: result.pagination, user, canCreate: can(user, spec, 'create') }

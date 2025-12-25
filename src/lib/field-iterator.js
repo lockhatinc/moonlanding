@@ -17,13 +17,14 @@ export const is = {
   searchable: f => f.search,
   listable: f => f.list === true,
   ref: f => f.type === 'ref' && f.ref,
-  editable: f => !f.hidden && !f.readOnly && f.type !== 'id',
+  editable: f => !f.hidden && !f.readOnly && f.type !== 'id' && !f.auto && f.type !== 'auto_timestamp' && !f.auto_generate,
   displayable: f => !f.hidden && f.type !== 'id',
   ofType: type => f => f.type === type,
   hasProperty: prop => f => f[prop] !== undefined,
 };
 
 export function getFormFields(spec) {
+  if (spec.system_entity) return [];
   return fieldQuery(spec, is.editable);
 }
 

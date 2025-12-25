@@ -134,7 +134,7 @@ export const create = (entity, data, user) => {
   const tableName = spec.name === 'user' ? 'users' : spec.name;
   const fields = { id: data.id || genId() };
   iterateCreateFields(spec, (key, field) => {
-    if (field.auto === 'now') fields[key] = now();
+    if (field.auto === 'now' || field.auto === 'update') fields[key] = now();
     else if (field.auto === 'user' && user) fields[key] = user.id;
     else if (data[key] !== undefined && data[key] !== '') {
       const v = coerceFieldValue(data[key], field.type);

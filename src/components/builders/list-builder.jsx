@@ -209,14 +209,14 @@ export function ListBuilder({
         <Group justify="space-between" align="center">
           <Group gap="xs">
             <Text size="sm" c="dimmed" role="status" aria-live="polite">
-              Showing {paginationState.page * paginationState.pageSize - paginationState.pageSize + 1}-
-              {Math.min(paginationState.page * paginationState.pageSize, paginationState.total)} of{' '}
-              {paginationState.total}
+              Showing {pagination.page * pagination.pageSize - pagination.pageSize + 1}-
+              {Math.min(pagination.page * pagination.pageSize, pagination.total)} of{' '}
+              {pagination.total}
             </Text>
             <Select
               placeholder="Page size"
-              value={String(paginationState.pageSize)}
-              onChange={(value) => handlers.pageSizeChange(parseInt(value))}
+              value={String(pagination.pageSize)}
+              onChange={(value) => onPageSizeChange ? onPageSizeChange(parseInt(value)) : handlers.pageSizeChange(parseInt(value))}
               data={(spec.list?.pageSizeOptions || [10, 20, 50, 100]).map((size) => ({
                 value: String(size),
                 label: `${size} per page`,
@@ -228,9 +228,9 @@ export function ListBuilder({
           </Group>
 
           <Pagination
-            value={paginationState.page}
-            onChange={handlers.pageChange}
-            total={paginationState.totalPages}
+            value={pagination.page}
+            onChange={onPageChange || handlers.pageChange}
+            total={pagination.totalPages}
             siblings={1}
             boundaries={1}
             aria-label="Pagination navigation"

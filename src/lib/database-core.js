@@ -22,9 +22,10 @@ export const genId = () => nanoid();
 export const now = () => Math.floor(Date.now() / 1000);
 
 export const migrate = () => {
+  console.log('[Database] Running migration...');
+
   db.exec(`CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id))`);
 
-  // If specs object is empty, populate it from ConfigEngine
   const specsToUse = Object.keys(specs).length > 0 ? specs : (() => {
     try {
       const { getConfigEngineSync } = require('@/lib/config-generator-engine');
@@ -33,10 +34,11 @@ export const migrate = () => {
       for (const entityName of engine.getAllEntities()) {
         allSpecs[entityName] = engine.generateEntitySpec(entityName);
       }
+      console.log(`[Database] Generated ${Object.keys(allSpecs).length} specs from ConfigEngine`);
       return allSpecs;
     } catch (e) {
       console.error('[Database] Failed to get specs from ConfigEngine during migration:', e.message);
-      return specs; // Fall back to empty specs
+      return specs;
     }
   })();
 
@@ -44,32 +46,28 @@ export const migrate = () => {
     if (!spec) continue;
     const columns = [];
     const foreignKeys = [];
-    // Lucia expects 'users' table for the 'user' entity
     const tableName = spec.name === 'user' ? 'users' : spec.name;
-    if (spec.name === 'user') {
-      console.error('[Database] User spec fields:', Object.keys(spec.fields || {}));
-    }
+
     forEachField(spec, (key, field) => {
       let col = `"${key}" ${SQL_TYPES[field.type] || 'TEXT'}`;
       if (field.required && field.type !== 'id') col += ' NOT NULL';
       if (field.unique) col += ' UNIQUE';
       if (field.default !== undefined) {
-        // Only add DEFAULT for simple scalar values
         if (typeof field.default === 'string' || typeof field.default === 'number' || typeof field.default === 'boolean') {
           const defaultVal = typeof field.default === 'string' ? `'${field.default.replace(/'/g, "''")}'` : field.default;
           col += ` DEFAULT ${defaultVal}`;
         }
-        // Skip defaults for complex types like arrays/objects
       }
       columns.push(col);
       if (field.type === 'ref' && field.ref) {
-        // Lucia expects 'users' table for the 'user' entity
         const refTable = field.ref === 'user' ? 'users' : field.ref;
         foreignKeys.push(`FOREIGN KEY ("${key}") REFERENCES "${refTable}"(id)`);
       }
     });
+
     const fkPart = foreignKeys.length ? (',\n' + foreignKeys.join(',\n')) : '';
     const sql = `CREATE TABLE IF NOT EXISTS "${tableName}" (${columns.join(',\n')}${fkPart})`;
+
     try {
       db.exec(sql);
     } catch (e) {
@@ -79,13 +77,15 @@ export const migrate = () => {
   }
 
   for (const spec of Object.values(specsToUse)) {
-    if (!spec) continue; // Skip undefined specs
+    if (!spec) continue;
     const searchFields = [];
-    // Lucia expects 'users' table for the 'user' entity
     const tableName = spec.name === 'user' ? 'users' : spec.name;
+
     forEachField(spec, (key, field) => {
       if (field.type === 'ref' || field.sortable || field.search) {
-        try { db.exec(`CREATE INDEX IF NOT EXISTS idx_${tableName}_${key} ON "${tableName}"("${key}")`); } catch (e) {
+        try {
+          db.exec(`CREATE INDEX IF NOT EXISTS idx_${tableName}_${key} ON "${tableName}"("${key}")`);
+        } catch (e) {
           console.error(`[Database] Index creation failed for ${tableName}.${key}:`, e.message);
         }
       }
@@ -100,4 +100,6 @@ export const migrate = () => {
       }
     }
   }
+
+  console.log('[Database] Migration complete');
 };

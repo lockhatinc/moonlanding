@@ -35,7 +35,7 @@ export function getNavItems() {
     const allEntities = engine.getAllEntities();
     return allEntities
       .map(e => engine.generateEntitySpec(e))
-      .filter(s => !s.embedded && !s.parent)
+      .filter(s => !s.embedded && !s.parent && !s.system_entity)
       .map(s => ({
         name: s.name,
         label: s.labelPlural || s.label,
@@ -54,7 +54,7 @@ export function buildNavigation() {
     const allEntities = engine.getAllEntities();
     return allEntities
       .map(e => engine.generateEntitySpec(e))
-      .filter(s => !s.embedded && !s.parent)
+      .filter(s => !s.embedded && !s.parent && !s.system_entity)
       .sort((a, b) => (a.order || 999) - (b.order || 999))
       .map(s => ({
         name: s.name,

@@ -792,12 +792,40 @@ entities:
     has_auto_revoke: true
     default_expiry_days: $thresholds.collaborator.default_expiry_days
     max_expiry_days: $thresholds.collaborator.max_expiry_days
-    field_overrides:
+    fields:
+      id:
+        type: id
+        required: true
+      email:
+        type: text
+        label: Email
+        required: true
+        search: true
+      expires_at:
+        type: timestamp
+        label: Expires At
+        description: When this collaborator access expires
+        required: false
+      is_permanent:
+        type: bool
+        label: Is Permanent
+        description: Whether this access is permanent and never expires
+        default: true
+        required: false
       notified_at:
         type: timestamp
         label: Expiry Notification Sent At
         description: Timestamp when 7-day expiry warning was sent
         required: false
+      created_at:
+        type: timestamp
+        required: true
+      updated_at:
+        type: timestamp
+        required: true
+      created_by:
+        type: ref
+        ref: user
   checklist:
     label: Checklist
     label_plural: Checklists
@@ -920,6 +948,51 @@ entities:
     children:
     - engagement
     - client_user
+    fields:
+      id:
+        type: id
+        required: true
+        list: true
+      name:
+        type: text
+        label: Name
+        required: true
+        list: true
+        search: true
+      email:
+        type: text
+        label: Email
+        list: true
+        search: true
+      phone:
+        type: text
+        label: Phone
+        list: true
+      address:
+        type: textarea
+        label: Address
+      created_at:
+        type: timestamp
+        label: Created At
+        auto: now
+        auto_generate: true
+        required: true
+        list: true
+        readOnly: true
+      updated_at:
+        type: timestamp
+        label: Updated At
+        auto: update
+        auto_generate: true
+        list: true
+        readOnly: true
+      created_by:
+        type: ref
+        ref: user
+        label: Created By
+        auto: user
+        auto_generate: true
+        readOnly: true
   client_user:
     label: Client User
     label_plural: Client Users
@@ -1066,6 +1139,40 @@ entities:
     permission_template: client_response
     parent: rfi
     has_google_drive_integration: true
+    fields:
+      id:
+        type: id
+        required: true
+      path:
+        type: text
+        label: File Path
+        description: Storage path where file is located
+        required: false
+        search: true
+      size:
+        type: int
+        label: File Size
+        description: Size of the file in bytes
+        required: false
+      mime_type:
+        type: text
+        label: MIME Type
+        description: Content type of the file
+        required: false
+      storage_type:
+        type: text
+        label: Storage Type
+        description: Where file is stored (local, drive, etc)
+        required: false
+      created_at:
+        type: timestamp
+        required: true
+      updated_at:
+        type: timestamp
+        required: true
+      created_by:
+        type: ref
+        ref: user
   rfi_response:
     label: RFI Response
     label_plural: RFI Responses
@@ -2037,6 +2144,27 @@ features:
     description: Google Workspace user sync
     integration: google_workspace
     schedule: 0 3 * * *
+file_storage:
+  friday_rfi_attachments:
+    path_pattern: /{clientId}/{engagementId}/{rfiId}/{questionId}/{fileName}_{timestamp}
+    description: Friday RFI Attachments - no database lookups
+    domain: friday
+    type: rfi_attachment
+  friday_master_files:
+    path_pattern: /LockhatInc/{clientId}/{engagementId}/{fileName}_{timestamp}
+    description: Friday Master Files
+    domain: friday
+    type: master_file
+  mwr_chat_attachments:
+    path_pattern: /{org}/{reviewId}/{filename}_{timestamp}
+    description: MWR Chat Attachments
+    domain: mwr
+    type: chat_attachment
+  mwr_reviews:
+    path_pattern: /1LZwInex0XVr6UKqyY_w6G2JeUyeUiiPG/{reviewId}/{filename}
+    description: MWR Reviews - fixed folder ID
+    domain: mwr
+    type: review
 integrations:
   google_workspace:
     enabled: true

@@ -8,7 +8,10 @@ export function useFormSelectData(formFields, spec, options = {}) {
     for (const field of formFields) {
       if (field.type === 'enum' && field.options) {
         const enumOptions = spec.options?.[field.options] || [];
-        data[field.key] = enumOptions.map(o => ({ value: String(o.value), label: o.label }));
+        if (enumOptions.length === 0 && field.key === 'stage') {
+          console.warn(`[useFormSelectData] No options found for ${field.key}, field.options="${field.options}", available keys:`, Object.keys(spec.options || {}));
+        }
+        data[field.options] = enumOptions.map(o => ({ value: String(o.value), label: o.label }));
       }
     }
     return data;

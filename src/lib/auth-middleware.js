@@ -31,7 +31,6 @@ export const withPageAuth = async (entityName, action = 'view', options = {}) =>
   let spec;
   try { spec = getSpec(entityName); } catch { notFound(); }
   if (options.notEmbedded !== false && spec.embedded) notFound();
-  if (options.allowParent !== true && spec.parent && action !== 'view') notFound();
   if (!can(user, spec, actionMap[action] || action)) {
     redirect(options.redirectTo || (action === 'list' ? '/' : `/${entityName}`));
   }
