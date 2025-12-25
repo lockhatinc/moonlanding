@@ -41,6 +41,8 @@ import {
   Columns,
   Rows,
   GripVertical,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 
 export const ENTITY_ICONS = {
@@ -87,6 +89,9 @@ export const ACTION_ICONS = {
   activity: Activity,
   lock: Lock,
   reopen: RotateCcw,
+  wifi: Wifi,
+  wifiOff: WifiOff,
+  check: Check,
 };
 
 export const NAVIGATION_ICONS = {
