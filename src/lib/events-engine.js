@@ -144,7 +144,7 @@ export const registerEntityHandlers = () => {
   hookEngine.on('review:afterCreate', async (review, user) => {
     await queueEmail('review_created', { review, recipients: 'team_partners' });
     if (review.template_id) {
-      const template = get('template', review.template_id);
+      const template = get('review_template', review.template_id);
       for (const id of safeJsonParse(template?.default_checklists, [])) {
         const checklist = get('checklist', id);
         if (checklist) create('review_checklist', { review_id: review.id, checklist_id: id, items: checklist.section_items || checklist.items, status: 'pending' }, user);
