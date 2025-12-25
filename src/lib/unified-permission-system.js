@@ -55,7 +55,7 @@ export class UnifiedPermissionSystem {
   }
 
   canAccessRow(user, spec, record) {
-    const rowAccessConfig = spec.rowAccess;
+    const rowAccessConfig = spec.rowAccess || spec.row_access;
     if (!rowAccessConfig) return true;
 
     switch (rowAccessConfig.scope) {
@@ -66,7 +66,10 @@ export class UnifiedPermissionSystem {
       case 'assigned_or_team':
         return user.id === record.assigned_to || user.team_id === record.team_id;
       case 'client':
-        return user.client_id === record.client_id;
+        if (user.role === 'client_admin' || user.role === 'client_user') {
+          return user.client_id === record.client_id;
+        }
+        return user.client_ids && user.client_ids.includes(record.client_id);
       case 'all':
         return true;
       default:

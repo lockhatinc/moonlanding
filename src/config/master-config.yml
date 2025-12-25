@@ -610,6 +610,8 @@ entities:
     order: 8
     permission_template: client_response
     workflow: rfi_type_standard
+    row_access:
+      scope: client
     computed_fields:
     - days_outstanding
     - daysOutstanding
@@ -827,6 +829,30 @@ entities:
     - client_admin
     - client_user
     field_overrides:
+      email:
+        type: text
+        required: true
+        unique: true
+        label: Email
+      name:
+        type: text
+        required: true
+        label: Name
+      password_hash:
+        type: text
+        label: Password Hash
+      role:
+        type: text
+        required: true
+        default: clerk
+        label: Role
+      status:
+        type: text
+        default: active
+        label: Status
+      photo_url:
+        type: text
+        label: Photo URL
       priority_reviews:
         type: json
         default: []

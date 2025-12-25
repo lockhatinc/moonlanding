@@ -44,6 +44,8 @@ export const migrate = () => {
     if (!spec) continue;
     const columns = [];
     const foreignKeys = [];
+    // Lucia expects 'users' table for the 'user' entity
+    const tableName = spec.name === 'user' ? 'users' : spec.name;
     if (spec.name === 'user') {
       console.error('[Database] User spec fields:', Object.keys(spec.fields || {}));
     }
@@ -60,14 +62,18 @@ export const migrate = () => {
         // Skip defaults for complex types like arrays/objects
       }
       columns.push(col);
-      if (field.type === 'ref' && field.ref) foreignKeys.push(`FOREIGN KEY ("${key}") REFERENCES "${field.ref}"(id)`);
+      if (field.type === 'ref' && field.ref) {
+        // Lucia expects 'users' table for the 'user' entity
+        const refTable = field.ref === 'user' ? 'users' : field.ref;
+        foreignKeys.push(`FOREIGN KEY ("${key}") REFERENCES "${refTable}"(id)`);
+      }
     });
     const fkPart = foreignKeys.length ? (',\n' + foreignKeys.join(',\n')) : '';
-    const sql = `CREATE TABLE IF NOT EXISTS "${spec.name}" (${columns.join(',\n')}${fkPart})`;
+    const sql = `CREATE TABLE IF NOT EXISTS "${tableName}" (${columns.join(',\n')}${fkPart})`;
     try {
       db.exec(sql);
     } catch (e) {
-      console.error(`[Database] Table creation failed for ${spec.name}:`, e.message, '\nSQL:', sql);
+      console.error(`[Database] Table creation failed for ${tableName}:`, e.message, '\nSQL:', sql);
       throw e;
     }
   }
@@ -75,10 +81,12 @@ export const migrate = () => {
   for (const spec of Object.values(specsToUse)) {
     if (!spec) continue; // Skip undefined specs
     const searchFields = [];
+    // Lucia expects 'users' table for the 'user' entity
+    const tableName = spec.name === 'user' ? 'users' : spec.name;
     forEachField(spec, (key, field) => {
       if (field.type === 'ref' || field.sortable || field.search) {
-        try { db.exec(`CREATE INDEX IF NOT EXISTS idx_${spec.name}_${key} ON "${spec.name}"("${key}")`); } catch (e) {
-          console.error(`[Database] Index creation failed for ${spec.name}.${key}:`, e.message);
+        try { db.exec(`CREATE INDEX IF NOT EXISTS idx_${tableName}_${key} ON "${tableName}"("${key}")`); } catch (e) {
+          console.error(`[Database] Index creation failed for ${tableName}.${key}:`, e.message);
         }
       }
       if (field.search || key === 'name' || key === 'description') searchFields.push(`"${key}"`);
@@ -86,9 +94,9 @@ export const migrate = () => {
 
     if (searchFields.length > 0) {
       try {
-        db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS ${spec.name}_fts USING fts5(${searchFields.join(', ')}, content="${spec.name}", content_rowid=id)`);
+        db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS ${tableName}_fts USING fts5(${searchFields.join(', ')}, content="${tableName}", content_rowid=id)`);
       } catch (e) {
-        console.error(`[Database] FTS table creation failed for ${spec.name}:`, e.message);
+        console.error(`[Database] FTS table creation failed for ${tableName}:`, e.message);
       }
     }
   }

@@ -219,6 +219,7 @@ export class ConfigGeneratorEngine {
       immutable: entityDef.immutable || false,
       immutable_strategy: entityDef.immutable_strategy || null,
       state_machine: entityDef.state_machine || false,
+      row_access: entityDef.row_access || null,
       entityDef: entityDef,
     };
 

@@ -53,8 +53,9 @@ class PermissionService {
 
   checkRowAccess(user, spec, record) {
     if (!user) return false;
-    if (!spec.rowAccess) return true;
-    const rowPerm = spec.rowAccess;
+    const rowAccess = spec.rowAccess || spec.row_access;
+    if (!rowAccess) return true;
+    const rowPerm = rowAccess;
     if (rowPerm.scope === 'team' && record.team_id && user.team_id && record.team_id !== user.team_id) return false;
     if (rowPerm.scope === 'assigned' && record.assigned_to && record.assigned_to !== user.id && user.role !== 'partner') return false;
     if (rowPerm.scope === 'assigned_or_team' && user.role !== 'partner') {
@@ -62,7 +63,15 @@ class PermissionService {
       const teamCheck = !record.team_id || (user.team_id && record.team_id === user.team_id);
       if (!assignedCheck && !teamCheck) return false;
     }
-    if (rowPerm.scope === 'client' && record.client_id && user.client_ids && !user.client_ids.includes(record.client_id)) return false;
+    if (rowPerm.scope === 'client') {
+      if (user.role === 'client_admin' || user.role === 'client_user') {
+        if (record.client_id && user.client_id && record.client_id !== user.client_id) return false;
+        // For client_user, also require assignment to view RFI
+        if (user.role === 'client_user' && !this.checkAssignment(user, spec, record)) return false;
+      } else if (record.client_id && user.client_ids && !user.client_ids.includes(record.client_id)) {
+        return false;
+      }
+    }
     return true;
   }
 
