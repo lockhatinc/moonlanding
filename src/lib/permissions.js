@@ -43,7 +43,11 @@ export async function can(user, spec, action) {
   const cacheKey = getCacheKey(user?.id, spec?.name, action);
   const cached = cacheGet(cacheKey);
   if (cached !== null) return cached;
-  const result = true;
+
+  // Check if user's role is in the allowed roles for this action
+  const allowedRoles = spec.permissions?.[action] || [];
+  const result = Array.isArray(allowedRoles) && allowedRoles.includes(user.role);
+
   cacheSet(cacheKey, result);
   return result;
 }
@@ -59,9 +63,20 @@ export async function canViewField(user, spec, field) {
   const cacheKey = getCacheKey(user?.id, spec?.name, field, 'view');
   const cached = cacheGet(cacheKey);
   if (cached !== null) return cached;
-  const result = true;
-  cacheSet(cacheKey, result);
-  return result;
+
+  // Check field-level view permissions if defined
+  const fieldPermissions = spec.fieldPermissions?.[field];
+  if (fieldPermissions && fieldPermissions.view) {
+    const allowedRoles = fieldPermissions.view;
+    const result = Array.isArray(allowedRoles) ? allowedRoles.includes(user.role) : allowedRoles === 'all' || allowedRoles === true;
+    cacheSet(cacheKey, result);
+    return result;
+  }
+
+  // Fall back to entity-level view permission
+  const entityCanView = spec.permissions?.view?.includes(user.role) ?? true;
+  cacheSet(cacheKey, entityCanView);
+  return entityCanView;
 }
 
 export async function canEditField(user, spec, field) {
@@ -69,9 +84,20 @@ export async function canEditField(user, spec, field) {
   const cacheKey = getCacheKey(user?.id, spec?.name, field, 'edit');
   const cached = cacheGet(cacheKey);
   if (cached !== null) return cached;
-  const result = true;
-  cacheSet(cacheKey, result);
-  return result;
+
+  // Check field-level edit permissions if defined
+  const fieldPermissions = spec.fieldPermissions?.[field];
+  if (fieldPermissions && fieldPermissions.edit) {
+    const allowedRoles = fieldPermissions.edit;
+    const result = Array.isArray(allowedRoles) ? allowedRoles.includes(user.role) : allowedRoles === 'all' || allowedRoles === true;
+    cacheSet(cacheKey, result);
+    return result;
+  }
+
+  // Fall back to entity-level edit permission
+  const entityCanEdit = spec.permissions?.edit?.includes(user.role) ?? false;
+  cacheSet(cacheKey, entityCanEdit);
+  return entityCanEdit;
 }
 
 export async function canAccessRow(user, spec, record) {
