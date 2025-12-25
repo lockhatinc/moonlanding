@@ -71,10 +71,16 @@ export class QueryAdapter {
 
   static async fromSearchParams(searchParams, spec = null) {
     const defaultPageSize = await getDefaultPageSize();
+    const get = (key) => {
+      if (typeof searchParams.get === 'function') {
+        return searchParams.get(key);
+      }
+      return searchParams[key];
+    };
     return {
-      q: searchParams.get('q'),
-      page: Math.max(1, parseInt(searchParams.get('page') || '1')),
-      pageSize: parseInt(searchParams.get('pageSize') || String(spec?.list?.pageSize || defaultPageSize)),
+      q: get('q'),
+      page: Math.max(1, parseInt(get('page') || '1')),
+      pageSize: parseInt(get('pageSize') || String(spec?.list?.pageSize || defaultPageSize)),
     };
   }
 
