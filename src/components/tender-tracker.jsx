@@ -31,6 +31,15 @@ export function TenderTracker({ tenderId, reviewId }) {
   const status = daysRemaining > 7 ? 'open' : daysRemaining > 1 ? 'warning' : daysRemaining > 0 ? 'urgent' : 'critical';
   const progressColor = STATUS_COLORS[status] || 'blue';
 
+  const calculateProgress = () => {
+    if (!tender.deadline || !tender.start_date) return 0;
+    const MS_PER_DAY = 1000 * 60 * 60 * 24;
+    const totalDays = Math.ceil((tender.deadline - tender.start_date) / MS_PER_DAY);
+    if (totalDays <= 0) return 0;
+    const elapsedDays = Math.ceil((Date.now() - tender.start_date) / MS_PER_DAY);
+    return Math.max(0, Math.min(100, (elapsedDays / totalDays) * 100));
+  };
+
   return (
     <Stack gap="md" className="tender-tracker">
       {error && (
@@ -68,7 +77,7 @@ export function TenderTracker({ tenderId, reviewId }) {
           <Text size="sm" fw={500}>{Math.max(daysRemaining, 0)}</Text>
         </Group>
         <Progress
-          value={Math.max(0, Math.min(100, daysRemaining > 0 ? (daysRemaining / 30) * 100 : 0))}
+          value={calculateProgress()}
           color={progressColor}
         />
       </div>

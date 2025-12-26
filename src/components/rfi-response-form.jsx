@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Textarea, FileInput, Stack, Text, Alert, Group } from '@mantine/core';
+import { Button, Textarea, FileInput, Stack, Text, Alert, Group, Progress } from '@mantine/core';
 
 export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
   const [responseText, setResponseText] = useState('');
@@ -9,6 +9,7 @@ export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
@@ -32,6 +33,7 @@ export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setUploadProgress(0);
 
     if (!responseText.trim() && files.length === 0) {
       setError('Response must include text or files');
@@ -39,37 +41,56 @@ export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
       return;
     }
 
-    try {
-      const formData = new FormData();
-      formData.append('rfi_id', rfiId);
-      formData.append('engagement_id', engagementId);
-      formData.append('response_text', responseText);
+    const formData = new FormData();
+    formData.append('rfi_id', rfiId);
+    formData.append('engagement_id', engagementId);
+    formData.append('response_text', responseText);
+    files.forEach((file) => formData.append('files', file));
 
-      files.forEach((file) => formData.append('files', file));
+    return new Promise((resolve) => {
+      const xhr = new XMLHttpRequest();
 
-      const res = await fetch(`/api/friday/rfi/${rfiId}/response`, {
-        method: 'POST',
-        body: formData
-      });
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          setUploadProgress(percent);
+        }
+      };
 
-      const data = await res.json();
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            setSuccess('Response submitted successfully');
+            setResponseText('');
+            setFiles([]);
+            setUploadProgress(0);
+            setTimeout(() => setSuccess(''), 3000);
+            if (onSubmit) onSubmit(data);
+            resolve();
+          } catch (err) {
+            setError('Failed to parse response');
+            setLoading(false);
+          }
+        } else {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            setError(data.error || 'Failed to submit response');
+          } catch {
+            setError('Failed to submit response');
+          }
+          setLoading(false);
+        }
+      };
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to submit response');
-      }
+      xhr.onerror = () => {
+        setError('Network error uploading response');
+        setLoading(false);
+      };
 
-      setSuccess('Response submitted successfully');
-      setResponseText('');
-      setFiles([]);
-
-      setTimeout(() => setSuccess(''), 3000);
-
-      if (onSubmit) onSubmit(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+      xhr.open('POST', `/api/friday/rfi/${rfiId}/response`);
+      xhr.send(formData);
+    });
   };
 
   return (
@@ -114,6 +135,10 @@ export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
 
         {error && <Alert color="red" title="Error">{error}</Alert>}
         {success && <Alert color="green" title="Success">{success}</Alert>}
+
+        {uploadProgress > 0 && uploadProgress < 100 && (
+          <Progress value={uploadProgress} label={`${uploadProgress}%`} size="lg" />
+        )}
 
         <Button
           type="submit"

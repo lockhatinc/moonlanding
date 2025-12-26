@@ -21,6 +21,8 @@ export function EngagementStageTransition({ engagementId, currentStage, onTransi
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [lockoutInfo, setLockoutInfo] = useState(null);
+  const [failedGates, setFailedGates] = useState([]);
 
   useEffect(() => {
     fetchAvailableTransitions();
@@ -33,6 +35,15 @@ export function EngagementStageTransition({ engagementId, currentStage, onTransi
 
       if (data.success) {
         setAvailable(data.availableTransitions || []);
+      }
+
+      const statusRes = await fetch(`/api/friday/engagement/${engagementId}/transition-status`);
+      const statusData = await statusRes.json();
+      if (statusData.inLockout) {
+        setLockoutInfo(statusData);
+      }
+      if (statusData.failedGates?.length > 0) {
+        setFailedGates(statusData.failedGates);
       }
     } catch (err) {
       setError('Failed to load available stages');
@@ -134,10 +145,33 @@ export function EngagementStageTransition({ engagementId, currentStage, onTransi
           </>
         ) : (
           <Alert color="yellow" title="No Transitions Available">
-            <Text size="sm">
-              The engagement cannot transition from <Badge>{STAGE_LABELS[currentStage]}</Badge> at this time.
-              All validation gates must pass before transitioning. Wait 5 minutes between transitions.
-            </Text>
+            <Stack gap="xs">
+              <Text size="sm" fw={500}>Current stage: {STAGE_LABELS[currentStage]}</Text>
+
+              {lockoutInfo?.inLockout && (
+                <Text size="sm" c="orange">
+                  ⏱️ Transition lockout: {lockoutInfo.minutesRemaining}m remaining
+                </Text>
+              )}
+
+              {failedGates.length > 0 && (
+                <>
+                  <Text size="sm" fw={500} mt="xs">Failed validation gates:</Text>
+                  <Stack gap="xs">
+                    {failedGates.map((gate, i) => (
+                      <Group key={i} gap="xs">
+                        <Text size="xs" c="red">✗</Text>
+                        <Text size="xs">{gate.name}: {gate.reason}</Text>
+                      </Group>
+                    ))}
+                  </Stack>
+                </>
+              )}
+
+              {failedGates.length === 0 && !lockoutInfo?.inLockout && (
+                <Text size="sm">All validation gates must pass before transitioning.</Text>
+              )}
+            </Stack>
           </Alert>
         )}
       </Stack>

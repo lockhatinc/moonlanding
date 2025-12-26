@@ -79,24 +79,24 @@ export function HighlightAnnotator({ reviewId, highlightId, onSave, onDelete, on
         <Text fw={500} size="sm" mb="xs">Color</Text>
         <Group gap="xs">
           {Object.entries(HIGHLIGHT_PALETTE).map(([key, palette]) => (
-            <Tooltip key={key} label={palette.label}>
-              <Button
-                size="xs"
-                variant={selectedColor === palette.color ? 'filled' : 'outline'}
-                color={key}
-                onClick={() => {
-                  setSelectedColor(palette.color);
-                  setUnsavedChanges(true);
-                }}
-                disabled={loading}
-                style={{
-                  backgroundColor: selectedColor === palette.color ? palette.color : undefined,
-                  borderColor: palette.color
-                }}
-              >
-                <Badge color={key} size="sm">{palette.label}</Badge>
-              </Button>
-            </Tooltip>
+            <Button
+              key={key}
+              size="xs"
+              variant={selectedColor === palette.color ? 'filled' : 'outline'}
+              color={key}
+              onClick={() => {
+                setSelectedColor(palette.color);
+                setUnsavedChanges(true);
+              }}
+              disabled={loading}
+              aria-label={`Select ${palette.label} color`}
+              style={{
+                backgroundColor: selectedColor === palette.color ? palette.color : undefined,
+                borderColor: palette.color
+              }}
+            >
+              {palette.label}
+            </Button>
           ))}
         </Group>
       </div>
