@@ -8,10 +8,20 @@ export async function loadFormOptions(spec) {
   for (const [key, field] of Object.entries(spec.fields)) {
     if (field.type === 'ref' && field.ref) {
       try {
-        options[key] = list(field.ref).map(r => ({
-          value: r.id,
-          label: r.name || r.email || r.id
-        }));
+        const data = list(field.ref);
+        if (field.ref === 'engagement') {
+          options[key] = data
+            .filter(r => r.status !== 'archived')
+            .map(r => ({
+              value: r.id,
+              label: `${r.name} (${r.client_name || 'No Client'} - ${r.financial_year || r.year || 'N/A'})`
+            }));
+        } else {
+          options[key] = data.map(r => ({
+            value: r.id,
+            label: r.name || r.email || r.id
+          }));
+        }
       } catch {
         options[key] = [];
       }
