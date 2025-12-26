@@ -16,6 +16,7 @@ export function HighlightAnnotator({ reviewId, highlightId, onSave, onDelete, on
   const [resolved, setResolved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
 
@@ -30,6 +31,13 @@ export function HighlightAnnotator({ reviewId, highlightId, onSave, onDelete, on
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [unsavedChanges, comment]);
 
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
   const handleSave = async () => {
     setLoading(true);
     setError('');
@@ -40,7 +48,7 @@ export function HighlightAnnotator({ reviewId, highlightId, onSave, onDelete, on
         color: selectedColor,
         status: resolved ? 'resolved' : 'unresolved'
       });
-      showSuccess('Highlight saved');
+      setSuccess('Highlight saved');
       setUnsavedChanges(false);
       if (onSave) onSave();
     } catch (err) {
@@ -57,7 +65,7 @@ export function HighlightAnnotator({ reviewId, highlightId, onSave, onDelete, on
     setError('');
     try {
       await deleteHighlight(highlightId);
-      showSuccess('Highlight deleted');
+      setSuccess('Highlight deleted');
       if (onDelete) onDelete();
     } catch (err) {
       setError(err?.message || 'Failed to delete highlight');
@@ -69,9 +77,16 @@ export function HighlightAnnotator({ reviewId, highlightId, onSave, onDelete, on
 
   return (
     <Stack gap="md" className="highlight-annotator">
+      {success && (
+        <Alert color="green" title="Success" onClose={() => setSuccess('')}>
+          {success}
+        </Alert>
+      )}
+
       {error && (
         <Alert color="red" title="Error" onClose={() => setError('')}>
           {error}
+          <Button size="xs" onClick={() => setError('')} mt="xs">Retry</Button>
         </Alert>
       )}
 
@@ -150,6 +165,7 @@ export function HighlightAnnotator({ reviewId, highlightId, onSave, onDelete, on
               variant="light"
               onClick={() => setShowDeleteConfirm(true)}
               disabled={loading}
+              aria-label="Delete highlight"
             >
               <ACTION_ICONS.delete size={16} />
             </ActionIcon>

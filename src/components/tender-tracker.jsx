@@ -36,7 +36,7 @@ export function TenderTracker({ tenderId, reviewId }) {
     const MS_PER_DAY = 1000 * 60 * 60 * 24;
     const totalDays = Math.ceil((tender.deadline - tender.start_date) / MS_PER_DAY);
     if (totalDays <= 0) return 0;
-    const elapsedDays = Math.ceil((Date.now() - tender.start_date) / MS_PER_DAY);
+    const elapsedDays = (Date.now() - tender.start_date) / MS_PER_DAY;
     return Math.max(0, Math.min(100, (elapsedDays / totalDays) * 100));
   };
 
@@ -53,7 +53,7 @@ export function TenderTracker({ tenderId, reviewId }) {
         <Text fw={500}>{tender.name || 'Tender'}</Text>
         <Group gap="xs">
           <Badge color={STATUS_COLORS[status]}>{status.toUpperCase()}</Badge>
-          <ActionIcon onClick={refetch} loading={loading} title="Refresh">
+          <ActionIcon onClick={refetch} loading={loading} title="Refresh" aria-label="Refresh tender information">
             <UI_ICONS.refresh size={16} />
           </ActionIcon>
         </Group>

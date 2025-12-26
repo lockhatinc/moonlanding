@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button, TextInput, NumberInput, Table, Badge, Group, Stack, Alert, Modal, Tooltip, Skeleton, Text } from '@mantine/core';
+import { UI_ICONS } from '@/config/icon-config';
 import { useCollaborators } from '@/lib/hooks/use-collaborators';
 import { showSuccess, showError } from '@/lib/notifications';
 
@@ -12,6 +13,14 @@ export function CollaboratorManager({ reviewId, onCollaboratorChange, canEdit = 
   const [submitting, setSubmitting] = useState(false);
   const [showRevokeConfirm, setShowRevokeConfirm] = useState(false);
   const [revokeTargetId, setRevokeTargetId] = useState(null);
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   const handleAddCollaborator = async () => {
     if (!email.trim()) {
@@ -27,7 +36,7 @@ export function CollaboratorManager({ reviewId, onCollaboratorChange, canEdit = 
     setSubmitting(true);
     try {
       await addCollaborator(email, expiryDays);
-      showSuccess(`Added ${email} as collaborator`);
+      setSuccess(`Added ${email} as collaborator`);
       setEmail('');
       setExpiryDays(7);
       if (onCollaboratorChange) onCollaboratorChange({ email, expiryDays });
@@ -47,7 +56,7 @@ export function CollaboratorManager({ reviewId, onCollaboratorChange, canEdit = 
     setShowRevokeConfirm(false);
     try {
       await removeCollaborator(revokeTargetId);
-      showSuccess('Collaborator access revoked');
+      setSuccess('Collaborator access revoked');
     } catch (err) {
       showError(err);
     }
@@ -81,6 +90,12 @@ export function CollaboratorManager({ reviewId, onCollaboratorChange, canEdit = 
 
   return (
     <Stack gap="md" className="collaborator-manager">
+      {success && (
+        <Alert color="green" title="Success" onClose={() => setSuccess('')}>
+          {success}
+        </Alert>
+      )}
+
       {canEdit && (
         <div>
           <Text fw={500} mb="xs">Add Collaborator</Text>
@@ -92,7 +107,7 @@ export function CollaboratorManager({ reviewId, onCollaboratorChange, canEdit = 
               type="email"
               disabled={submitting}
             />
-            <Tooltip label="Leave empty for permanent access. Max 30 days.">
+            <Tooltip label="Leave at 0 for permanent access. Maximum 30 days.">
               <NumberInput
                 label="Expire in (days)"
                 value={expiryDays}
@@ -100,7 +115,8 @@ export function CollaboratorManager({ reviewId, onCollaboratorChange, canEdit = 
                 min={0}
                 max={30}
                 disabled={submitting}
-                placeholder="Leave empty for permanent (0 = permanent access)"
+                placeholder="0 for permanent access"
+                description="Set to 0 for permanent access"
               />
             </Tooltip>
             <Button
@@ -135,7 +151,11 @@ export function CollaboratorManager({ reviewId, onCollaboratorChange, canEdit = 
             <Table.Tbody>{rows}</Table.Tbody>
           </Table>
         ) : (
-          <Text c="dimmed" ta="center" py="md">No collaborators added yet</Text>
+          <Stack align="center" py="xl">
+            <UI_ICONS.users size={48} style={{ opacity: 0.5, color: 'var(--mantine-color-gray-5)' }} />
+            <Text c="dimmed">No collaborators added yet</Text>
+            <Text size="xs" c="dimmed">Invite users above to collaborate on this review</Text>
+          </Stack>
         )}
       </div>
 

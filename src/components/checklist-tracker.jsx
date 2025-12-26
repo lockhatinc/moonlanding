@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Checkbox, Button, Progress, Stack, Group, Text, Input, Alert, ActionIcon, LoadingOverlay, Skeleton, Modal } from '@mantine/core';
 import { useChecklist } from '@/lib/hooks/use-checklist';
 import { showSuccess, showError } from '@/lib/notifications';
@@ -13,6 +13,14 @@ export function ChecklistTracker({ checklistId, reviewId, onUpdate }) {
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [success, setSuccess] = useState('');
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   if (loading && !items.length) {
     return <Skeleton height={300} />;
@@ -21,7 +29,7 @@ export function ChecklistTracker({ checklistId, reviewId, onUpdate }) {
   const handleToggleItem = async (itemId) => {
     try {
       await toggleItem(itemId);
-      showSuccess('Item toggled');
+      setSuccess('Item toggled');
       if (onUpdate) onUpdate();
     } catch (err) {
       showError(err);
@@ -31,7 +39,7 @@ export function ChecklistTracker({ checklistId, reviewId, onUpdate }) {
   const handleDeleteItem = async (itemId) => {
     try {
       await deleteItem(itemId);
-      showSuccess('Item deleted');
+      setSuccess('Item deleted');
       setDeleteConfirm(null);
       if (onUpdate) onUpdate();
     } catch (err) {
@@ -48,7 +56,7 @@ export function ChecklistTracker({ checklistId, reviewId, onUpdate }) {
     if (!editText.trim()) return;
     try {
       await addItem(editText);
-      showSuccess('Item updated');
+      setSuccess('Item updated');
       setEditingId(null);
       setEditText('');
       if (onUpdate) onUpdate();
@@ -63,7 +71,7 @@ export function ChecklistTracker({ checklistId, reviewId, onUpdate }) {
     setSubmitting(true);
     try {
       await addItem(newItem);
-      showSuccess('Item added');
+      setSuccess('Item added');
       setNewItem('');
       if (onUpdate) onUpdate();
     } catch (err) {
@@ -83,6 +91,12 @@ export function ChecklistTracker({ checklistId, reviewId, onUpdate }) {
         <Progress value={progress} color={progress === 100 ? 'green' : 'blue'} />
       </div>
 
+      {success && (
+        <Alert color="green" title="Success" onClose={() => setSuccess('')}>
+          {success}
+        </Alert>
+      )}
+
       {error && (
         <Alert color="red" title="Error" onClose={() => setError(null)}>
           {error}
@@ -92,7 +106,11 @@ export function ChecklistTracker({ checklistId, reviewId, onUpdate }) {
 
       <div>
         {items.length === 0 ? (
-          <Text c="dimmed" ta="center" py="md">No checklist items yet. Add your first item below.</Text>
+          <Stack align="center" py="xl">
+            <ACTION_ICONS.checklist size={48} style={{ opacity: 0.5, color: 'var(--mantine-color-gray-5)' }} />
+            <Text c="dimmed">No checklist items yet</Text>
+            <Text size="xs" c="dimmed">Add your first item below to get started</Text>
+          </Stack>
         ) : (
           <Stack gap="xs">
             {items.map((item) => (

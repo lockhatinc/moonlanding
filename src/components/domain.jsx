@@ -3,6 +3,7 @@
 import { useState, useMemo, Suspense, lazy } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
+import { useHotkeys } from '@mantine/hooks';
 import { Stack, Group, Box, Title, Tabs, Grid, ScrollArea, Paper, Badge, Text, ActionIcon, Button, Modal, Skeleton } from '@mantine/core';
 import { ACTION_ICONS, UI_ICONS } from '@/config/icon-config';
 import { FieldRender } from './field-render';
@@ -38,6 +39,7 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
   const [selectedHighlight, setSelectedHighlight] = useState(null);
   const [showAddChecklistDialog, setShowAddChecklistDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [activeTab, setActiveTab] = useState('queries');
   const { handleHighlight, handleResolve, handleAddResponse, handleSendMessage } = useReviewHandlers(data.id);
 
   const highlights = children.highlights || [];
@@ -45,11 +47,21 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
   const chatMessages = children.chat || [];
   const unresolvedCount = useMemo(() => highlights.filter((h) => !h.resolved).length, [highlights]);
 
+  useHotkeys([
+    ['1', () => setActiveTab('queries')],
+    ['2', () => setActiveTab('details')],
+    ['3', () => setActiveTab('checklists')],
+    ['4', () => setActiveTab('collaborators')],
+    ['5', () => setActiveTab('tenders')],
+    ['6', () => setActiveTab('priority')],
+    ['7', () => setActiveTab('chat')],
+  ]);
+
   return (
     <Stack gap="md">
       <Group justify="space-between">
         <Group>
-          <ActionIcon variant="subtle" onClick={() => router.push('/review')}><ACTION_ICONS.back size={18} /></ActionIcon>
+          <ActionIcon variant="subtle" onClick={() => router.push('/review')} aria-label="Back to reviews"><ACTION_ICONS.back size={18} /></ActionIcon>
           <ACTION_ICONS.search size={24} />
           <Box>
             <Title order={2}>{data.name}</Title>
@@ -70,7 +82,7 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
           <Box h="calc(100vh - 200px)"><PDFWrapper review={data} fileUrl={data.drive_file_id} highlights={highlights} onHighlight={canEdit ? handleHighlight : undefined} selectedHighlight={selectedHighlight} onSelectHighlight={setSelectedHighlight} /></Box>
         </Grid.Col>
         <Grid.Col span={{ base: 12, lg: 4 }}>
-          <Tabs defaultValue="queries" h="calc(100vh - 200px)">
+          <Tabs value={activeTab} onTabChange={setActiveTab} h="calc(100vh - 200px)">
             <Tabs.List>
               <Tabs.Tab value="queries" leftSection={<UI_ICONS.messageSquare size={14} />} rightSection={<Badge size="sm">{highlights.length}</Badge>}>Highlights</Tabs.Tab>
               <Tabs.Tab value="details" leftSection={<UI_ICONS.file size={14} />}>Details</Tabs.Tab>
@@ -119,19 +131,38 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
         onClose={() => setShowDeleteConfirm(false)}
         title="Delete Review"
       >
-        <Text mb="md">Delete review <strong>"{data.name}"</strong>? This action cannot be undone.</Text>
-        <Group justify="flex-end">
-          <Button variant="default" onClick={() => setShowDeleteConfirm(false)}>
-            Cancel
-          </Button>
-          {deleteAction && (
-            <form action={deleteAction} style={{ display: 'inline' }}>
-              <Button type="submit" color="red">
-                Delete
-              </Button>
-            </form>
-          )}
-        </Group>
+        <Stack gap="md">
+          <Text mb="md">Delete review <strong>"{data.name}"</strong>?</Text>
+
+          <Paper p="md" withBorder bg="var(--mantine-color-red-0)">
+            <Stack gap="xs">
+              <Text size="sm" fw={500} c="red">Impact of deletion:</Text>
+              <Group gap="xs">
+                <Text size="sm">- {highlights.length} highlight{highlights.length !== 1 ? 's' : ''} will be deleted</Text>
+              </Group>
+              <Group gap="xs">
+                <Text size="sm">- {checklists.length} checklist{checklists.length !== 1 ? 's' : ''} will be removed</Text>
+              </Group>
+              <Group gap="xs">
+                <Text size="sm">- All collaborator access will be revoked</Text>
+              </Group>
+              <Text size="sm" fw={500} c="red" mt="xs">This action cannot be undone.</Text>
+            </Stack>
+          </Paper>
+
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setShowDeleteConfirm(false)}>
+              Cancel
+            </Button>
+            {deleteAction && (
+              <form action={deleteAction} style={{ display: 'inline' }}>
+                <Button type="submit" color="red">
+                  Delete
+                </Button>
+              </form>
+            )}
+          </Group>
+        </Stack>
       </Modal>
     </Stack>
   );

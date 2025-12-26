@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Textarea, FileInput, Stack, Text, Alert, Group, Progress } from '@mantine/core';
 
 export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
@@ -8,20 +8,29 @@ export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fileError, setFileError] = useState('');
   const [success, setSuccess] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
 
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
   const MAX_FILE_SIZE = 25 * 1024 * 1024;
 
-  const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.currentTarget.files || []);
-    const validFiles = selectedFiles.filter(f => {
+  const handleFileChange = (selectedFiles) => {
+    const filesArray = Array.isArray(selectedFiles) ? selectedFiles : [];
+    const validFiles = filesArray.filter(f => {
       if (f.size > MAX_FILE_SIZE) {
-        setError(`File ${f.name} exceeds 25MB limit`);
+        setFileError(`File ${f.name} exceeds 25MB limit`);
         return false;
       }
       return true;
     });
+    setFileError('');
     setFiles(validFiles);
   };
 
@@ -65,7 +74,6 @@ export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
             setResponseText('');
             setFiles([]);
             setUploadProgress(0);
-            setTimeout(() => setSuccess(''), 3000);
             if (onSubmit) onSubmit(data);
             resolve();
           } catch (err) {
@@ -118,6 +126,7 @@ export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
             onChange={handleFileChange}
             disabled={loading}
             accept="*"
+            error={fileError}
           />
           {files.length > 0 && (
             <Stack gap="xs" mt="xs">

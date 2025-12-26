@@ -28,6 +28,13 @@ export function EngagementStageTransition({ engagementId, currentStage, onTransi
     fetchAvailableTransitions();
   }, [engagementId, currentStage]);
 
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
   const fetchAvailableTransitions = async () => {
     try {
       const res = await fetch(`/api/friday/engagement/transition?engagement_id=${engagementId}`);
@@ -81,8 +88,6 @@ export function EngagementStageTransition({ engagementId, currentStage, onTransi
       setSuccess(`Transitioned to ${STAGE_LABELS[selected]}`);
       setSelected('');
       setReason('');
-
-      setTimeout(() => setSuccess(''), 3000);
 
       if (onTransitionComplete) onTransitionComplete(data.transition);
     } catch (err) {
