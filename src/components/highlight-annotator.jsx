@@ -1,104 +1,145 @@
 'use client';
 
-import { useState, useRef } from 'react';
-import { Button, Stack, Textarea, Group, ColorPicker, Badge, ActionIcon } from '@mantine/core';
+import { useState, useEffect } from 'react';
+import { Button, Stack, Textarea, Group, Badge, ActionIcon, Alert, Modal, Text, Tooltip } from '@mantine/core';
 import { HIGHLIGHT_PALETTE } from '@/config/constants';
 import { ACTION_ICONS } from '@/config/icon-config';
+import { useHighlights } from '@/lib/hooks/use-highlights';
+import { showSuccess, showError } from '@/lib/notifications';
 
-export function HighlightAnnotator({ reviewId, highlightId, onSave, onDelete, isEditing = false }) {
+const MAX_COMMENT_LENGTH = 1000;
+
+export function HighlightAnnotator({ reviewId, highlightId, onSave, onDelete, onCancel, isEditing = false }) {
+  const { saveHighlight, deleteHighlight, setError: setHookError } = useHighlights(reviewId);
   const [comment, setComment] = useState('');
   const [selectedColor, setSelectedColor] = useState('#B0B0B0');
-  const [status, setStatus] = useState('open');
   const [resolved, setResolved] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (unsavedChanges && comment.trim()) {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [unsavedChanges, comment]);
 
   const handleSave = async () => {
     setLoading(true);
-
+    setError('');
     try {
-      const endpoint = isEditing
-        ? `/api/mwr/review/${reviewId}/highlights/${highlightId}`
-        : `/api/mwr/review/${reviewId}/highlights`;
-
-      const method = isEditing ? 'PATCH' : 'POST';
-
-      const res = await fetch(endpoint, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          comment,
-          color: selectedColor,
-          status: resolved ? 'resolved' : status
-        })
+      await saveHighlight({
+        id: isEditing ? highlightId : undefined,
+        comment,
+        color: selectedColor,
+        status: resolved ? 'resolved' : 'unresolved'
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (onSave) onSave(data);
-      }
+      showSuccess('Highlight saved');
+      setUnsavedChanges(false);
+      if (onSave) onSave();
     } catch (err) {
-      console.error('Failed to save highlight');
+      setError(err?.message || 'Failed to save highlight');
+      showError(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Delete this highlight?')) return;
-
+  const handleDeleteConfirm = async () => {
+    setShowDeleteConfirm(false);
+    setLoading(true);
+    setError('');
     try {
-      const res = await fetch(`/api/mwr/review/${reviewId}/highlights/${highlightId}`, {
-        method: 'DELETE'
-      });
-
-      if (res.ok && onDelete) onDelete();
+      await deleteHighlight(highlightId);
+      showSuccess('Highlight deleted');
+      if (onDelete) onDelete();
     } catch (err) {
-      console.error('Failed to delete highlight');
+      setError(err?.message || 'Failed to delete highlight');
+      showError(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <Stack gap="md" className="highlight-annotator">
+      {error && (
+        <Alert color="red" title="Error" onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
+
       <div>
-        <Group mb="xs">
-          <span className="font-semibold">Color</span>
-          <Group gap="xs">
-            {Object.entries(HIGHLIGHT_PALETTE).map(([key, palette]) => (
+        <Text fw={500} size="sm" mb="xs">Color</Text>
+        <Group gap="xs">
+          {Object.entries(HIGHLIGHT_PALETTE).map(([key, palette]) => (
+            <Tooltip key={key} label={palette.label}>
               <Button
-                key={key}
                 size="xs"
-                onClick={() => setSelectedColor(palette.color)}
-                style={{
-                  backgroundColor: palette.color,
-                  border: selectedColor === palette.color ? '2px solid black' : 'none'
+                variant={selectedColor === palette.color ? 'filled' : 'outline'}
+                color={key}
+                onClick={() => {
+                  setSelectedColor(palette.color);
+                  setUnsavedChanges(true);
                 }}
-                title={palette.label}
-              />
-            ))}
-          </Group>
+                disabled={loading}
+                style={{
+                  backgroundColor: selectedColor === palette.color ? palette.color : undefined,
+                  borderColor: palette.color
+                }}
+              >
+                <Badge color={key} size="sm">{palette.label}</Badge>
+              </Button>
+            </Tooltip>
+          ))}
         </Group>
       </div>
 
-      <Textarea
-        placeholder="Add comment..."
-        value={comment}
-        onChange={(e) => setComment(e.currentTarget.value)}
-        minRows={3}
-        disabled={loading}
-      />
+      <div>
+        <Textarea
+          label="Comment"
+          placeholder="Add your comment..."
+          value={comment}
+          onChange={(e) => {
+            setComment(e.currentTarget.value);
+            setUnsavedChanges(true);
+          }}
+          minRows={3}
+          maxLength={MAX_COMMENT_LENGTH}
+          disabled={loading}
+          description={`${comment.length}/${MAX_COMMENT_LENGTH} characters`}
+        />
+      </div>
 
-      <Group>
-        <Button.Group>
-          <Button
-            variant={resolved ? 'filled' : 'light'}
-            onClick={() => setResolved(!resolved)}
-            color={resolved ? 'green' : 'gray'}
-          >
-            {resolved ? '✓ Resolved' : 'Mark Resolved'}
-          </Button>
+      <Group justify="space-between">
+        <Button
+          variant={resolved ? 'filled' : 'outline'}
+          onClick={() => {
+            setResolved(!resolved);
+            setUnsavedChanges(true);
+          }}
+          color={resolved ? 'green' : 'gray'}
+          disabled={loading}
+          leftSection={resolved ? <ACTION_ICONS.check size={14} /> : null}
+        >
+          {resolved ? 'Resolved' : 'Mark as Resolved'}
+        </Button>
+
+        <Group gap="xs">
+          {isEditing && (
+            <Button variant="outline" onClick={onCancel} disabled={loading}>
+              Cancel
+            </Button>
+          )}
           <Button
             onClick={handleSave}
-            disabled={loading}
+            disabled={loading || !comment.trim()}
             loading={loading}
           >
             Save
@@ -107,14 +148,30 @@ export function HighlightAnnotator({ reviewId, highlightId, onSave, onDelete, is
             <ActionIcon
               color="red"
               variant="light"
-              onClick={handleDelete}
+              onClick={() => setShowDeleteConfirm(true)}
               disabled={loading}
             >
               <ACTION_ICONS.delete size={16} />
             </ActionIcon>
           )}
-        </Button.Group>
+        </Group>
       </Group>
+
+      <Modal
+        opened={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="Delete Highlight"
+      >
+        <Text mb="md">Delete this highlight and all its comments? This action cannot be undone.</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setShowDeleteConfirm(false)}>
+            Cancel
+          </Button>
+          <Button color="red" onClick={handleDeleteConfirm}>
+            Delete
+          </Button>
+        </Group>
+      </Modal>
     </Stack>
   );
 }

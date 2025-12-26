@@ -1,35 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, TextInput, NumberInput, Table, Badge, Group, Stack, Alert, Modal } from '@mantine/core';
+import { Button, TextInput, NumberInput, Table, Badge, Group, Stack, Alert, Modal, Tooltip, Skeleton, Text } from '@mantine/core';
+import { useCollaborators } from '@/lib/hooks/use-collaborators';
+import { showSuccess, showError } from '@/lib/notifications';
 
-export function CollaboratorManager({ reviewId, onCollaboratorChange }) {
-  const [collaborators, setCollaborators] = useState([]);
+export function CollaboratorManager({ reviewId, onCollaboratorChange, canEdit = false }) {
+  const { collaborators, loading, error: hookError, addCollaborator, removeCollaborator, refetch, setError } = useCollaborators(reviewId);
   const [email, setEmail] = useState('');
   const [expiryDays, setExpiryDays] = useState(7);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-
-  useEffect(() => {
-    fetchCollaborators();
-  }, [reviewId]);
-
-  const fetchCollaborators = async () => {
-    try {
-      const res = await fetch(`/api/mwr/review/${reviewId}/collaborators`);
-      const data = await res.json();
-
-      if (data.success) {
-        setCollaborators(data.collaborators || []);
-      }
-    } catch (err) {
-      setError('Failed to load collaborators');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [showRevokeConfirm, setShowRevokeConfirm] = useState(false);
+  const [revokeTargetId, setRevokeTargetId] = useState(null);
 
   const handleAddCollaborator = async () => {
     if (!email.trim()) {
@@ -37,54 +19,43 @@ export function CollaboratorManager({ reviewId, onCollaboratorChange }) {
       return;
     }
 
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError('Invalid email format');
+      return;
+    }
+
     setSubmitting(true);
-    setError('');
-
     try {
-      const res = await fetch(`/api/mwr/review/${reviewId}/collaborators`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          expiry_days: expiryDays || null
-        })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error);
-      }
-
-      setSuccess(`Added ${email} as collaborator`);
+      await addCollaborator(email, expiryDays);
+      showSuccess(`Added ${email} as collaborator`);
       setEmail('');
       setExpiryDays(7);
-      fetchCollaborators();
-
-      if (onCollaboratorChange) onCollaboratorChange(data);
+      if (onCollaboratorChange) onCollaboratorChange({ email, expiryDays });
     } catch (err) {
-      setError(err.message);
+      showError(err);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleRevoke = async (collaboratorId) => {
-    if (!confirm('Revoke access?')) return;
+  const handleRevokeClick = (collaboratorId) => {
+    setRevokeTargetId(collaboratorId);
+    setShowRevokeConfirm(true);
+  };
 
+  const confirmRevoke = async () => {
+    setShowRevokeConfirm(false);
     try {
-      const res = await fetch(`/api/mwr/review/${reviewId}/collaborators/${collaboratorId}`, {
-        method: 'DELETE'
-      });
-
-      if (res.ok) {
-        setSuccess('Collaborator access revoked');
-        fetchCollaborators();
-      }
+      await removeCollaborator(revokeTargetId);
+      showSuccess('Collaborator access revoked');
     } catch (err) {
-      setError('Failed to revoke access');
+      showError(err);
     }
   };
+
+  if (loading && !collaborators.length) {
+    return <Skeleton height={200} />;
+  }
 
   const rows = collaborators.map((collab) => (
     <Table.Tr key={collab.id}>
@@ -99,7 +70,8 @@ export function CollaboratorManager({ reviewId, onCollaboratorChange }) {
           size="xs"
           color="red"
           variant="light"
-          onClick={() => handleRevoke(collab.id)}
+          onClick={() => handleRevokeClick(collab.id)}
+          disabled={!canEdit}
         >
           Revoke
         </Button>
@@ -109,39 +81,48 @@ export function CollaboratorManager({ reviewId, onCollaboratorChange }) {
 
   return (
     <Stack gap="md" className="collaborator-manager">
-      <div>
-        <h3>Add Collaborator</h3>
-        <Group grow>
-          <TextInput
-            placeholder="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.currentTarget.value)}
-            type="email"
-            disabled={submitting}
-          />
-          <NumberInput
-            label="Expire in (days)"
-            value={expiryDays}
-            onChange={setExpiryDays}
-            min={1}
-            max={30}
-            disabled={submitting}
-          />
-          <Button
-            onClick={handleAddCollaborator}
-            disabled={submitting || !email.trim()}
-            loading={submitting}
-          >
-            Add
-          </Button>
-        </Group>
-      </div>
+      {canEdit && (
+        <div>
+          <Text fw={500} mb="xs">Add Collaborator</Text>
+          <Group grow>
+            <TextInput
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.currentTarget.value)}
+              type="email"
+              disabled={submitting}
+            />
+            <Tooltip label="Leave empty for permanent access. Max 30 days.">
+              <NumberInput
+                label="Expire in (days)"
+                value={expiryDays}
+                onChange={setExpiryDays}
+                min={1}
+                max={30}
+                disabled={submitting}
+                placeholder="Leave empty for permanent"
+              />
+            </Tooltip>
+            <Button
+              onClick={handleAddCollaborator}
+              disabled={submitting || !email.trim()}
+              loading={submitting}
+            >
+              Add
+            </Button>
+          </Group>
+        </div>
+      )}
 
-      {error && <Alert color="red">{error}</Alert>}
-      {success && <Alert color="green">{success}</Alert>}
+      {hookError && (
+        <Alert color="red" title="Error" onClose={() => setError(null)}>
+          {hookError}
+          <Button size="xs" onClick={refetch} mt="xs">Retry</Button>
+        </Alert>
+      )}
 
       <div>
-        <h3>Current Collaborators ({collaborators.length})</h3>
+        <Text fw={500} mb="sm">Current Collaborators ({collaborators.length})</Text>
         {collaborators.length > 0 ? (
           <Table>
             <Table.Thead>
@@ -154,9 +135,25 @@ export function CollaboratorManager({ reviewId, onCollaboratorChange }) {
             <Table.Tbody>{rows}</Table.Tbody>
           </Table>
         ) : (
-          <Alert color="blue">No collaborators added yet</Alert>
+          <Text c="dimmed" ta="center" py="md">No collaborators added yet</Text>
         )}
       </div>
+
+      <Modal
+        opened={showRevokeConfirm}
+        onClose={() => setShowRevokeConfirm(false)}
+        title="Revoke Access"
+      >
+        <Text mb="md">Are you sure you want to revoke this collaborator's access?</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setShowRevokeConfirm(false)}>
+            Cancel
+          </Button>
+          <Button color="red" onClick={confirmRevoke}>
+            Revoke
+          </Button>
+        </Group>
+      </Modal>
     </Stack>
   );
 }

@@ -1,65 +1,53 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Checkbox, Button, Progress, Stack, Group, Text, Input } from '@mantine/core';
+import { useState } from 'react';
+import { Checkbox, Button, Progress, Stack, Group, Text, Input, Alert, ActionIcon, LoadingOverlay, Skeleton } from '@mantine/core';
+import { useChecklist } from '@/lib/hooks/use-checklist';
+import { showSuccess, showError } from '@/lib/notifications';
+import { ACTION_ICONS } from '@/config/icon-config';
 
 export function ChecklistTracker({ checklistId, reviewId, onUpdate }) {
-  const [items, setItems] = useState([]);
+  const { items, progress, loading, error, addItem, toggleItem, deleteItem, refetch, setError } = useChecklist(checklistId, reviewId);
   const [newItem, setNewItem] = useState('');
-  const [progress, setProgress] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchChecklist();
-  }, [checklistId]);
-
-  const fetchChecklist = async () => {
-    try {
-      const res = await fetch(`/api/mwr/review/${reviewId}/checklists/${checklistId}`);
-      const data = await res.json();
-
-      if (data.success) {
-        setItems(data.checklist.items || []);
-        setProgress(data.progress || 0);
-      }
-    } catch (err) {
-      console.error('Failed to load checklist');
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (loading && !items.length) {
+    return <Skeleton height={300} />;
+  }
 
   const handleToggleItem = async (itemId) => {
     try {
-      const res = await fetch(`/api/mwr/review/${reviewId}/checklists/${checklistId}/items/${itemId}/toggle`, {
-        method: 'PATCH'
-      });
-
-      if (res.ok) {
-        fetchChecklist();
-        if (onUpdate) onUpdate();
-      }
+      await toggleItem(itemId);
+      showSuccess('Item toggled');
+      if (onUpdate) onUpdate();
     } catch (err) {
-      console.error('Failed to update item');
+      showError(err);
+    }
+  };
+
+  const handleDeleteItem = async (itemId) => {
+    try {
+      await deleteItem(itemId);
+      showSuccess('Item deleted');
+      if (onUpdate) onUpdate();
+    } catch (err) {
+      showError(err);
     }
   };
 
   const handleAddItem = async () => {
     if (!newItem.trim()) return;
 
+    setSubmitting(true);
     try {
-      const res = await fetch(`/api/mwr/review/${reviewId}/checklists/${checklistId}/items`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: newItem })
-      });
-
-      if (res.ok) {
-        setNewItem('');
-        fetchChecklist();
-      }
+      await addItem(newItem);
+      showSuccess('Item added');
+      setNewItem('');
+      if (onUpdate) onUpdate();
     } catch (err) {
-      console.error('Failed to add item');
+      showError(err);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -73,25 +61,42 @@ export function ChecklistTracker({ checklistId, reviewId, onUpdate }) {
         <Progress value={progress} color={progress === 100 ? 'green' : 'blue'} />
       </div>
 
+      {error && (
+        <Alert color="red" title="Error" onClose={() => setError(null)}>
+          {error}
+          <Button size="xs" onClick={refetch} mt="xs">Retry</Button>
+        </Alert>
+      )}
+
       <div>
-        <Stack gap="xs">
-          {items.map((item) => (
-            <Group key={item.id} gap="sm">
-              <Checkbox
-                checked={item.is_done}
-                onChange={() => handleToggleItem(item.id)}
-              />
-              <Text
-                style={{
-                  textDecoration: item.is_done ? 'line-through' : 'none',
-                  flex: 1
-                }}
-              >
-                {item.text}
-              </Text>
-            </Group>
-          ))}
-        </Stack>
+        {items.length === 0 ? (
+          <Text c="dimmed" ta="center" py="md">No checklist items yet. Add your first item below.</Text>
+        ) : (
+          <Stack gap="xs">
+            {items.map((item) => (
+              <Group key={item.id} gap="sm" justify="space-between">
+                <Group gap="sm" style={{ flex: 1 }}>
+                  <Checkbox
+                    checked={item.is_done}
+                    onChange={() => handleToggleItem(item.id)}
+                  />
+                  <Text
+                    style={{
+                      textDecoration: item.is_done ? 'line-through' : 'none',
+                      color: item.is_done ? 'var(--mantine-color-gray-5)' : 'inherit',
+                      flex: 1
+                    }}
+                  >
+                    {item.text}
+                  </Text>
+                </Group>
+                <ActionIcon color="red" variant="subtle" onClick={() => handleDeleteItem(item.id)}>
+                  <ACTION_ICONS.delete size={16} />
+                </ActionIcon>
+              </Group>
+            ))}
+          </Stack>
+        )}
       </div>
 
       <Group>
@@ -100,11 +105,12 @@ export function ChecklistTracker({ checklistId, reviewId, onUpdate }) {
           value={newItem}
           onChange={(e) => setNewItem(e.currentTarget.value)}
           style={{ flex: 1 }}
+          disabled={submitting}
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleAddItem();
           }}
         />
-        <Button onClick={handleAddItem} size="sm">
+        <Button onClick={handleAddItem} size="sm" loading={submitting} disabled={!newItem.trim()}>
           Add
         </Button>
       </Group>

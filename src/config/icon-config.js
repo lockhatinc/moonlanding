@@ -47,6 +47,9 @@ import {
   UserCheck,
   Award,
   Folder,
+  Calendar,
+  Star,
+  RefreshCw,
 } from 'lucide-react';
 
 export const ENTITY_ICONS = {
@@ -117,6 +120,10 @@ export const UI_ICONS = {
   columns: Columns,
   rows: Rows,
   gripVertical: GripVertical,
+  users: Users,
+  calendar: Calendar,
+  star: Star,
+  refresh: RefreshCw,
 };
 
 export function getEntityIcon(entityName) {
@@ -188,6 +195,9 @@ const COMPONENT_NAMES = {
   UserCheck,
   Award,
   Folder,
+  Calendar,
+  Star,
+  RefreshCw,
 };
 
 export const Icons = {

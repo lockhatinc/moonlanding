@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Textarea, FileInput, Stack, Text, Alert } from '@mantine/core';
+import { Button, Textarea, FileInput, Stack, Text, Alert, Group } from '@mantine/core';
 
 export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
   const [responseText, setResponseText] = useState('');
@@ -10,8 +10,22 @@ export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const MAX_FILE_SIZE = 25 * 1024 * 1024;
+
   const handleFileChange = (e) => {
-    setFiles(e.currentTarget.files ? Array.from(e.currentTarget.files) : []);
+    const selectedFiles = Array.from(e.currentTarget.files || []);
+    const validFiles = selectedFiles.filter(f => {
+      if (f.size > MAX_FILE_SIZE) {
+        setError(`File ${f.name} exceeds 25MB limit`);
+        return false;
+      }
+      return true;
+    });
+    setFiles(validFiles);
+  };
+
+  const removeFile = (index) => {
+    setFiles(files.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
@@ -48,6 +62,8 @@ export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
       setResponseText('');
       setFiles([]);
 
+      setTimeout(() => setSuccess(''), 3000);
+
       if (onSubmit) onSubmit(data);
     } catch (err) {
       setError(err.message);
@@ -66,14 +82,16 @@ export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
             value={responseText}
             onChange={(e) => setResponseText(e.currentTarget.value)}
             minRows={4}
+            maxLength={5000}
             disabled={loading}
+            description={`${responseText.length}/5000 characters`}
           />
         </div>
 
         <div>
           <Text size="sm" fw={500} mb="xs">Attachments (Optional)</Text>
           <FileInput
-            placeholder="Click to select files"
+            placeholder="Click to select files (Max 25MB per file)"
             icon={null}
             multiple
             onChange={handleFileChange}
@@ -81,9 +99,16 @@ export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
             accept="*"
           />
           {files.length > 0 && (
-            <Text size="xs" mt="xs" c="dimmed">
-              {files.length} file(s) selected
-            </Text>
+            <Stack gap="xs" mt="xs">
+              {files.map((file, i) => (
+                <Group key={i} justify="space-between" p="xs" style={{ backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                  <Text size="sm">{file.name} ({(file.size / 1024 / 1024).toFixed(2)}MB)</Text>
+                  <Button size="xs" color="red" onClick={() => removeFile(i)}>
+                    Remove
+                  </Button>
+                </Group>
+              ))}
+            </Stack>
           )}
         </div>
 

@@ -704,6 +704,53 @@ entities:
     has_pdf_viewer: true
     has_collaboration: true
     has_tender_tracking: true
+    fields:
+      id:
+        type: id
+        required: true
+      name:
+        type: text
+        required: true
+        search: true
+        label: Review Name
+      engagement_id:
+        type: ref
+        ref: engagement
+        required: true
+        label: Engagement
+      status:
+        type: enum
+        default: active
+        label: Status
+      drive_file_id:
+        type: text
+        label: Google Drive File ID
+      financial_year:
+        type: text
+        label: Financial Year
+      team_id:
+        type: ref
+        ref: team
+        label: Team
+      deadline:
+        type: timestamp
+        label: Deadline
+      wip_value:
+        type: decimal
+        precision: 2
+        label: WIP Value
+      is_private:
+        type: bool
+        default: false
+        label: Private Review
+      created_at:
+        type: timestamp
+        required: true
+      updated_at:
+        type: timestamp
+      created_by:
+        type: ref
+        ref: user
     list:
       component: review-list
     detail:
