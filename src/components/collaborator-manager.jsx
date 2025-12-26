@@ -97,10 +97,10 @@ export function CollaboratorManager({ reviewId, onCollaboratorChange, canEdit = 
                 label="Expire in (days)"
                 value={expiryDays}
                 onChange={setExpiryDays}
-                min={1}
+                min={0}
                 max={30}
                 disabled={submitting}
-                placeholder="Leave empty for permanent"
+                placeholder="Leave empty for permanent (0 = permanent access)"
               />
             </Tooltip>
             <Button

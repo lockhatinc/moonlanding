@@ -105,7 +105,7 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
                 </Paper>
               </Tabs.Panel>
               <Tabs.Panel value="collaborators"><CollaboratorManager reviewId={data.id} canEdit={canEdit} /></Tabs.Panel>
-              <Tabs.Panel value="tenders"><TenderTracker /></Tabs.Panel>
+              <Tabs.Panel value="tenders"><TenderTracker reviewId={data.id} tenderId={data.tender_id} /></Tabs.Panel>
               <Tabs.Panel value="priority"><PriorityReviewsSidebar userId={user.id} reviewId={data.id} /></Tabs.Panel>
               <Tabs.Panel value="chat"><ChatPanel entityType="review" entityId={data.id} messages={chatMessages} user={user} onSendMessage={handleSendMessage} /></Tabs.Panel>
             </ScrollArea>

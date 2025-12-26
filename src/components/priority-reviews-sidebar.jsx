@@ -51,7 +51,7 @@ export function PriorityReviewsSidebar({ userId, reviewId, onSelectReview }) {
 
       <Group justify="space-between">
         <Text fw={500} size="sm">PRIORITY REVIEWS ({reviews.length})</Text>
-        <Button size="xs" leftSection={<UI_ICONS.star size={14} />} onClick={() => {}} title="Add priority review">
+        <Button size="xs" leftSection={<UI_ICONS.star size={14} />} onClick={() => {}} title="Add priority review" disabled>
           +
         </Button>
       </Group>
@@ -72,7 +72,6 @@ export function PriorityReviewsSidebar({ userId, reviewId, onSelectReview }) {
               }}
               onClick={() => handleSelectReview(review.id)}
             >
-              <UI_ICONS.gripVertical size={16} style={{ cursor: 'grab' }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <Text size="sm" fw={500} truncate>{review.name}</Text>
                 <Badge size="xs" color={getStatusColor(review.status)}>
