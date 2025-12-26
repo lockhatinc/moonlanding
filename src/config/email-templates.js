@@ -101,6 +101,12 @@ export const EMAIL_TEMPLATES = {
     html: `<h2>Collaborator Access: ${context.review?.name}</h2><ul><li><strong>Review:</strong> ${context.review?.name}</li><li><strong>Type:</strong> ${context.access_type}</li><li><strong>Expires:</strong> ${context.expires_at}</li><li><strong>Added By:</strong> ${context.added_by}</li></ul><p><a href="${context.review_url}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">View Review</a></p>`,
   }),
 
+  collaborator_removed: (context) => ({
+    subject: `Collaborator Access Removed: ${context.review?.name || 'Untitled'}`,
+    body: `Review: ${context.review?.name}\nRemoved By: ${context.removed_by}`,
+    html: `<h2>Collaborator Access Removed</h2><p>Your collaboration access to <strong>${context.review?.name}</strong> has been removed.</p><p>Removed By: ${context.removed_by}</p><p>If you believe this was an error, please contact the review owner.</p>`,
+  }),
+
   collaborator_expiry_7day_warning: (context) => ({
     subject: `Review Collaboration Access Expiring in 7 Days - ${context.review_name || 'Review'}`,
     body: `Hello ${context.collaborator_name},\n\nYour collaboration access to the review "${context.review_name}" will expire in 7 days on ${context.expires_date}.\n\nPlease complete any outstanding work before your access is automatically revoked.\n\nReview: ${context.review_name}\nExpires: ${context.expires_date}\n\nIf you need extended access, please contact the review owner.`,

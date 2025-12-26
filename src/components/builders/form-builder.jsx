@@ -10,6 +10,7 @@ import { buildFormFields } from '@/config';
 import { renderFormField } from '@/lib/rendering-engine';
 import { FormSections } from '@/components/form-sections';
 import { showNotification } from '@/lib/notification-helpers';
+import { validateEntity } from '@/lib/validate';
 
 function SubmitButton({ label, isSubmitting }) {
   const { pending } = useFormStatus();
@@ -18,22 +19,20 @@ function SubmitButton({ label, isSubmitting }) {
 
 export function FormBuilder({ spec, data = {}, options = {}, onSubmit, onSuccess, onError, sections = null }) {
   const router = useRouter();
-  const { values, setValue, errors, setError, hasErrors } = useFormState(spec, data);
+  const { values, setValue, errors, setError, hasErrors, validateFieldOnBlur } = useFormState(spec, data);
   const formFields = useMemo(() => buildFormFields(spec), [spec]);
   const formSections = useMemo(() => sections || spec.form?.sections || [{ label: 'Details', fields: formFields.map(f => f.key) }], [sections, spec, formFields]);
   const { enumSelectData, refSelectData } = useFormSelectData(formFields, spec, options);
 
-  const renderField = (field) => renderFormField(field, values, setValue, enumSelectData, refSelectData);
+  const renderField = (field) => renderFormField(field, values, setValue, enumSelectData, refSelectData, (fieldName) => validateFieldOnBlur(fieldName));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (hasErrors) {
-      const errorMessages = Object.entries(errors)
-        .filter(([, msg]) => msg)
-        .map(([field, msg]) => `${field}: ${msg}`)
-        .join('; ');
-      showNotification.error(errorMessages || 'Please fix all errors before submitting', 'Validation Error');
-      onError?.({ type: 'validation', errors });
+    const validationErrors = await validateEntity(spec, values);
+    if (Object.keys(validationErrors).length > 0) {
+      Object.entries(validationErrors).forEach(([field, error]) => setError(field, error));
+      showNotification.error('Please fix all errors before submitting', 'Validation Error');
+      onError?.({ type: 'validation', errors: validationErrors });
       return;
     }
 

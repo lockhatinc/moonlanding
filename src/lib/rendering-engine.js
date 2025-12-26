@@ -28,11 +28,11 @@ function createSafeRenderer(mode, config = {}) {
   return (...args) => {
     try {
       if (mode === 'form') {
-        const [field, values, setField, enumData, refData] = args;
+        const [field, values, setField, enumData, refData, onBlur] = args;
         const v = values[field.key] ?? '';
-        if (field.type === 'enum') return renderField(field.type, 'form', field, v, setField, enumData);
-        if (field.type === 'ref') return renderField(field.type, 'form', field, v, setField, enumData, refData);
-        return renderField(field.type, 'form', field, v, setField);
+        if (field.type === 'enum') return renderField(field.type, 'form', field, v, setField, enumData, undefined, onBlur);
+        if (field.type === 'ref') return renderField(field.type, 'form', field, v, setField, enumData, refData, onBlur);
+        return renderField(field.type, 'form', field, v, setField, undefined, undefined, onBlur);
       }
       if (mode === 'list') {
         const [value, column, spec, row] = args;

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { get, update, remove } from '@/engine';
+import { get, update } from '@/engine';
 import { withPageAuth } from '@/lib/auth-middleware';
+import { softDeleteHighlight } from '@/lib/highlight-soft-delete';
 
 export async function PATCH(request, { params }) {
   try {
@@ -52,7 +53,7 @@ export async function DELETE(request, { params }) {
       );
     }
 
-    remove('highlight', highlightId, user);
+    softDeleteHighlight(highlightId, user.id);
 
     return NextResponse.json({
       success: true,

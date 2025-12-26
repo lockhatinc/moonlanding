@@ -6,6 +6,32 @@ import { safeJsonParse } from '@/lib/safe-json';
 const logActivity = (t, id, act, msg, u, d) =>
   create('activity_log', { entity_type: t, entity_id: id, action: act, message: msg, details: d ? JSON.stringify(d) : null, user_email: u?.email }, u);
 
+const STAGES = {
+  info_gathering: 0,
+  commencement: 1,
+  team_execution: 2,
+  partner_review: 3,
+  finalization: 4,
+  closeout: 5
+};
+
+function canTransitionStage(fromStage, toStage) {
+  const fromNum = STAGES[fromStage];
+  const toNum = STAGES[toStage];
+
+  if (fromNum === undefined || toNum === undefined) return false;
+  if (fromNum === toNum) return false;
+
+  if (toNum > fromNum) return true;
+
+  if (toNum < fromNum) {
+    if (fromStage === 'finalization' || fromStage === 'closeout') return false;
+    return true;
+  }
+
+  return false;
+}
+
 export const validateStageTransition = (engagement, newStage, user) => {
   const currentStage = engagement.stage;
   const userRole = user.role;

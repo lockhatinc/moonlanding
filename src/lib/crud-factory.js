@@ -323,6 +323,11 @@ export const createCrudHandlers = (entityName) => {
       if (spec.workflow && spec.entityDef?.stages && prev.stage) {
         const stageConfig = spec.entityDef.stages[prev.stage];
         const locks = stageConfig?.locks || [];
+
+        if (prev.stage === 'closeout') {
+          throw new AppError('CloseOut stage is read-only. No edits allowed.', 'FORBIDDEN', HTTP.FORBIDDEN);
+        }
+
         if (locks.includes('all')) {
           throw new AppError(`Stage ${prev.stage} is locked. No edits allowed.`, 'FORBIDDEN', HTTP.FORBIDDEN);
         }

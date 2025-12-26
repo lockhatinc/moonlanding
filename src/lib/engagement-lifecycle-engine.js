@@ -1,5 +1,5 @@
 import { getSpec } from '@/config/spec-helpers';
-import { get, update } from '@/engine';
+import { get, update, list } from '@/engine';
 import { canAccess } from '@/lib/permissions';
 import { getAllEntities } from '@/lib/config-generator-engine';
 
@@ -200,10 +200,25 @@ export function getAvailableTransitions(engagement, user) {
 }
 
 export function getEngagementTransitions(engagementId, limit = 10) {
-  // Returns transition history from activity log
-  // This would fetch from activity_log collection filtered by engagement_id
-  // Placeholder for now - integrate with actual activity logging system
-  return [];
+  const transitions = list('activity_log', {
+    where: {
+      entity_id: engagementId,
+      entity_type: 'engagement',
+      action_type: 'stage_transition'
+    },
+    orderBy: { field: 'timestamp', direction: 'desc' },
+    limit
+  });
+
+  if (!transitions || transitions.length === 0) return [];
+
+  return transitions.map(t => ({
+    from_stage: t.metadata?.from_stage,
+    to_stage: t.metadata?.to_stage,
+    timestamp: t.timestamp,
+    user_id: t.user_id,
+    reason: t.metadata?.reason
+  }));
 }
 
 function logTransition(engagementId, fromStage, toStage, userId, reason) {

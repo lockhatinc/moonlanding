@@ -556,6 +556,8 @@ entities:
     order: 2
     permission_template: standard_auditor
     workflow: engagement_lifecycle
+    row_access:
+      scope: assigned_or_team
     computed_fields:
     - progress
     - daysOutstanding

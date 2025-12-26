@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useLoadingError } from '@/lib/hooks/use-loading-error';
+import { validateField } from './validate';
 
 export const useFormState = (spec, initialData = {}) => {
   const [values, setValues] = useState(initialData);
@@ -22,8 +23,16 @@ export const useFormState = (spec, initialData = {}) => {
     setTouched(prev => ({ ...prev, [field]: true }));
   }, []);
 
+  const validateFieldOnBlur = useCallback(async (fieldName) => {
+    if (!spec?.fields?.[fieldName]) return;
+    touch(fieldName);
+    const error = await validateField(spec, fieldName, values[fieldName]);
+    setError(fieldName, error);
+  }, [spec, values, touch, setError]);
+
   return {
     values, setValue, errors, setError, touched, touch, loading, setLoading,
+    validateFieldOnBlur,
     hasErrors: Object.keys(errors).length > 0,
     getFieldError: (field) => touched[field] ? errors[field] : null,
     reset: () => { setValues(initialData); setErrors({}); setTouched({}); },

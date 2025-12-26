@@ -14,7 +14,7 @@ export async function loadFormOptions(spec) {
             .filter(r => r.status !== 'archived')
             .map(r => ({
               value: r.id,
-              label: `${r.name} (${r.client_name || 'No Client'} - ${r.financial_year || r.year || 'N/A'})`
+              label: `${r.client_name || 'No Client'} - ${r.name} (${r.financial_year || r.year || 'N/A'})`
             }));
         } else {
           options[key] = data.map(r => ({

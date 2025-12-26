@@ -13,6 +13,7 @@ import { serverCreateEntity, serverUpdateEntity } from '@/lib/action-factory';
 import { showNotification } from './notification-helpers';
 import { FormSections } from '@/components/form-sections';
 import { ErrorBoundary } from '@/lib/error-boundary';
+import { validateEntity } from '@/lib/validate';
 
 const ListBuilder = dynamic(() => import('@/components/builders/list-builder').then(m => ({ default: m.ListBuilder })), { loading: () => <Loader />, ssr: false });
 
@@ -23,21 +24,19 @@ function SubmitButton({ label, isSubmitting }) {
 
 function FormMode({ spec, data = {}, options = {}, entityName = null, sections = null }) {
   const { goBack, router } = useNavigation(entityName || spec.name);
-  const { values, setValue, errors, setError, hasErrors } = useFormState(spec, data);
+  const { values, setValue, errors, setError, hasErrors, validateFieldOnBlur } = useFormState(spec, data);
   const formFields = useMemo(() => buildFormFields(spec), [spec]);
   const formSections = useMemo(() => sections || spec.form?.sections || [{ label: 'Details', fields: formFields.map(f => f.key) }], [sections, spec, formFields]);
   const { enumSelectData, refSelectData } = useFormSelectData(formFields, spec, options);
 
-  const renderField = (field) => renderFormField(field, values, setValue, enumSelectData, refSelectData);
+  const renderField = (field) => renderFormField(field, values, setValue, enumSelectData, refSelectData, (fieldName) => validateFieldOnBlur(fieldName));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (hasErrors) {
-      const errorMessages = Object.entries(errors)
-        .filter(([, msg]) => msg)
-        .map(([field, msg]) => `${field}: ${msg}`)
-        .join('; ');
-      showNotification.error(errorMessages || 'Please fix all errors before submitting', 'Validation Error');
+    const validationErrors = await validateEntity(spec, values);
+    if (Object.keys(validationErrors).length > 0) {
+      Object.entries(validationErrors).forEach(([field, error]) => setError(field, error));
+      showNotification.error('Please fix all errors before submitting', 'Validation Error');
       console.error(`${LOG_PREFIXES.validation} Validation errors`);
       return;
     }
