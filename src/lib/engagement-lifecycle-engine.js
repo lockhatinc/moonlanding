@@ -21,6 +21,67 @@ const STAGE_LABELS = {
   closeout: 'Close Out'
 };
 
+function getGateDefinitions(engagement) {
+  return {
+    commencement: {
+      name: 'Engagement Letter',
+      passed: engagement.has_engagement_letter || false,
+      reason: engagement.has_engagement_letter ? 'Ready' : 'Engagement letter required'
+    },
+    team_execution: {
+      name: 'Team Assignment',
+      passed: engagement.has_team || false,
+      reason: engagement.has_team ? 'Ready' : 'Team assignment required'
+    },
+    finalization: {
+      name: 'RFI Responses',
+      passed: engagement.has_rfi_responses || false,
+      reason: engagement.has_rfi_responses ? 'Ready' : 'All RFI responses required'
+    },
+    closeout: {
+      name: 'Closeout Requirements',
+      passed: (engagement.engagement_letter_status === 'accepted' || engagement.progress === 0),
+      reason: engagement.engagement_letter_status === 'accepted' ? 'Accepted' : engagement.progress === 0 ? 'Cancelled' : 'Letter acceptance or cancellation required'
+    }
+  };
+}
+
+export function getTransitionStatus(engagement) {
+  const lockoutMinutes = 5;
+  let inLockout = false;
+  let minutesRemaining = 0;
+
+  if (engagement.last_transition_at) {
+    const lastTime = new Date(engagement.last_transition_at).getTime();
+    const now = new Date().getTime();
+    const elapsedMinutes = (now - lastTime) / 60000;
+
+    if (elapsedMinutes < lockoutMinutes) {
+      inLockout = true;
+      minutesRemaining = Math.ceil(lockoutMinutes - elapsedMinutes);
+    }
+  }
+
+  const failedGates = [];
+  const gateDefinitions = getGateDefinitions(engagement);
+
+  for (const [stage, gate] of Object.entries(gateDefinitions)) {
+    if (!gate.passed) {
+      failedGates.push({
+        stage,
+        name: gate.name,
+        reason: gate.reason
+      });
+    }
+  }
+
+  return {
+    inLockout,
+    minutesRemaining,
+    failedGates
+  };
+}
+
 export function validateStageTransition(engagement, toStage, user) {
   if (!engagement) throw new Error('Engagement not found');
   if (!Object.keys(STAGES).includes(toStage)) throw new Error(`Invalid stage: ${toStage}`);
@@ -39,21 +100,12 @@ export function validateStageTransition(engagement, toStage, user) {
   }
 
   // Validate gates based on target stage
-  const gates = {
-    commencement: () => engagement.has_engagement_letter || false,
-    team_execution: () => engagement.has_team || false,
-    finalization: () => engagement.has_rfi_responses || false,
-    closeout: () => {
-      const letterAccepted = engagement.engagement_letter_status === 'accepted';
-      const cancelled = engagement.progress === 0;
-      return letterAccepted || cancelled;
-    }
-  };
+  const gateDefinitions = getGateDefinitions(engagement);
 
-  if (gates[toStage]) {
-    const gateCheck = gates[toStage]();
-    if (!gateCheck) {
-      throw new Error(`Gate failed for ${toStage}: missing required data`);
+  if (gateDefinitions[toStage]) {
+    const gate = gateDefinitions[toStage];
+    if (!gate.passed) {
+      throw new Error(`Gate failed for ${toStage}: ${gate.reason}`);
     }
   }
 
