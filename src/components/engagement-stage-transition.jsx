@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, Select, Stack, Text, Alert, Badge, Group } from '@mantine/core';
+import { Button, Select, Stack, Text, Alert, Badge, Group, Textarea, Skeleton } from '@mantine/core';
 import { STAGE_LABELS } from '@/lib/engagement-lifecycle-engine';
 
 const STAGE_COLORS = {
@@ -71,6 +71,8 @@ export function EngagementStageTransition({ engagementId, currentStage, onTransi
       setSelected('');
       setReason('');
 
+      setTimeout(() => setSuccess(''), 3000);
+
       if (onTransitionComplete) onTransitionComplete(data.transition);
     } catch (err) {
       setError(err.message);
@@ -78,6 +80,10 @@ export function EngagementStageTransition({ engagementId, currentStage, onTransi
       setSubmitting(false);
     }
   };
+
+  if (loading && !available.length) {
+    return <Skeleton height={150} />;
+  }
 
   return (
     <div className="engagement-stage-transition">
@@ -91,14 +97,14 @@ export function EngagementStageTransition({ engagementId, currentStage, onTransi
           </Group>
         </div>
 
-        {!loading && available.length > 0 ? (
+        {available.length > 0 ? (
           <>
             <Select
               label="Move To Stage"
               placeholder="Select next stage"
               data={available.map(s => ({
                 value: s.stage,
-                label: `${STAGE_LABELS[s.stage]}${s.forward ? ' ↓' : ' ↑'}`
+                label: `${STAGE_LABELS[s.stage]} ${s.forward ? '(Forward)' : '(Backward)'}`
               }))}
               value={selected}
               onChange={setSelected}
@@ -106,12 +112,13 @@ export function EngagementStageTransition({ engagementId, currentStage, onTransi
               searchable
             />
 
-            <textarea
-              placeholder="Reason for transition (optional)"
+            <Textarea
+              label="Transition Reason (optional)"
+              placeholder="Explain why you're making this transition..."
               value={reason}
               onChange={(e) => setReason(e.currentTarget.value)}
               disabled={submitting}
-              style={{ padding: '8px', minHeight: '80px', fontFamily: 'monospace' }}
+              minRows={2}
             />
 
             {error && <Alert color="red">{error}</Alert>}
@@ -126,7 +133,12 @@ export function EngagementStageTransition({ engagementId, currentStage, onTransi
             </Button>
           </>
         ) : (
-          <Alert color="blue">No available stage transitions</Alert>
+          <Alert color="yellow" title="No Transitions Available">
+            <Text size="sm">
+              The engagement cannot transition from <Badge>{STAGE_LABELS[currentStage]}</Badge> at this time.
+              All validation gates must pass before transitioning. Wait 5 minutes between transitions.
+            </Text>
+          </Alert>
         )}
       </Stack>
     </div>

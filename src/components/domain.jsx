@@ -3,7 +3,7 @@
 import { useState, useMemo, Suspense, lazy } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { Stack, Group, Box, Title, Tabs, Grid, ScrollArea, Paper, Badge, Text, ActionIcon, Button } from '@mantine/core';
+import { Stack, Group, Box, Title, Tabs, Grid, ScrollArea, Paper, Badge, Text, ActionIcon, Button, Modal, Skeleton } from '@mantine/core';
 import { ACTION_ICONS, UI_ICONS } from '@/config/icon-config';
 import { FieldRender } from './field-render';
 import { HighlightLayer } from './highlight-layer';
@@ -37,6 +37,7 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
   const router = useRouter();
   const [selectedHighlight, setSelectedHighlight] = useState(null);
   const [showAddChecklistDialog, setShowAddChecklistDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { handleHighlight, handleResolve, handleAddResponse, handleSendMessage } = useReviewHandlers(data.id);
 
   const highlights = children.highlights || [];
@@ -61,7 +62,7 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
         <Group>
           {canEdit && <Button variant="outline" leftSection={<ACTION_ICONS.checklist size={16} />} onClick={() => setShowAddChecklistDialog(true)}>Add Checklist</Button>}
           {canEdit && <Button variant="outline" leftSection={<ACTION_ICONS.edit size={16} />} onClick={() => router.push(`/review/${data.id}/edit`)}>Edit</Button>}
-          {canDelete && deleteAction && <form action={deleteAction}><Button type="submit" color="red" leftSection={<ACTION_ICONS.delete size={16} />}>Delete</Button></form>}
+          {canDelete && <Button color="red" leftSection={<ACTION_ICONS.delete size={16} />} onClick={() => setShowDeleteConfirm(true)}>Delete</Button>}
         </Group>
       </Group>
       <Grid gutter="md">
@@ -71,13 +72,13 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
         <Grid.Col span={{ base: 12, lg: 4 }}>
           <Tabs defaultValue="queries" h="calc(100vh - 200px)">
             <Tabs.List>
-              <Tabs.Tab value="queries" leftSection={<UI_ICONS.messageSquare size={14} />}>Highlights</Tabs.Tab>
+              <Tabs.Tab value="queries" leftSection={<UI_ICONS.messageSquare size={14} />} rightSection={<Badge size="sm">{highlights.length}</Badge>}>Highlights</Tabs.Tab>
               <Tabs.Tab value="details" leftSection={<UI_ICONS.file size={14} />}>Details</Tabs.Tab>
-              <Tabs.Tab value="checklists" leftSection={<ACTION_ICONS.checklist size={14} />}>Checklists</Tabs.Tab>
+              <Tabs.Tab value="checklists" leftSection={<ACTION_ICONS.checklist size={14} />} rightSection={<Badge size="sm">{checklists.length}</Badge>}>Checklists</Tabs.Tab>
               <Tabs.Tab value="collaborators" leftSection={<UI_ICONS.users size={14} />}>Collaborators</Tabs.Tab>
               <Tabs.Tab value="tenders" leftSection={<UI_ICONS.calendar size={14} />}>Tenders</Tabs.Tab>
               <Tabs.Tab value="priority" leftSection={<UI_ICONS.star size={14} />}>Priority</Tabs.Tab>
-              <Tabs.Tab value="chat">Chat</Tabs.Tab>
+              <Tabs.Tab value="chat" rightSection={<Badge size="sm">{chatMessages.length}</Badge>}>Chat</Tabs.Tab>
             </Tabs.List>
             <ScrollArea h="calc(100% - 40px)" pt="md">
               <Tabs.Panel value="queries"><HighlightLayer highlights={highlights} selectedId={selectedHighlight} onSelect={setSelectedHighlight} onResolve={handleResolve} onAddResponse={handleAddResponse} user={user} canResolve={canEdit} /></Tabs.Panel>
@@ -112,6 +113,26 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
         </Grid.Col>
       </Grid>
       {showAddChecklistDialog && <AddChecklistDialog review={data} onClose={() => setShowAddChecklistDialog(false)} onSuccess={() => { setShowAddChecklistDialog(false); router.refresh(); }} />}
+
+      <Modal
+        opened={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        title="Delete Review"
+      >
+        <Text mb="md">Delete review <strong>"{data.name}"</strong>? This action cannot be undone.</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setShowDeleteConfirm(false)}>
+            Cancel
+          </Button>
+          {deleteAction && (
+            <form action={deleteAction} style={{ display: 'inline' }}>
+              <Button type="submit" color="red">
+                Delete
+              </Button>
+            </form>
+          )}
+        </Group>
+      </Modal>
     </Stack>
   );
 }
