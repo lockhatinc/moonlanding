@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Stack, Button, Badge, Group, Text, ActionIcon, Tooltip } from '@mantine/core';
-import { GripVertical, X } from 'tabler-icons-react';
+import { UI_ICONS, ACTION_ICONS } from '@/config/icon-config';
+import { X } from 'lucide-react';
 
 export function PriorityReviewsSidebar({ userId, onSelectReview }) {
   const [reviews, setReviews] = useState([]);
@@ -59,7 +60,7 @@ export function PriorityReviewsSidebar({ userId, onSelectReview }) {
             }}
             onClick={() => onSelectReview(review.id)}
           >
-            <GripVertical size={16} />
+            <UI_ICONS.gripVertical size={16} />
             <div style={{ flex: 1 }}>
               <Text size="sm" fw={500}>{review.name}</Text>
               <Badge size="xs" color={getStatusColor(review.status)}>

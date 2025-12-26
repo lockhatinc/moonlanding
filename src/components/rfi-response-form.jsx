@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Button, Textarea, FileInput, Stack, Text, Alert } from '@mantine/icons';
+import { Button, Textarea, FileInput, Stack, Text, Alert } from '@mantine/core';
 
 export function RFIResponseForm({ rfiId, engagementId, onSubmit, isClient }) {
   const [responseText, setResponseText] = useState('');

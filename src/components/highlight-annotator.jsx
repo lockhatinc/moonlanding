@@ -2,8 +2,8 @@
 
 import { useState, useRef } from 'react';
 import { Button, Stack, Textarea, Group, ColorPicker, Badge, ActionIcon } from '@mantine/core';
-import { HIGHLIGHT_PALETTE } from '@/lib/mwr-core-engines';
-import { Trash2 } from 'tabler-icons-react';
+import { HIGHLIGHT_PALETTE } from '@/config/constants';
+import { ACTION_ICONS } from '@/config/icon-config';
 
 export function HighlightAnnotator({ reviewId, highlightId, onSave, onDelete, isEditing = false }) {
   const [comment, setComment] = useState('');
@@ -110,7 +110,7 @@ export function HighlightAnnotator({ reviewId, highlightId, onSave, onDelete, is
               onClick={handleDelete}
               disabled={loading}
             >
-              <Trash2 size={16} />
+              <ACTION_ICONS.delete size={16} />
             </ActionIcon>
           )}
         </Button.Group>

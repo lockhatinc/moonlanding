@@ -9,6 +9,12 @@ import { FieldRender } from './field-render';
 import { HighlightLayer } from './highlight-layer';
 import { useReviewHandlers } from '@/lib/use-review-handlers';
 import { getStatusColor } from '@/config/theme-config';
+import { CollaboratorManager } from './collaborator-manager';
+import { ChecklistTracker } from './checklist-tracker';
+import { TenderTracker } from './tender-tracker';
+import { PriorityReviewsSidebar } from './priority-reviews-sidebar';
+import { RFIResponseForm } from './rfi-response-form';
+import { HighlightAnnotator } from './highlight-annotator';
 
 const AddChecklistDialog = dynamic(() => import('./dialogs/add-checklist').then(m => ({ default: m.AddChecklistDialog })), { loading: () => <div>Loading...</div>, ssr: false });
 const ChatPanel = dynamic(() => import('./chat-panel').then(m => ({ default: m.ChatPanel })), { loading: () => <div>Loading...</div>, ssr: false });
@@ -65,9 +71,12 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
         <Grid.Col span={{ base: 12, lg: 4 }}>
           <Tabs defaultValue="queries" h="calc(100vh - 200px)">
             <Tabs.List>
-              <Tabs.Tab value="queries" leftSection={<UI_ICONS.messageSquare size={14} />}>Queries</Tabs.Tab>
+              <Tabs.Tab value="queries" leftSection={<UI_ICONS.messageSquare size={14} />}>Highlights</Tabs.Tab>
               <Tabs.Tab value="details" leftSection={<UI_ICONS.file size={14} />}>Details</Tabs.Tab>
               <Tabs.Tab value="checklists" leftSection={<ACTION_ICONS.checklist size={14} />}>Checklists</Tabs.Tab>
+              <Tabs.Tab value="collaborators" leftSection={<UI_ICONS.users size={14} />}>Collaborators</Tabs.Tab>
+              <Tabs.Tab value="tenders" leftSection={<UI_ICONS.calendar size={14} />}>Tenders</Tabs.Tab>
+              <Tabs.Tab value="priority" leftSection={<UI_ICONS.star size={14} />}>Priority</Tabs.Tab>
               <Tabs.Tab value="chat">Chat</Tabs.Tab>
             </Tabs.List>
             <ScrollArea h="calc(100% - 40px)" pt="md">
@@ -94,6 +103,9 @@ export function ReviewDetail({ spec, data, children = {}, user, canEdit = false,
                   )}
                 </Paper>
               </Tabs.Panel>
+              <Tabs.Panel value="collaborators"><CollaboratorManager reviewId={data.id} canEdit={canEdit} /></Tabs.Panel>
+              <Tabs.Panel value="tenders"><TenderTracker /></Tabs.Panel>
+              <Tabs.Panel value="priority"><PriorityReviewsSidebar userId={user.id} reviewId={data.id} /></Tabs.Panel>
               <Tabs.Panel value="chat"><ChatPanel entityType="review" entityId={data.id} messages={chatMessages} user={user} onSendMessage={handleSendMessage} /></Tabs.Panel>
             </ScrollArea>
           </Tabs>
