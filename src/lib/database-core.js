@@ -4,6 +4,7 @@ import fs from 'fs';
 import { specs } from '@/config/spec-helpers';
 import { SQL_TYPES } from '@/config/data-constants';
 import { forEachField } from '@/lib/field-iterator';
+import { getConfigEngineSync } from '@/lib/config-generator-engine';
 import { nanoid } from 'nanoid';
 
 const DB_PATH = path.resolve(process.cwd(), 'data', 'app.db');
@@ -26,21 +27,20 @@ export const migrate = () => {
 
   db.exec(`CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id))`);
 
-  const specsToUse = Object.keys(specs).length > 0 ? specs : (() => {
+  let specsToUse = specs;
+  if (Object.keys(specs).length === 0) {
     try {
-      const { getConfigEngineSync } = require('@/lib/config-generator-engine');
       const engine = getConfigEngineSync();
-      const allSpecs = {};
+      specsToUse = {};
       for (const entityName of engine.getAllEntities()) {
-        allSpecs[entityName] = engine.generateEntitySpec(entityName);
+        specsToUse[entityName] = engine.generateEntitySpec(entityName);
       }
-      console.log(`[Database] Generated ${Object.keys(allSpecs).length} specs from ConfigEngine`);
-      return allSpecs;
+      console.log(`[Database] Generated ${Object.keys(specsToUse).length} specs from ConfigEngine`);
     } catch (e) {
       console.error('[Database] Failed to get specs from ConfigEngine during migration:', e.message);
-      return specs;
+      specsToUse = specs;
     }
-  })();
+  }
 
   for (const spec of Object.values(specsToUse)) {
     if (!spec) continue;
