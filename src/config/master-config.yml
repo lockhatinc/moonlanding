@@ -587,17 +587,20 @@ entities:
         type: text
         required: true
         search: true
+        list: true
         label: Engagement Name
       client_id:
         type: ref
         ref: client
         required: true
         search: true
+        list: true
         label: Client
       year:
         type: number
         required: true
         search: true
+        list: true
         label: Year
       status:
         type: text
@@ -611,6 +614,7 @@ entities:
         type: enum
         default: info_gathering
         required: true
+        list: true
         label: Stage
       progress:
         type: number

@@ -208,30 +208,47 @@
 
 **Therefore:** Code-level verification completed (all implementations present), but runtime behavior NOT validated. This is a critical gap.
 
+#### Latest Fixes (2025-12-27 Session 2)
+
+**Table Rendering Fixed:**
+- Added `list: true` to engagement entity fields (name, client_id, year, stage) in master-config.yml
+- Engagement list now renders with 6 rows, proper headers, all columns visible
+- Table buttons clickable (navigation working when not UI-automated)
+
+**Child Entity Loading Fixed:**
+- Updated batchGetChildren() in query-engine.js to handle array-style children specs
+- Converts simple string array ['rfi', 'review', ...] to proper [key, {entity: name}] format
+- Resolves EntitySpec type error that was blocking detail page loads
+
+**Database Schema Gap Identified (Infrastructure Issue):**
+- SQLite tables exist but with incomplete fields
+- RFI table missing engagement_id FK (and other fields)
+- Tables created before spec fields were fully added to master-config
+- Detail page fails when trying to load rfi children due to missing FK: `no such column: rfi.engagement_id`
+- **This is NOT a business logic issue** - the code to fetch children is correct
+- **This IS an infrastructure/schema issue** - database needs migration with ALTER TABLE ADD COLUMN
+
 #### Remaining Work (Priority Order)
 
-1. **CRITICAL - Make UI automatable** (2-4 hours)
-   - Debug virtualized table event handlers
-   - Or switch to simple (non-virtualized) table rendering for testability
-   - Enable end-to-end testing via Playwright
+1. **CRITICAL - Fix database schema** (2-3 hours)
+   - Drop/recreate tables OR run ALTER TABLE ADD COLUMN for missing FKs
+   - Regenerate FTS tables
+   - Unblock detail page rendering
 
-2. **HIGH - Setup database testing** (1 hour)
-   - Install sqlite3 or use Node.js sqlite wrapper
-   - Enable direct database verification of business logic
+2. **HIGH - End-to-end testing via API** (6-8 hours, no UI dependency)
+   - Test engagement lifecycle stage transitions
+   - Test RFI dual-state logic
+   - Test highlight soft-delete audit trail
+   - Test recreation rollback on failure
+   - Test permission enforcement via API POST/PATCH/DELETE
+   - Test notification triggers
+   - Test database cleanup triggers
 
-3. **HIGH - Test each business rule** (8-12 hours)
-   - Engagement lifecycle stage transitions
-   - RFI dual-state logic
-   - Highlight soft-delete audit trail
-   - Recreation rollback on failure
-   - Permission enforcement (CloseOut read-only, team scope, etc.)
-   - Notification triggers
-   - Database cleanup triggers
-
-4. **MEDIUM - Fix config architecture** (2-4 hours)
+3. **MEDIUM - Fix config architecture** (2-4 hours)
    - Move dynamic config loading to build-time or cache layer
    - Eliminate "Config engine not available" warnings
 
-5. **LOW - Document final state** (1 hour)
-   - Update CLAUDE.md with tested vs untested status
-   - Create testing checklist for future validation
+4. **LOW - UI end-to-end testing** (4-6 hours, if UI automation fixed)
+   - Debug/fix virtualized table event handlers
+   - Or implement non-virtualized table option for testing
+   - Add E2E test suite

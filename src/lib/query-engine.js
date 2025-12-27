@@ -181,10 +181,11 @@ export const getChildren = (parentEntity, parentId, childDef) => {
 };
 
 export const batchGetChildren = (parentEntity, parentId, childSpecs) => {
-  const childEntries = Array.isArray(childSpecs) ? childSpecs : Object.entries(childSpecs);
+  const childEntries = Array.isArray(childSpecs) ? childSpecs.map(s => [s, { entity: s }]) : Object.entries(childSpecs);
   const queries = childEntries.map(async ([key, def]) => {
+    const entity = def.entity || def;
     const foreignKey = def.foreignKey || `${parentEntity}_id`;
-    const results = list(def.entity, { [foreignKey]: parentId });
+    const results = list(entity, { [foreignKey]: parentId });
     return [key, results];
   });
   return Promise.all(queries).then(results => Object.fromEntries(results));
