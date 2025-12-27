@@ -91,13 +91,13 @@ const _ENGAGEMENT_STAGE_FALLBACK = {
   TEAM_EXECUTION: 'team_execution',
   PARTNER_REVIEW: 'partner_review',
   FINALIZATION: 'finalization',
-  CLOSE_OUT: 'close_out',
+  CLOSEOUT: 'closeout',
   info_gathering: 'info_gathering',
   commencement: 'commencement',
   team_execution: 'team_execution',
   partner_review: 'partner_review',
   finalization: 'finalization',
-  close_out: 'close_out',
+  closeout: 'closeout',
 };
 
 const _REVIEW_STATUS_FALLBACK = {
@@ -209,5 +209,5 @@ export const STAGE_TRANSITIONS = {
   'commencement': 'team_execution',
   'team_execution': 'partner_review',
   'partner_review': 'finalization',
-  'finalization': 'close_out'
+  'finalization': 'closeout'
 };

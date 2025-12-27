@@ -27,7 +27,7 @@ export const THEME = {
     'engagement_stage.team_execution': 'amber',
     'engagement_stage.partner_review': 'amber',
     'engagement_stage.finalization': 'green',
-    'engagement_stage.close_out': 'green',
+    'engagement_stage.closeout': 'green',
 
     'review_status.open': 'yellow',
     'review_status.closed': 'green',

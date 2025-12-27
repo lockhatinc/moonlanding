@@ -60,5 +60,5 @@ export const ENGAGEMENT_STAGE_OPTIONS = {
   team_execution: { label: 'Team Execution', color: 'amber' },
   partner_review: { label: 'Partner Review', color: 'amber' },
   finalization: { label: 'Finalization', color: 'green' },
-  close_out: { label: 'Close Out', color: 'green' },
+  closeout: { label: 'Close Out', color: 'green' },
 };
