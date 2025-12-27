@@ -72,7 +72,7 @@ export const registerEntityHandlers = () => {
           await queueEmail('engagement_finalization', { engagement, recipients: 'client_admin' });
           await activateWorkflowsForStage(engagement.id, 'finalization', user);
         },
-        close_out: () => {
+        closeout: () => {
           if (engagement.letter_auditor_status !== 'accepted' && engagement.progress > 0)
             throw new Error('Cannot close out: Letter must be accepted or progress must be 0%');
         },

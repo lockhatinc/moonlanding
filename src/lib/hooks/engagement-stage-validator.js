@@ -121,7 +121,7 @@ export async function validateEngagementStageTransition(context) {
   }
 
   // Validate backward transitions with date constraints
-  const stageOrder = ['info_gathering', 'commencement', 'team_execution', 'partner_review', 'finalization', 'close_out'];
+  const stageOrder = ['info_gathering', 'commencement', 'team_execution', 'partner_review', 'finalization', 'closeout'];
   const fromIndex = stageOrder.indexOf(fromStage);
   const toIndex = stageOrder.indexOf(toStage);
   const isBackwardTransition = toIndex < fromIndex;
@@ -211,7 +211,7 @@ export async function validateEngagementStageTransition(context) {
     }
   }
 
-  if (toStage === 'close_out') {
+  if (toStage === 'closeout') {
     if (!isPartner) {
       logPermissionDenial(id, fromStage, toStage, user, 'partner_exclusive', {
         user_role: userRole

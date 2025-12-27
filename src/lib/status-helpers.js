@@ -67,7 +67,7 @@ export const ENGAGEMENT_STAGE = {
   TEAM_EXECUTION: 'team_execution',
   PARTNER_REVIEW: 'partner_review',
   FINALIZATION: 'finalization',
-  CLOSE_OUT: 'close_out'
+  CLOSE_OUT: 'closeout'
 };
 
 export const STAGE_TRANSITIONS = {
@@ -75,7 +75,7 @@ export const STAGE_TRANSITIONS = {
   'commencement': 'team_execution',
   'team_execution': 'partner_review',
   'partner_review': 'finalization',
-  'finalization': 'close_out'
+  'finalization': 'closeout'
 };
 
 export const RFI_CLIENT_STATUS = {

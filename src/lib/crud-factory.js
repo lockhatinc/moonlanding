@@ -324,7 +324,7 @@ export const createCrudHandlers = (entityName) => {
         const stageConfig = spec.entityDef.stages[prev.stage];
         const locks = stageConfig?.locks || [];
 
-        if (prev.stage === 'close_out') {
+        if (prev.stage === 'closeout') {
           throw new AppError('CloseOut stage is read-only. No edits allowed.', 'FORBIDDEN', HTTP.FORBIDDEN);
         }
 
