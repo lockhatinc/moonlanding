@@ -678,6 +678,12 @@ entities:
         activates_at_stage: finalization
     state_machine: true
     has_notifications: true
+    fields:
+      engagement_id:
+        type: ref
+        ref: engagement
+        required: true
+        description: Parent engagement
     field_overrides:
       response_count:
         type: number
@@ -774,6 +780,12 @@ entities:
     immutable_strategy: move_to_archive
     has_color_palette: true
     has_position_data: true
+    fields:
+      review_id:
+        type: ref
+        ref: review
+        required: true
+        description: Parent review
     field_overrides:
       status:
         type: enum
@@ -818,6 +830,12 @@ entities:
     order: 10.5
     permission_template: review_collaboration
     parent: highlight
+    fields:
+      highlight_id:
+        type: ref
+        ref: highlight
+        required: true
+        description: Parent highlight
     field_overrides:
       text:
         type: text
@@ -850,6 +868,11 @@ entities:
       id:
         type: id
         required: true
+      review_id:
+        type: ref
+        ref: review
+        required: true
+        description: Parent review
       email:
         type: text
         label: Email
@@ -889,6 +912,12 @@ entities:
     parent: review
     auto_complete_when: all_items_done
     has_pdf_generation: true
+    fields:
+      review_id:
+        type: ref
+        ref: review
+        required: true
+        description: Parent review
     children:
     - checklist_item
   checklist_item:
@@ -1054,6 +1083,12 @@ entities:
     order: 6
     permission_template: admin_only
     parent: client
+    fields:
+      client_id:
+        type: ref
+        ref: client
+        required: true
+        description: Parent client
     linked_entity: user
   tender:
     label: Tender
@@ -1154,6 +1189,12 @@ entities:
     order: 9
     permission_template: standard_auditor
     parent: engagement
+    fields:
+      engagement_id:
+        type: ref
+        ref: engagement
+        required: true
+        description: Parent engagement
     document_type: engagement_letter
     has_google_drive_integration: true
     has_template_variables: true
@@ -1164,6 +1205,12 @@ entities:
     order: 13
     permission_template: standard_auditor
     parent: engagement
+    fields:
+      engagement_id:
+        type: ref
+        ref: engagement
+        required: true
+        description: Parent engagement
     children:
     - rfi
   flag:
@@ -1173,6 +1220,12 @@ entities:
     order: 14
     permission_template: review_collaboration
     parent: review
+    fields:
+      review_id:
+        type: ref
+        ref: review
+        required: true
+        description: Parent review
     flag_types:
     - review_comment
     - highlight
@@ -1184,6 +1237,12 @@ entities:
     order: 15
     permission_template: client_response
     parent: rfi
+    fields:
+      rfi_id:
+        type: ref
+        ref: rfi
+        required: true
+        description: Parent RFI
     has_email_integration: true
   file:
     label: File
@@ -1197,6 +1256,11 @@ entities:
       id:
         type: id
         required: true
+      rfi_id:
+        type: ref
+        ref: rfi
+        required: true
+        description: Parent RFI
       path:
         type: text
         label: File Path
