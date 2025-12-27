@@ -853,6 +853,47 @@ entities:
         type: ref
         ref: highlight_comment
 
+  removedHighlight:
+    label: Removed Highlight
+    label_plural: Removed Highlights
+    icon: Trash
+    order: 10.6
+    permission_template: partner_only
+    immutable: true
+    fields:
+      review_id:
+        type: ref
+        ref: review
+        required: true
+        description: Parent review
+      original_id:
+        type: text
+        required: true
+        description: Original highlight ID
+    field_overrides:
+      deleted_at:
+        type: timestamp
+        required: true
+      deleted_by:
+        type: ref
+        ref: user
+        required: true
+      archived_by:
+        type: ref
+        ref: user
+      resolution_notes:
+        type: text
+      color:
+        type: enum
+        options:
+        - grey
+        - green
+        - red
+        - purple
+      is_high_priority:
+        type: bool
+        default: false
+
   collaborator:
     label: Collaborator
     label_plural: Collaborators
