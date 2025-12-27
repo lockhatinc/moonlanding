@@ -179,4 +179,9 @@
 - **RFI response counting:** Auto-incremented via post-create hook when rfi_response entity is created.
 - **Highlight comments:** Support threaded comments via parent_comment_id field. Requires highlight entity as parent.
 - **Firebase Admin SDK:** Gracefully handles missing configuration. Returns 503 Service Unavailable if Firebase not initialized. MWR Bridge endpoint depends on firebase-admin package.
-- **Testing:** All 39 business rules + 8 edge cases validated via parallel test suite (Playwright browser tests + code analysis). Zero stubs/mocks detected. Full spec compliance achieved (P_a ≥ 0.99).
+### Real Issues Discovered (2025-12-27 Testing)
+
+- **Catch-all routing:** `[entity]` pages intercept static files (/icon-*.png, /manifest.json) and throw 500 errors for unregistered entities. Fixed with notFound() error boundary in page wrappers. Static assets now return 404 instead.
+- **Config loading client-side:** ConfigGeneratorEngine runs in browser context but cannot load dynamic imports. Logs "[Config engine not available, using fallback enums]" on every page load. Not blocking but indicates config architecture issue. Client-side config lookup is not suitable for dynamic entity specs.
+- **Virtual table rendering:** Engagement table renders 6 rows but Playwright cannot click buttons. Likely virtualized list or event handler issues. UI functional but not automatable in current state.
+- **Testing assertion:** Full end-to-end feature testing NOT completed due to UI interaction constraints. Code-level analysis shows all implementations present. Runtime behavior not validated.
