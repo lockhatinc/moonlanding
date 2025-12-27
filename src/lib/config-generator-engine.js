@@ -972,8 +972,8 @@ export function getConfigEngineSync() {
       g.__configEngine__ = new ConfigGeneratorEngine(config);
       console.log('[ConfigGeneratorEngine] Lazy-initialized from master-config.yml');
     } catch (error) {
-      console.error('[ConfigGeneratorEngine] Failed to lazy-initialize:', error.message);
-      throw new Error('[ConfigGeneratorEngine] Engine not initialized. ' + error.message);
+      console.error('[ConfigGeneratorEngine] Lazy-init failed:', error instanceof Error ? error.stack : error);
+      throw error;
     }
   }
   return g.__configEngine__;
