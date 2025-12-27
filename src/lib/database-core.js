@@ -18,17 +18,14 @@ db.pragma(`busy_timeout = ${BUSY_TIMEOUT_MS}`);
 db.pragma('synchronous = NORMAL');
 db.pragma('foreign_keys = ON');
 
-export const getDatabase = () => db;
-export const genId = () => nanoid();
-export const now = () => Math.floor(Date.now() / 1000);
-
 export const migrate = () => {
+  console.error('[Database] ===== MIGRATE CALLED =====');
   console.log('[Database] Running migration...');
-
-  db.exec(`CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id))`);
+  console.log('[Database] Initial specs count:', Object.keys(specs).length);
 
   let specsToUse = specs;
   if (Object.keys(specs).length === 0) {
+    console.log('[Database] Specs is empty, loading from ConfigEngine...');
     try {
       const engine = getConfigEngineSync();
       specsToUse = {};
@@ -40,7 +37,10 @@ export const migrate = () => {
       console.error('[Database] Failed to get specs from ConfigEngine during migration:', e.message);
       specsToUse = specs;
     }
+  } else {
+    console.log('[Database] Using pre-loaded specs:', Object.keys(specsToUse).length);
   }
+  console.log('[Database] Final specs count:', Object.keys(specsToUse).length);
 
   for (const spec of Object.values(specsToUse)) {
     if (!spec) continue;
@@ -101,5 +101,24 @@ export const migrate = () => {
     }
   }
 
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at INTEGER NOT NULL, FOREIGN KEY (user_id) REFERENCES users(id))`);
+  } catch (e) {
+    console.error('[Database] Sessions table creation failed:', e.message);
+    throw e;
+  }
+
   console.log('[Database] Migration complete');
 };
+
+let migrationComplete = false;
+export const getDatabase = () => {
+  if (!migrationComplete) {
+    migrate();
+    migrationComplete = true;
+  }
+  return db;
+};
+
+export const genId = () => nanoid();
+export const now = () => Math.floor(Date.now() / 1000);
