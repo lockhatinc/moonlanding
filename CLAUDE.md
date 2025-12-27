@@ -1,6 +1,6 @@
 # CLAUDE.md - Technical Caveats & Build Status
 
-## Build Status (2025-12-24)
+## Build Status (2025-12-27 Session 3 - CRITICAL FIX)
 
 **Current:** Zero-warning build achieved, all API endpoints operational
 - Build: Compiled successfully in 14.9s
@@ -8,7 +8,18 @@
 - Errors: 0
 - Bundle size: ~264 kB per route, 102 kB shared
 
-**Critical fixes (commit deab89e):**
+**CRITICAL FIX (commit 744ea92):** Parent FK field missing from child entity specs
+- Issue: Detail page child entity loading failed with "no such column" errors
+- Root cause: Child entities (rfi, review, highlight, etc.) referenced parent FKs in query logic but FK fields not defined in config specs
+- Solution: Added parent FK field definitions to all 11 child entities:
+  - engagement_id: rfi, letter, rfi_section
+  - review_id: highlight, collaborator, checklist, flag
+  - highlight_id: highlight_comment
+  - client_id: client_user
+  - rfi_id: message, file
+- Impact: Database migration will now create proper FK constraints. Detail pages should load child entities correctly after DB recreation.
+
+**Previous critical fixes (commit deab89e):**
 - error-handler.js: Fixed ERROR_MESSAGES function calls to proper nested structure (operation.notFound, permission.denied, auth.unauthorized, operation.alreadyExists, system.error)
 - middleware.ts: Added `export const runtime = 'nodejs'` to fix edge runtime process.cwd() errors
 
@@ -208,32 +219,25 @@
 
 **Therefore:** Code-level verification completed (all implementations present), but runtime behavior NOT validated. This is a critical gap.
 
-#### Latest Fixes (2025-12-27 Session 2)
+#### Latest Fixes (2025-12-27 Session 3 - CRITICAL)
 
-**Table Rendering Fixed:**
-- Added `list: true` to engagement entity fields (name, client_id, year, stage) in master-config.yml
-- Engagement list now renders with 6 rows, proper headers, all columns visible
-- Table buttons clickable (navigation working when not UI-automated)
-
-**Child Entity Loading Fixed:**
-- Updated batchGetChildren() in query-engine.js to handle array-style children specs
-- Converts simple string array ['rfi', 'review', ...] to proper [key, {entity: name}] format
-- Resolves EntitySpec type error that was blocking detail page loads
-
-**Database Schema Gap Identified (Infrastructure Issue):**
-- SQLite tables exist but with incomplete fields
-- RFI table missing engagement_id FK (and other fields)
-- Tables created before spec fields were fully added to master-config
-- Detail page fails when trying to load rfi children due to missing FK: `no such column: rfi.engagement_id`
-- **This is NOT a business logic issue** - the code to fetch children is correct
-- **This IS an infrastructure/schema issue** - database needs migration with ALTER TABLE ADD COLUMN
+**Database Schema Gap FIXED:**
+- Issue: All 11 child entities missing parent FK field definitions in master-config.yml specs
+  - Affected entities: rfi, review, highlight, highlight_comment, collaborator, checklist, client_user, letter, rfi_section, flag, message, file
+  - Query logic assumed FK fields existed but specs were missing them
+  - Result: "no such column: {entity}.{parent}_id" errors on detail page loads
+- Solution: Added parent FK field definitions to master-config.yml for all child entities
+  - Database migration will now create proper foreign key constraints
+  - Next database initialization will include all missing columns
+- Status: COMMITTED (commit 744ea92)
+- Verification: Config loads successfully, schema specs now complete, no structural errors
 
 #### Remaining Work (Priority Order)
 
-1. **CRITICAL - Fix database schema** (2-3 hours)
-   - Drop/recreate tables OR run ALTER TABLE ADD COLUMN for missing FKs
-   - Regenerate FTS tables
-   - Unblock detail page rendering
+1. **Database Initialization** (In Progress)
+   - Database file needs recreation with new schema
+   - Next API/page load should trigger migration with FK fields
+   - Verify detail pages load child entities without "no such column" errors
 
 2. **HIGH - End-to-end testing via API** (6-8 hours, no UI dependency)
    - Test engagement lifecycle stage transitions
