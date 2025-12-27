@@ -1,50 +1,61 @@
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return (text || '').replace(/[&<>"']/g, m => map[m]);
+}
+
 export const EMAIL_TEMPLATES = {
   engagement_created: (context) => ({
-    subject: `New Engagement: ${context.record?.title || 'Untitled'}`,
-    body: `A new engagement has been created. Details: Title: ${context.record?.title}, Created: ${new Date().toISOString()}`,
-    html: `<p>A new engagement has been created.</p><p><strong>${context.record?.title}</strong></p>`,
+    subject: `New Engagement: ${escapeHtml(context.record?.title || 'Untitled')}`,
+    body: `A new engagement has been created. Details: Title: ${escapeHtml(context.record?.title)}, Created: ${new Date().toISOString()}`,
+    html: `<p>A new engagement has been created.</p><p><strong>${escapeHtml(context.record?.title)}</strong></p>`,
   }),
 
   engagement_updated: (context) => ({
-    subject: `Engagement Updated: ${context.record?.title || 'Untitled'}`,
+    subject: `Engagement Updated: ${escapeHtml(context.record?.title || 'Untitled')}`,
     body: `Engagement has been updated.`,
     html: `<p>Engagement has been updated.</p>`,
   }),
 
   engagement_info_gathering: (context) => ({
-    subject: `New Engagement: ${context.engagement?.name || 'Untitled'}`,
-    body: `Engagement: ${context.engagement?.name}\nClient: ${context.client?.name}\nYear: ${context.year}\nType: ${context.engagement_type}`,
-    html: `<h2>New Engagement: ${context.engagement?.name}</h2><ul><li><strong>Engagement:</strong> ${context.engagement?.name}</li><li><strong>Client:</strong> ${context.client?.name}</li><li><strong>Year:</strong> ${context.year}</li><li><strong>Type:</strong> ${context.engagement_type}</li></ul><p><a href="${context.engagement_url}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">View Engagement</a></p>`,
+    subject: `New Engagement: ${escapeHtml(context.engagement?.name || 'Untitled')}`,
+    body: `Engagement: ${escapeHtml(context.engagement?.name)}\nClient: ${escapeHtml(context.client?.name)}\nYear: ${context.year}\nType: ${escapeHtml(context.engagement_type)}`,
+    html: `<h2>New Engagement: ${escapeHtml(context.engagement?.name)}</h2><ul><li><strong>Engagement:</strong> ${escapeHtml(context.engagement?.name)}</li><li><strong>Client:</strong> ${escapeHtml(context.client?.name)}</li><li><strong>Year:</strong> ${context.year}</li><li><strong>Type:</strong> ${escapeHtml(context.engagement_type)}</li></ul><p><a href="${escapeHtml(context.engagement_url)}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">View Engagement</a></p>`,
   }),
 
   engagement_commencement: (context) => ({
-    subject: `Engagement Commenced: ${context.engagement?.name || 'Untitled'}`,
-    body: `Engagement: ${context.engagement?.name}\nClient: ${context.client?.name}\nDate: ${context.commencement_date}`,
-    html: `<h2>Engagement Commenced: ${context.engagement?.name}</h2><ul><li><strong>Engagement:</strong> ${context.engagement?.name}</li><li><strong>Client:</strong> ${context.client?.name}</li><li><strong>Date:</strong> ${context.commencement_date}</li></ul><p><a href="${context.engagement_url}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">View Engagement</a></p>`,
+    subject: `Engagement Commenced: ${escapeHtml(context.engagement?.name || 'Untitled')}`,
+    body: `Engagement: ${escapeHtml(context.engagement?.name)}\nClient: ${escapeHtml(context.client?.name)}\nDate: ${context.commencement_date}`,
+    html: `<h2>Engagement Commenced: ${escapeHtml(context.engagement?.name)}</h2><ul><li><strong>Engagement:</strong> ${escapeHtml(context.engagement?.name)}</li><li><strong>Client:</strong> ${escapeHtml(context.client?.name)}</li><li><strong>Date:</strong> ${context.commencement_date}</li></ul><p><a href="${escapeHtml(context.engagement_url)}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">View Engagement</a></p>`,
   }),
 
   engagement_finalization: (context) => ({
-    subject: `Engagement Complete: ${context.engagement?.name || 'Untitled'}`,
-    body: `Engagement: ${context.engagement?.name}\nClient: ${context.client?.name}\nYear: ${context.year}`,
-    html: `<h2>Engagement Complete: ${context.engagement?.name}</h2><ul><li><strong>Engagement:</strong> ${context.engagement?.name}</li><li><strong>Client:</strong> ${context.client?.name}</li><li><strong>Year:</strong> ${context.year}</li></ul><p><a href="${context.engagement_url}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">Rate Engagement</a></p>`,
+    subject: `Engagement Complete: ${escapeHtml(context.engagement?.name || 'Untitled')}`,
+    body: `Engagement: ${escapeHtml(context.engagement?.name)}\nClient: ${escapeHtml(context.client?.name)}\nYear: ${context.year}`,
+    html: `<h2>Engagement Complete: ${escapeHtml(context.engagement?.name)}</h2><ul><li><strong>Engagement:</strong> ${escapeHtml(context.engagement?.name)}</li><li><strong>Client:</strong> ${escapeHtml(context.client?.name)}</li><li><strong>Year:</strong> ${context.year}</li></ul><p><a href="${escapeHtml(context.engagement_url)}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">Rate Engagement</a></p>`,
   }),
 
   engagement_stage_change: (context) => ({
-    subject: `Stage Changed: ${context.engagement?.name || 'Untitled'}`,
-    body: `Engagement: ${context.engagement?.name}\nFrom: ${context.from_stage}\nTo: ${context.to_stage}`,
-    html: `<h2>Stage Changed: ${context.engagement?.name}</h2><ul><li><strong>Engagement:</strong> ${context.engagement?.name}</li><li><strong>From:</strong> ${context.from_stage}</li><li><strong>To:</strong> ${context.to_stage}</li></ul><p><a href="${context.engagement_url}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">View Engagement</a></p>`,
+    subject: `Stage Changed: ${escapeHtml(context.engagement?.name || 'Untitled')}`,
+    body: `Engagement: ${escapeHtml(context.engagement?.name)}\nFrom: ${escapeHtml(context.from_stage)}\nTo: ${escapeHtml(context.to_stage)}`,
+    html: `<h2>Stage Changed: ${escapeHtml(context.engagement?.name)}</h2><ul><li><strong>Engagement:</strong> ${escapeHtml(context.engagement?.name)}</li><li><strong>From:</strong> ${escapeHtml(context.from_stage)}</li><li><strong>To:</strong> ${escapeHtml(context.to_stage)}</li></ul><p><a href="${escapeHtml(context.engagement_url)}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">View Engagement</a></p>`,
   }),
 
   engagement_date_change: (context) => ({
-    subject: `Date Updated: ${context.engagement?.name || 'Untitled'}`,
-    body: `Engagement: ${context.engagement?.name}\nField: ${context.field}\nNew Date: ${context.new_date}`,
-    html: `<h2>Date Updated: ${context.engagement?.name}</h2><ul><li><strong>Engagement:</strong> ${context.engagement?.name}</li><li><strong>Field:</strong> ${context.field}</li><li><strong>New Date:</strong> ${context.new_date}</li></ul><p><a href="${context.engagement_url}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">View Engagement</a></p>`,
+    subject: `Date Updated: ${escapeHtml(context.engagement?.name || 'Untitled')}`,
+    body: `Engagement: ${escapeHtml(context.engagement?.name)}\nField: ${escapeHtml(context.field)}\nNew Date: ${context.new_date}`,
+    html: `<h2>Date Updated: ${escapeHtml(context.engagement?.name)}</h2><ul><li><strong>Engagement:</strong> ${escapeHtml(context.engagement?.name)}</li><li><strong>Field:</strong> ${escapeHtml(context.field)}</li><li><strong>New Date:</strong> ${context.new_date}</li></ul><p><a href="${escapeHtml(context.engagement_url)}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">View Engagement</a></p>`,
   }),
 
   review_created: (context) => ({
-    subject: `New Review: ${context.review?.name || 'Untitled'}`,
-    body: `Review: ${context.review?.name}\nTeam: ${context.team_name}\nYear: ${context.financial_year}\nCreated By: ${context.created_by}`,
-    html: `<h2>New Review: ${context.review?.name}</h2><ul><li><strong>Review:</strong> ${context.review?.name}</li><li><strong>Team:</strong> ${context.team_name}</li><li><strong>Year:</strong> ${context.financial_year}</li><li><strong>Created By:</strong> ${context.created_by}</li></ul><p><a href="${context.review_url}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">View Review</a></p>`,
+    subject: `New Review: ${escapeHtml(context.review?.name || 'Untitled')}`,
+    body: `Review: ${escapeHtml(context.review?.name)}\nTeam: ${escapeHtml(context.team_name)}\nYear: ${context.financial_year}\nCreated By: ${escapeHtml(context.created_by)}`,
+    html: `<h2>New Review: ${escapeHtml(context.review?.name)}</h2><ul><li><strong>Review:</strong> ${escapeHtml(context.review?.name)}</li><li><strong>Team:</strong> ${escapeHtml(context.team_name)}</li><li><strong>Year:</strong> ${context.financial_year}</li><li><strong>Created By:</strong> ${escapeHtml(context.created_by)}</li></ul><p><a href="${escapeHtml(context.review_url)}" style="display:inline-block;padding:10px 20px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:4px">View Review</a></p>`,
   }),
 
   review_assigned: (context) => ({

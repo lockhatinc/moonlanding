@@ -72,7 +72,7 @@ export async function GET(request, context) {
 
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: HTTP.INTERNAL_SERVER_ERROR }
+      { status: HTTP.INTERNAL_ERROR }
     );
   }
 }

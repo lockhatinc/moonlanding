@@ -2,12 +2,26 @@ import fs from 'fs';
 import path from 'path';
 import Database from 'better-sqlite3';
 import { specs } from '@/config/spec-helpers';
-// Fallback: import {, LOG_PREFIXES } from '@/config/spec-helpers';
 
 const DB_PATH = path.resolve(process.cwd(), 'data', 'app.db');
 const db = new Database(DB_PATH);
 
 const backupDir = path.join(process.cwd(), 'data', 'backups');
+const VALID_TABLES = new Set(Object.values(specs).map(s => `${s.name}s`));
+
+function validateTableName(tableName) {
+  if (!VALID_TABLES.has(tableName)) {
+    throw new Error(`Invalid table: ${tableName}`);
+  }
+  return tableName;
+}
+
+function validateColumnNames(columns) {
+  if (!Array.isArray(columns) || columns.length === 0) {
+    throw new Error('Invalid columns');
+  }
+  return columns.every(c => /^[a-z_][a-z0-9_]*$/i.test(c));
+}
 
 export async function exportDatabase() {
   if (!fs.existsSync(backupDir)) {
@@ -26,10 +40,10 @@ export async function exportDatabase() {
   for (const spec of Object.values(specs)) {
     const tableName = `${spec.name}s`;
     try {
-      const rows = db.prepare(`SELECT * FROM ${tableName}`).all();
+      const rows = db.prepare(`SELECT * FROM "${tableName}"`).all();
       backup.tables[tableName] = rows;
     } catch (error) {
-      console.error(`${LOG_PREFIXES.system} Failed to export ${tableName}:`, error.message);
+      console.error(`[BACKUP] Failed to export ${tableName}:`, error.message);
     }
   }
 
@@ -51,17 +65,24 @@ export async function importDatabase(backupPath) {
     if (!rows || rows.length === 0) continue;
 
     try {
-      db.prepare(`DELETE FROM ${tableName}`).run();
+      validateTableName(tableName);
+
+      db.prepare(`DELETE FROM "${tableName}"`).run();
 
       const columns = Object.keys(rows[0]);
+      if (!validateColumnNames(columns)) {
+        throw new Error(`Invalid column names in ${tableName}`);
+      }
+
       const placeholders = columns.map(() => '?').join(', ');
-      const stmt = db.prepare(`INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`);
+      const columnList = columns.map(c => `"${c}"`).join(', ');
+      const stmt = db.prepare(`INSERT INTO "${tableName}" (${columnList}) VALUES (${placeholders})`);
 
       for (const row of rows) {
         stmt.run(...columns.map(col => row[col]));
       }
     } catch (error) {
-      console.error(`${LOG_PREFIXES.system} Failed to restore ${tableName}:`, error.message);
+      console.error(`[BACKUP] Failed to restore ${tableName}:`, error.message);
     }
   }
 }

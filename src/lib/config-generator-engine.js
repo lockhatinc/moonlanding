@@ -952,7 +952,29 @@ export function resetConfigEngine() {
 export function getConfigEngineSync() {
   const g = getGlobalScope();
   if (!g.__configEngine__) {
-    throw new Error('[ConfigGeneratorEngine] Engine not initialized. Call getConfigEngine() first or ensure system-config-loader is initialized during app startup.');
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const yaml = require('js-yaml');
+
+      const configPath = path.join(process.cwd(), 'src/config/master-config.yml');
+      if (!fs.existsSync(configPath)) {
+        throw new Error(`[ConfigGeneratorEngine] master-config.yml not found at ${configPath}`);
+      }
+
+      const configContent = fs.readFileSync(configPath, 'utf8');
+      const config = yaml.load(configContent);
+
+      if (!config) {
+        throw new Error('[ConfigGeneratorEngine] Failed to parse master-config.yml');
+      }
+
+      g.__configEngine__ = new ConfigGeneratorEngine(config);
+      console.log('[ConfigGeneratorEngine] Lazy-initialized from master-config.yml');
+    } catch (error) {
+      console.error('[ConfigGeneratorEngine] Failed to lazy-initialize:', error.message);
+      throw new Error('[ConfigGeneratorEngine] Engine not initialized. ' + error.message);
+    }
   }
   return g.__configEngine__;
 }

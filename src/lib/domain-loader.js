@@ -281,9 +281,17 @@ let globalDomainLoader = null;
 
 export function getDomainLoader() {
   if (!globalDomainLoader) {
-    const { getConfigEngineSync } = require('@/lib/config-generator-engine');
-    const engine = getConfigEngineSync();
-    globalDomainLoader = new DomainLoader(engine);
+    try {
+      const { getConfigEngineSync } = require('@/lib/config-generator-engine');
+      const engine = getConfigEngineSync();
+      if (!engine) {
+        throw new Error('[DomainLoader] Config engine is not initialized');
+      }
+      globalDomainLoader = new DomainLoader(engine);
+    } catch (error) {
+      console.error('[getDomainLoader] Initialization failed:', error.message);
+      throw error;
+    }
   }
   return globalDomainLoader;
 }
