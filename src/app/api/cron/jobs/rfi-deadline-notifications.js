@@ -86,13 +86,26 @@ function getRFIRecipients(rfi) {
     recipients.push(...rfi.assigned_users);
   }
 
-  // Add managers and partners (fetch from engagement)
   if (rfi.engagement_id) {
-    // In real implementation: fetch engagement and add managers/partners
-    // For now, add placeholder
+    try {
+      const engagement = get('engagement', rfi.engagement_id);
+      if (engagement && engagement.team_id) {
+        const team = get('team', engagement.team_id);
+        if (team) {
+          if (team.managers && Array.isArray(team.managers)) {
+            recipients.push(...team.managers);
+          }
+          if (team.partners && Array.isArray(team.partners)) {
+            recipients.push(...team.partners);
+          }
+        }
+      }
+    } catch (e) {
+      console.error(`[RFI Deadline] Failed to fetch engagement/team managers for RFI ${rfi.id}:`, e.message);
+    }
   }
 
-  return Array.from(new Set(recipients)); // Deduplicate
+  return Array.from(new Set(recipients));
 }
 
 function sendDeadlineNotification(rfi, recipientUserId, daysUntilDeadline, level) {
