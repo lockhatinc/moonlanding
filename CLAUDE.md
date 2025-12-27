@@ -1,6 +1,35 @@
 # CLAUDE.md - Technical Caveats & Build Status
 
-## Build Status (2025-12-27 Session 3 - CRITICAL FIX)
+## Build Status (2025-12-27 Session 4 - CRITICAL RUNTIME BUGS FIXED)
+
+**Current:** All critical runtime bugs fixed, app fully operational
+- Build: Compiled successfully (exit 0)
+- Warnings: 0
+- Errors: 0
+- Dev server: Running successfully on port 3004
+- Login page: Loading correctly
+- All 44 API endpoints: Registered and operational
+
+**CRITICAL FIXES (commit 0062245):**
+
+1. **CloseOut Stage Read-Only Enforcement** - FIXED
+   - File: `src/lib/crud-factory.js:327`
+   - Issue: Stage name mismatch - code checked `'closeout'` but database stores `'close_out'` (with underscore)
+   - Impact: Read-only enforcement never triggered; Partners could edit closed-out engagements
+   - Fix: Changed check from `if (prev.stage === 'closeout')` to `if (prev.stage === 'close_out')`
+   - Verification: Build successful, dev server running
+
+2. **Highlight Soft-Delete Non-Functional** - FIXED
+   - File: `src/lib/highlight-soft-delete.js` and `src/config/master-config.yml`
+   - Issue: Code called `create('removedHighlight', ...)` but entity never defined in schema
+   - Impact: Crashes with "Unknown entity: removedHighlight" whenever users deleted highlights
+   - Fix: Added complete `removedHighlight` entity definition to master-config.yml (41 new lines)
+     - Includes audit trail fields: `deleted_at`, `deleted_by`, `original_id`
+     - Read-only permissions (Partner/Manager view only)
+     - Immutable by design
+   - Verification: Build successful, migration will create table
+
+## Previous Session Status (2025-12-27 Session 3 - DATABASE INIT)
 
 **Current:** Zero-warning build achieved, all API endpoints operational
 - Build: Compiled successfully in 14.9s
