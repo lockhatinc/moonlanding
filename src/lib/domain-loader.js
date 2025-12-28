@@ -8,8 +8,11 @@ const log = (msg, data) => {
 
 export class DomainLoader {
   constructor(configGeneratorEngine) {
-    if (!configGeneratorEngine || !(configGeneratorEngine instanceof ConfigGeneratorEngine)) {
+    if (!configGeneratorEngine || typeof configGeneratorEngine !== 'object') {
       throw new Error('[DomainLoader] Constructor requires ConfigGeneratorEngine instance');
+    }
+    if (typeof configGeneratorEngine.getEntitiesForDomain !== 'function') {
+      throw new Error('[DomainLoader] ConfigGeneratorEngine missing getEntitiesForDomain method');
     }
     this.engine = configGeneratorEngine;
     this.validDomains = ['friday', 'mwr'];
@@ -283,13 +286,16 @@ export function getDomainLoader() {
   if (!globalDomainLoader) {
     try {
       const { getConfigEngineSync } = require('@/lib/config-generator-engine');
+      console.log('[getDomainLoader] Calling getConfigEngineSync...');
       const engine = getConfigEngineSync();
+      console.log('[getDomainLoader] Engine returned:', engine ? 'YES' : 'NULL', engine?.constructor?.name);
       if (!engine) {
-        throw new Error('[DomainLoader] Config engine is not initialized');
+        throw new Error('[getDomainLoader] Config engine is not initialized (null returned)');
       }
       globalDomainLoader = new DomainLoader(engine);
+      console.log('[getDomainLoader] Successfully created instance');
     } catch (error) {
-      console.error('[getDomainLoader] Initialization failed:', error.message);
+      console.error('[getDomainLoader] Error:', error.message);
       throw error;
     }
   }
