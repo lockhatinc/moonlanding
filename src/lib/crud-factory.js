@@ -1,7 +1,7 @@
 import { getSpec } from '@/config/spec-helpers';
 import { API_ENDPOINTS } from '@/config';
 import { list, get, create, update, remove, listWithPagination, search, searchWithPagination, getChildren } from '@/lib/query-engine';
-import { validateEntity, validateUpdate, hasErrors } from '@/lib/validate';
+import { validateEntity, validateUpdate, hasErrors, sanitizeData } from '@/lib/validate';
 import { requireAuth, requirePermission } from '@/lib/auth-middleware';
 import { broadcastUpdate } from '@/lib/realtime-server';
 import { executeHook } from '@/lib/hook-engine';
@@ -315,7 +315,8 @@ export const createCrudHandlers = (entityName) => {
       permissionService.enforceEditPermissions(user, spec, data);
       const errors = await validateEntity(spec, data);
       if (hasErrors?.(errors) || Object.keys(errors).length) throw ValidationError('Validation failed', errors);
-      const ctx = await executeHook(`create:${entityName}:before`, data, { context: { entity: entityName, user } });
+      const sanitized = sanitizeData(data, spec);
+      const ctx = await executeHook(`create:${entityName}:before`, sanitized, { context: { entity: entityName, user } });
       const result = create(entityName, ctx.data, user);
       await executeHook(`create:${entityName}:after`, { entity: entityName, data: result, user });
       broadcastUpdate(API_ENDPOINTS.entity(entityName), 'create', permissionService.filterFields(user, spec, result));
@@ -359,8 +360,9 @@ export const createCrudHandlers = (entityName) => {
 
       const errors = await validateUpdate(spec, id, data);
       if (hasErrors?.(errors) || Object.keys(errors).length) throw ValidationError('Validation failed', errors);
-      const ctx = await executeHook(`update:${entityName}:before`, { entity: entityName, id, data, user, prev });
-      const updateData = ctx?.data?.data !== undefined ? ctx.data.data : data;
+      const sanitized = sanitizeData(data, spec);
+      const ctx = await executeHook(`update:${entityName}:before`, { entity: entityName, id, data: sanitized, user, prev });
+      const updateData = ctx?.data?.data !== undefined ? ctx.data.data : sanitized;
       update(ctx.entity || entityName, ctx.id || id, updateData, user);
       const result = get(entityName, id);
       await executeHook(`update:${entityName}:after`, { entity: entityName, id, data: result, user });

@@ -1,6 +1,16 @@
 import { getSpec } from '@/config/spec-helpers';
 import { get } from '@/lib/query-engine';
 
+function sanitizeHtml(str) {
+  if (typeof str !== 'string') return str;
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Validates a single field value against its field definition
  * @param {Object} fieldDef - Field definition from spec.fields
@@ -228,4 +238,24 @@ export const validateUpdate = async (entityName, id, data) => {
 
 export const hasErrors = (errors) => {
   return Object.keys(errors || {}).length > 0;
+};
+
+/**
+ * Sanitizes all string/text fields in data object
+ * @param {Object} data - Data object to sanitize
+ * @param {Object} spec - Entity spec
+ * @returns {Object} Sanitized data
+ */
+export const sanitizeData = (data, spec) => {
+  const sanitized = { ...data };
+
+  for (const [fieldName, value] of Object.entries(sanitized)) {
+    const fieldDef = spec.fields?.[fieldName];
+
+    if (fieldDef && (fieldDef.type === 'string' || fieldDef.type === 'text') && typeof value === 'string') {
+      sanitized[fieldName] = sanitizeHtml(value);
+    }
+  }
+
+  return sanitized;
 };
