@@ -1,7 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
-  outputFileTracingRoot: __dirname,
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',
@@ -28,22 +26,18 @@ const nextConfig = {
     return config;
   },
   onDemandEntries: {
-    maxInactiveAge: 60 * 1000,
-    pagesBufferLength: 5,
+    maxInactiveAge: 15 * 1000,
+    pagesBufferLength: 2,
   },
   poweredByHeader: false,
   headers: async () => {
     return [
       {
-        source: '/sw.js',
+        source: '/(.*)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate',
-          },
-          {
-            key: 'Service-Worker-Allowed',
-            value: '/',
+            value: 'no-store, no-cache, must-revalidate, proxy-revalidate',
           },
         ],
       },

@@ -50,4 +50,3 @@ export * from '@/lib/entity-generator';
 export * from '@/lib/workflow-engine';
 export { StateBuilder, createStateBuilder, createReducer, createAsyncReducer } from '@/lib/state-builder-factory';
 export { SubscriptionManager, subscriptionManager } from '@/lib/realtime-subscription-manager';
-export { FieldMetadataCache, fieldMetadataCache, cacheFieldMetadata, getFieldMetadata, getEntityFieldMetadata } from '@/lib/field-metadata-cache';

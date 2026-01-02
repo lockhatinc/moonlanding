@@ -1,44 +1,15 @@
-import { CACHE } from '@/config/auth-config';
 import { ERROR_MESSAGES } from '@/config';
 import { getCollaboratorRole, checkCollaboratorAccess } from '@/services/collaborator-role.service';
 
 class PermissionService {
   constructor() {
-    this.cache = new Map();
-    this.stats = { hits: 0, misses: 0, createdAt: Date.now() };
-    this.CACHE_TTL = CACHE.ttl;
-  }
-
-  getCacheKey(user, spec, action, field = null) {
-    return `${user?.id}|${spec?.name}|${action}|${field || ''}`;
-  }
-
-  clearCache() {
-    this.cache.clear();
-    this.stats.createdAt = Date.now();
-  }
-
-  getCacheStats() {
-    const hitRate = this.stats.hits + this.stats.misses > 0
-      ? ((this.stats.hits / (this.stats.hits + this.stats.misses)) * 100).toFixed(2) + '%'
-      : '0%';
-    return { ...this.stats, size: this.cache.size, hitRate };
+    this.stats = { checks: 0 };
   }
 
   checkAccess(user, spec, action, options = {}) {
     if (!user) return false;
-    if (options.noCache) return this.checkPermission(user, spec, action);
-    const key = this.getCacheKey(user, spec, action);
-    if (Date.now() - this.stats.createdAt > this.CACHE_TTL) this.clearCache();
-    const cached = this.cache.get(key);
-    if (cached !== undefined) {
-      this.stats.hits++;
-      return cached;
-    }
-    this.stats.misses++;
-    const result = this.checkPermission(user, spec, action);
-    this.cache.set(key, result);
-    return result;
+    this.stats.checks++;
+    return this.checkPermission(user, spec, action);
   }
 
   checkFieldAccess(user, spec, fieldName, action) {

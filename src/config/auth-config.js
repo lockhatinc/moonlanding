@@ -8,11 +8,6 @@ export const TOKEN = {
   description: 'Access token time-to-live in seconds (24 hours)',
 };
 
-export const CACHE = {
-  ttl: 1800000,
-  description: 'Permission cache TTL in milliseconds (30 minutes)',
-};
-
 export const TIMEOUT = {
   api: 30000,
   googleApi: 10000,
@@ -22,7 +17,6 @@ export const TIMEOUT = {
 export const AUTH_CONFIG = {
   SESSION,
   TOKEN,
-  CACHE,
   TIMEOUT,
 };
 
