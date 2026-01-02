@@ -16,7 +16,17 @@ import { now } from '@/lib/database-core';
 import { coerceFieldValue } from '@/lib/field-registry';
 
 export const createCrudHandlers = (entityName) => {
+  console.log('[crud-factory] createCrudHandlers called with:', { entityName, type: typeof entityName });
+  if (!entityName || typeof entityName !== 'string') {
+    console.error('[crud-factory] FATAL: entityName is invalid!', {
+      entityName,
+      type: typeof entityName,
+    });
+    throw new Error(`[crud-factory] Invalid entityName: ${entityName} (type: ${typeof entityName})`);
+  }
+  console.log('[crud-factory] About to call getSpec with:', entityName);
   const spec = getSpec(entityName);
+  console.log('[crud-factory] getSpec returned:', spec ? 'OK' : 'NULL');
   if (!spec) throw new Error(`No spec: ${entityName}`);
 
   const handlers = {
@@ -313,7 +323,7 @@ export const createCrudHandlers = (entityName) => {
     create: async (user, data) => {
       await requirePermission(user, spec, 'create');
       permissionService.enforceEditPermissions(user, spec, data);
-      const errors = await validateEntity(spec, data);
+      const errors = await validateEntity(entityName, data);
       if (hasErrors?.(errors) || Object.keys(errors).length) throw ValidationError('Validation failed', errors);
       const sanitized = sanitizeData(data, spec);
       const ctx = await executeHook(`create:${entityName}:before`, sanitized, { context: { entity: entityName, user } });
@@ -358,7 +368,7 @@ export const createCrudHandlers = (entityName) => {
         }
       }
 
-      const errors = await validateUpdate(spec, id, data);
+      const errors = await validateUpdate(entityName, id, data);
       if (hasErrors?.(errors) || Object.keys(errors).length) throw ValidationError('Validation failed', errors);
       const sanitized = sanitizeData(data, spec);
       const ctx = await executeHook(`update:${entityName}:before`, { entity: entityName, id, data: sanitized, user, prev });
