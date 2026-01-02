@@ -1,8 +1,14 @@
 import { ConfigGeneratorEngine, setConfigEngine } from '@/lib/config-generator-engine';
+import fs from 'fs';
+import path from 'path';
+import yaml from 'js-yaml';
+import { fileURLToPath } from 'url';
 
 if (typeof window !== 'undefined') {
   throw new Error('system-config-loader is server-side only and should not be bundled with client code');
 }
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const log = (msg, data) => {
   const prefix = '[SystemConfigLoader]';
@@ -13,10 +19,6 @@ const log = (msg, data) => {
 const logError = (msg, error) => {
   console.error(`[SystemConfigLoader] ERROR ${msg}`, error.message || error);
 };
-
-const fs = require('fs');
-const path = require('path');
-const yaml = require('js-yaml');
 
 export class SystemConfigLoader {
   static async load(customConfig = null) {
@@ -45,7 +47,8 @@ export class SystemConfigLoader {
         return { config: customConfig, generator };
       }
 
-      const configPath = path.join(process.cwd(), 'src/config/master-config.yml');
+      const projectRoot = path.join(__dirname, '../..');
+      const configPath = path.join(projectRoot, 'src/config/master-config.yml');
       log('Loading master-config.yml from', configPath);
 
       if (!fs.existsSync(configPath)) {
