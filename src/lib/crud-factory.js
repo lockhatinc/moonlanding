@@ -253,7 +253,7 @@ export const createCrudHandlers = (entityName) => {
 
     list: async (user, request) => {
       requirePermission(user, spec, 'list');
-      const { q, page, pageSize } = await parseQuery(request);
+      const { q, page, pageSize, filters } = await parseQuery(request);
       const config = await (await import('@/lib/config-generator-engine')).getConfigEngine();
       const paginationCfg = config.getConfig().system.pagination;
       const DEFAULT_PAGE_SIZE = paginationCfg.default_page_size;
@@ -270,7 +270,7 @@ export const createCrudHandlers = (entityName) => {
         const filtered = permissionService.filterRecords(user, spec, results);
         return ok({ items: filtered.map(item => permissionService.filterFields(user, spec, item)) });
       }
-      const { items, pagination } = await listWithPagination(entityName, {}, finalPage, finalPageSize);
+      const { items, pagination } = await listWithPagination(entityName, filters || {}, finalPage, finalPageSize);
       const filtered = permissionService.filterRecords(user, spec, items);
       return paginated(filtered.map(item => permissionService.filterFields(user, spec, item)), pagination);
     },
