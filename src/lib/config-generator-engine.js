@@ -220,6 +220,13 @@ export class ConfigGeneratorEngine {
 
     entityDef = this._deepClone(entityDef);
 
+    const childrenObj = {};
+    if (entityDef.children && Array.isArray(entityDef.children)) {
+      entityDef.children.forEach(childName => {
+        childrenObj[childName] = { entity: childName };
+      });
+    }
+
     const spec = {
       name: actualEntityName,
       label: entityDef.label || actualEntityName,
@@ -227,7 +234,7 @@ export class ConfigGeneratorEngine {
       icon: entityDef.icon || 'Circle',
       order: entityDef.order || 999,
       parent: entityDef.parent || null,
-      children: entityDef.children || [],
+      children: childrenObj,
       computed_fields: entityDef.computed_fields || [],
       has_timeline: entityDef.has_timeline || false,
       has_roles: entityDef.has_roles || [],
