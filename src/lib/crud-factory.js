@@ -253,7 +253,7 @@ export const createCrudHandlers = (entityName) => {
 
     list: async (user, request) => {
       requirePermission(user, spec, 'list');
-      const { q, page, pageSize } = parseQuery(request);
+      const { q, page, pageSize } = await parseQuery(request);
       const config = await (await import('@/lib/config-generator-engine')).getConfigEngine();
       const paginationCfg = config.getConfig().system.pagination;
       const DEFAULT_PAGE_SIZE = paginationCfg.default_page_size;
@@ -386,7 +386,7 @@ export const createCrudHandlers = (entityName) => {
   return withErrorHandler(async (request, context) => {
     const user = await requireAuth();
     const { id, childKey } = context.params || {};
-    const { action } = parseQuery(request);
+    const { action } = await parseQuery(request);
     const method = request.method;
 
     const domainLoader = getDomainLoader();

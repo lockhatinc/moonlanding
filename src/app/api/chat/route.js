@@ -12,7 +12,7 @@ import { getSpec } from '@/config/spec-helpers';
 const customGetHandler = withErrorHandler(async (request) => {
   setCurrentRequest(request);
   const user = await requireAuth();
-  const { entity_type, entity_id } = parseQuery(request);
+  const { entity_type, entity_id } = await parseQuery(request);
   const messageSpec = getSpec('message');
 
   if (!entity_type || !entity_id) {
