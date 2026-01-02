@@ -70,6 +70,17 @@ export const fieldRegistry = {
     (val) => String(val ?? '')
   ),
 
+  number: createNumberType(
+    'REAL',
+    (val) => {
+      if (val === undefined || val === '' || val === null) return null;
+      const num = parseFloat(val);
+      if (isNaN(num)) throw new Error(`Invalid number: ${val}`);
+      return num;
+    },
+    (val) => String(val ?? '')
+  ),
+
   decimal: createNumberType(
     'REAL',
     (val) => {

@@ -1,6 +1,7 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { getDatabase, now } from '@/lib/database-core';
 import { requireAuth } from '@/lib/auth-middleware';
+import { setCurrentRequest } from '@/engine.server';
 import { ERROR_MESSAGES } from '@/config';
 import { HTTP } from '@/config/api-constants';
 
@@ -24,6 +25,7 @@ function logActivity(db, engagementId, action, userId, metadata = {}) {
 }
 
 export async function POST(request) {
+  setCurrentRequest(request);
   const db = getDatabase();
 
   try {
@@ -172,6 +174,7 @@ export async function POST(request) {
 }
 
 export async function GET(request) {
+  setCurrentRequest(request);
   const db = getDatabase();
 
   try {

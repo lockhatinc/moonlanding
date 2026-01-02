@@ -1,5 +1,6 @@
 import { createHttpMethods } from '@/lib/http-methods-factory';
 import { requireAuth } from '@/lib/auth-middleware';
+import { setCurrentRequest } from '@/engine.server';
 import { withErrorHandler } from '@/lib/with-error-handler';
 import { parse as parseQuery } from '@/lib/query-string-adapter';
 import { list, get } from '@/lib/query-engine';
@@ -9,6 +10,7 @@ import { permissionService } from '@/services';
 import { getSpec } from '@/config/spec-helpers';
 
 const customGetHandler = withErrorHandler(async (request) => {
+  setCurrentRequest(request);
   const user = await requireAuth();
   const { entity_type, entity_id } = parseQuery(request);
   const messageSpec = getSpec('message');

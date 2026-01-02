@@ -1,7 +1,9 @@
 import { createUniversalHandler } from '@/lib/universal-handler';
+import { setCurrentRequest } from '@/engine.server';
 
 function createMethodHandler(entityNameOrGetter) {
   return async function(request, context) {
+    setCurrentRequest(request);
     const entityName = typeof entityNameOrGetter === 'function'
       ? await entityNameOrGetter(context)
       : entityNameOrGetter;

@@ -2,12 +2,14 @@ import { getDomainLoader } from '@/lib/domain-loader';
 import { getConfigEngine } from '@/lib/config-generator-engine';
 import { list, get } from '@/lib/query-engine';
 import { requireAuth, requirePermission } from '@/lib/auth-middleware';
+import { setCurrentRequest } from '@/engine.server';
 import { ok } from '@/lib/response-formatter';
 import { withErrorHandler } from '@/lib/with-error-handler';
 import { AppError } from '@/lib/error-handler';
 import { HTTP } from '@/config/api-constants';
 
 export const GET = withErrorHandler(async (request) => {
+  setCurrentRequest(request);
   const user = await requireAuth();
   const domainLoader = getDomainLoader();
   const configEngine = getConfigEngine();
