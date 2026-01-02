@@ -1,6 +1,6 @@
 import { getSpec } from '@/config/spec-helpers';
 import { API_ENDPOINTS } from '@/config';
-import { list, get, create, update, remove, listWithPagination, search, getChildren } from '@/lib/query-engine';
+import { list, get, create, update, remove, listWithPagination, search, searchWithPagination, getChildren } from '@/lib/query-engine';
 import { validateEntity, validateUpdate, hasErrors } from '@/lib/validate';
 import { requireAuth, requirePermission } from '@/lib/auth-middleware';
 import { broadcastUpdate } from '@/lib/realtime-server';
@@ -267,9 +267,9 @@ export const createCrudHandlers = (entityName) => {
       }
 
       if (q) {
-        const results = search(entityName, q);
-        const filtered = permissionService.filterRecords(user, spec, results);
-        return ok({ items: filtered.map(item => permissionService.filterFields(user, spec, item)) });
+        const { items, pagination } = await searchWithPagination(entityName, q, {}, finalPage, finalPageSize);
+        const filtered = permissionService.filterRecords(user, spec, items);
+        return paginated(filtered.map(item => permissionService.filterFields(user, spec, item)), pagination);
       }
 
       const coercedFilters = {};
