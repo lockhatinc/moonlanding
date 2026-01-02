@@ -13,6 +13,9 @@ import { redirect } from 'next/navigation';
 import { forwardRef } from 'react';
 import { getNavItems } from '@/config/spec-helpers';
 import { QueryAdapter } from '@/lib/query-string-adapter';
+import { ListBuilder } from '@/components/builders/list-builder';
+import { FormBuilder } from '@/components/builders/form-builder';
+import { EntityDetail as ED } from '@/components/entity-detail';
 
 const Entity = dynamic(() => import('@/lib/entity-component').then(m => ({ default: m.Entity })), { ssr: true });
 const EntityDetail = dynamic(() => import('@/components/entity-detail').then(m => ({ default: m.EntityDetail })), { ssr: true });
@@ -91,9 +94,6 @@ export class EntityGenerator {
       return Comp;
     };
 
-    const { ListBuilder } = require('@/components/builders/list-builder');
-    const { FormBuilder } = require('@/components/builders/form-builder');
-    const { EntityDetail: ED } = require('@/components/entity-detail');
 
     const createFormComp = (mode) => createComp(FormBuilder, `${mode.charAt(0).toUpperCase() + mode.slice(1)}${spec.label}`, { mode });
 

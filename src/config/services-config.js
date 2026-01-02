@@ -1,6 +1,7 @@
 import { apiClient } from '@/lib/api-client-unified';
 import { renderingEngine } from '@/lib/rendering-engine';
 import { globalPluginManager } from '@/framework';
+import { engagementService } from '@/services/engagement.service';
 
 let SERVICE_REGISTRY = null;
 
@@ -8,7 +9,6 @@ function initializeRegistry() {
   if (SERVICE_REGISTRY !== null) return SERVICE_REGISTRY;
 
   try {
-    const { engagementService } = require('@/services/engagement.service');
     SERVICE_REGISTRY = {
       engagement: engagementService,
     };

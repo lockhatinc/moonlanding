@@ -50,6 +50,9 @@ const server = http.createServer(async (req, res) => {
   const startTime = Date.now();
 
   try {
+    const { setCurrentRequest } = await loadModule(path.join(__dirname, 'src/engine.server.js'));
+    setCurrentRequest(req);
+
     if (!systemInitialized) {
       const module = await loadModule(path.join(__dirname, 'src/config/system-config-loader.js'));
       await module.initializeSystemConfig();
@@ -84,15 +87,23 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req);
       const request = new NextRequest(req, body, url);
 
+      const pathParts = pathname.slice(5).split('/').filter(Boolean);
+      const entity = pathParts[0];
+      const pathArray = pathParts.slice(1);
+
+      const context = {
+        params: Promise.resolve({ entity, path: pathArray })
+      };
+
       try {
-        const response = await handler(request);
+        const response = await handler(request, context);
         const responseBody = await response.json();
         res.writeHead(response.status, response.headers);
         res.end(JSON.stringify(responseBody));
       } catch (err) {
-        console.error('[API] Handler error:', err);
+        console.error('[API] Handler error:', err.message || err);
         res.writeHead(500);
-        res.end(JSON.stringify({ error: err.message }));
+        res.end(JSON.stringify({ error: err.message || String(err) }));
       }
       return;
     }

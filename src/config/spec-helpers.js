@@ -1,4 +1,5 @@
 import { STAGE_TRANSITIONS } from './constants';
+import { getConfigEngineSync } from '@/lib/config-generator-engine';
 
 export const specs = {};
 
@@ -7,8 +8,7 @@ function getEngine() {
     throw new Error('getEngine() should only be called on the server side');
   }
   try {
-    const mod = require('@/lib/config-generator-engine');
-    return mod.getConfigEngineSync();
+    return getConfigEngineSync();
   } catch (e) {
     throw new Error(`Failed to get config engine: ${e.message}`);
   }

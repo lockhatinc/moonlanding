@@ -61,10 +61,10 @@ export const name = '${name}';
     return { id, name, filepath };
   }
 
-  migrate() {
+  async migrate() {
     this.initMigrationsTable();
     this.createInitialMigration();
-    this.runPendingMigrations();
+    await this.runPendingMigrations();
   }
 
   createInitialMigration() {
@@ -114,13 +114,14 @@ export const name = '${name}';
     );
   }
 
-  runPendingMigrations() {
+  async runPendingMigrations() {
     const files = fs.readdirSync(MIGRATIONS_DIR).filter(f => f.endsWith('.js')).sort();
     for (const file) {
       const id = file.replace('.js', '');
       const existing = this.db.prepare('SELECT * FROM migrations WHERE id = ?').get(id);
       if (!existing) {
-        const migrationModule = require(path.join(MIGRATIONS_DIR, file));
+        const filePath = `file://${path.join(MIGRATIONS_DIR, file)}`;
+        const migrationModule = await import(filePath);
         migrationModule.up(this.db);
         this.db.prepare('INSERT INTO migrations (id, name, executed_at) VALUES (?, ?, ?)').run(
           id,

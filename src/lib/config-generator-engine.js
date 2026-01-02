@@ -1,3 +1,10 @@
+import fs from 'fs';
+import path from 'path';
+import yaml from 'js-yaml';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 class LRUCache {
   constructor(maxSize = 100) {
     this.maxSize = maxSize;
@@ -953,11 +960,8 @@ export function getConfigEngineSync() {
   const g = getGlobalScope();
   if (!g.__configEngine__) {
     try {
-      const fs = require('fs');
-      const path = require('path');
-      const yaml = require('js-yaml');
-
-      const configPath = path.join(process.cwd(), 'src/config/master-config.yml');
+      const projectRoot = path.join(__dirname, '../..');
+      const configPath = path.join(projectRoot, 'src/config/master-config.yml');
       if (!fs.existsSync(configPath)) {
         throw new Error(`[ConfigGeneratorEngine] master-config.yml not found at ${configPath}`);
       }

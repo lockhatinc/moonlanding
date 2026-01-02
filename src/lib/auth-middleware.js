@@ -1,8 +1,7 @@
 import { getUser } from '@/engine.server';
 import { getSpec } from '@/config/spec-helpers';
 import { can } from '@/lib/permissions';
-import { UnauthorizedError, PermissionError } from '@/lib/error-handler';
-import { redirect, notFound } from 'next/navigation';
+import { UnauthorizedError, PermissionError, NotFoundError } from '@/lib/error-handler';
 
 const actionMap = { list: 'list', get: 'view', view: 'view', create: 'create', update: 'edit', edit: 'edit', delete: 'delete' };
 
@@ -27,12 +26,12 @@ export const withAuth = (handler, action = 'view') => async (request, context) =
 
 export const withPageAuth = async (entityName, action = 'view', options = {}) => {
   const user = await getUser();
-  if (!user) redirect('/login');
+  if (!user) throw UnauthorizedError('Not authenticated');
   let spec;
-  try { spec = getSpec(entityName); } catch { notFound(); }
-  if (options.notEmbedded !== false && spec.embedded) notFound();
+  try { spec = getSpec(entityName); } catch { throw NotFoundError(`Entity ${entityName} not found`); }
+  if (options.notEmbedded !== false && spec.embedded) throw NotFoundError('Entity is embedded');
   if (!can(user, spec, actionMap[action] || action)) {
-    redirect(options.redirectTo || (action === 'list' ? '/' : `/${entityName}`));
+    throw PermissionError(`Cannot ${action} ${entityName}`);
   }
   return { user, spec };
 };

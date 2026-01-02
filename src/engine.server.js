@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { Lucia } from 'lucia';
 import { BetterSqlite3Adapter } from '@lucia-auth/adapter-sqlite';
 import { Google } from 'arctic';
@@ -17,13 +16,28 @@ export const google = hasGoogleAuth
   ? new Google(config.auth.google.clientId, config.auth.google.clientSecret, config.auth.google.redirectUri)
   : null;
 
+function parseCookies(cookieHeader) {
+  const cookies = {};
+  if (!cookieHeader) return cookies;
+  cookieHeader.split(';').forEach(cookie => {
+    const [name, value] = cookie.trim().split('=');
+    if (name && value) cookies[name] = decodeURIComponent(value);
+  });
+  return cookies;
+}
+
+let _currentRequest = null;
+export function setCurrentRequest(req) { _currentRequest = req; }
+
 export async function getUser() {
   try {
-    const cookieStore = await cookies(), sessionId = cookieStore.get(lucia.sessionCookieName)?.value;
+    const request = _currentRequest;
+    if (!request) return null;
+    const cookies = parseCookies(request.headers?.cookie || '');
+    const sessionId = cookies[lucia.sessionCookieName];
     if (!sessionId) return null;
     const { user, session } = await lucia.validateSession(sessionId);
-    if (session?.fresh) { const cookie = lucia.createSessionCookie(session.id); cookieStore.set(cookie.name, cookie.value, cookie.attributes); }
-    if (!session) { const cookie = lucia.createBlankSessionCookie(); cookieStore.set(cookie.name, cookie.value, cookie.attributes); }
+    if (!user || !session) return null;
     return user;
   } catch { return null; }
 }

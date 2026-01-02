@@ -1,4 +1,4 @@
-import { ConfigGeneratorEngine } from '@/lib/config-generator-engine';
+import { ConfigGeneratorEngine, getConfigEngineSync } from '@/lib/config-generator-engine';
 
 const log = (msg, data) => {
   const prefix = '[DomainLoader]';
@@ -285,7 +285,6 @@ let globalDomainLoader = null;
 export function getDomainLoader() {
   if (!globalDomainLoader) {
     try {
-      const { getConfigEngineSync } = require('@/lib/config-generator-engine');
       console.log('[getDomainLoader] Calling getConfigEngineSync...');
       const engine = getConfigEngineSync();
       console.log('[getDomainLoader] Engine returned:', engine ? 'YES' : 'NULL', engine?.constructor?.name);

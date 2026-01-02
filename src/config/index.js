@@ -65,7 +65,6 @@ export { POLLING_CONFIG, RETRY_TIMING, NOTIFICATION_TIMING, CACHE_TTL, DEBOUNCE_
 export { BasePlugin, BaseService, BaseEngine, PluginManager, globalPluginManager, FieldRendererPlugin, NotificationPlugin, AuditLogPlugin, SearchPlugin, PermissionPlugin } from '@/framework';
 export { STATUS_ENUMS, getStatusValues, getEnumStatusColor, getStatusLabel, getStatusOptions, isValidStatus } from './status-enum-config';
 export { TimelineEngine, timelineEngine } from '@/lib/timeline-engine';
-export { EDITABLE_FIELD_RENDERERS, LIST_RENDERERS, DISPLAY_RENDERERS, getFieldRenderers } from './field-render-config';
 
 export const API_ENDPOINTS = {
   entity: (name) => `/api/${name}`,
