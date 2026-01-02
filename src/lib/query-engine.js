@@ -165,13 +165,21 @@ export const update = (entity, id, data, user) => {
   const spec = getSpec(entity);
   const tableName = spec.name === 'user' ? 'users' : spec.name;
   const fields = {};
+
+  // Always update updated_at timestamp
+  if (spec.fields.updated_at) {
+    fields.updated_at = now();
+  }
+
   iterateUpdateFields(spec, (key, field) => {
+    if (fields[key] !== undefined) return; // Skip if already set
     if (field.auto === 'update') fields[key] = now();
     else if (data[key] !== undefined) {
       const v = coerceFieldValue(data[key], field.type);
       fields[key] = v === undefined ? null : v;
     }
   });
+
   if (!Object.keys(fields).length) return;
   execRun(`${SQL_KEYWORDS.update} ${tableName} ${SQL_KEYWORDS.set} ${Object.keys(fields).map(k => `${k}${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`).join(QUERY_BUILDING.delimiter)} ${SQL_KEYWORDS.where} id${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`, [...Object.values(fields), id], { entity, operation: 'Update' });
 };
