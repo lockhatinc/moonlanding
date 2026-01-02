@@ -12,6 +12,8 @@ export const lucia = new Lucia(adapter, {
   getUserAttributes: (row) => ({ id: row.id, email: row.email, name: row.name, avatar: row.avatar, type: row.type, role: row.role }),
 });
 
+console.log('[Engine] Lucia session cookie name:', lucia.sessionCookieName);
+
 export const google = hasGoogleAuth
   ? new Google(config.auth.google.clientId, config.auth.google.clientSecret, config.auth.google.redirectUri)
   : null;

@@ -1,8 +1,9 @@
 import { NextResponse } from '@/lib/next-polyfills';
-import { getUser } from '@/engine.server';
+import { getUser, setCurrentRequest } from '@/engine.server';
 import { HTTP } from '@/config/api-constants';
 
-export async function GET() {
+export async function GET(request) {
+  setCurrentRequest(request);
   const user = await getUser();
 
   if (!user) {

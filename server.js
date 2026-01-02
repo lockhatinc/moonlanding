@@ -76,12 +76,16 @@ const server = http.createServer(async (req, res) => {
       if (firstPart && firstPart !== '[entity]') {
         const specificRoute = path.join(__dirname, `src/app/api/${firstPart}${pathParts.slice(1).map(p => `/${p}`).join('')}/route.js`);
         if (fs.existsSync(specificRoute)) {
+          console.log(`[Server] Using specific route: ${firstPart}`);
           routeFile = specificRoute;
+        } else {
+          console.log(`[Server] No specific route found at: ${specificRoute}`);
         }
       }
 
       // Fall back to catch-all route
       if (!routeFile) {
+        console.log(`[Server] Using catch-all route for: ${pathname}`);
         routeFile = path.join(__dirname, `src/app/api/[entity]/[[...path]]/route.js`);
       }
 
@@ -103,8 +107,7 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req);
       const request = new NextRequest(req, body, url);
 
-      const pathParts = pathname.slice(5).split('/').filter(Boolean);
-      const entity = pathParts[0];
+      const entity = firstPart;
       const pathArray = pathParts.slice(1);
 
       const context = {
