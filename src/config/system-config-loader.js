@@ -82,9 +82,13 @@ export class SystemConfigLoader {
       }
       log('Specs object populated', { specCount: Object.keys(specs).length });
 
-      const { registerEntityHandlers } = await import('@/lib/events-engine.js');
-      registerEntityHandlers();
-      log('Entity event handlers registered');
+      try {
+        const { registerEntityHandlers } = await import('../lib/events-engine.js');
+        registerEntityHandlers();
+        log('Entity event handlers registered');
+      } catch (hookError) {
+        log('Warning: Could not register entity handlers', hookError.message);
+      }
 
       log('ConfigGeneratorEngine initialized and set as global');
       log('System config loading complete', {

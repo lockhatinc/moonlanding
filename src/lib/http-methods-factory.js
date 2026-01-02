@@ -6,20 +6,18 @@ function createMethodHandler(entityNameOrGetter) {
       ? await entityNameOrGetter(context)
       : entityNameOrGetter;
 
-    const params = context?.params
-      ? await context.params
-      : { entity: entityName };
-
-    return createUniversalHandler(entityName)(request, { params });
+    const handler = createUniversalHandler(entityName);
+    return await handler(request, context);
   };
 }
 
 export function createHttpMethods(entityNameOrGetter) {
+  const handler = createMethodHandler(entityNameOrGetter);
   return {
-    GET: createMethodHandler(entityNameOrGetter),
-    POST: createMethodHandler(entityNameOrGetter),
-    PUT: createMethodHandler(entityNameOrGetter),
-    PATCH: createMethodHandler(entityNameOrGetter),
-    DELETE: createMethodHandler(entityNameOrGetter),
+    GET: handler,
+    POST: handler,
+    PUT: handler,
+    PATCH: handler,
+    DELETE: handler,
   };
 }

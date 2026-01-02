@@ -19,6 +19,11 @@ const nextConfig = {
         path: false,
         crypto: false,
       };
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@/services$': false,
+        '@/services/': false,
+      };
     }
     return config;
   },

@@ -270,7 +270,7 @@ export const createCrudHandlers = (entityName) => {
         const filtered = permissionService.filterRecords(user, spec, results);
         return ok({ items: filtered.map(item => permissionService.filterFields(user, spec, item)) });
       }
-      const { items, pagination } = listWithPagination(entityName, {}, finalPage, finalPageSize);
+      const { items, pagination } = await listWithPagination(entityName, {}, finalPage, finalPageSize);
       const filtered = permissionService.filterRecords(user, spec, items);
       return paginated(filtered.map(item => permissionService.filterFields(user, spec, item)), pagination);
     },

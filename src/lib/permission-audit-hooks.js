@@ -1,3 +1,5 @@
+'use server';
+
 import { permissionAuditService } from '@/services';
 
 export async function auditRoleChange({
