@@ -1,6 +1,6 @@
 # CLAUDE.md - Technical Caveats & Build Status
 
-## Build Status (2025-01-02 Session 5 - ZERO-BUILD IMPLEMENTATION)
+## Build Status (2025-01-02 Session 6 - AUTO FIELD INITIALIZATION FIX)
 
 **Current:** Fully buildless operation with ground truth data
 - Build step: NONE (dev-only, no compilation)
@@ -8,8 +8,24 @@
 - Dev server: `npm run dev` (tsx runtime)
 - Offline caching: REMOVED (ground truth every request)
 - All 44 API endpoints: Operational, fresh on every call
+- ✅ **CREATE operations fully functional** - auto-populated fields working
 
-**CRITICAL FIXES (commit 0062245):**
+**CRITICAL FIXES (commit b0b111f):**
+
+1. **Auto-Populated Timestamp Fields Not Being Set** - FIXED
+   - Files: `src/config/master-config.yml` and `src/lib/query-engine.js`
+   - Issue: CREATE operations failed with "NOT NULL constraint failed: engagement.created_at"
+   - Root cause:
+     - Master config lacked `auto: 'now'` properties on timestamp fields
+     - query-engine.js wasn't explicitly setting auto fields before iterating editable fields
+     - Auto fields (created_at, updated_at, created_by) are read-only so not included in iterateCreateFields
+   - Fix:
+     - Added `auto: now/update/user` properties to all entity timestamp fields in master-config.yml
+     - Modified query-engine.js create() function to explicitly set auto fields before field iteration
+     - Ensures created_at, updated_at, created_by are always populated on entity creation
+   - Verification: E2E test successful - engagement created with year field and all timestamps populated
+
+**Previous Session Fixes (Session 5, commit 0062245):**
 
 1. **CloseOut Stage Read-Only Enforcement** - FIXED
    - File: `src/lib/crud-factory.js:327`
