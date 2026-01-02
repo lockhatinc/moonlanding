@@ -623,11 +623,20 @@ entities:
       created_at:
         type: timestamp
         required: true
+        auto: now
+        auto_generate: true
+        readOnly: true
       updated_at:
         type: timestamp
+        auto: update
+        auto_generate: true
+        readOnly: true
       created_by:
         type: ref
         ref: user
+        auto: user
+        auto_generate: true
+        readOnly: true
     field_overrides:
       stage:
         type: enum
@@ -759,11 +768,20 @@ entities:
       created_at:
         type: timestamp
         required: true
+        auto: now
+        auto_generate: true
+        readOnly: true
       updated_at:
         type: timestamp
+        auto: update
+        auto_generate: true
+        readOnly: true
       created_by:
         type: ref
         ref: user
+        auto: user
+        auto_generate: true
+        readOnly: true
     list:
       component: review-list
     detail:
@@ -847,6 +865,9 @@ entities:
       created_at:
         type: timestamp
         required: true
+        auto: now
+        auto_generate: true
+        readOnly: true
       thread_id:
         type: string
       parent_comment_id:
@@ -938,12 +959,21 @@ entities:
       created_at:
         type: timestamp
         required: true
+        auto: now
+        auto_generate: true
+        readOnly: true
       updated_at:
         type: timestamp
         required: true
+        auto: update
+        auto_generate: true
+        readOnly: true
       created_by:
         type: ref
         ref: user
+        auto: user
+        auto_generate: true
+        readOnly: true
   checklist:
     label: Checklist
     label_plural: Checklists
@@ -999,12 +1029,21 @@ entities:
       created_at:
         type: timestamp
         required: true
+        auto: now
+        auto_generate: true
+        readOnly: true
       updated_at:
         type: timestamp
         required: true
+        auto: update
+        auto_generate: true
+        readOnly: true
       created_by:
         type: ref
         ref: user
+        auto: user
+        auto_generate: true
+        readOnly: true
       updated_by:
         type: ref
         ref: user
@@ -1214,12 +1253,21 @@ entities:
       created_at:
         type: timestamp
         required: true
+        auto: now
+        auto_generate: true
+        readOnly: true
       updated_at:
         type: timestamp
         required: true
+        auto: update
+        auto_generate: true
+        readOnly: true
       created_by:
         type: ref
         ref: user
+        auto: user
+        auto_generate: true
+        readOnly: true
       updated_by:
         type: ref
         ref: user
@@ -1326,12 +1374,21 @@ entities:
       created_at:
         type: timestamp
         required: true
+        auto: now
+        auto_generate: true
+        readOnly: true
       updated_at:
         type: timestamp
         required: true
+        auto: update
+        auto_generate: true
+        readOnly: true
       created_by:
         type: ref
         ref: user
+        auto: user
+        auto_generate: true
+        readOnly: true
   rfi_response:
     label: RFI Response
     label_plural: RFI Responses
@@ -1411,12 +1468,21 @@ entities:
       created_at:
         type: timestamp
         required: true
+        auto: now
+        auto_generate: true
+        readOnly: true
       updated_at:
         type: timestamp
         required: true
+        auto: update
+        auto_generate: true
+        readOnly: true
       created_by:
         type: ref
         ref: user
+        auto: user
+        auto_generate: true
+        readOnly: true
       updated_by:
         type: ref
         ref: user
@@ -1630,12 +1696,21 @@ entities:
       created_at:
         type: timestamp
         required: true
+        auto: now
+        auto_generate: true
+        readOnly: true
       updated_at:
         type: timestamp
         required: true
+        auto: update
+        auto_generate: true
+        readOnly: true
       created_by:
         type: ref
         ref: user
+        auto: user
+        auto_generate: true
+        readOnly: true
       updated_by:
         type: ref
         ref: user

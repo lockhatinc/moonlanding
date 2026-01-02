@@ -28,10 +28,23 @@ const watchedDirs = [
 ];
 
 watchedDirs.forEach((dir) => {
-  fs.watch(dir, { recursive: true }, (eventType, filename) => {
-    if (filename && (filename.endsWith('.js') || filename.endsWith('.jsx'))) {
+  fs.watch(dir, { recursive: true }, async (eventType, filename) => {
+    if (filename && (filename.endsWith('.js') || filename.endsWith('.jsx') || filename.endsWith('.yml'))) {
       moduleCache.clear();
       console.log(`[Hot] Invalidated: ${filename}`);
+
+      if (filename.endsWith('master-config.yml') || filename.includes('master-config')) {
+        try {
+          const { getConfigEngineSync } = await import('./src/lib/config-generator-engine.js');
+          const engine = getConfigEngineSync();
+          if (engine && engine.invalidateCache) {
+            engine.invalidateCache();
+            console.log('[Hot] Invalidated ConfigGeneratorEngine cache');
+          }
+        } catch (e) {
+          console.log('[Hot] Could not invalidate config cache:', e.message);
+        }
+      }
     }
   });
 });

@@ -133,7 +133,20 @@ export const create = (entity, data, user) => {
   const spec = getSpec(entity);
   const tableName = spec.name === 'user' ? 'users' : spec.name;
   const fields = { id: data.id || genId() };
+
+  // Add auto fields that should always be included
+  if (spec.fields.created_at) {
+    fields.created_at = now();
+  }
+  if (spec.fields.updated_at) {
+    fields.updated_at = now();
+  }
+  if (spec.fields.created_by && user) {
+    fields.created_by = user.id;
+  }
+
   iterateCreateFields(spec, (key, field) => {
+    if (fields[key] !== undefined) return; // Skip if already set
     if (field.auto === 'now' || field.auto === 'update') fields[key] = now();
     else if (field.auto === 'user' && user) fields[key] = user.id;
     else if (data[key] !== undefined && data[key] !== '') {
@@ -142,6 +155,7 @@ export const create = (entity, data, user) => {
     }
     else if (field.default !== undefined) fields[key] = coerceFieldValue(field.default, field.type);
   });
+
   const keys = Object.keys(fields);
   execRun(`${SQL_KEYWORDS.insert} ${tableName} (${keys.join(QUERY_BUILDING.delimiter)}) ${SQL_KEYWORDS.values} (${keys.map(() => QUERY_BUILDING.parameterPlaceholder).join(QUERY_BUILDING.delimiter)})`, Object.values(fields), { entity, operation: 'Create' });
   return { id: fields.id, ...fields };

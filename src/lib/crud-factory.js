@@ -296,8 +296,8 @@ export const createCrudHandlers = (entityName) => {
       permissionService.enforceEditPermissions(user, spec, data);
       const errors = await validateEntity(spec, data);
       if (hasErrors?.(errors) || Object.keys(errors).length) throw ValidationError('Validation failed', errors);
-      const ctx = await executeHook(`create:${entityName}:before`, { entity: entityName, data, user });
-      const result = create(ctx.entity || entityName, ctx.data || data, user);
+      const ctx = await executeHook(`create:${entityName}:before`, data, { context: { entity: entityName, user } });
+      const result = create(entityName, ctx.data, user);
       await executeHook(`create:${entityName}:after`, { entity: entityName, data: result, user });
       broadcastUpdate(API_ENDPOINTS.entity(entityName), 'create', permissionService.filterFields(user, spec, result));
       return created(permissionService.filterFields(user, spec, result));
