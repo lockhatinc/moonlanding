@@ -13,6 +13,7 @@ import { parse as parseQuery } from '@/lib/query-string-adapter';
 import { withErrorHandler } from '@/lib/with-error-handler';
 import { getDomainLoader } from '@/lib/domain-loader';
 import { now } from '@/lib/database-core';
+import { coerceFieldValue } from '@/lib/field-registry';
 
 export const createCrudHandlers = (entityName) => {
   const spec = getSpec(entityName);
@@ -270,7 +271,16 @@ export const createCrudHandlers = (entityName) => {
         const filtered = permissionService.filterRecords(user, spec, results);
         return ok({ items: filtered.map(item => permissionService.filterFields(user, spec, item)) });
       }
-      const { items, pagination } = await listWithPagination(entityName, filters || {}, finalPage, finalPageSize);
+
+      const coercedFilters = {};
+      if (filters) {
+        for (const [key, value] of Object.entries(filters)) {
+          const fieldDef = spec.fields?.[key];
+          coercedFilters[key] = fieldDef ? coerceFieldValue(value, fieldDef.type) : value;
+        }
+      }
+
+      const { items, pagination } = await listWithPagination(entityName, coercedFilters, finalPage, finalPageSize);
       const filtered = permissionService.filterRecords(user, spec, items);
       return paginated(filtered.map(item => permissionService.filterFields(user, spec, item)), pagination);
     },
