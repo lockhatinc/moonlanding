@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 import { getUser } from '@/engine.server';
 import { HTTP } from '@/config/api-constants';
 

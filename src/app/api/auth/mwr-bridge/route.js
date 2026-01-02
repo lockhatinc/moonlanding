@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 
 export async function POST(request) {
   console.warn('[MWR Bridge] Firebase authentication is disabled');

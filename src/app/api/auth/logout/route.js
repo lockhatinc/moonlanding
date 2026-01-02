@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 import { invalidateSession } from '@/engine.server';
 import { config } from '@/config/env';
 

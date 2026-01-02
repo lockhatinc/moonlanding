@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 import { getDatabase, genId, now } from '@/lib/database-core';
 import {
   allocateEmailToEntity,

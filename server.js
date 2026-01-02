@@ -67,7 +67,23 @@ const server = http.createServer(async (req, res) => {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
     if (pathname.startsWith('/api/')) {
-      const routeFile = path.join(__dirname, `src/app/api/[entity]/[[...path]]/route.js`);
+      // Special handling for specific routes
+      const pathParts = pathname.slice(5).split('/').filter(Boolean);
+      const firstPart = pathParts[0];
+      let routeFile = null;
+
+      // Check for specific route files first (auth, cron, etc)
+      if (firstPart && firstPart !== '[entity]') {
+        const specificRoute = path.join(__dirname, `src/app/api/${firstPart}${pathParts.slice(1).map(p => `/${p}`).join('')}/route.js`);
+        if (fs.existsSync(specificRoute)) {
+          routeFile = specificRoute;
+        }
+      }
+
+      // Fall back to catch-all route
+      if (!routeFile) {
+        routeFile = path.join(__dirname, `src/app/api/[entity]/[[...path]]/route.js`);
+      }
 
       if (!fs.existsSync(routeFile)) {
         res.writeHead(404);

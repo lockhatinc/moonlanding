@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 import { getDatabase, now } from '@/lib/database-core';
 import { sendEmail } from '@/adapters/google-gmail';
 import { EMAIL_STATUS } from '@/config/constants';

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 import { getDatabase, now } from '@/lib/database-core';
 import { requireAuth } from '@/lib/auth-middleware';
 import { ERROR_MESSAGES } from '@/config';

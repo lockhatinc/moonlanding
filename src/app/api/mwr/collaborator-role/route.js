@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 import { getDomainLoader } from '@/lib/domain-loader';
 import { getConfigEngine } from '@/lib/config-generator-engine';
 import { AppError } from '@/lib/error-handler';

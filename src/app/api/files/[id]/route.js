@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 import { requireUser } from '@/engine.server';
 import { can } from '@/lib/permissions';
 import { get } from '@/engine';

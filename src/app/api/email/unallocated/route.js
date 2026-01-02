@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 import { getDatabase } from '@/lib/database-core';
 
 export async function GET(request) {
