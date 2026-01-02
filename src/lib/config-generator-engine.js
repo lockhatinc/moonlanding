@@ -262,6 +262,15 @@ export class ConfigGeneratorEngine {
       const workflow = this.getWorkflow(entityDef.workflow);
       spec.workflow = workflow;
       spec.workflowDef = workflow;
+
+      if (workflow?.stages && Array.isArray(workflow.stages)) {
+        const stagesObj = {};
+        workflow.stages.forEach(stage => {
+          const stageName = typeof stage === 'string' ? stage : stage.name;
+          stagesObj[stageName] = stage;
+        });
+        entityDef.stages = stagesObj;
+      }
     }
 
     if (entityDef.field_overrides) {
