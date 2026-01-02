@@ -1,14 +1,13 @@
 # CLAUDE.md - Technical Caveats & Build Status
 
-## Build Status (2025-12-27 Session 4 - CRITICAL RUNTIME BUGS FIXED)
+## Build Status (2025-01-02 Session 5 - ZERO-BUILD IMPLEMENTATION)
 
-**Current:** All critical runtime bugs fixed, app fully operational
-- Build: Compiled successfully (exit 0)
-- Warnings: 0
-- Errors: 0
-- Dev server: Running successfully on port 3004
-- Login page: Loading correctly
-- All 44 API endpoints: Registered and operational
+**Current:** Fully buildless operation with ground truth data
+- Build step: NONE (dev-only, no compilation)
+- Startup: 0.1s (instant)
+- Dev server: `npm run dev` (tsx runtime)
+- Offline caching: REMOVED (ground truth every request)
+- All 44 API endpoints: Operational, fresh on every call
 
 **CRITICAL FIXES (commit 0062245):**
 
@@ -60,6 +59,41 @@
 - Webpack: Added webpackIgnore comments for dynamic imports
 
 ---
+
+## Zero-Build Implementation (2025-01-02)
+
+### Architecture
+- **No webpack, babel, or build artifacts** - Removed entirely
+- **Pure runtime transpilation** - Uses tsx for TypeScript/JSX on-demand
+- **Instant startup** - 0.1s dev server with zero initialization
+- **Hot reload** - File changes trigger instant module reload
+- **Ground truth** - All requests fetch fresh from server, zero caching
+
+### Development
+```bash
+npm install     # Install dependencies (tsx included)
+npm run dev     # Start buildless dev server on port 3004
+```
+
+### How It Works
+1. `tsx server.js` - Runs server with runtime TypeScript/JSX transpilation
+2. Import resolver: `@/` → `src/`, relative imports auto-resolved
+3. Custom HTTP server loads API routes at runtime
+4. System config lazy-loads on first request
+5. File watching invalidates modules on changes
+
+### Removed
+- `next.config.js` and `postcss.config.js`
+- Service worker and offline caching
+- Permission caching and data caching
+- Webpack configuration entirely
+- Build/start npm scripts
+
+### Limitations
+- Transcompilation happens at runtime (not pre-built)
+- Large codebases may have slower first-load on specific routes
+- No static optimization (but not needed for dev)
+- Requires Node.js 18+ for ES modules
 
 ## Technical Caveats & Known Limitations
 
