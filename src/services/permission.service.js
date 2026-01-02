@@ -61,6 +61,8 @@ class PermissionService {
     if (!user) return record;
     const filtered = {};
     for (const [key, value] of Object.entries(record)) {
+      const fieldDef = spec.fields?.[key];
+      if (fieldDef?.hidden) continue;
       if (this.checkFieldAccess(user, spec, key, 'view')) filtered[key] = value;
     }
     return filtered;

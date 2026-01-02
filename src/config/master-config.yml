@@ -1077,6 +1077,7 @@ entities:
       password_hash:
         type: text
         label: Password Hash
+        hidden: true
       role:
         type: text
         required: true
