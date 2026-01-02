@@ -6,11 +6,15 @@
     "dev": "next dev --port 3004",
     "lint": "next lint"
   },
+  "workspaces": [
+    "../dynamic-react-renderer"
+  ],
   "dependencies": {
     "@lucia-auth/adapter-sqlite": "^3.0.2",
     "@mantine/core": "^7.13.0",
     "@mantine/hooks": "^7.13.0",
     "@mantine/notifications": "^7.13.0",
+    "@sequentialos/dynamic-react-renderer": "file:../dynamic-react-renderer",
     "@tabler/icons-react": "^3.36.0",
     "arctic": "^1.9.2",
     "bcrypt": "^5.1.1",

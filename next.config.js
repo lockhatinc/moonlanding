@@ -10,6 +10,7 @@ const nextConfig = {
       config.externals.push('better-sqlite3');
       config.externals.push('bcrypt');
       config.externals.push('firebase-admin');
+      config.externals.push('@sequentialos/dynamic-react-renderer');
     } else {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -26,8 +27,8 @@ const nextConfig = {
     return config;
   },
   onDemandEntries: {
-    maxInactiveAge: 15 * 1000,
-    pagesBufferLength: 2,
+    maxInactiveAge: 10 * 1000,
+    pagesBufferLength: 1,
   },
   poweredByHeader: false,
   headers: async () => {
