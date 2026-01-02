@@ -341,7 +341,8 @@ export const createCrudHandlers = (entityName) => {
       const errors = await validateUpdate(spec, id, data);
       if (hasErrors?.(errors) || Object.keys(errors).length) throw ValidationError('Validation failed', errors);
       const ctx = await executeHook(`update:${entityName}:before`, { entity: entityName, id, data, user, prev });
-      update(ctx.entity || entityName, ctx.id || id, ctx.data || data, user);
+      const updateData = ctx?.data?.data !== undefined ? ctx.data.data : data;
+      update(ctx.entity || entityName, ctx.id || id, updateData, user);
       const result = get(entityName, id);
       await executeHook(`update:${entityName}:after`, { entity: entityName, id, data: result, user });
       broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'update', permissionService.filterFields(user, spec, result));
