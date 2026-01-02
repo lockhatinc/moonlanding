@@ -5,6 +5,7 @@ import { list, search, searchWithPagination, get, getChildren, batchGetChildren,
 import { can } from '@/lib/permissions';
 import { loadFormOptions } from '@/lib/utils';
 import { withPageAuth } from '@/lib/auth-middleware';
+import { UnauthorizedError, PermissionError } from '@/lib/error-handler';
 import { createCrudHandlers } from '@/lib/crud-factory';
 import { Shell } from '@/components/layout';
 import { notFound } from 'next/navigation';
@@ -115,8 +116,8 @@ export class EntityGenerator {
     const createAction = (action, handler) => async (...args) => {
       const { getUser } = await import('@/engine.server');
       const user = await getUser();
-      if (!user) throw new Error(ERROR_MESSAGES.authenticationFailed());
-      if (!can(user, spec, action)) throw new Error(ERROR_MESSAGES.permissionDenied(action));
+      if (!user) throw UnauthorizedError('Authentication required');
+      if (!can(user, spec, action)) throw PermissionError(`Cannot ${action} ${spec.name}`);
       return handler(user, ...args);
     };
 

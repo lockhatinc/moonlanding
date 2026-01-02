@@ -1,5 +1,6 @@
 import { ERROR_MESSAGES } from '@/config';
 import { getCollaboratorRole, checkCollaboratorAccess } from '@/services/collaborator-role.service';
+import { PermissionError } from '@/lib/error-handler';
 
 class PermissionService {
   constructor() {
@@ -66,11 +67,11 @@ class PermissionService {
   }
 
   enforceEditPermissions(user, spec, data) {
-    if (!user) throw new Error(ERROR_MESSAGES.permissionDenied(`${spec.name}.edit`));
-    if (!this.checkAccess(user, spec, 'edit')) throw new Error(ERROR_MESSAGES.permissionDenied(`${spec.name}.edit`));
+    if (!user) throw PermissionError(`Cannot edit ${spec.name}`);
+    if (!this.checkAccess(user, spec, 'edit')) throw PermissionError(`Cannot edit ${spec.name}`);
     for (const field of Object.keys(data)) {
       if (!this.checkFieldAccess(user, spec, field, 'edit')) {
-        throw new Error(ERROR_MESSAGES.permissionDenied(`${spec.name}.${field}`));
+        throw PermissionError(`Cannot edit ${spec.name}.${field}`);
       }
     }
   }
@@ -263,7 +264,7 @@ class PermissionService {
 
   requireActionPermission(user, spec, action, record = null, context = {}) {
     if (!this.checkActionPermission(user, spec, action, record, context)) {
-      throw new Error(ERROR_MESSAGES.permissionDenied(`${spec.name}.${action}`));
+      throw PermissionError(`Cannot ${action} ${spec.name}`);
     }
   }
 
