@@ -11,16 +11,16 @@ export const requireAuth = async () => {
   return user;
 };
 
-export const requirePermission = (user, spec, action) => {
+export const requirePermission = async (user, spec, action) => {
   const mapped = actionMap[action] || action;
-  if (!can(user, spec, mapped)) throw PermissionError(`Cannot ${action} ${spec.name}`);
+  if (!await can(user, spec, mapped)) throw PermissionError(`Cannot ${action} ${spec.name}`);
 };
 
 export const withAuth = (handler, action = 'view') => async (request, context) => {
   const user = await requireAuth();
   const entity = context.params?.entity || context.entity;
   const spec = entity ? getSpec(entity) : null;
-  if (spec) requirePermission(user, spec, action);
+  if (spec) await requirePermission(user, spec, action);
   return handler(request, { ...context, user, spec });
 };
 
@@ -30,7 +30,7 @@ export const withPageAuth = async (entityName, action = 'view', options = {}) =>
   let spec;
   try { spec = getSpec(entityName); } catch { throw NotFoundError(`Entity ${entityName} not found`); }
   if (options.notEmbedded !== false && spec.embedded) throw NotFoundError('Entity is embedded');
-  if (!can(user, spec, actionMap[action] || action)) {
+  if (!await can(user, spec, actionMap[action] || action)) {
     throw PermissionError(`Cannot ${action} ${entityName}`);
   }
   return { user, spec };

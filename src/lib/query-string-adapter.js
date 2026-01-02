@@ -20,10 +20,12 @@ export class QueryAdapter {
   static async parse(request) {
     const { searchParams } = new URL(request.url);
     const defaultPageSize = await getDefaultPageSize();
+    // Support both pageSize (preferred) and limit (fallback)
+    const pageSizeParam = searchParams.get('pageSize') || searchParams.get('limit') || String(defaultPageSize);
     return {
       q: searchParams.get('q'),
       page: Math.max(1, parseInt(searchParams.get('page') || '1')),
-      pageSize: parseInt(searchParams.get('pageSize') || String(defaultPageSize)),
+      pageSize: parseInt(pageSizeParam),
       action: searchParams.get('action'),
       limit: searchParams.get('limit'),
       offset: searchParams.get('offset'),
@@ -77,10 +79,12 @@ export class QueryAdapter {
       }
       return searchParams[key];
     };
+    // Support both pageSize (preferred) and limit (fallback)
+    const pageSizeParam = get('pageSize') || get('limit') || String(spec?.list?.pageSize || defaultPageSize);
     return {
       q: get('q'),
       page: Math.max(1, parseInt(get('page') || '1')),
-      pageSize: parseInt(get('pageSize') || String(spec?.list?.pageSize || defaultPageSize)),
+      pageSize: parseInt(pageSizeParam),
     };
   }
 

@@ -181,7 +181,10 @@ export const update = (entity, id, data, user) => {
   });
 
   if (!Object.keys(fields).length) return;
-  execRun(`${SQL_KEYWORDS.update} ${tableName} ${SQL_KEYWORDS.set} ${Object.keys(fields).map(k => `${k}${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`).join(QUERY_BUILDING.delimiter)} ${SQL_KEYWORDS.where} id${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`, [...Object.values(fields), id], { entity, operation: 'Update' });
+  const sql = `${SQL_KEYWORDS.update} ${tableName} ${SQL_KEYWORDS.set} ${Object.keys(fields).map(k => `${k}${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`).join(QUERY_BUILDING.delimiter)} ${SQL_KEYWORDS.where} id${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`;
+  const values = [...Object.values(fields), id];
+  console.log(`[query-engine] UPDATE ${entity} fields:`, Object.keys(fields), 'values:', values.slice(0, -1));
+  execRun(sql, values, { entity, operation: 'Update' });
 };
 
 export const remove = (entity, id) => {

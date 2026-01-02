@@ -253,18 +253,27 @@ export const createCrudHandlers = (entityName) => {
     },
 
     list: async (user, request) => {
-      requirePermission(user, spec, 'list');
+      await requirePermission(user, spec, 'list');
       const { q, page, pageSize, filters } = await parseQuery(request);
       const config = await (await import('@/lib/config-generator-engine')).getConfigEngine();
       const paginationCfg = config.getConfig().system.pagination;
       const DEFAULT_PAGE_SIZE = paginationCfg.default_page_size;
       const MAX_PAGE_SIZE = paginationCfg.max_page_size;
-      const finalPageSize = Math.min(pageSize || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
-      const finalPage = page || 1;
 
-      if (finalPageSize > MAX_PAGE_SIZE) {
-        throw new AppError(`Maximum page size is ${MAX_PAGE_SIZE}`, 'BAD_REQUEST', HTTP.BAD_REQUEST);
+      // Validate and set final page number
+      const finalPage = page || 1;
+      if (!Number.isInteger(finalPage) || finalPage < 1) {
+        throw new AppError('page must be >= 1', 'BAD_REQUEST', HTTP.BAD_REQUEST);
       }
+
+      // Validate and set final page size
+      const requestedPageSize = pageSize || DEFAULT_PAGE_SIZE;
+      if (!Number.isInteger(requestedPageSize) || requestedPageSize < 1) {
+        throw new AppError('pageSize must be >= 1', 'BAD_REQUEST', HTTP.BAD_REQUEST);
+      }
+
+      // Cap pageSize to MAX_PAGE_SIZE (silently)
+      const finalPageSize = Math.min(requestedPageSize, MAX_PAGE_SIZE);
 
       if (q) {
         const { items, pagination } = await searchWithPagination(entityName, q, {}, finalPage, finalPageSize);
@@ -286,7 +295,7 @@ export const createCrudHandlers = (entityName) => {
     },
 
     get: async (user, id) => {
-      requirePermission(user, spec, 'view');
+      await requirePermission(user, spec, 'view');
       if (!id) throw new AppError('ID required', 'BAD_REQUEST', HTTP.BAD_REQUEST);
       const item = get(entityName, id);
       if (!item) throw NotFoundError(entityName, id);
@@ -295,14 +304,14 @@ export const createCrudHandlers = (entityName) => {
     },
 
     getChildren: async (user, id, childKey) => {
-      requirePermission(user, spec, 'view');
+      await requirePermission(user, spec, 'view');
       const childDef = spec.children?.[childKey];
       if (!childDef) throw new AppError('Unknown child', 'BAD_REQUEST', HTTP.BAD_REQUEST);
       return ok(getChildren(entityName, id, childDef));
     },
 
     create: async (user, data) => {
-      requirePermission(user, spec, 'create');
+      await requirePermission(user, spec, 'create');
       permissionService.enforceEditPermissions(user, spec, data);
       const errors = await validateEntity(spec, data);
       if (hasErrors?.(errors) || Object.keys(errors).length) throw ValidationError('Validation failed', errors);
@@ -314,7 +323,7 @@ export const createCrudHandlers = (entityName) => {
     },
 
     update: async (user, id, data) => {
-      requirePermission(user, spec, 'edit');
+      await requirePermission(user, spec, 'edit');
       if (!id) throw new AppError('ID required', 'BAD_REQUEST', HTTP.BAD_REQUEST);
       const prev = get(entityName, id);
       if (!prev) throw NotFoundError(entityName, id);
@@ -361,7 +370,7 @@ export const createCrudHandlers = (entityName) => {
     },
 
     delete: async (user, id) => {
-      requirePermission(user, spec, 'delete');
+      await requirePermission(user, spec, 'delete');
       if (!id) throw new AppError('ID required', 'BAD_REQUEST', HTTP.BAD_REQUEST);
       const record = get(entityName, id);
       if (!record) throw NotFoundError(entityName, id);
