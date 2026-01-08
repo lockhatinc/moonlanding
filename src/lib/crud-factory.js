@@ -5,7 +5,7 @@ import { validateEntity, validateUpdate, hasErrors, sanitizeData } from '@/lib/v
 import { requireAuth, requirePermission } from '@/lib/auth-middleware';
 import { broadcastUpdate } from '@/lib/realtime-server';
 import { executeHook } from '@/lib/hook-engine';
-import { AppError, NotFoundError, ValidationError } from '@/lib/error-handler';
+import { AppError, NotFoundError as NotFoundErrorClass, ValidationError } from '@/lib/errors';
 import { ok, created, paginated } from '@/lib/response-formatter';
 import { HTTP } from '@/config/api-constants';
 import { permissionService } from '@/services';
@@ -25,9 +25,8 @@ export const createCrudHandlers = (entityName) => {
     throw new Error(`[crud-factory] Invalid entityName: ${entityName} (type: ${typeof entityName})`);
   }
   console.log('[crud-factory] About to call getSpec with:', entityName);
-  const spec = getSpec(entityName);
+  let spec = getSpec(entityName);
   console.log('[crud-factory] getSpec returned:', spec ? 'OK' : 'NULL');
-  if (!spec) throw new Error(`No spec: ${entityName}`);
 
   const handlers = {
     customAction: async (user, action, id, data = {}) => {
@@ -415,6 +414,8 @@ export const createCrudHandlers = (entityName) => {
   };
 
   return withErrorHandler(async (request, context) => {
+    if (!spec) throw new NotFoundErrorClass(`Entity "${entityName}" not found`);
+
     const user = await requireAuth();
     const { id, childKey } = context.params || {};
     const { action } = await parseQuery(request);

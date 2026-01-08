@@ -22,8 +22,8 @@ export function getSpec(name) {
     if (error.message.includes('not initialized')) {
       throw new Error(`ConfigEngine not initialized. System startup may not be complete. Original error: ${error.message}`);
     }
-    if (error.message.includes('Unknown entity')) {
-      throw new Error(`Unknown entity: ${name}`);
+    if (error.message.includes('Unknown entity') || error.message.includes('not found')) {
+      return null;
     }
     throw error;
   }
