@@ -94,8 +94,19 @@ const server = http.createServer(async (req, res) => {
         } else {
           console.log(`[Server] No specific route found at: ${specificRoute}`);
 
+          // Check for nested dynamic routes like /mwr/review/[id]/highlights
+          if (pathParts.length >= 3 && firstPart === 'mwr') {
+            const baseEntity = pathParts[1];
+            const childEntity = pathParts[3];
+            const nestedRoute = path.join(__dirname, `src/app/api/mwr/${baseEntity}/[id]/${childEntity}/route.js`);
+            if (childEntity && fs.existsSync(nestedRoute)) {
+              console.log(`[Server] Using nested MWR route: mwr/${baseEntity}/[id]/${childEntity}`);
+              routeFile = nestedRoute;
+            }
+          }
+
           // Check for domain-specific dynamic routes (e.g., /api/friday/[entity]/route.js)
-          if (pathParts.length >= 2) {
+          if (!routeFile && pathParts.length >= 2) {
             const domainDynamicRoute = path.join(__dirname, `src/app/api/${firstPart}/[entity]/route.js`);
             if (fs.existsSync(domainDynamicRoute)) {
               console.log(`[Server] Using domain-specific dynamic route: ${firstPart}/[entity]`);
@@ -131,8 +142,12 @@ const server = http.createServer(async (req, res) => {
 
       let entity;
       let pathArray;
+      let params = { entity: firstPart, path: [] };
 
-      if (routeFile.includes('[entity]')) {
+      if (routeFile.includes('mwr/') && routeFile.includes('[id]')) {
+        // Nested MWR route like /mwr/review/[id]/highlights
+        params = { id: pathParts[2] };
+      } else if (routeFile.includes('[entity]')) {
         if (routeFile.includes('src/app/api/[entity]')) {
           entity = firstPart;
           pathArray = pathParts.slice(1);
@@ -140,13 +155,15 @@ const server = http.createServer(async (req, res) => {
           entity = pathParts[1];
           pathArray = pathParts.slice(2);
         }
+        params = { entity, path: pathArray };
       } else {
         entity = firstPart;
         pathArray = pathParts.slice(1);
+        params = { entity, path: pathArray };
       }
 
       const context = {
-        params: Promise.resolve({ entity, path: pathArray })
+        params: params
       };
 
       try {

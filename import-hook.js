@@ -23,6 +23,12 @@ function resolveFile(filePath) {
 }
 
 export async function resolve(specifier, context, nextResolve) {
+  // Shim next/server for buildless environment
+  if (specifier === 'next/server') {
+    const shimPath = path.join(__dirname, 'next-server-shim.js');
+    return nextResolve(`file://${shimPath}`, context);
+  }
+
   if (specifier.startsWith('@/')) {
     const modulePath = specifier.slice(2);
     const filePath = resolveFile(path.join(srcPath, modulePath));

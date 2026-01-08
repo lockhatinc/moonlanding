@@ -36,14 +36,8 @@ function wrapHandler(method) {
       },
     };
 
-    const modifiedRequest = new Request(request.url + `?domain=${domain}`, {
-      method: request.method,
-      headers: request.headers,
-      body: method !== 'GET' && method !== 'HEAD' ? await request.text() : undefined
-    });
-
     const handlers = createCrudHandlers(entityName);
-    return handlers(modifiedRequest, enhancedContext);
+    return handlers(request, enhancedContext);
   };
 }
 
