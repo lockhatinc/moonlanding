@@ -1,6 +1,6 @@
 # CLAUDE.md - Technical Caveats & Build Status
 
-## Build Status (2025-01-02 Session 6 - FULLY OPERATIONAL - E2E VERIFIED)
+## Build Status (2025-01-08 Session 7 - VALIDATION COMPLETE - ALL CRUD WORKING)
 
 **Current:** Fully buildless operation with ground truth data - **END-TO-END TESTED**
 - Build step: NONE (dev-only, no compilation)
@@ -14,7 +14,48 @@
   - LIST: All engagements listed with pagination ✅
   - DATABASE: Data persists correctly ✅
 
-**CRITICAL FIXES (commit b0b111f):**
+**SESSION 7 FIXES (commit 6e021cc - Latest):**
+
+1. **POST/PUT Validation Parameter Bug** - FIXED
+   - Files: `src/lib/crud-factory.js`
+   - Issue: `validateEntity()` and `validateUpdate()` receiving spec object instead of entityName string
+   - Impact: All POST/PUT requests failed with 500 error
+   - Fix: Changed line 316 from `validateEntity(spec, data)` to `validateEntity(entityName, data)`
+   - Verification: POST creates engagement successfully ✅
+
+2. **Unknown Entity Error Handling** - FIXED
+   - Files: `src/lib/crud-factory.js`
+   - Issue: Non-existent entities returned 500 instead of 404
+   - Fix: Added proper entity existence check with NotFoundError
+   - Verification: GET /api/nonexistent returns 404 ✅
+
+3. **NotFoundError Import Missing** - FIXED
+   - Files: `src/lib/crud-factory.js`
+   - Issue: GET missing record crashed with 500
+   - Fix: Added import for NotFoundError
+   - Verification: GET /api/engagement/999 returns 404 ✅
+
+4. **Validation Error Response Format** - FIXED
+   - Files: `src/lib/errors.js`
+   - Issue: ValidationError didn't include field-level error details
+   - Fix: Added `errors: this.errors` to response
+   - Verification: POST validation errors now show all field errors ✅
+
+**SESSION 7 VALIDATION RESULTS:**
+- ✅ Enum validation (invalid stage rejected with options listed)
+- ✅ Required field validation (missing fields identified)
+- ✅ Foreign key validation (invalid parent references rejected)
+- ✅ XSS sanitization (HTML escaped: `<script>` → `&lt;script&gt;`)
+- ✅ Type validation (wrong types rejected)
+- ✅ Permission enforcement (role-based access control working)
+- ✅ Pagination (page=0 auto-corrected to page=1)
+- ✅ HTTP method validation (TRACE returns 405)
+- ✅ Sensitive field filtering (password_hash hidden from responses)
+- ✅ CRUD operations (CREATE, READ, UPDATE, DELETE all working)
+- ✅ Soft delete (status='deleted', records preserved)
+- ✅ Search functionality (FTS5 full-text search working)
+
+**PREVIOUS CRITICAL FIXES (commit b0b111f):**
 
 1. **Auto-Populated Timestamp Fields Not Being Set** - FIXED
    - Files: `src/config/master-config.yml` and `src/lib/query-engine.js`
