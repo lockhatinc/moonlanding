@@ -41,7 +41,7 @@ const createHandler = (entity, action) => async (request, { params, searchParams
   if (action === 'create') {
     const data = await request.json();
     const errors = await validateEntity(spec, data);
-    if (hasErrors(errors)) throw ValidationError('Validation failed', errors);
+    if (hasErrors(errors)) throw new ValidationError('Validation failed', errors);
 
     const result = create(entity, data, user);
     broadcastUpdate(API_ENDPOINTS.entity(entity), 'create', result);
@@ -55,7 +55,7 @@ const createHandler = (entity, action) => async (request, { params, searchParams
 
     const data = await request.json();
     const errors = await validateUpdate(spec, id, data);
-    if (hasErrors(errors)) throw ValidationError('Validation failed', errors);
+    if (hasErrors(errors)) throw new ValidationError('Validation failed', errors);
 
     update(entity, id, data, user);
     const result = get(entity, id);

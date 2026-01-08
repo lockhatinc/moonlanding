@@ -323,7 +323,7 @@ export const createCrudHandlers = (entityName) => {
       await requirePermission(user, spec, 'create');
       permissionService.enforceEditPermissions(user, spec, data);
       const errors = await validateEntity(entityName, data);
-      if (hasErrors?.(errors) || Object.keys(errors).length) throw ValidationError('Validation failed', errors);
+      if (hasErrors?.(errors) || Object.keys(errors).length) throw new ValidationError('Validation failed', errors);
       const sanitized = sanitizeData(data, spec);
       const ctx = await executeHook(`create:${entityName}:before`, sanitized, { context: { entity: entityName, user } });
       const result = create(entityName, ctx.data, user);
@@ -368,7 +368,7 @@ export const createCrudHandlers = (entityName) => {
       }
 
       const errors = await validateUpdate(entityName, id, data);
-      if (hasErrors?.(errors) || Object.keys(errors).length) throw ValidationError('Validation failed', errors);
+      if (hasErrors?.(errors) || Object.keys(errors).length) throw new ValidationError('Validation failed', errors);
       const sanitized = sanitizeData(data, spec);
       const ctx = await executeHook(`update:${entityName}:before`, { entity: entityName, id, data: sanitized, user, prev });
       const updateData = ctx?.data?.data !== undefined ? ctx.data.data : sanitized;

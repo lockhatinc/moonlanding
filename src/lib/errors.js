@@ -25,6 +25,17 @@ export class ValidationError extends AppError {
     super(message, 'VALIDATION_ERROR', HTTP.BAD_REQUEST);
     this.errors = errors;
   }
+
+  toJSON() {
+    return {
+      status: 'error',
+      message: this.message,
+      code: this.code,
+      statusCode: this.statusCode,
+      errors: this.errors,
+      context: this.context,
+    };
+  }
 }
 
 export class AuthError extends AppError {
