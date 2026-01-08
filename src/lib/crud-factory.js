@@ -6,6 +6,7 @@ import { requireAuth, requirePermission } from '@/lib/auth-middleware';
 import { broadcastUpdate } from '@/lib/realtime-server';
 import { executeHook } from '@/lib/hook-engine';
 import { AppError, NotFoundError as NotFoundErrorClass, ValidationError } from '@/lib/errors';
+import { NotFoundError } from '@/lib/error-handler';
 import { ok, created, paginated } from '@/lib/response-formatter';
 import { HTTP } from '@/config/api-constants';
 import { permissionService } from '@/services';
