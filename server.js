@@ -93,6 +93,15 @@ const server = http.createServer(async (req, res) => {
           routeFile = specificRoute;
         } else {
           console.log(`[Server] No specific route found at: ${specificRoute}`);
+
+          // Check for domain-specific dynamic routes (e.g., /api/friday/[entity]/route.js)
+          if (pathParts.length >= 2) {
+            const domainDynamicRoute = path.join(__dirname, `src/app/api/${firstPart}/[entity]/route.js`);
+            if (fs.existsSync(domainDynamicRoute)) {
+              console.log(`[Server] Using domain-specific dynamic route: ${firstPart}/[entity]`);
+              routeFile = domainDynamicRoute;
+            }
+          }
         }
       }
 
@@ -120,8 +129,21 @@ const server = http.createServer(async (req, res) => {
       const body = await readBody(req);
       const request = new NextRequest(req, body, url);
 
-      const entity = firstPart;
-      const pathArray = pathParts.slice(1);
+      let entity;
+      let pathArray;
+
+      if (routeFile.includes('[entity]')) {
+        if (routeFile.includes('src/app/api/[entity]')) {
+          entity = firstPart;
+          pathArray = pathParts.slice(1);
+        } else {
+          entity = pathParts[1];
+          pathArray = pathParts.slice(2);
+        }
+      } else {
+        entity = firstPart;
+        pathArray = pathParts.slice(1);
+      }
 
       const context = {
         params: Promise.resolve({ entity, path: pathArray })
