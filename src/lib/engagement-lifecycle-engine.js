@@ -1,7 +1,7 @@
 import { getSpec } from '@/config/spec-helpers';
 import { get, update, list } from '@/engine';
-import { canAccess } from '@/lib/permissions';
-import { getAllEntities } from '@/lib/config-generator-engine';
+import { canAccessRow as canAccess } from '@/lib/permissions';
+import { getConfigEngine } from '@/lib/config-generator-engine';
 
 const STAGES = {
   info_gathering: 0,

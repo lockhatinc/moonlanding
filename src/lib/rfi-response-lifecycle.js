@@ -1,5 +1,5 @@
 import { create, update, get } from '@/engine';
-import { canAccess } from '@/lib/permissions';
+import { canAccessRow as canAccess } from '@/lib/permissions';
 
 export const RESPONSE_STATES = {
   submitted: 'submitted',
