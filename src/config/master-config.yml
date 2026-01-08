@@ -1559,6 +1559,26 @@ entities:
         default: 0
       processing_error:
         type: text
+      bounce_reason:
+        type: text
+      bounced_at:
+        type: timestamp
+      bounce_permanent:
+        type: bool
+        default: false
+      created_at:
+        type: timestamp
+        auto: 'now'
+        readOnly: true
+      updated_at:
+        type: timestamp
+        auto: 'update'
+        readOnly: true
+      created_by:
+        type: ref
+        ref: user
+        auto: 'user'
+        readOnly: true
   job_execution_log:
     label: Job Execution Log
     label_plural: Job Execution Logs

@@ -1,18 +1,13 @@
-import { NextResponse } from 'next/server';
-import { lucia } from '@/engine.server';
+import { NextResponse } from '@/lib/next-polyfills';
+import { getUser, setCurrentRequest } from '@/engine.server';
 import { permissionAuditService } from '@/services';
-import { cookies } from 'next/headers';
 
-async function getUser() {
-  const sessionId = (await cookies()).get(lucia.sessionCookieName)?.value ?? null;
-  if (!sessionId) return null;
-  const { user } = await lucia.validateSession(sessionId);
-  return user;
-}
-
-export async function GET() {
+export async function GET(request) {
+  setCurrentRequest(request);
   try {
+    console.log('[AuditStats] Request cookie header:', request.headers?.cookie);
     const user = await getUser();
+    console.log('[AuditStats] Validated user:', user);
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

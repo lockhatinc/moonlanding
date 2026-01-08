@@ -1,14 +1,6 @@
 import { NextResponse } from '@/lib/next-polyfills';
-import { lucia } from '@/engine.server';
+import { getUser, setCurrentRequest } from '@/engine.server';
 import { auditDashboard } from '@/lib/audit-dashboard';
-import { cookies } from '@/lib/next-polyfills';
-
-async function getUser() {
-  const sessionId = (await cookies()).get(lucia.sessionCookieName)?.value ?? null;
-  if (!sessionId) return null;
-  const { user } = await lucia.validateSession(sessionId);
-  return user;
-}
 
 function checkDashboardPermission(user) {
   if (!user) {
@@ -23,6 +15,7 @@ function checkDashboardPermission(user) {
 }
 
 export async function GET(request) {
+  setCurrentRequest(request);
   try {
     const user = await getUser();
     const permCheck = checkDashboardPermission(user);
