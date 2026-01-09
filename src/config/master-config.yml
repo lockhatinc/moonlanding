@@ -91,6 +91,8 @@ permission_templates:
     - delete
     - manage_collaborators
     - manage_highlights
+    - resolve_highlight
+    - reopen_highlight
     - manage_flags
     - archive
     manager:
@@ -100,6 +102,8 @@ permission_templates:
     - edit
     - manage_collaborators_own
     - manage_highlights_own
+    - resolve_highlight
+    - reopen_highlight
     clerk:
     - list
     - view
@@ -1311,11 +1315,36 @@ entities:
     permission_template: review_collaboration
     parent: review
     fields:
+      id:
+        type: id
+        label: ID
+        required: true
       review_id:
         type: ref
         ref: review
         required: true
         description: Parent review
+      flag_type:
+        type: text
+        description: Type of flag
+      applied_by:
+        type: ref
+        ref: user
+        description: User who applied the flag
+      applied_at:
+        type: timestamp
+        description: When flag was applied
+      created_at:
+        type: timestamp
+        auto: now
+        required: true
+      updated_at:
+        type: timestamp
+        auto: update
+      created_by:
+        type: ref
+        ref: user
+        auto: user
     flag_types:
     - review_comment
     - highlight

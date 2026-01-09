@@ -36,8 +36,16 @@ function wrapHandler(method) {
       },
     };
 
+    const url = new URL(request.url);
+    url.searchParams.set('domain', domain);
+    const modifiedRequest = new Request(url.toString(), {
+      method: request.method,
+      headers: request.headers,
+      body: method !== 'GET' && method !== 'HEAD' ? await request.text() : undefined
+    });
+
     const handlers = createCrudHandlers(entityName);
-    return handlers(request, enhancedContext);
+    return handlers(modifiedRequest, enhancedContext);
   };
 }
 

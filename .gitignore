@@ -44,3 +44,5 @@ yarn-error.log*
 /config
 *.pem
 serviceAccountCloud.json
+
+.code-search/

@@ -36,7 +36,9 @@ function wrapHandler(method) {
       },
     };
 
-    const modifiedRequest = new Request(request.url + `?domain=${domain}`, {
+    const url = new URL(request.url);
+    url.searchParams.set('domain', domain);
+    const modifiedRequest = new Request(url.toString(), {
       method: request.method,
       headers: request.headers,
       body: method !== 'GET' && method !== 'HEAD' ? await request.text() : undefined
