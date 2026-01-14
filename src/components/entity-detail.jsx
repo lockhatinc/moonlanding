@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useCallback, memo } from 'react';
-import dynamic from 'next/dynamic';
+import dynamic, { useRouter } from '@/lib/next-polyfills';
 import { Tabs, Badge, Stack, Center, Loader } from '@mantine/core';
 import { getDisplayFields } from '@/config';
-import { useRouter } from 'next/navigation';
 import { Icons } from '@/config/icon-config';
 import { SkeletonDetail } from '@/components/skeleton';
 import { useApi } from '@/lib/api-client-unified';

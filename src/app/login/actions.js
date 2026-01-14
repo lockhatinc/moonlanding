@@ -5,7 +5,7 @@ import { createSession } from '@/engine.server';
 import { specs } from '@/config/spec-helpers';
 import { initializeSystemConfig } from '@/config/system-config-loader';
 // Fallback: import { } from '@/config/spec-helpers';
-import { redirect } from 'next/navigation';
+import { redirect } from '@/lib/next-polyfills';
 
 let _initialized = false;
 

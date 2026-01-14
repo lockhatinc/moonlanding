@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound } from '@/lib/next-polyfills';
 import { createListPage } from '@/lib/page-factory';
 
 const listPageCreator = createListPage();

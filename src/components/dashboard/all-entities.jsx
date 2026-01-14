@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Paper, Title, SimpleGrid, UnstyledButton, Group, Text } from '@mantine/core';
-import Link from 'next/link';
+import Link from '@/lib/next-polyfills';
 import { Icons } from '@/config/icon-config';
 
 export const AllEntities = memo(function AllEntities({ navItems }) {

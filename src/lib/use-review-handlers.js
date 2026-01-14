@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/next-polyfills';
 import { useApi } from '@/lib/api-client-unified';
 
 export function useReviewHandlers(dataId) {

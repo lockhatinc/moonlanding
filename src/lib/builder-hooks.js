@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/next-polyfills';
 import { useLoadingState } from '@/lib/hooks';
 import { usePageState } from '@/lib/hooks/use-page-state';
 import { useSortState } from '@/lib/hooks/use-sort-state';

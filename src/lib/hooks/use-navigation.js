@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/next-polyfills';
 
 export const useNavigation = (entityName = null) => {
   const router = useRouter();

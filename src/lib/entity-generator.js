@@ -1,4 +1,4 @@
-import dynamic from 'next/dynamic';
+import dynamic from '@/lib/next-polyfills';
 import { specs, getSpec } from '@/config/spec-helpers';
 import { ERROR_MESSAGES } from '@/config';
 import { list, search, searchWithPagination, get, getChildren, batchGetChildren, listWithPagination, create, update, remove } from '@/engine';
@@ -8,9 +8,9 @@ import { withPageAuth } from '@/lib/auth-middleware';
 import { UnauthorizedError, PermissionError } from '@/lib/error-handler';
 import { createCrudHandlers } from '@/lib/crud-factory';
 import { Shell } from '@/components/layout';
-import { notFound } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
+import { notFound } from '@/lib/next-polyfills';
+import { revalidatePath } from '@/lib/next-polyfills';
+import { redirect } from '@/lib/next-polyfills';
 import { forwardRef } from 'react';
 import { getNavItems } from '@/config/spec-helpers';
 import { QueryAdapter } from '@/lib/query-string-adapter';

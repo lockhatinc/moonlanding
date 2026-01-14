@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import dynamic from 'next/dynamic';
+import dynamic from '@/lib/next-polyfills';
 import { Box, Button, Group, Text, Title, Loader } from '@mantine/core';
 import { useFormState } from '@/lib/hooks';
 import { useNavigation } from '@/lib/hooks/use-navigation';

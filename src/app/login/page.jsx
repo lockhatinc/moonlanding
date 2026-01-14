@@ -1,5 +1,5 @@
 import { getUser } from '@/engine.server';
-import { redirect } from 'next/navigation';
+import { redirect } from '@/lib/next-polyfills';
 import { LoginForm } from './login-form';
 import { Center, Paper, Box, Title, Text, Code, ThemeIcon } from '@mantine/core';
 

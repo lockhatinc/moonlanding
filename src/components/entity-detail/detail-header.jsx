@@ -1,6 +1,6 @@
 import { Group, Box, Title, ActionIcon, Button } from '@mantine/core';
 import { ACTION_ICONS } from '@/config/icon-config';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/next-polyfills';
 import { FieldRender } from '../field-render';
 
 export function DetailHeader({ spec, data, canEdit, canDelete, onDelete, icon: Icon }) {

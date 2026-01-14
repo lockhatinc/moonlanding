@@ -1,7 +1,7 @@
 'use client';
 
 import { useFormStatus } from 'react-dom';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/next-polyfills';
 import { useMemo, useCallback } from 'react';
 import { Button, Title, Group, Box } from '@mantine/core';
 import { useFormState } from '@/lib/hooks';

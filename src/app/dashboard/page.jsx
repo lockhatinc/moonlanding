@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { redirect } from '@/lib/next-polyfills';
 
 export default function DashboardRedirect() {
   redirect('/');

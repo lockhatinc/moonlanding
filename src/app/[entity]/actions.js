@@ -2,7 +2,7 @@
 
 import { list, get, remove, create, update } from '@/engine';
 import { dateToSeconds } from '@/lib/field-registry';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath } from '@/lib/next-polyfills';
 import { createCRUDActions, createEntityAction } from '@/lib/action-utils';
 
 import { serverDeleteEntity } from '@/lib/action-factory';

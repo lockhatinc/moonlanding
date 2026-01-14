@@ -2,7 +2,7 @@ import { getSpec, getNavItems } from '@/config/spec-helpers';
 import { get, getChildren } from '@/engine';
 import { can } from '@/lib/permissions';
 import { withPageAuth } from '@/lib/auth-middleware';
-import { notFound } from 'next/navigation';
+import { notFound } from '@/lib/next-polyfills';
 import { loadFormOptions } from './utils';
 
 export { withPageAuth as requireEntityAccess };

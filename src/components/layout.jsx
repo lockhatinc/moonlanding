@@ -1,7 +1,7 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
+import { usePathname } from '@/lib/next-polyfills';
+import Link from '@/lib/next-polyfills';
 import { AppShell, Burger, Group, Avatar, Menu, Text, NavLink, Stack, UnstyledButton, Box } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Icons, ACTION_ICONS, NAVIGATION_ICONS } from '@/config/icon-config';

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo, Suspense, lazy } from 'react';
-import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
+import dynamic from '@/lib/next-polyfills';
+import { useRouter } from '@/lib/next-polyfills';
 import { useHotkeys } from '@mantine/hooks';
 import { Stack, Group, Box, Title, Tabs, Grid, ScrollArea, Paper, Badge, Text, ActionIcon, Button, Modal, Skeleton } from '@mantine/core';
 import { ACTION_ICONS, UI_ICONS } from '@/config/icon-config';

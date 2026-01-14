@@ -1,8 +1,8 @@
-import dynamicImport from 'next/dynamic';
+import dynamicImport from '@/lib/next-polyfills';
 import { count } from '@/engine';
 import { getUser } from '@/engine.server';
 import { getNavItems } from '@/config/spec-helpers';
-import { redirect } from 'next/navigation';
+import { redirect } from '@/lib/next-polyfills';
 import { Shell } from '@/components/layout';
 import { Box, Title, Text, SimpleGrid, Stack } from '@mantine/core';
 import { AllEntities } from '@/components/dashboard/all-entities';
