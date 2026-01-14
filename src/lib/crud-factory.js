@@ -442,7 +442,10 @@ export const createCrudHandlers = (entityName) => {
         // Add parent filter to request
         const url = new URL(request.url);
         url.searchParams.set(parentFkField, context.params.parentId);
-        const filteredRequest = new Request(url, request);
+        const filteredRequest = new Request(url, {
+          method: request.method,
+          headers: request.headers
+        });
         return await handlers.list(user, filteredRequest);
       }
       return await handlers.list(user, request);
