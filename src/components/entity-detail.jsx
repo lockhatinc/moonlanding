@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, memo } from 'react';
-import dynamic, { useRouter } from '@/lib/next-polyfills';
+import { dynamic, useRouter } from '@/lib/next-polyfills';
 import { Tabs, Badge, Stack, Center, Loader } from '@mantine/core';
 import { getDisplayFields } from '@/config';
 import { Icons } from '@/config/icon-config';

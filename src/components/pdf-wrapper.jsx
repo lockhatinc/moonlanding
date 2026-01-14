@@ -1,7 +1,6 @@
 'use client';
 
-import dynamic from '@/lib/next-polyfills';
-import { useSearchParams } from '@/lib/next-polyfills';
+import { dynamic, useSearchParams } from '@/lib/next-polyfills';
 
 const PDFViewer = dynamic(() => import('./pdf-viewer').then(m => ({ default: m.PDFViewer })), {
   loading: () => <div>Loading PDF viewer...</div>,

@@ -97,9 +97,35 @@ const server = http.createServer(async (req, res) => {
     const pathname = url.pathname;
 
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
+    // Handle page requests (non-API routes)
+    if (!pathname.startsWith('/api/')) {
+      try {
+        const { renderPageToHtml, REDIRECT_HANDLED } = await loadModule(path.join(__dirname, 'src/lib/page-renderer.js'));
+        const html = await renderPageToHtml(pathname, req, res);
+        if (html === REDIRECT_HANDLED) {
+          // Redirect was already handled and response sent
+          const elapsed = Date.now() - startTime;
+          console.log(`[${req.method}] ${req.url} ${res.statusCode} ${elapsed}ms (page redirect)`);
+          return;
+        }
+        if (html) {
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          res.writeHead(200);
+          res.end(html);
+          const elapsed = Date.now() - startTime;
+          console.log(`[${req.method}] ${req.url} 200 ${elapsed}ms (page)`);
+          return;
+        }
+      } catch (err) {
+        console.error('[Page Renderer] Error:', err.message);
+      }
+      // Fall through to 404 if page rendering fails
+    }
+
+    // Handle API requests
     if (pathname.startsWith('/api/')) {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
       // Special handling for specific routes
       const pathParts = pathname.slice(5).split('/').filter(Boolean);
       const firstPart = pathParts[0];

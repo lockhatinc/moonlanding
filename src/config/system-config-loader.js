@@ -39,6 +39,14 @@ export class SystemConfigLoader {
         registerEntityHandlers();
         log('Entity event handlers registered');
 
+        // Seed initial users if needed
+        try {
+          const { seedUsers } = await import('./seed-users.js');
+          await seedUsers();
+        } catch (seedError) {
+          log('Warning: Could not seed users', seedError.message);
+        }
+
         log('Custom config loaded successfully', {
           entities: Object.keys(customConfig.entities || {}).length,
           roles: Object.keys(customConfig.roles || {}).length,
@@ -91,6 +99,14 @@ export class SystemConfigLoader {
         log('Entity event handlers registered');
       } catch (hookError) {
         log('Warning: Could not register entity handlers', hookError.message);
+      }
+
+      // Seed initial users if needed
+      try {
+        const { seedUsers } = await import('./seed-users.js');
+        await seedUsers();
+      } catch (seedError) {
+        log('Warning: Could not seed users', seedError.message);
       }
 
       log('ConfigGeneratorEngine initialized and set as global');

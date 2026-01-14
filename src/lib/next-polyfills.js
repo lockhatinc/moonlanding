@@ -21,16 +21,68 @@ export class NextResponse {
   }
 }
 
+// Global request/response state set by server.js and route handlers
+let currentRequest = null;
+let currentResponse = null;
+
+export function setCurrentRequest(req) {
+  currentRequest = req;
+}
+
+export function setCurrentResponse(res) {
+  currentResponse = res;
+}
+
 export async function cookies() {
   if (typeof window !== 'undefined') {
     throw new Error('cookies() should only be called on the server side');
   }
+
+  // Parse cookies from request
+  const cookieHeader = currentRequest?.headers?.cookie || '';
+  const cookieMap = {};
+
+  if (cookieHeader) {
+    cookieHeader.split(';').forEach(cookie => {
+      const [name, value] = cookie.split('=').map(s => s.trim());
+      if (name) cookieMap[name] = decodeURIComponent(value || '');
+    });
+  }
+
   return {
-    get: (name) => ({ name, value: '' }),
-    set: (name, value, options) => {},
-    delete: (name) => {},
-    getAll: () => [],
-    has: (name) => false,
+    get: (name) => {
+      const value = cookieMap[name];
+      return value ? { name, value } : undefined;
+    },
+    set: (name, value, options = {}) => {
+      if (!currentResponse) return;
+
+      let setCookieValue = `${name}=${encodeURIComponent(value)}`;
+      if (options.path) setCookieValue += `; Path=${options.path}`;
+      if (options.maxAge) setCookieValue += `; Max-Age=${options.maxAge}`;
+      if (options.expires) setCookieValue += `; Expires=${options.expires}`;
+      if (options.secure) setCookieValue += '; Secure';
+      if (options.httpOnly) setCookieValue += '; HttpOnly';
+      if (options.sameSite) setCookieValue += `; SameSite=${options.sameSite}`;
+
+      const existing = currentResponse.getHeader('Set-Cookie') || [];
+      const setCookies = Array.isArray(existing) ? existing : [existing];
+      currentResponse.setHeader('Set-Cookie', [...setCookies, setCookieValue]);
+    },
+    delete: (name) => {
+      if (!currentResponse) return;
+
+      const setCookieValue = `${name}=; Path=/; Max-Age=0`;
+      const existing = currentResponse.getHeader('Set-Cookie') || [];
+      const setCookies = Array.isArray(existing) ? existing : [existing];
+      currentResponse.setHeader('Set-Cookie', [...setCookies, setCookieValue]);
+    },
+    getAll: () => {
+      return Object.entries(cookieMap).map(([name, value]) => ({ name, value }));
+    },
+    has: (name) => {
+      return name in cookieMap;
+    },
   };
 }
 
@@ -52,11 +104,16 @@ export function revalidateTag(tag) {
 }
 
 // Frontend polyfills for Next.js navigation
-export function redirect(path) {
+export function redirect(path, status = 302) {
   if (typeof window !== 'undefined') {
     window.location.href = path;
   } else {
-    throw new Error('redirect() called on server without proper handling');
+    // Throw error with properties that page-renderer can recognize
+    const error = new Error(`Redirect to ${path}`);
+    error.type = 'redirect';
+    error.location = path;
+    error.status = status;
+    throw error;
   }
 }
 

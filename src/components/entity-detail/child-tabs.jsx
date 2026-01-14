@@ -1,7 +1,7 @@
 'use client';
 
 import { memo } from 'react';
-import dynamic from '@/lib/next-polyfills';
+import { dynamic } from '@/lib/next-polyfills';
 import { Tabs, Loader } from '@mantine/core';
 import { can } from '@/lib/permissions';
 

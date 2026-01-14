@@ -1,4 +1,4 @@
-import dynamicImport from '@/lib/next-polyfills';
+import { dynamic as dynamicImport } from '@/lib/next-polyfills';
 import { count } from '@/engine';
 import { getUser } from '@/engine.server';
 import { getNavItems } from '@/config/spec-helpers';

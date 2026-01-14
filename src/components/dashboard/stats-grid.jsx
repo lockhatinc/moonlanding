@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { SimpleGrid, UnstyledButton, Paper, Group, Text, ThemeIcon } from '@mantine/core';
-import Link from '@/lib/next-polyfills';
+import { Link } from '@/lib/next-polyfills';
 import { Icons } from '@/config/icon-config';
 
 const StatCard = memo(function StatCard({ stat }) {

@@ -1,5 +1,5 @@
 import { Paper, Title, Stack, UnstyledButton, Group, ThemeIcon, Box, Text } from '@mantine/core';
-import Link from '@/lib/next-polyfills';
+import { Link } from '@/lib/next-polyfills';
 import { ENTITY_ICONS } from '@/config/icon-config';
 
 const ACTIONS = [
