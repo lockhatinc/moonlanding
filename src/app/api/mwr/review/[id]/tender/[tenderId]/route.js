@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 import { get } from '@/engine';
 import { withPageAuth } from '@/lib/auth-middleware';
 import { calculateDaysUntilDeadline, getDeadlineStatus } from '@/lib/mwr-core-engines';

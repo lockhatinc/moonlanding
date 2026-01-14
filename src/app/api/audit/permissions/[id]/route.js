@@ -1,7 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, cookies } from '@/lib/next-polyfills';
 import { lucia } from '@/engine.server';
 import { permissionAuditService } from '@/services';
-import { cookies } from 'next/headers';
 
 async function getUser() {
   const sessionId = (await cookies()).get(lucia.sessionCookieName)?.value ?? null;

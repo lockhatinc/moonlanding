@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 import { withPageAuth } from '@/lib/auth-middleware';
 import { revokeCollaborator } from '@/lib/collaborator-access-control';
 

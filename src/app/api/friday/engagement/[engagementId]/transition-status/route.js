@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 import { get } from '@/engine';
 import { withPageAuth } from '@/lib/auth-middleware';
 import { getTransitionStatus } from '@/lib/engagement-lifecycle-engine';

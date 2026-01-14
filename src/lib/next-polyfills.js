@@ -34,6 +34,15 @@ export async function cookies() {
   };
 }
 
+export function headers() {
+  return {
+    get: (name) => null,
+    getSetCookie: () => [],
+    has: (name) => false,
+    entries: () => [],
+  };
+}
+
 export function revalidatePath(path, type = 'page') {
   // No-op in zero-build mode
 }

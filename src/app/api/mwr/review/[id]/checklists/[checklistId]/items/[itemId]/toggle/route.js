@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 import { withPageAuth } from '@/lib/auth-middleware';
 import { completeChecklistItem, getChecklistProgress } from '@/lib/mwr-core-engines';
 

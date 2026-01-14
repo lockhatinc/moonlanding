@@ -1525,6 +1525,9 @@ entities:
     has_queue: true
     has_templates: true
     fields:
+      id:
+        type: id
+        required: true
       sender_email:
         type: email
         required: true

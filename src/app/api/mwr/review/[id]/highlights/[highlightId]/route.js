@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 import { get, update } from '@/engine';
 import { withPageAuth } from '@/lib/auth-middleware';
 import { softDeleteHighlight } from '@/lib/highlight-soft-delete';

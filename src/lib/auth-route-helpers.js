@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { NextResponse, cookies } from '@/lib/next-polyfills';
 import { SESSION } from '@/config/auth-config';
 import { HTTP } from '@/config/api-constants';
 

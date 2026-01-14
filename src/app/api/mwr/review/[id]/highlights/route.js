@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from '@/lib/next-polyfills';
 import { create, list } from '@/engine';
 import { withPageAuth } from '@/lib/auth-middleware';
 
