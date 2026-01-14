@@ -46,3 +46,4 @@ yarn-error.log*
 serviceAccountCloud.json
 
 .code-search/
+.glootie-stop-verified
