@@ -1,14 +1,17 @@
 import { getDomainLoader } from '@/lib/domain-loader';
 import { getConfigEngine } from '@/lib/config-generator-engine';
 import { createCrudHandlers } from '@/lib/crud-factory';
-import { list } from '@/lib/query-engine';
+import { list, listWithPagination } from '@/lib/query-engine';
 import { requireAuth, requirePermission } from '@/lib/auth-middleware';
-import { ok } from '@/lib/response-formatter';
+import { paginated } from '@/lib/response-formatter';
 import { withErrorHandler } from '@/lib/with-error-handler';
 import { AppError } from '@/lib/error-handler';
 import { HTTP } from '@/config/api-constants';
+import { parse as parseQuery } from '@/lib/query-string-adapter';
+import { setCurrentRequest } from '@/engine.server';
 
 export const GET = withErrorHandler(async (request) => {
+  setCurrentRequest(request);
   const user = await requireAuth();
   const domainLoader = getDomainLoader();
   const configEngine = await getConfigEngine();
@@ -26,7 +29,11 @@ export const GET = withErrorHandler(async (request) => {
   const spec = configEngine.generateEntitySpec(entity);
   requirePermission(user, spec, 'list');
 
-  const data = list(entity);
+  // Parse pagination parameters
+  const { page = 1, pageSize } = await parseQuery(request);
+
+  // Get paginated data
+  const { items: data, pagination } = await listWithPagination(entity, {}, page, pageSize);
 
   const filtered = domainLoader.filterDataByDomain(data, domain, entity);
 
@@ -57,13 +64,8 @@ export const GET = withErrorHandler(async (request) => {
     return bDate - aDate;
   });
 
-  return ok({
-    entity,
-    domain,
-    items: sorted,
-    count: sorted.length,
-    priority_reviews: priorityReviews
-  });
+  // Return paginated response with metadata
+  return paginated(sorted, { ...pagination, priority_reviews: priorityReviews });
 }, 'MWR:Review:List');
 
 async function handleMutation(request, method) {

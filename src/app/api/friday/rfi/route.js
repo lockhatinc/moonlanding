@@ -1,7 +1,8 @@
 import { NextResponse } from '@/lib/next-polyfills';
-import { list } from '@/engine';
+import { list, listWithPagination } from '@/engine';
 import { withPageAuth } from '@/lib/auth-middleware';
 import { getCurrentState } from '@/lib/rfi-dual-state-engine';
+import { paginated } from '@/lib/response-formatter';
 
 export async function GET(request) {
   try {
@@ -10,13 +11,14 @@ export async function GET(request) {
     const searchParams = new URL(request.url).searchParams;
     const engagementId = searchParams.get('engagement_id');
     const status = searchParams.get('status');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const page = parseInt(searchParams.get('page') || '1');
+    const pageSize = parseInt(searchParams.get('pageSize') || '50');
 
     const filters = {};
     if (engagementId) filters.engagement_id = engagementId;
     if (status !== null) filters.status = parseInt(status);
 
-    const rfis = list('rfi', filters, { limit });
+    const { items: rfis, pagination } = await listWithPagination('rfi', filters, page, pageSize);
 
     // Enrich with display states
     const enrichedRfis = rfis.map(rfi => {
@@ -31,11 +33,7 @@ export async function GET(request) {
       };
     });
 
-    return NextResponse.json({
-      success: true,
-      data: enrichedRfis,
-      count: enrichedRfis.length
-    });
+    return paginated(enrichedRfis, pagination);
   } catch (error) {
     console.error('[rfi-route] Error:', error);
     return NextResponse.json(
