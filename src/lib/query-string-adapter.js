@@ -37,7 +37,7 @@ export class QueryAdapter {
 
   static extractFilters(searchParams) {
     const filters = {};
-    const reserved = new Set(['q', 'page', 'pageSize', 'action', 'limit', 'offset', 'sort', 'sortDir']);
+    const reserved = new Set(['q', 'page', 'pageSize', 'action', 'limit', 'offset', 'sort', 'sortDir', 'domain']);
     for (const [key, value] of searchParams) {
       if (!reserved.has(key) && value) {
         filters[key] = value;
