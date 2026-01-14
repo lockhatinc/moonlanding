@@ -13,7 +13,7 @@ export const GET = withErrorHandler(async (request) => {
   setCurrentRequest(request);
   const user = await requireAuth();
   const domainLoader = getDomainLoader();
-  const configEngine = getConfigEngine();
+  const configEngine = await getConfigEngine();
   const domain = 'friday';
   const entity = 'engagement';
 

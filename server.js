@@ -59,6 +59,26 @@ async function loadModule(filePath) {
   return module;
 }
 
+// Normalize header names to proper HTTP case
+// Response.headers converts all keys to lowercase, but Node.js http server
+// needs proper case for headers to be transmitted correctly (especially Set-Cookie)
+function normalizeHeaderName(key) {
+  const headerMap = {
+    'content-type': 'Content-Type',
+    'content-length': 'Content-Length',
+    'set-cookie': 'Set-Cookie',
+    'cache-control': 'Cache-Control',
+    'expires': 'Expires',
+    'etag': 'ETag',
+    'last-modified': 'Last-Modified',
+    'location': 'Location',
+    'date': 'Date',
+    'connection': 'Connection',
+  };
+
+  return headerMap[key.toLowerCase()] || key;
+}
+
 const server = http.createServer(async (req, res) => {
   const startTime = Date.now();
 
@@ -94,8 +114,19 @@ const server = http.createServer(async (req, res) => {
         } else {
           console.log(`[Server] No specific route found at: ${specificRoute}`);
 
+          // Check for nested dynamic routes like /friday/engagement/[id]/rfi
+          if (pathParts.length >= 3 && firstPart === 'friday') {
+            const baseEntity = pathParts[1];
+            const childEntity = pathParts[3];
+            const nestedRoute = path.join(__dirname, `src/app/api/friday/${baseEntity}/[id]/${childEntity}/route.js`);
+            if (childEntity && fs.existsSync(nestedRoute)) {
+              console.log(`[Server] Using nested Friday route: friday/${baseEntity}/[id]/${childEntity}`);
+              routeFile = nestedRoute;
+            }
+          }
+
           // Check for nested dynamic routes like /mwr/review/[id]/highlights
-          if (pathParts.length >= 3 && firstPart === 'mwr') {
+          if (!routeFile && pathParts.length >= 3 && firstPart === 'mwr') {
             const baseEntity = pathParts[1];
             const childEntity = pathParts[3];
             const nestedRoute = path.join(__dirname, `src/app/api/mwr/${baseEntity}/[id]/${childEntity}/route.js`);
@@ -144,7 +175,10 @@ const server = http.createServer(async (req, res) => {
       let pathArray;
       let params = { entity: firstPart, path: [] };
 
-      if (routeFile.includes('mwr/') && routeFile.includes('[id]')) {
+      if (routeFile.includes('friday/') && routeFile.includes('[id]')) {
+        // Nested Friday route like /friday/engagement/[id]/rfi
+        params = { id: pathParts[2] };
+      } else if (routeFile.includes('mwr/') && routeFile.includes('[id]')) {
         // Nested MWR route like /mwr/review/[id]/highlights
         params = { id: pathParts[2] };
       } else if (routeFile.includes('[entity]')) {
@@ -169,7 +203,27 @@ const server = http.createServer(async (req, res) => {
       try {
         const response = await handler(request, context);
         const responseBody = await response.json();
-        res.writeHead(response.status, response.headers);
+
+        // Convert headers and normalize case for Node.js http server
+        let headerObj = {};
+        if (response.headers) {
+          // Headers object is iterable - iterate to preserve all headers
+          for (const [key, value] of response.headers) {
+            // Normalize header names to proper HTTP case
+            // Node.js http server needs proper case for headers to work correctly
+            const normalizedKey = normalizeHeaderName(key);
+            headerObj[normalizedKey] = value;
+          }
+        }
+
+        // Ensure Content-Type is set
+        if (!headerObj['Content-Type']) {
+          headerObj['Content-Type'] = 'application/json; charset=utf-8';
+        }
+
+        console.log('[API Response] Status:', response.status, 'Headers:', Object.keys(headerObj));
+        console.log('[API Response] Set-Cookie header:', headerObj['Set-Cookie'] ? 'PRESENT' : 'MISSING');
+        res.writeHead(response.status, headerObj);
         res.end(JSON.stringify(responseBody));
       } catch (err) {
         console.error('[API] Handler error:', err.message || err);

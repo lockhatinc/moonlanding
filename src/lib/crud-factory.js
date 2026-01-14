@@ -436,6 +436,15 @@ export const createCrudHandlers = (entityName) => {
     if (method === 'GET') {
       if (id && childKey) return await handlers.getChildren(user, id, childKey);
       if (id || action === 'view') return await handlers.get(user, id || context.params?.id);
+      // For nested resources, list with parent filter
+      if (context.params?.parentId && context.params?.parentEntity) {
+        const parentFkField = `${context.params.parentEntity}_id`;
+        // Add parent filter to request
+        const url = new URL(request.url);
+        url.searchParams.set(parentFkField, context.params.parentId);
+        const filteredRequest = new Request(url, request);
+        return await handlers.list(user, filteredRequest);
+      }
       return await handlers.list(user, request);
     }
 
@@ -444,7 +453,17 @@ export const createCrudHandlers = (entityName) => {
         const data = await request.json();
         return await handlers.customAction(user, action, id, data);
       }
-      return await handlers.create(user, await request.json());
+      const data = await request.json();
+      // Inject parent ID for nested resources
+      if (context.params?.parentId && context.params?.parentEntity) {
+        const parentFkField = `${context.params.parentEntity}_id`;
+        console.log(`[CRUD] Injecting parent: ${parentFkField} = ${context.params.parentId}`);
+        data[parentFkField] = context.params.parentId;
+        console.log(`[CRUD] Data after injection:`, data);
+      } else {
+        console.log(`[CRUD] No parent injection: parentId=${context.params?.parentId}, parentEntity=${context.params?.parentEntity}`);
+      }
+      return await handlers.create(user, data);
     }
 
     if (method === 'PUT' || method === 'PATCH') {

@@ -11,7 +11,7 @@ import { HTTP } from '@/config/api-constants';
 export const GET = withErrorHandler(async (request) => {
   const user = await requireAuth();
   const domainLoader = getDomainLoader();
-  const configEngine = getConfigEngine();
+  const configEngine = await getConfigEngine();
   const domain = 'mwr';
   const entity = 'review';
 
