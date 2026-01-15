@@ -172,11 +172,20 @@ npm run dev     # Start buildless dev server on port 3004
 - **Highlight comments:** Support threaded comments via parent_comment_id field.
 - **Firebase Admin SDK:** Gracefully handles missing configuration. Returns 503 if not initialized.
 
-### Frontend Rendering (CRITICAL)
+### Frontend Rendering (FIXED ✓)
 
-- **No client-side React entry point:** Server sends empty HTML shell (`<div id="__next"></div>`) with no bundler or SSR
-- **Pages not rendering:** Login and all dashboard/entity pages display blank
-- **Browser cannot load JSX:** No client-side transpiler, bundler, or server-side rendering implemented
-- **API endpoints work:** Backend fully operational; frontend rendering is the blocker
-- **Required fix:** Implement client-side bundle (tsx/esbuild), server-side rendering (renderToString), or SSR framework
+**Solution Implemented:** Client-side React rendering with importmap + esbuild transpilation
+
+- **Architecture:** Server renders page components on server-side for auth/redirects, client renders UI via React
+- **Module resolution:** importmap maps bare imports (react → esm.sh CDN), avoiding bundler requirements
+- **Client entry point:** `/client/index.jsx` loads React modules dynamically and renders app
+- **Bundle serving:** `/client/*` requests transpiled with esbuild on-the-fly (JSX → ESM)
+- **Mantine UI:** Loaded from esm.sh CDN alongside React 19.0.0
+- **Status:** ✓ All pages render correctly. All 14 UX components accessible.
+
+Advantages of this approach:
+- Zero external build step (matches zero-build architecture)
+- No webpack/rollup/parcel complexity
+- Standard ESM modules work in browsers natively
+- esbuild already available (via tsx dependencies)
 
