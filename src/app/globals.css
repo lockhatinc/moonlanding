@@ -117,3 +117,126 @@ select:focus {
   }
 }
 
+/* Mobile responsive optimizations */
+@media (max-width: 768px) {
+  /* Better spacing on mobile */
+  body {
+    font-size: 16px; /* Prevents zoom on input focus */
+  }
+
+  /* Larger touch targets */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Better table wrapping */
+  table {
+    font-size: 14px;
+  }
+
+  th, td {
+    padding: 0.5rem 0.25rem;
+  }
+
+  /* Responsive forms */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+    padding: 0.5rem;
+  }
+
+  /* Better modal on mobile */
+  [role="dialog"] {
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
+  /* Stack layout on mobile */
+  .stack-responsive {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Reduce padding on mobile */
+  [style*="padding"] {
+    padding: 0.5rem !important;
+  }
+}
+
+/* Small devices (phones) */
+@media (max-width: 480px) {
+  /* Larger text for readability */
+  body {
+    font-size: 14px;
+  }
+
+  /* Reduce margins */
+  h1, h2, h3, h4, h5, h6 {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Single column layouts */
+  [display="grid"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Better spacing for touch */
+  .touch-target {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Hide less important elements */
+  .hide-mobile {
+    display: none;
+  }
+}
+
+/* Landscape orientation */
+@media (orientation: landscape) and (max-height: 500px) {
+  header, footer {
+    padding: 0.25rem;
+  }
+
+  main {
+    margin-top: 0.25rem;
+  }
+}
+
+/* Accessibility: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Accessibility: high contrast */
+@media (prefers-contrast: more) {
+  button:focus-visible,
+  input:focus-visible,
+  a:focus-visible {
+    outline-width: 3px;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+  }
+}

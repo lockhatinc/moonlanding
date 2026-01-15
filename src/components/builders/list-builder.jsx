@@ -10,6 +10,7 @@ import { renderCellValue } from '@/lib/rendering-engine';
 import { filterByQuery, groupByField, sortGroups } from '@/lib/list-data-transform';
 import { SkeletonTable } from '@/components/skeleton';
 import { EmptyState, NoSearchResults } from '@/components/empty-state';
+import { BulkActionsToolbar } from '@/components/bulk-actions-toolbar';
 
 const TableRow = memo(function TableRow({ row, columns, spec, groupBy, onRowClick }) {
   const isPriority = row._isPriority === true;
@@ -56,6 +57,7 @@ export function ListBuilder({
 }) {
   const { pagination: paginationState, sort, search, handlers, setLoading } = useBuilderState(spec, 'list');
   const { selected: expandedGroups, toggle: toggleGroup } = useSelection([], true);
+  const { selected: selectedRows, toggle: toggleRow, toggleAll: toggleAllRows, clear: clearSelected } = useSelection([], false);
 
   const columns = useMemo(() => buildListColumns(spec), [spec]);
   const Icon = Icons[spec.icon] || Icons.file;
@@ -88,6 +90,11 @@ export function ListBuilder({
 
   return (
     <Stack gap="md">
+      <BulkActionsToolbar
+        selectionCount={selectedRows.length}
+        actions={[]}
+        onClearSelection={clearSelected}
+      />
       <Group justify="space-between">
         <Group gap="xs">
           <Icon size={24} />
