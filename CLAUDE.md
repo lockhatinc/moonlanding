@@ -187,6 +187,7 @@ npm run dev     # Start buildless dev server on port 3004
 - Route handler order matters: `/client/` bundle handler MUST come before page renderer to prevent client files from being processed as dynamic pages
 - Error handling in renderPageToHtml() must safely convert errors to strings (Symbol values in error properties cause crashes)
 - tsconfig.json must include `"jsx": "react-jsx"` for tsx to properly transpile JSX in .js files
+- **Content-Length header MUST be set** when sending page HTML responses. Without it, Node.js uses chunked transfer encoding, causing browsers to only receive the first chunk (incomplete HTML). Set with: `res.setHeader('Content-Length', Buffer.byteLength(html, 'utf-8'))`
 - Server-rendered HTML includes `<div id="__next">` with rendered content + importmap + window.__PATHNAME__ and __PARAMS__ for client context
 
 **Advantages:**
