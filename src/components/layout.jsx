@@ -16,6 +16,7 @@ export function Shell({ children, user, nav = [] }) {
   const { shortcutsOpened, openShortcuts, closeShortcuts } = useKeyboardShortcuts();
 
   return (
+    <>
     <AppShell header={{ height: LAYOUT.headerHeight }} navbar={{ width: LAYOUT.navbarWidth, breakpoint: 'sm', collapsed: { mobile: !opened } }} padding="md">
       {/* Skip to main content link for accessibility */}
       <Button
@@ -133,6 +134,7 @@ export function Shell({ children, user, nav = [] }) {
         Press ? for help
       </Button>
     </Group>
+    </>
   );
 }
 

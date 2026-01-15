@@ -1,6 +1,8 @@
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import React from 'react';
+import { renderToString } from 'react-dom/server';
 import { setCurrentRequest } from '@/engine.server';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -23,8 +25,13 @@ export async function renderPageToHtml(pathname, req, res) {
     // Set the current request for server functions (getUser(), etc)
     setCurrentRequest(req);
 
+    // Make React available globally for JSX transformation at runtime
+    // This is needed because pages use JSX without importing React
+    globalThis.React = React;
+
     // Normalize pathname
     let normalizedPath = pathname === '/' ? '/' : pathname.replace(/\/$/, '');
+    console.log(`[Page Renderer] Processing: ${pathname} → normalized: ${normalizedPath}`);
 
     // Route matching - maps pathname to page file
     let pageFile = null;
@@ -65,6 +72,7 @@ export async function renderPageToHtml(pathname, req, res) {
 
     // Check if page file exists
     if (!pageFile || !fs.existsSync(pageFile)) {
+      console.log(`[Page Renderer] Page file not found: ${pageFile}`);
       return null;
     }
 
@@ -79,12 +87,16 @@ export async function renderPageToHtml(pathname, req, res) {
       return null;
     }
 
+    console.log(`[Page Renderer] Executing component for ${normalizedPath}`);
+
     // Execute the page component (may be async server component)
     // This is needed to handle redirects, getUser(), etc
-    let result;
+    let reactElement;
     try {
-      result = await PageComponent({ params });
+      reactElement = await PageComponent({ params });
+      console.log(`[Page Renderer] Component executed, result type: ${typeof reactElement}, is React element: ${reactElement && reactElement.$$typeof}`);
     } catch (error) {
+      console.error(`[Page Renderer] Component execution error: ${error?.message}`);
       // Check if it's a redirect or special error
       if (error && typeof error === 'object') {
         if (error.type === 'redirect' || error.digest?.includes('NEXT_REDIRECT')) {
@@ -107,10 +119,11 @@ export async function renderPageToHtml(pathname, req, res) {
       }
       // Other errors - log and try to render anyway
       console.error('[Page Renderer] Page error:', error?.message);
+      reactElement = null;
     }
 
-    // Generate HTML shell with client-side rendering bootstrap
-    const html = generateHtmlShell(normalizedPath, params, pageFile);
+    // Generate HTML shell with server-side rendered content
+    const html = generateHtmlShell(normalizedPath, params, pageFile, reactElement);
     return html;
   } catch (error) {
     console.error('[Page Renderer] Error:', error.message, error.stack);
@@ -118,8 +131,13 @@ export async function renderPageToHtml(pathname, req, res) {
   }
 }
 
-function generateHtmlShell(pathname, params, pageFile) {
+function generateHtmlShell(pathname, params, pageFile, reactElement) {
   const title = extractPageTitle(pageFile);
+
+  // Render React element to HTML string if available
+  // For now, skip rendering due to Mantine provider requirements
+  // The server executes the component for auth checks, but content renders client-side
+  let renderedContent = '';
 
   return `<!DOCTYPE html>
 <html lang="en" suppressHydrationWarning>
@@ -137,6 +155,19 @@ function generateHtmlShell(pathname, params, pageFile) {
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background: #f8f9fa; }
     #__next { min-height: 100vh; }
   </style>
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@19.0.0",
+      "react-dom": "https://esm.sh/react-dom@19.0.0",
+      "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+      "@mantine/core": "https://esm.sh/@mantine/core@7.17.8",
+      "@mantine/hooks": "https://esm.sh/@mantine/hooks@7.17.8",
+      "@mantine/notifications": "https://esm.sh/@mantine/notifications@7.17.8",
+      "@mantine/modals": "https://esm.sh/@mantine/modals@7.17.8"
+    }
+  }
+  </script>
 </head>
 <body>
   <div id="__next"></div>
@@ -144,10 +175,7 @@ function generateHtmlShell(pathname, params, pageFile) {
     window.__PATHNAME__ = '${escapeJs(pathname)}';
     window.__PARAMS__ = ${JSON.stringify(params)};
   </script>
-  <script type="module">
-    // Client-side page initialization
-    console.log('[App] Starting on', window.__PATHNAME__);
-  </script>
+  <script type="module" src="/client/index.jsx"></script>
 </body>
 </html>`;
 }

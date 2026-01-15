@@ -259,6 +259,40 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // Handle client-side bundle requests
+    if (pathname.startsWith('/client/')) {
+      const clientFile = pathname.slice(8); // Remove '/client/' prefix
+      let filePath = path.join(__dirname, `src/client/${clientFile}`);
+
+      // Try with .jsx extension if not provided
+      if (!fs.existsSync(filePath) && !filePath.endsWith('.jsx')) {
+        filePath = filePath + '.jsx';
+      }
+
+      if (fs.existsSync(filePath) && (filePath.endsWith('.jsx') || filePath.endsWith('.js'))) {
+        try {
+          // Read and transpile the file with esbuild
+          const code = fs.readFileSync(filePath, 'utf-8');
+          const { transform } = await import('esbuild');
+          const result = await transform(code, { loader: 'jsx', format: 'esm' });
+          res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+          res.writeHead(200);
+          res.end(result.code);
+          const elapsed = Date.now() - startTime;
+          console.log(`[${req.method}] ${req.url} 200 ${elapsed}ms (client bundle)`);
+          return;
+        } catch (err) {
+          console.error('[Client Bundle] Error:', err.message);
+          res.writeHead(500);
+          res.end(JSON.stringify({ error: 'Error transpiling bundle: ' + err.message }));
+          return;
+        }
+      }
+      res.writeHead(404);
+      res.end(JSON.stringify({ error: 'Client bundle not found' }));
+      return;
+    }
+
     res.writeHead(404);
     res.end(JSON.stringify({ error: 'Not found' }));
   } catch (err) {
