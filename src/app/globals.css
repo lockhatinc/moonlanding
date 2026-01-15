@@ -5,3 +5,115 @@
 .hover-bg:hover {
   background-color: var(--mantine-color-gray-1);
 }
+
+/* Smooth animations and transitions */
+* {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Button hover effects */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+/* Link and anchor smooth transitions */
+a {
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+/* Fade in animation for page loads */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Apply fade-in to main content */
+main > * {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Modal and dialog animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading skeleton pulse animation */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Improve focus states for accessibility */
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--mantine-color-blue-6);
+  outline-offset: 2px;
+}
+
+/* Better table styling */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+thead {
+  background-color: var(--mantine-color-gray-0);
+}
+
+tbody tr:hover {
+  background-color: var(--mantine-color-gray-0);
+}
+
+/* Improved form field spacing */
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+input,
+textarea,
+select {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--mantine-color-blue-6);
+}
+
+/* Print styles */
+@media print {
+  .hover-bg:hover {
+    background-color: transparent;
+  }
+
+  button {
+    display: none;
+  }
+}
+

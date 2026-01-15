@@ -9,6 +9,7 @@ import { Icons, UI_ICONS, NAVIGATION_ICONS, ACTION_ICONS } from '@/config/icon-c
 import { renderCellValue } from '@/lib/rendering-engine';
 import { filterByQuery, groupByField, sortGroups } from '@/lib/list-data-transform';
 import { SkeletonTable } from '@/components/skeleton';
+import { EmptyState, NoSearchResults } from '@/components/empty-state';
 
 const TableRow = memo(function TableRow({ row, columns, spec, groupBy, onRowClick }) {
   const isPriority = row._isPriority === true;
@@ -116,6 +117,17 @@ export function ListBuilder({
 
       {loading ? (
         <SkeletonTable rowCount={TABLE_DEFAULTS.skeleton.rowCount} columnCount={columns.length + (groupBy ? 1 : 0)} />
+      ) : data.length === 0 && search.query ? (
+        <NoSearchResults query={search.query} />
+      ) : data.length === 0 ? (
+        <EmptyState
+          title={`No ${spec.labelPlural.toLowerCase()} yet`}
+          message={`Create your first ${spec.label.toLowerCase()} to get started`}
+          icon={Icons[spec.icon] || Icons.file}
+          action={canCreate}
+          actionLabel={`New ${spec.label}`}
+          actionHref={`/${spec.name}/new`}
+        />
       ) : (
         <div style={{ border: '1px solid var(--mantine-color-gray-3)', borderRadius: TABLE_DEFAULTS.borderRadius, overflow: 'hidden' }}>
           <Table striped highlightOnHover id="results-table">
@@ -194,13 +206,6 @@ export function ListBuilder({
                     />
                   )),
               ]).flat().filter(Boolean)}
-              {data.length === 0 && (
-                <Table.Tr>
-                  <Table.Td colSpan={columns.length + (groupBy ? 1 : 0)} style={{ textAlign: 'center', padding: 32, color: 'var(--mantine-color-gray-6)' }} role="status" aria-live="polite">
-                    No {spec.labelPlural.toLowerCase()} found
-                  </Table.Td>
-                </Table.Tr>
-              )}
             </Table.Tbody>
           </Table>
         </div>

@@ -7,7 +7,25 @@ const StatCard = memo(function StatCard({ stat }) {
   const StatIcon = Icons[stat.icon] || Icons.file;
   return (
     <UnstyledButton component={Link} href={stat.href}>
-      <Paper p="md" withBorder style={{ cursor: 'pointer' }}>
+      <Paper
+        p="md"
+        withBorder
+        style={{
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.boxShadow = 'none';
+        }}
+      >
         <Group justify="space-between" mb="xs">
           <Text size="sm" fw={500}>{stat.name}</Text>
           <ThemeIcon variant="light" color={stat.color} size="sm">
@@ -30,3 +48,4 @@ export function StatsGrid({ stats }) {
     </SimpleGrid>
   );
 }
+

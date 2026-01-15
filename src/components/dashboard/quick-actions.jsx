@@ -33,7 +33,20 @@ export function QuickActions() {
       <Stack gap="xs">
         {ACTIONS.map((action) => (
           <UnstyledButton key={action.label} component={Link} href={action.href}>
-            <Group p="sm" style={{ borderRadius: 8 }} className="hover-bg">
+            <Group
+              p="sm"
+              style={{
+                borderRadius: 8,
+                backgroundColor: 'transparent',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-0)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
               <ThemeIcon size={40} radius="md" color={action.color} variant="light">
                 <action.icon size={20} />
               </ThemeIcon>
@@ -48,3 +61,4 @@ export function QuickActions() {
     </Paper>
   );
 }
+

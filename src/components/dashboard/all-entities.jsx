@@ -12,10 +12,25 @@ export const AllEntities = memo(function AllEntities({ navItems }) {
           const Icon = Icons[item.icon] || Icons.file;
           return (
             <UnstyledButton key={item.name} component={Link} href={item.href}>
-              <Paper p="sm" withBorder style={{ cursor: 'pointer' }}>
+              <Paper
+                p="sm"
+                withBorder
+                style={{
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
                 <Group>
-                  <Icon size={20} color="var(--mantine-color-dimmed)" />
-                  <Text fw={500}>{item.label}</Text>
+                  <Icon size={20} color="var(--mantine-color-blue-6)" />
+                  <Text fw={500} size="sm">{item.label}</Text>
                 </Group>
               </Paper>
             </UnstyledButton>
@@ -25,3 +40,4 @@ export const AllEntities = memo(function AllEntities({ navItems }) {
     </Paper>
   );
 });
+

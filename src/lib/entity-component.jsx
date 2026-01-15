@@ -56,11 +56,14 @@ function FormMode({ spec, data = {}, options = {}, entityName = null, sections =
     }
   };
 
+  const isCreate = !data.id;
+  const pageTitle = isCreate ? `New ${spec.label}` : `Edit ${spec.label}`;
+
   return (
     <form onSubmit={handleSubmit}>
       <Box maw={600}>
         <Group gap="xs" mb="lg">
-          <Title order={2}>{data.id ? `Edit ${spec.label}` : `New ${spec.label}`}</Title>
+          <Title order={2}>{pageTitle}</Title>
         </Group>
         <FormSections
           sections={formSections}
