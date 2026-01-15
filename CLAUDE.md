@@ -172,6 +172,37 @@ npm run dev     # Start buildless dev server on port 3004
 - **Highlight comments:** Support threaded comments via parent_comment_id field.
 - **Firebase Admin SDK:** Gracefully handles missing configuration. Returns 503 if not initialized.
 
+## Critical Architectural Issue - Client-Side Rendering Not Implemented
+
+**Status:** BLOCKING - Application pages not rendering
+
+The application uses a zero-build runtime architecture with:
+- Server: tsx server.js (Node.js with ESM + TSX transpilation)
+- Frontend: Intended to be client-side React rendering
+- Issue: **No client-side React entry point exists**
+
+### Current State
+- Server sends HTML shell with empty `<div id="__next"></div>`
+- No bundler (webpack, vite, etc.)
+- No client-side React root initialization
+- Pages reference `@/app/[entity]/page.jsx` which exist as server components
+- Browser has no way to load and render these JSX files
+
+### Impact
+- Login page shows empty screen (no form visible)
+- All dashboard/list/entity pages blank
+- All implemented UX components (14 components) cannot be tested/used
+- API endpoints functional (backend works)
+- Authentication/data layer operational
+
+### Required Fix
+Implement one of:
+1. **Client-side React bundle**: Use tsx/esbuild to create browser-loadable JS bundle
+2. **Server-side React rendering**: Use `renderToString()` to pre-render pages on server
+3. **SSR framework**: Switch to full framework (Next.js, Remix, etc.)
+
+Currently blocked on implementation - this is beyond UX improvements.
+
 ## UX/Accessibility System (Session 11)
 
 ### Components Implemented
