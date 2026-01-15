@@ -172,3 +172,57 @@ npm run dev     # Start buildless dev server on port 3004
 - **Highlight comments:** Support threaded comments via parent_comment_id field.
 - **Firebase Admin SDK:** Gracefully handles missing configuration. Returns 503 if not initialized.
 
+## UX/Accessibility System (Session 11)
+
+### Components Implemented
+
+**Error Handling:**
+- `ErrorBoundary` (src/components/error-boundary.jsx) - Class component with error state recovery
+- Error pages: 403 (Forbidden), 500 (Server Error), timeout errors
+- `ConfirmDialog` for destructive action confirmation
+
+**User Feedback:**
+- `ToastContainer` with success/error/loading states
+- `BulkActionsToolbar` for row selection feedback
+- Empty states with call-to-action buttons
+- Loading skeletons during data fetch
+
+**Navigation & Input:**
+- `KeyboardShortcutsModal` - Displays keyboard shortcuts (? key, Cmd+K, Cmd+Enter)
+- `DeleteButton` with confirmation workflow
+- `useKeyboardShortcuts` hook for global keyboard events
+- Skip-to-content link with focus management in layout
+
+**Form & Data:**
+- `ValidatedInput` components with inline validation feedback
+- `useRowSelection` hook for table row selection
+- Bulk actions toolbar integration in list-builder
+
+**Accessibility Utilities:**
+- `useFocusTrap` - Traps focus within modals/dialogs
+- `useFocusRestore` - Restores focus after modal closes
+- `useScrollLock` - Prevents scroll when modal open
+
+**Mobile & Responsive:**
+- Tablet optimization (768px breakpoint)
+- Phone optimization (480px breakpoint)
+- Touch targets: 44px minimum (WCAG compliance)
+- Landscape orientation handling
+
+**Accessibility Features:**
+- Reduced motion support (`@media prefers-reduced-motion: reduce`)
+- High contrast support (`@media prefers-contrast: more`)
+- Dark mode support (`@media prefers-color-scheme: dark`)
+- Focus-visible outlines for keyboard users
+- ARIA labels on all interactive elements
+
+### Known Limitations
+
+- **Modal focus trap:** Only traps Tab key. Arrow keys not handled.
+- **Keyboard shortcuts:** Global handlers conflict if multiple modals open simultaneously.
+- **Toast notifications:** Stacking is visual only. Screen readers may not announce properly if rapid-fire toasts.
+- **Error boundary:** Only catches render errors. Event handler errors not caught (use try/catch in handlers).
+- **Animations:** Reduced motion CSS vars applied globally; individual component animations cannot be toggled separately.
+- **Row selection:** No keyboard shortcuts for bulk selection. Must use checkbox or "select all" button.
+- **Form validation:** Real-time validation fires on every keystroke. High-frequency onChange events may impact performance on large forms.
+
