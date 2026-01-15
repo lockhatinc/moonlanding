@@ -1,11 +1,19 @@
 import React from 'react';
+import { MantineProvider } from '@mantine/core';
+import { ModalsProvider } from '@mantine/modals';
+import { Notifications } from '@mantine/notifications';
 
-// Minimal app component - no external dependencies yet
+/**
+ * App wrapper that provides Mantine theming and notification system
+ * Page content is server-rendered and injected into #__next by page-renderer.js
+ * Client-side only handles provider setup and interactivity
+ */
 export function App() {
-  return React.createElement('div', { style: { padding: '20px', fontFamily: 'system-ui, sans-serif' } },
-    React.createElement('h1', null, '🚀 Platform'),
-    React.createElement('p', null, 'Current page: ' + (window.__PATHNAME__ || '/')),
-    React.createElement('p', null, 'Client-side rendering is working!')
+  return (
+    <MantineProvider>
+      <ModalsProvider>
+        <Notifications />
+      </ModalsProvider>
+    </MantineProvider>
   );
 }
-

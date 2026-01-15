@@ -1,36 +1,35 @@
-// Minimal client-side entry point
-// Using dynamic imports to respect the importmap
+import React from 'react';
+import { hydrateRoot } from 'react-dom/client';
 
 console.log('[Client] Starting initialization...');
 
-(async () => {
-  try {
-    const React = await import('react');
-    const ReactDOM = await import('react-dom/client');
-    const { App } = await import('/client/app.jsx');
+// Make React available globally for JSX transformation
+globalThis.React = React;
 
-    console.log('[Client] Modules loaded successfully');
+console.log('[Client] React made global');
 
-    const container = document.getElementById('__next');
-    if (container) {
-      console.log('[Client] Rendering app...');
-      const root = ReactDOM.default.createRoot(container);
-      root.render(React.default.createElement(App.default || App));
-      console.log('[Client] App rendered');
-    } else {
-      console.error('[Client] __next container not found');
+// Initialize the app when the DOM is ready
+const container = document.getElementById('__next');
+console.log('[Client] Container:', container);
+
+if (container) {
+  console.log('[Client] Hydrating server-rendered content');
+
+  // Dynamically import the App component
+  (async () => {
+    try {
+      const { App } = await import('/client/app.jsx');
+      console.log('[Client] App imported');
+      // Hydrate the server-rendered content with client interactivity
+      hydrateRoot(container, React.createElement(App, null));
+      console.log('[Client] App hydrated');
+    } catch (err) {
+      console.error('[Client] ERROR:', err.message);
+      console.error('[Client] Stack:', err.stack);
+      container.innerHTML = `<div style="padding: 20px; color: red;"><h1>Error</h1><p>${err.message}</p></div>`;
     }
-  } catch (err) {
-    console.error('[Client] Initialization error:', err.message);
-    console.error(err.stack);
-    // Fallback rendering
-    const container = document.getElementById('__next');
-    if (container) {
-      container.innerHTML = `<div style="padding: 20px; color: red;">
-        <h1>Error Loading App</h1>
-        <p>${err.message}</p>
-        <details><pre>${err.stack}</pre></details>
-      </div>`;
-    }
-  }
-})();
+  })();
+} else {
+  console.error('[Client] ERROR: __next container not found');
+}
+

@@ -3,6 +3,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
+import { MantineProvider } from '@mantine/core';
 import { setCurrentRequest } from '@/engine.server';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -94,9 +95,21 @@ export async function renderPageToHtml(pathname, req, res) {
     let reactElement;
     try {
       reactElement = await PageComponent({ params });
-      console.log(`[Page Renderer] Component executed, result type: ${typeof reactElement}, is React element: ${reactElement && reactElement.$$typeof}`);
+      console.log(`[Page Renderer] Component executed, result type: ${typeof reactElement}`);
+      if (reactElement && reactElement.$$typeof) {
+        console.log(`[Page Renderer] React element detected`);
+      }
+      if (reactElement) {
+        console.log(`[Page Renderer] Element has type: ${reactElement?.type?.name || reactElement?.type || 'unknown'}`);
+      }
     } catch (error) {
-      console.error(`[Page Renderer] Component execution error: ${error?.message}`);
+      let errorMsg = 'Unknown error';
+      try {
+        errorMsg = String(error?.message || error?.toString?.() || 'Unknown');
+      } catch (e) {
+        errorMsg = typeof error === 'object' ? 'Object error' : String(error);
+      }
+      console.error(`[Page Renderer] Component execution error: ${errorMsg}`);
       // Check if it's a redirect or special error
       if (error && typeof error === 'object') {
         if (error.type === 'redirect' || error.digest?.includes('NEXT_REDIRECT')) {
@@ -122,7 +135,9 @@ export async function renderPageToHtml(pathname, req, res) {
       reactElement = null;
     }
 
-    // Generate HTML shell with server-side rendered content
+    console.log(`[Page Renderer] Before generateHtmlShell: reactElement=${reactElement ? 'present' : 'null'}`);
+
+    // Generate HTML shell with rendered content
     const html = generateHtmlShell(normalizedPath, params, pageFile, reactElement);
     return html;
   } catch (error) {
@@ -134,10 +149,24 @@ export async function renderPageToHtml(pathname, req, res) {
 function generateHtmlShell(pathname, params, pageFile, reactElement) {
   const title = extractPageTitle(pageFile);
 
-  // Render React element to HTML string if available
-  // For now, skip rendering due to Mantine provider requirements
-  // The server executes the component for auth checks, but content renders client-side
+  // Render React element to HTML string
   let renderedContent = '';
+  if (reactElement) {
+    try {
+      // Wrap page in MantineProvider for server-side rendering
+      const wrappedElement = React.createElement(
+        MantineProvider,
+        null,
+        reactElement
+      );
+      renderedContent = renderToString(wrappedElement);
+      console.log(`[Page Renderer] Rendered ${renderedContent.length} characters of HTML`);
+    } catch (error) {
+      console.error(`[Page Renderer] Error rendering element to string:`, error.message);
+      console.error(`[Page Renderer] Stack:`, error.stack);
+      renderedContent = '';
+    }
+  }
 
   return `<!DOCTYPE html>
 <html lang="en" suppressHydrationWarning>
@@ -164,13 +193,15 @@ function generateHtmlShell(pathname, params, pageFile, reactElement) {
       "@mantine/core": "https://esm.sh/@mantine/core@7.17.8",
       "@mantine/hooks": "https://esm.sh/@mantine/hooks@7.17.8",
       "@mantine/notifications": "https://esm.sh/@mantine/notifications@7.17.8",
-      "@mantine/modals": "https://esm.sh/@mantine/modals@7.17.8"
+      "@mantine/modals": "https://esm.sh/@mantine/modals@7.17.8",
+      "@mantine/core/styles.css": "https://esm.sh/@mantine/core@7.17.8/esm/styles.min.css",
+      "@mantine/notifications/styles.css": "https://esm.sh/@mantine/notifications@7.17.8/esm/styles.min.css"
     }
   }
   </script>
 </head>
 <body>
-  <div id="__next"></div>
+  <div id="__next">${renderedContent}</div>
   <script>
     window.__PATHNAME__ = '${escapeJs(pathname)}';
     window.__PARAMS__ = ${JSON.stringify(params)};
