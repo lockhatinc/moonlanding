@@ -174,18 +174,31 @@ npm run dev     # Start buildless dev server on port 3004
 
 ### Frontend Rendering (FIXED ✓)
 
-**Solution Implemented:** Client-side React rendering with importmap + esbuild transpilation
+**Solution Implemented:** Server-side React rendering with hydration + importmap for client modules
 
-- **Architecture:** Server renders page components on server-side for auth/redirects, client renders UI via React
+- **Architecture:** Server executes page components with `renderToString()` for full HTML output, client hydrates with `hydrateRoot()` for interactivity
 - **Module resolution:** importmap maps bare imports (react → esm.sh CDN), avoiding bundler requirements
-- **Client entry point:** `/client/index.jsx` loads React modules dynamically and renders app
+- **Client entry point:** `/client/index.jsx` hydrates server-rendered content with interactive providers
 - **Bundle serving:** `/client/*` requests transpiled with esbuild on-the-fly (JSX → ESM)
 - **Mantine UI:** Loaded from esm.sh CDN alongside React 19.0.0
-- **Status:** ✓ All pages render correctly. All 14 UX components accessible.
+- **Status:** ✓ All pages render with real content. Login form fully functional. Auth redirects working (302).
 
-Advantages of this approach:
+**Critical Implementation Details:**
+- Route handler order matters: `/client/` bundle handler MUST come before page renderer to prevent client files from being processed as dynamic pages
+- Error handling in renderPageToHtml() must safely convert errors to strings (Symbol values in error properties cause crashes)
+- tsconfig.json must include `"jsx": "react-jsx"` for tsx to properly transpile JSX in .js files
+- Server-rendered HTML includes `<div id="__next">` with rendered content + importmap + window.__PATHNAME__ and __PARAMS__ for client context
+
+**Advantages:**
 - Zero external build step (matches zero-build architecture)
-- No webpack/rollup/parcel complexity
-- Standard ESM modules work in browsers natively
-- esbuild already available (via tsx dependencies)
+- Full HTML output from server enables proper auth checks and redirects
+- Mantine components render on server and hydrate on client seamlessly
+- No bundle splitting complexity
+
+**Verified Working:**
+- /login returns 8KB HTML with complete LoginForm (email, password inputs, submit button)
+- /dashboard returns 302 redirect to / (authentication guard)
+- / returns 302 redirect to /login (unauthenticated guard)
+- Client hydration adds interactivity to server-rendered components
+
 
