@@ -145,6 +145,7 @@ const server = http.createServer(async (req, res) => {
         }
         if (html) {
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          res.setHeader('Content-Length', Buffer.byteLength(html, 'utf-8'));
           res.writeHead(200);
           res.end(html);
           const elapsed = Date.now() - startTime;
