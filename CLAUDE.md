@@ -46,3 +46,14 @@ Custom module cache can become stale. Clear with: `rm -f data/app.db data/app.db
 
 ### Password Hashing
 User passwords use bcrypt. When seeding users, generate hash with `bcrypt.hash('password', 12)`.
+
+### Form Number Fields
+HTML form data always sends strings. Number fields must be converted before API submission:
+```js
+form.querySelectorAll('input[type=number]').forEach(inp => {
+  if (data[inp.name]) data[inp.name] = Number(data[inp.name]);
+});
+```
+
+### Dynamic Enum Options
+Enum fields with dynamic options (e.g., `options: engagement_lifecycle.stages[].name`) must be resolved at render time by looking up the workflow definition in the config.

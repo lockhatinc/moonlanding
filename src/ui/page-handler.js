@@ -1,6 +1,7 @@
 import { getUser, setCurrentRequest } from '@/engine.server.js';
 import { getSpec } from '@/config/spec-helpers.js';
 import { list, get, count } from '@/lib/query-engine.js';
+import { getConfigEngineSync } from '@/lib/config-generator-engine.js';
 import {
   renderLogin,
   renderDashboard,
@@ -10,8 +11,48 @@ import {
   renderSettings,
   renderAuditDashboard,
   renderSystemHealth,
+  renderAccessDenied,
   REDIRECT
 } from './renderer.js';
+import { canList, canView, canCreate, canEdit } from './permissions-ui.js';
+
+function resolveEnumOptions(spec) {
+  const resolvedSpec = { ...spec, fields: { ...spec.fields } };
+  const engine = getConfigEngineSync();
+  const config = engine.getConfig();
+
+  for (const [fieldKey, field] of Object.entries(spec.fields || {})) {
+    if (field.type === 'enum' && typeof field.options === 'string') {
+      const optPath = field.options;
+      if (optPath.includes('engagement_lifecycle.stages')) {
+        const stages = config.workflows?.engagement_lifecycle?.stages || [];
+        resolvedSpec.fields[fieldKey] = {
+          ...field,
+          options: stages.map(s => ({ value: s.name, label: s.label || s.name }))
+        };
+      }
+    }
+  }
+  return resolvedSpec;
+}
+
+function getRefOptions(spec) {
+  const refOptions = {};
+  const refFields = Object.entries(spec.fields || {}).filter(([k, f]) => f.type === 'ref' && f.ref);
+  for (const [fieldKey, field] of refFields) {
+    try {
+      const refItems = list(field.ref, {});
+      refOptions[fieldKey] = refItems.map(r => ({
+        value: r.id,
+        label: r.name || r.title || r.label || r.email || r.id
+      }));
+    } catch (e) {
+      console.error(`[getRefOptions] Failed to load ${field.ref}:`, e.message);
+      refOptions[fieldKey] = [];
+    }
+  }
+  return refOptions;
+}
 
 function resolveRefFields(items, spec) {
   try {
@@ -109,6 +150,10 @@ export async function handlePage(pathname, req, res) {
     const spec = getSpec(entityName);
     if (!spec) return null;
 
+    if (!canList(user, entityName)) {
+      return renderAccessDenied(user, entityName, 'list');
+    }
+
     const items = list(entityName, {});
     const resolvedItems = resolveRefFields(items, spec);
     return renderEntityList(entityName, resolvedItems, spec, user);
@@ -120,7 +165,16 @@ export async function handlePage(pathname, req, res) {
     if (!spec) return null;
 
     if (idOrAction === 'new') {
-      return renderEntityForm(entityName, null, spec, user, true);
+      if (!canCreate(user, entityName)) {
+        return renderAccessDenied(user, entityName, 'create');
+      }
+      const resolvedSpec = resolveEnumOptions(spec);
+      const refOptions = getRefOptions(resolvedSpec);
+      return renderEntityForm(entityName, null, resolvedSpec, user, true, refOptions);
+    }
+
+    if (!canView(user, entityName)) {
+      return renderAccessDenied(user, entityName, 'view');
     }
 
     const item = get(entityName, idOrAction);
@@ -135,10 +189,16 @@ export async function handlePage(pathname, req, res) {
     const spec = getSpec(entityName);
     if (!spec) return null;
 
+    if (!canEdit(user, entityName)) {
+      return renderAccessDenied(user, entityName, 'edit');
+    }
+
     const item = get(entityName, id);
     if (!item) return null;
 
-    return renderEntityForm(entityName, item, spec, user, false);
+    const resolvedSpec = resolveEnumOptions(spec);
+    const refOptions = getRefOptions(resolvedSpec);
+    return renderEntityForm(entityName, item, resolvedSpec, user, false, refOptions);
   }
 
   return null;

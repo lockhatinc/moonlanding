@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { canCreate, canEdit, canDelete, canList, getNavItems, getAdminItems, getQuickActions, isClientUser } from './permissions-ui.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.join(__dirname, '../..');
@@ -157,11 +158,30 @@ export function generateHtml(title, bodyContent, scripts = []) {
     .required-marker { color: #ef4444; margin-left: 2px; }
     .form-label { font-weight: 500; margin-bottom: 0.25rem; display: block; }
     .btn-loading { opacity: 0.7; pointer-events: none; }
+    .btn-loading::after { content: '...'; }
+    .btn-disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
     .confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
     .confirm-dialog { background: white; border-radius: 0.5rem; padding: 1.5rem; max-width: 400px; width: 90%; }
     .confirm-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; }
     .confirm-message { color: #6b7280; margin-bottom: 1.5rem; }
     .confirm-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+    .breadcrumb { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem; }
+    .breadcrumb a { color: var(--primary); text-decoration: none; }
+    .breadcrumb a:hover { text-decoration: underline; }
+    .breadcrumb-separator { color: #9ca3af; }
+    .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 200; display: flex; flex-direction: column; gap: 0.5rem; }
+    .toast { padding: 0.75rem 1rem; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); animation: toast-in 0.3s ease-out; max-width: 320px; }
+    .toast-success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+    .toast-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+    .toast-info { background: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; }
+    @keyframes toast-in { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+    .tooltip { position: relative; }
+    .tooltip::after { content: attr(data-tip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); padding: 0.25rem 0.5rem; background: #1f2937; color: white; font-size: 0.75rem; border-radius: 0.25rem; white-space: nowrap; opacity: 0; pointer-events: none; transition: opacity 0.2s; margin-bottom: 0.25rem; }
+    .tooltip:hover::after { opacity: 1; }
+    .access-denied { text-align: center; padding: 4rem 2rem; }
+    .access-denied-icon { font-size: 4rem; color: #ef4444; margin-bottom: 1rem; }
+    .access-denied h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .access-denied p { color: #6b7280; margin-bottom: 1.5rem; }
   </style>
 </head>
 <body>
@@ -177,6 +197,52 @@ export function generateHtml(title, bodyContent, scripts = []) {
   ${scriptTags}
 </body>
 </html>`;
+}
+
+function renderBreadcrumb(items) {
+  if (!items || items.length === 0) return '';
+  const crumbs = items.map((item, i) => {
+    if (i === items.length - 1) {
+      return `<span>${item.label}</span>`;
+    }
+    return `<a href="${item.href}">${item.label}</a><span class="breadcrumb-separator">/</span>`;
+  }).join('');
+  return `<nav class="breadcrumb">${crumbs}</nav>`;
+}
+
+function toastScript() {
+  return `
+    window.showToast = (message, type = 'info') => {
+      let container = document.getElementById('toast-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+      }
+      const toast = document.createElement('div');
+      toast.className = 'toast toast-' + type;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+    };
+  `;
+}
+
+export function renderAccessDenied(user, entityName, action) {
+  const actionText = { list: 'view this list', view: 'view this item', create: 'create items here', edit: 'edit this item', delete: 'delete this item' };
+  const body = `
+    <div class="min-h-screen">
+      ${renderNav(user)}
+      <div class="access-denied">
+        <div class="access-denied-icon">&#128274;</div>
+        <h1>Access Denied</h1>
+        <p>You do not have permission to ${actionText[action] || action} in ${entityName}.</p>
+        <a href="/" class="btn btn-primary">Return to Dashboard</a>
+      </div>
+    </div>
+  `;
+  return generateHtml('Access Denied', body, []);
 }
 
 export function renderLogin(error = null) {
@@ -264,6 +330,7 @@ export function renderDashboard(user, stats = {}) {
   const isClerk = user?.role === 'clerk';
   const isManager = user?.role === 'manager';
   const isAdmin = user?.role === 'partner';
+  const breadcrumb = renderBreadcrumb([{ href: '/', label: 'Dashboard' }]);
 
   const myRfisSection = (stats.myRfis && stats.myRfis.length > 0) ? `
     <div class="card bg-white shadow">
@@ -317,6 +384,7 @@ export function renderDashboard(user, stats = {}) {
       ${renderNav(user)}
 
       <div class="p-6">
+        ${breadcrumb}
         <div class="mb-6">
           <h1 class="text-2xl font-bold">Dashboard</h1>
           <p class="text-gray-500">Welcome back, ${user?.name || 'User'}. ${welcomeMsg}</p>
@@ -357,14 +425,7 @@ export function renderDashboard(user, stats = {}) {
             <div class="card-body">
               <h2 class="card-title">Quick Actions</h2>
               <div class="flex flex-wrap gap-2 mt-4">
-                ${isClerk ? `
-                  <a href="/rfi" class="btn btn-primary btn-sm">View My RFIs</a>
-                  <a href="/engagement" class="btn btn-outline btn-sm">View Engagements</a>
-                ` : `
-                  <a href="/engagement/new" class="btn btn-primary btn-sm">New Engagement</a>
-                  <a href="/client/new" class="btn btn-outline btn-sm">New Client</a>
-                  <a href="/review/new" class="btn btn-outline btn-sm">New Review</a>
-                `}
+                ${getQuickActions(user).map(a => `<a href="${a.href}" class="btn ${a.primary ? 'btn-primary' : 'btn-outline'} btn-sm">${a.label}</a>`).join('')}
               </div>
             </div>
           </div>
@@ -372,11 +433,7 @@ export function renderDashboard(user, stats = {}) {
             <div class="card-body">
               <h2 class="card-title">Navigation</h2>
               <div class="flex flex-wrap gap-2 mt-4">
-                <a href="/engagement" class="btn btn-ghost btn-sm">Engagements</a>
-                <a href="/client" class="btn btn-ghost btn-sm">Clients</a>
-                <a href="/rfi" class="btn btn-ghost btn-sm">RFIs</a>
-                <a href="/review" class="btn btn-ghost btn-sm">Reviews</a>
-                ${isAdmin ? '<a href="/user" class="btn btn-ghost btn-sm">Users</a>' : ''}
+                ${getNavItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('')}
               </div>
             </div>
           </div>
@@ -424,9 +481,24 @@ export function renderEntityList(entityName, items, spec, user) {
       const btn = document.getElementById('confirm-delete-btn');
       btn.classList.add('btn-loading');
       btn.textContent = 'Deleting...';
-      const res = await fetch('/api/${entityName}/' + pendingDeleteId, { method: 'DELETE' });
-      if (res.ok) window.location.reload();
-      else { alert('Delete failed'); cancelDelete(); btn.classList.remove('btn-loading'); btn.textContent = 'Delete'; }
+      try {
+        const res = await fetch('/api/${entityName}/' + pendingDeleteId, { method: 'DELETE' });
+        if (res.ok) {
+          showToast('Deleted successfully', 'success');
+          setTimeout(() => window.location.reload(), 500);
+        } else {
+          const data = await res.json().catch(() => ({}));
+          showToast(data.message || data.error || 'Delete failed', 'error');
+          cancelDelete();
+          btn.classList.remove('btn-loading');
+          btn.textContent = 'Delete';
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+        cancelDelete();
+        btn.classList.remove('btn-loading');
+        btn.textContent = 'Delete';
+      }
     };
   `;
 
@@ -444,36 +516,62 @@ export function renderEntityList(entityName, items, spec, user) {
     });
   `;
 
+  const userCanEdit = canEdit(user, entityName);
+  const userCanDelete = canDelete(user, entityName);
+
   const rowsWithData = items.map(item => {
     const cells = listFields.map(([k]) => `<td>${formatValue(item[k], k, item)}</td>`).join('');
+    const editBtn = userCanEdit
+      ? `<a href="/${entityName}/${item.id}/edit" class="btn btn-xs btn-outline">Edit</a>`
+      : `<span class="btn btn-xs btn-outline btn-disabled tooltip" data-tip="You don't have permission to edit">Edit</span>`;
+    const deleteBtn = userCanDelete
+      ? `<button onclick="event.stopPropagation(); confirmDelete('${item.id}')" class="btn btn-xs btn-error btn-outline">Delete</button>`
+      : `<span class="btn btn-xs btn-error btn-outline btn-disabled tooltip" data-tip="You don't have permission to delete">Delete</span>`;
     const actions = `<td class="flex gap-1">
       <a href="/${entityName}/${item.id}" class="btn btn-xs btn-ghost">View</a>
-      <a href="/${entityName}/${item.id}/edit" class="btn btn-xs btn-outline">Edit</a>
-      <button onclick="event.stopPropagation(); confirmDelete('${item.id}')" class="btn btn-xs btn-error btn-outline">Delete</button>
+      ${editBtn}
+      ${deleteBtn}
     </td>`;
     return `<tr class="hover cursor-pointer" data-searchable onclick="window.location='/${entityName}/${item.id}'">${cells}${actions}</tr>`;
   }).join('');
+
+  const userCanCreate = canCreate(user, entityName);
+  const createBtn = userCanCreate
+    ? `<a href="/${entityName}/new" class="btn btn-primary btn-sm">Create New</a>`
+    : '';
+
+  const emptyRowContent = items.length === 0
+    ? (userCanCreate
+      ? `<tr><td colspan="100" class="text-center py-8 text-gray-500">No items found. <a href="/${entityName}/new" class="text-primary hover:underline">Create your first ${label.toLowerCase()}</a></td></tr>`
+      : `<tr><td colspan="100" class="text-center py-8 text-gray-500">No items found.</td></tr>`)
+    : '';
+
+  const breadcrumb = renderBreadcrumb([
+    { href: '/', label: 'Dashboard' },
+    { href: `/${entityName}`, label: label }
+  ]);
 
   const body = `
     <div class="min-h-screen">
       ${renderNav(user)}
       <div class="p-6">
+        ${breadcrumb}
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-2xl font-bold">${label}</h1>
           <div class="flex gap-2">
             <input type="text" id="search-input" placeholder="Search..." class="input input-bordered input-sm" style="width: 200px" />
-            <a href="/${entityName}/new" class="btn btn-primary btn-sm">Create New</a>
+            ${createBtn}
           </div>
         </div>
 
         <div class="card bg-white shadow" style="overflow-x:auto">
           <table class="table table-zebra w-full">
             <thead><tr>${headers}<th>Actions</th></tr></thead>
-            <tbody id="table-body">${rowsWithData || emptyRow}</tbody>
+            <tbody id="table-body">${rowsWithData || emptyRowContent}</tbody>
           </table>
         </div>
       </div>
-      <div id="confirm-dialog" class="confirm-overlay" style="display:none">
+      ${userCanDelete ? `<div id="confirm-dialog" class="confirm-overlay" style="display:none">
         <div class="confirm-dialog">
           <div class="confirm-title">Confirm Delete</div>
           <div class="confirm-message">Are you sure you want to delete this item? This action cannot be undone.</div>
@@ -482,16 +580,18 @@ export function renderEntityList(entityName, items, spec, user) {
             <button id="confirm-delete-btn" onclick="executeDelete()" class="btn btn-error">Delete</button>
           </div>
         </div>
-      </div>
+      </div>` : ''}
     </div>
   `;
 
-  return generateHtml(label, body, [deleteScript, searchScript]);
+  return generateHtml(label, body, [toastScript(), deleteScript, searchScript]);
 }
 
 export function renderEntityDetail(entityName, item, spec, user) {
   const label = spec?.label || entityName;
   const fields = spec?.fields || {};
+  const userCanEdit = canEdit(user, entityName);
+  const userCanDelete = canDelete(user, entityName);
 
   const fieldRows = Object.entries(fields)
     .filter(([k]) => k !== 'id' && item[k] !== undefined)
@@ -502,18 +602,33 @@ export function renderEntityDetail(entityName, item, spec, user) {
       </div>
     `).join('');
 
+  const editBtn = userCanEdit
+    ? `<a href="/${entityName}/${item.id}/edit" class="btn btn-outline">Edit</a>`
+    : `<span class="btn btn-outline btn-disabled tooltip" data-tip="You don't have permission to edit">Edit</span>`;
+
+  const deleteBtn = userCanDelete
+    ? `<button onclick="showDeleteConfirm()" class="btn btn-error btn-outline">Delete</button>`
+    : `<span class="btn btn-error btn-outline btn-disabled tooltip" data-tip="You don't have permission to delete">Delete</span>`;
+
+  const breadcrumb = renderBreadcrumb([
+    { href: '/', label: 'Dashboard' },
+    { href: `/${entityName}`, label: spec?.labelPlural || label },
+    { href: `/${entityName}/${item.id}`, label: item.name || item.title || `#${item.id}` }
+  ]);
+
   const body = `
     <div class="min-h-screen">
       ${renderNav(user)}
       <div class="p-6">
+        ${breadcrumb}
         <div class="flex justify-between items-center mb-6">
           <div>
-            <a href="/${entityName}" class="text-sm text-primary hover:underline">&larr; Back to list</a>
-            <h1 class="text-2xl font-bold">${item.name || label} #${item.id}</h1>
+            <h1 class="text-2xl font-bold">${item.name || item.title || label}</h1>
+            <p class="text-gray-500 text-sm">ID: ${item.id}</p>
           </div>
           <div class="flex gap-2">
-            <a href="/${entityName}/${item.id}/edit" class="btn btn-outline">Edit</a>
-            <button onclick="showDeleteConfirm()" class="btn btn-error btn-outline">Delete</button>
+            ${editBtn}
+            ${deleteBtn}
           </div>
         </div>
 
@@ -523,7 +638,7 @@ export function renderEntityDetail(entityName, item, spec, user) {
           </div>
         </div>
       </div>
-      <div id="confirm-dialog" class="confirm-overlay" style="display:none">
+      ${userCanDelete ? `<div id="confirm-dialog" class="confirm-overlay" style="display:none">
         <div class="confirm-dialog">
           <div class="confirm-title">Confirm Delete</div>
           <div class="confirm-message">Are you sure you want to delete this item? This action cannot be undone.</div>
@@ -532,11 +647,12 @@ export function renderEntityDetail(entityName, item, spec, user) {
             <button id="confirm-delete-btn" onclick="executeDelete()" class="btn btn-error">Delete</button>
           </div>
         </div>
-      </div>
+      </div>` : ''}
     </div>
   `;
 
   const script = `
+    ${toastScript()}
     window.showDeleteConfirm = () => {
       document.getElementById('confirm-dialog').style.display = 'flex';
     };
@@ -547,16 +663,31 @@ export function renderEntityDetail(entityName, item, spec, user) {
       const btn = document.getElementById('confirm-delete-btn');
       btn.classList.add('btn-loading');
       btn.textContent = 'Deleting...';
-      const res = await fetch('/api/${entityName}/${item.id}', { method: 'DELETE' });
-      if (res.ok) window.location = '/${entityName}';
-      else { alert('Delete failed'); hideDeleteConfirm(); btn.classList.remove('btn-loading'); btn.textContent = 'Delete'; }
+      try {
+        const res = await fetch('/api/${entityName}/${item.id}', { method: 'DELETE' });
+        if (res.ok) {
+          showToast('Deleted successfully', 'success');
+          setTimeout(() => { window.location = '/${entityName}'; }, 500);
+        } else {
+          const data = await res.json().catch(() => ({}));
+          showToast(data.message || data.error || 'Delete failed', 'error');
+          hideDeleteConfirm();
+          btn.classList.remove('btn-loading');
+          btn.textContent = 'Delete';
+        }
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+        hideDeleteConfirm();
+        btn.classList.remove('btn-loading');
+        btn.textContent = 'Delete';
+      }
     };
   `;
 
-  return generateHtml(`${label} Detail`, body, [script]);
+  return generateHtml(`${label} Detail`, body, [toastScript(), script]);
 }
 
-export function renderEntityForm(entityName, item, spec, user, isNew = false) {
+export function renderEntityForm(entityName, item, spec, user, isNew = false, refOptions = {}) {
   const label = spec?.label || entityName;
   const fields = spec?.fields || {};
 
@@ -583,6 +714,10 @@ export function renderEntityForm(entityName, item, spec, user, isNew = false) {
         const opts = userStatusOptions.map(o => `<option value="${o}" ${val === o ? 'selected' : ''}>${o.charAt(0).toUpperCase() + o.slice(1)}</option>`).join('');
         return `<div class="form-group"><label class="form-label">Status</label><select name="status" class="select select-bordered w-full">${opts}</select></div>`;
       }
+      if (f.type === 'ref' && refOptions[k]) {
+        const opts = refOptions[k].map(o => `<option value="${o.value}" ${val === o.value ? 'selected' : ''}>${o.label}</option>`).join('');
+        return `<div class="form-group"><label class="form-label">${f.label || k}${reqMarker}</label><select name="${k}" class="select select-bordered w-full" ${required}><option value="">Select...</option>${opts}</select></div>`;
+      }
       if (f.type === 'textarea') {
         return `<div class="form-group"><label class="form-label">${f.label || k}${reqMarker}</label><textarea name="${k}" class="textarea textarea-bordered w-full" ${required}>${val}</textarea></div>`;
       }
@@ -606,12 +741,18 @@ export function renderEntityForm(entityName, item, spec, user, isNew = false) {
       <input type="password" name="new_password" class="input input-bordered w-full" placeholder="Enter new password" autocomplete="new-password"/>
     </div>` : '';
 
+  const breadcrumbItems = isNew
+    ? [{ href: '/', label: 'Dashboard' }, { href: `/${entityName}`, label: spec?.labelPlural || label }, { label: 'Create' }]
+    : [{ href: '/', label: 'Dashboard' }, { href: `/${entityName}`, label: spec?.labelPlural || label }, { href: `/${entityName}/${item?.id}`, label: item?.name || item?.title || `#${item?.id}` }, { label: 'Edit' }];
+
+  const breadcrumb = renderBreadcrumb(breadcrumbItems);
+
   const body = `
     <div class="min-h-screen">
       ${renderNav(user)}
       <div class="p-6">
+        ${breadcrumb}
         <div class="mb-6">
-          <a href="/${entityName}" class="text-sm text-primary hover:underline">&larr; Back to list</a>
           <h1 class="text-2xl font-bold">${isNew ? 'Create' : 'Edit'} ${label}</h1>
         </div>
 
@@ -621,8 +762,11 @@ export function renderEntityForm(entityName, item, spec, user, isNew = false) {
               ${formFields}
               ${passwordField}
               <div class="flex gap-2 pt-4">
-                <button type="submit" id="submit-btn" class="btn btn-primary">Save</button>
-                <a href="/${entityName}" class="btn btn-ghost">Cancel</a>
+                <button type="submit" id="submit-btn" class="btn btn-primary">
+                  <span class="btn-text">Save</span>
+                  <span class="btn-loading-text" style="display:none">Saving...</span>
+                </button>
+                <a href="/${entityName}${isNew ? '' : '/' + item?.id}" class="btn btn-ghost">Cancel</a>
               </div>
             </form>
           </div>
@@ -632,12 +776,14 @@ export function renderEntityForm(entityName, item, spec, user, isNew = false) {
   `;
 
   const script = `
+    ${toastScript()}
     const form = document.getElementById('entity-form');
     const submitBtn = document.getElementById('submit-btn');
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       submitBtn.classList.add('btn-loading');
-      submitBtn.textContent = 'Saving...';
+      submitBtn.querySelector('.btn-text').style.display = 'none';
+      submitBtn.querySelector('.btn-loading-text').style.display = 'inline';
       submitBtn.disabled = true;
 
       const fd = new FormData(form);
@@ -645,6 +791,11 @@ export function renderEntityForm(entityName, item, spec, user, isNew = false) {
       for (const [k, v] of fd.entries()) data[k] = v;
       form.querySelectorAll('input[type=checkbox]').forEach(cb => {
         data[cb.name] = cb.checked;
+      });
+      form.querySelectorAll('input[type=number]').forEach(inp => {
+        if (inp.name && data[inp.name] !== undefined && data[inp.name] !== '') {
+          data[inp.name] = Number(data[inp.name]);
+        }
       });
 
       const url = ${isNew} ? '/api/${entityName}' : '/api/${entityName}/${item?.id}';
@@ -658,18 +809,21 @@ export function renderEntityForm(entityName, item, spec, user, isNew = false) {
         });
         const result = await res.json();
         if (res.ok) {
+          showToast('${isNew ? 'Created' : 'Updated'} successfully!', 'success');
           const entityData = result.data || result;
-          window.location = '/${entityName}/' + (entityData.id || '${item?.id}');
+          setTimeout(() => { window.location = '/${entityName}/' + (entityData.id || '${item?.id}'); }, 500);
         } else {
-          alert(result.message || result.error || 'Save failed');
+          showToast(result.message || result.error || 'Save failed', 'error');
           submitBtn.classList.remove('btn-loading');
-          submitBtn.textContent = 'Save';
+          submitBtn.querySelector('.btn-text').style.display = 'inline';
+          submitBtn.querySelector('.btn-loading-text').style.display = 'none';
           submitBtn.disabled = false;
         }
       } catch (err) {
-        alert('Error: ' + err.message);
+        showToast('Error: ' + err.message, 'error');
         submitBtn.classList.remove('btn-loading');
-        submitBtn.textContent = 'Save';
+        submitBtn.querySelector('.btn-text').style.display = 'inline';
+        submitBtn.querySelector('.btn-loading-text').style.display = 'none';
         submitBtn.disabled = false;
       }
     });
@@ -679,10 +833,16 @@ export function renderEntityForm(entityName, item, spec, user, isNew = false) {
 }
 
 export function renderSettings(user, config = {}) {
+  const breadcrumb = renderBreadcrumb([
+    { href: '/', label: 'Dashboard' },
+    { href: '/admin/settings', label: 'Settings' }
+  ]);
+
   const body = `
     <div class="min-h-screen">
       ${renderNav(user)}
       <div class="p-6">
+        ${breadcrumb}
         <h1 class="text-2xl font-bold mb-6">System Settings</h1>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -794,10 +954,16 @@ export function renderAuditDashboard(user, auditData = {}) {
     </tr>
   `).join('') || '<tr><td colspan="6" class="text-center py-4 text-gray-500">No audit records found</td></tr>';
 
+  const breadcrumb = renderBreadcrumb([
+    { href: '/', label: 'Dashboard' },
+    { href: '/admin/audit', label: 'Audit' }
+  ]);
+
   const body = `
     <div class="min-h-screen">
       ${renderNav(user)}
       <div class="p-6">
+        ${breadcrumb}
         <h1 class="text-2xl font-bold mb-6">Audit Dashboard</h1>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -866,10 +1032,16 @@ export function renderSystemHealth(user, healthData = {}) {
     </tr>
   `).join('') || '<tr><td colspan="2" class="text-center py-4">No data</td></tr>';
 
+  const breadcrumb = renderBreadcrumb([
+    { href: '/', label: 'Dashboard' },
+    { href: '/admin/health', label: 'Health' }
+  ]);
+
   const body = `
     <div class="min-h-screen">
       ${renderNav(user)}
       <div class="p-6">
+        ${breadcrumb}
         <h1 class="text-2xl font-bold mb-6">System Health</h1>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -914,27 +1086,18 @@ export function renderSystemHealth(user, healthData = {}) {
 }
 
 function renderNav(user) {
-  const isAdmin = user?.role === 'partner';
-  const isManager = user?.role === 'manager';
-  const adminLinks = isAdmin ? `
-    <a href="/user" class="btn btn-ghost btn-sm">Users</a>
-    <a href="/team" class="btn btn-ghost btn-sm">Teams</a>
-    <a href="/admin/audit" class="btn btn-ghost btn-sm">Audit</a>
-    <a href="/admin/health" class="btn btn-ghost btn-sm">Health</a>
-    <a href="/admin/settings" class="btn btn-ghost btn-sm">Settings</a>
-  ` : (isManager ? `
-    <a href="/admin/audit" class="btn btn-ghost btn-sm">Audit</a>
-  ` : '');
+  const navItems = getNavItems(user);
+  const adminItems = getAdminItems(user);
+
+  const navLinks = navItems.map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
+  const adminLinks = adminItems.map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
 
   return `
     <nav class="navbar bg-white shadow-sm px-4">
       <div class="navbar-start">
         <a href="/" class="font-bold text-lg">Platform</a>
         <div class="hidden md:flex gap-1 ml-6">
-          <a href="/engagement" class="btn btn-ghost btn-sm">Engagements</a>
-          <a href="/client" class="btn btn-ghost btn-sm">Clients</a>
-          <a href="/rfi" class="btn btn-ghost btn-sm">RFIs</a>
-          <a href="/review" class="btn btn-ghost btn-sm">Reviews</a>
+          ${navLinks}
           ${adminLinks}
         </div>
       </div>
