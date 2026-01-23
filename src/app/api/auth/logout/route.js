@@ -1,8 +1,8 @@
-import { setCurrentRequest, invalidateSession } from '@/engine.server';
-import { setCurrentResponse } from '@/lib/next-polyfills';
-import { config } from '@/config/env';
+import { setCurrentRequest as setEngineRequest, invalidateSession } from '@/engine.server';
+import { setCurrentRequest, setCurrentResponse } from '@/lib/next-polyfills';
 
 export async function GET(request, { res } = {}) {
+  setEngineRequest(request);
   setCurrentRequest(request);
   // Create a response-like object to capture Set-Cookie headers
   const headers = new Map();
@@ -29,6 +29,7 @@ export async function GET(request, { res } = {}) {
 }
 
 export async function POST(request) {
+  setEngineRequest(request);
   setCurrentRequest(request);
   // Create a response-like object to capture Set-Cookie headers
   const headers = new Map();

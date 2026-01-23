@@ -4,6 +4,7 @@ import { Google } from 'arctic';
 import db from '@/engine';
 import { config, hasGoogleAuth } from '@/config';
 import { can, check } from '@/lib/permissions';
+import { cookies } from '@/lib/next-polyfills';
 
 const adapter = new BetterSqlite3Adapter(db, { user: 'users', session: 'sessions' });
 

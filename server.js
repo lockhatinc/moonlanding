@@ -241,27 +241,26 @@ const server = http.createServer(async (req, res) => {
 
       try {
         const response = await handler(request, context);
-        const responseBody = await response.json();
 
-        // Convert headers and normalize case for Node.js http server
         let headerObj = {};
         if (response.headers) {
-          // Headers object is iterable - iterate to preserve all headers
           for (const [key, value] of response.headers) {
-            // Normalize header names to proper HTTP case
-            // Node.js http server needs proper case for headers to work correctly
             const normalizedKey = normalizeHeaderName(key);
             headerObj[normalizedKey] = value;
           }
         }
 
-        // Ensure Content-Type is set
+        if (response.status >= 300 && response.status < 400) {
+          res.writeHead(response.status, headerObj);
+          res.end();
+          return;
+        }
+
+        const responseBody = await response.json();
         if (!headerObj['Content-Type']) {
           headerObj['Content-Type'] = 'application/json; charset=utf-8';
         }
 
-        console.log('[API Response] Status:', response.status, 'Headers:', Object.keys(headerObj));
-        console.log('[API Response] Set-Cookie header:', headerObj['Set-Cookie'] ? 'PRESENT' : 'MISSING');
         res.writeHead(response.status, headerObj);
         res.end(JSON.stringify(responseBody));
       } catch (err) {
