@@ -10,6 +10,39 @@ import {
   REDIRECT
 } from './renderer.js';
 
+function resolveRefFields(items, spec) {
+  try {
+    const refFields = Object.entries(spec.fields || {}).filter(([k, f]) => f.type === 'ref' && f.ref);
+    if (!refFields.length) return items;
+
+    const refCaches = {};
+    for (const [fieldKey, field] of refFields) {
+      const refIds = [...new Set(items.map(item => item[fieldKey]).filter(Boolean))];
+      if (refIds.length) {
+        try {
+          const refItems = list(field.ref, {});
+          refCaches[fieldKey] = Object.fromEntries(refItems.map(r => [r.id, r.name || r.title || r.label || r.id]));
+        } catch (e) {
+          console.error(`[resolveRefFields] Failed to load ${field.ref}:`, e.message);
+        }
+      }
+    }
+
+    return items.map(item => {
+      const resolved = { ...item };
+      for (const [fieldKey] of refFields) {
+        if (item[fieldKey] && refCaches[fieldKey]) {
+          resolved[`${fieldKey}_display`] = refCaches[fieldKey][item[fieldKey]] || item[fieldKey];
+        }
+      }
+      return resolved;
+    });
+  } catch (e) {
+    console.error('[resolveRefFields] Error:', e.message);
+    return items;
+  }
+}
+
 export async function handlePage(pathname, req, res) {
   setCurrentRequest(req);
 
@@ -44,7 +77,8 @@ export async function handlePage(pathname, req, res) {
     if (!spec) return null;
 
     const items = list(entityName, {});
-    return renderEntityList(entityName, items, spec, user);
+    const resolvedItems = resolveRefFields(items, spec);
+    return renderEntityList(entityName, resolvedItems, spec, user);
   }
 
   if (segments.length === 2) {
@@ -59,7 +93,8 @@ export async function handlePage(pathname, req, res) {
     const item = get(entityName, idOrAction);
     if (!item) return null;
 
-    return renderEntityDetail(entityName, item, spec, user);
+    const [resolvedItem] = resolveRefFields([item], spec);
+    return renderEntityDetail(entityName, resolvedItem, spec, user);
   }
 
   if (segments.length === 3 && segments[2] === 'edit') {

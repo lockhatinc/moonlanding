@@ -117,9 +117,11 @@ const server = http.createServer(async (req, res) => {
           return;
         }
         if (html) {
-          res.setHeader('Content-Type', 'text/html; charset=utf-8');
-          res.setHeader('Content-Length', Buffer.byteLength(html, 'utf-8'));
-          res.writeHead(200);
+          if (!res.headersSent) {
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            res.setHeader('Content-Length', Buffer.byteLength(html, 'utf-8'));
+            res.writeHead(200);
+          }
           res.end(html);
           const elapsed = Date.now() - startTime;
           console.log(`[${req.method}] ${req.url} 200 ${elapsed}ms (page)`);
@@ -127,6 +129,7 @@ const server = http.createServer(async (req, res) => {
         }
       } catch (err) {
         console.error('[Page Handler] Error:', err.message, err.stack);
+        if (res.headersSent) return;
       }
       // Fall through to 404 if page rendering fails
     }
@@ -267,12 +270,16 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    res.writeHead(404);
-    res.end(JSON.stringify({ error: 'Not found' }));
+    if (!res.headersSent) {
+      res.writeHead(404);
+      res.end(JSON.stringify({ error: 'Not found' }));
+    }
   } catch (err) {
     console.error('[Server] Error:', err);
-    res.writeHead(500);
-    res.end(JSON.stringify({ error: err.message }));
+    if (!res.headersSent) {
+      res.writeHead(500);
+      res.end(JSON.stringify({ error: err.message }));
+    }
   }
 
   const elapsed = Date.now() - startTime;
