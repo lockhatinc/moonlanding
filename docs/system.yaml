@@ -1,0 +1,181 @@
+organization:
+  timezone: Africa/Johannesburg
+  working_days: [monday, tuesday, wednesday, thursday, friday]
+  fiscal_year_start: 3
+
+thresholds:
+  email:
+    rate_limit_per_minute: 100
+    daily_limit: 10000
+    send_max_retries: 3
+    rate_limit_delay_ms: 600
+  rfi:
+    max_days_outstanding: 90
+    deadline_reminder_days: [7, 3, 1, 0]
+  workflow:
+    stage_transition_lockout_minutes: 5
+  system:
+    default_page_size: 50
+    max_page_size: 100
+    session_timeout_hours: 24
+  retry:
+    max_attempts: 3
+    backoff_ms: 1000
+
+automation:
+  schedules:
+    daily_engagement_check: "0 6 * * *"
+    daily_rfi_notifications: "0 7 * * *"
+    weekly_client_emails: "0 8 * * 1"
+    yearly_engagement_creation: "0 1 1 1 *"
+    monthly_engagement_creation: "0 1 1 * *"
+    daily_backup: "0 2 * * *"
+    daily_user_sync: "0 5 * * *"
+
+notifications:
+  templates:
+    engagement_created:
+      subject: "New Engagement: {{client_name}} - {{engagement_type}}"
+      channels: [email]
+      recipients: [team_partners]
+    rfi_deadline_reminder:
+      subject: "RFI Deadline Reminder: {{engagement_name}}"
+      channels: [email]
+      recipients: [assigned_users]
+    stage_changed:
+      subject: "Engagement Stage Updated: {{client_name}}"
+      channels: [email]
+      recipients: [team_members, client_admin]
+    weekly_summary:
+      subject: "Weekly Engagement Summary: {{client_name}}"
+      channels: [email]
+      recipients: [client_users]
+    collaborator_added:
+      subject: "You have been added as a collaborator"
+      channels: [email]
+      recipients: [new_collaborator]
+
+permissions:
+  roles:
+    partner:
+      level: 3
+      entities:
+        engagement: [create, read, update, delete, close_out]
+        rfi: [create, read, update, delete, mark_complete]
+        review: [create, read, update, delete, archive]
+        highlight: [create, read, update, delete, resolve, unresolve]
+        checklist: [create, read, update, delete]
+        template: [create, read, update, delete]
+        team: [create, read, update, delete]
+        user: [create, read, update, delete]
+        client: [create, read, update, delete]
+      features:
+        - settings_access
+        - delete_attachments
+        - remove_checklists
+        - set_deadline_dates
+        - toggle_ml_queries
+        - unresolve_any_highlight
+
+    manager:
+      level: 2
+      entities:
+        engagement: [create, read, update]
+        rfi: [create, read, update, mark_complete]
+        review: [create, read, update]
+        highlight: [create, read, update, resolve]
+        checklist: [read, update]
+        template: [read]
+        team: [read]
+        user: [read]
+        client: [read, update]
+      features:
+        - add_checklists
+        - add_flags_tags
+        - set_wip_values
+        - unresolve_own_highlight
+      restrictions:
+        - cannot_set_deadline_dates
+        - cannot_delete_attachments
+        - cannot_remove_checklists
+
+    clerk:
+      level: 1
+      entities:
+        engagement: [read]
+        rfi: [read, respond]
+        review: [read]
+        highlight: [create, read]
+        checklist: [read]
+      features:
+        - view_only
+        - create_highlights
+        - respond_to_checklist
+      restrictions:
+        - cannot_access_settings
+        - cannot_change_stage
+        - cannot_mark_complete
+        - cannot_add_flags_tags
+        - cannot_resolve_highlights
+        - cannot_create_tender_reviews
+
+    client_admin:
+      level: 1
+      entities:
+        engagement: [read]
+        rfi: [read, respond]
+      features:
+        - view_all_client_rfis
+        - respond_to_rfi
+        - upload_files
+        - rate_engagement
+
+    client_user:
+      level: 0
+      entities:
+        engagement: [read]
+        rfi: [read, respond]
+      features:
+        - view_assigned_rfis_only
+        - respond_to_assigned_rfi
+        - upload_files
+
+integrations:
+  google:
+    oauth:
+      client_id: env:GOOGLE_CLIENT_ID
+      redirect_uri: env:GOOGLE_REDIRECT_URI
+      scopes:
+        - email
+        - profile
+    drive:
+      parent_folder: env:GOOGLE_DRIVE_FOLDER_ID
+      service_account: env:GOOGLE_SERVICE_ACCOUNT
+      scopes:
+        - https://www.googleapis.com/auth/drive
+        - https://www.googleapis.com/auth/documents
+        - https://www.googleapis.com/auth/drive.file
+  email:
+    provider: smtp
+    from: env:EMAIL_FROM
+    host: env:SMTP_HOST
+    port: env:SMTP_PORT
+    user: env:SMTP_USER
+    pass: env:SMTP_PASS
+
+storage:
+  type: local
+  uploads_dir: data/uploads
+  max_file_size_mb: 50
+  allowed_types:
+    - application/pdf
+    - image/png
+    - image/jpeg
+    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+
+database:
+  type: sqlite
+  path: data/app.db
+  fts_enabled: true
+  backup_dir: data/backups

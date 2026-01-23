@@ -1,0 +1,206 @@
+roles:
+  partner:
+    level: 3
+    inherits: [manager]
+    grants:
+      engagement:
+        - close_out
+        - delete
+        - set_any_stage
+      review:
+        - delete
+        - archive
+        - unarchive
+        - delete_attachments
+        - remove_checklists
+      highlight:
+        - unresolve_any
+        - toggle_ml_query
+      settings:
+        - templates
+        - checklists
+        - teams
+        - users
+        - permissions
+        - integrations
+        - review_settings
+      tender:
+        - set_deadline_date
+
+  manager:
+    level: 2
+    inherits: [clerk]
+    grants:
+      engagement:
+        - create
+        - update
+        - change_stage
+      rfi:
+        - create
+        - update
+        - mark_complete
+        - set_deadline
+        - send_reminder
+      review:
+        - create
+        - update
+        - add_collaborators
+        - add_checklists
+        - add_flags
+        - add_tags
+        - set_wip
+      highlight:
+        - resolve
+        - unresolve_own
+        - partial_resolve
+
+  clerk:
+    level: 1
+    grants:
+      engagement:
+        - read
+      rfi:
+        - read
+        - view_responses
+      review:
+        - read
+        - view_highlights
+        - view_checklists
+      highlight:
+        - create
+        - respond
+      checklist:
+        - respond
+    restrictions:
+      - no_settings_access
+      - no_stage_change
+      - no_rfi_complete
+      - no_flags_tags
+      - no_resolve_highlight
+      - no_tender_create
+
+  client_admin:
+    level: 1
+    scope: client_bound
+    grants:
+      engagement:
+        - read_own_client
+      rfi:
+        - read_all_client_rfis
+        - respond
+        - upload_files
+      feedback:
+        - rate_engagement
+
+  client_user:
+    level: 0
+    scope: client_bound
+    grants:
+      engagement:
+        - read_assigned
+      rfi:
+        - read_assigned_only
+        - respond_assigned
+        - upload_files
+
+field_permissions:
+  engagement:
+    stage:
+      read: [partner, manager, clerk]
+      write: [partner, manager]
+      close_out: [partner]
+    fee:
+      read: [partner, manager]
+      write: [partner, manager]
+    users:
+      read: [partner, manager, clerk]
+      write: [partner, manager]
+
+  rfi:
+    status:
+      read: [partner, manager, clerk, client_admin, client_user]
+      complete: [partner, manager]
+      reopen: [partner, manager]
+    deadline_date:
+      read: [partner, manager, clerk, client_admin, client_user]
+      write: [partner, manager]
+    flag:
+      read: [partner, manager, clerk]
+      write: [partner, manager]
+    ml_query:
+      read: [partner, manager, clerk]
+      write: [partner]
+
+  review:
+    private:
+      read: [partner, manager, clerk]
+      write: [partner]
+    archived:
+      read: [partner, manager, clerk]
+      write: [partner]
+    deadline_date:
+      read: [partner, manager, clerk]
+      write: [partner]
+    flags:
+      read: [partner, manager, clerk]
+      write: [partner, manager]
+    tags:
+      read: [partner, manager, clerk]
+      write: [partner, manager]
+    wip:
+      read: [partner, manager]
+      write: [partner, manager]
+
+  highlight:
+    resolved:
+      read: [partner, manager, clerk]
+      set_true: [partner, manager]
+      set_false_own: [partner, manager]
+      set_false_any: [partner]
+    partial_resolved:
+      read: [partner, manager, clerk]
+      set_true: [partner, manager]
+      set_false_own: [partner, manager]
+      set_false_any: [partner]
+
+route_permissions:
+  /settings: [partner]
+  /settings/templates: [partner]
+  /settings/checklists: [partner]
+  /settings/teams: [partner]
+  /settings/users: [partner]
+  /settings/permissions: [partner]
+  /settings/integrations: [partner]
+  /settings/review: [partner]
+  /clients: [partner, manager]
+  /engagements: [partner, manager, clerk]
+  /engagements/:id/edit: [partner, manager]
+  /rfi: [partner, manager, clerk]
+  /reviews: [partner, manager, clerk]
+  /reviews/:id: [partner, manager, clerk]
+
+action_permissions:
+  engagement:
+    create: { roles: [partner, manager], condition: null }
+    change_stage: { roles: [partner, manager], condition: "status == active" }
+    close_out: { roles: [partner], condition: "engagement_letter_accepted || progress == 0" }
+    delete: { roles: [partner], condition: null }
+    recreate: { roles: [partner, manager], condition: "repeat_interval != once" }
+
+  rfi:
+    mark_complete: { roles: [partner, manager], condition: "files_count > 0 || response_count > 0" }
+    send_reminder: { roles: [partner, manager], condition: "status == 0" }
+    bulk_deadline: { roles: [partner, manager], condition: null }
+
+  review:
+    archive: { roles: [partner], condition: null }
+    delete: { roles: [partner], condition: null }
+    add_checklist: { roles: [partner, manager], condition: null }
+    remove_checklist: { roles: [partner], condition: null }
+    delete_attachment: { roles: [partner], condition: "attachment != main_file" }
+
+  highlight:
+    resolve: { roles: [partner, manager], condition: "!resolved" }
+    unresolve: { roles: [partner], condition: "resolved" }
+    unresolve_own: { roles: [manager], condition: "resolved && resolved_by == current_user" }
+    partial_resolve: { roles: [partner, manager], condition: "!resolved && !partial_resolved" }

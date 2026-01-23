@@ -1,0 +1,189 @@
+engagement:
+  fields:
+    client_id: { type: reference, ref: client, required: true }
+    team_id: { type: reference, ref: team, required: true }
+    engagement_type_id: { type: reference, ref: engagement_type, required: true }
+    year: { type: integer, required: true, min: 2000, max: 2100 }
+    month: { type: string }
+    stage: { type: enum, values: [info_gathering, commencement, team_execution, partner_review, finalization, close_out] }
+    status: { type: enum, values: [pending, active] }
+    fee: { type: decimal, min: 0 }
+    commencement_date: { type: date, required: true }
+    completion_date: { type: date }
+    repeat_interval: { type: enum, values: [yearly, monthly, once] }
+    users: { type: array, items: { type: reference, ref: user } }
+    engagement_letter: { type: json }
+    post_rfi: { type: json }
+    feedback: { type: json }
+  computed:
+    progress: calculateEngagementProgress
+    client_progress: calculateClientProgress
+  constraints:
+    unique: [client_id, engagement_type_id, year, month]
+  stages:
+    info_gathering:
+      label: Info Gathering
+      color: gray
+      auto_transition: { to: commencement, condition: "commencement_date <= today" }
+      restrictions: { manual_set: "commencement_date > today" }
+    commencement:
+      label: Commencement
+      color: blue
+      on_enter: [send_engagement_letter]
+    team_execution:
+      label: Team Execution
+      color: yellow
+    partner_review:
+      label: Partner Review
+      color: orange
+    finalization:
+      label: Finalization
+      color: purple
+      restrictions: { advance: "role == partner && (engagement_letter_accepted || progress == 0)" }
+    close_out:
+      label: Close Out
+      color: green
+      readonly: true
+  recreation:
+    copy_entities: [section, rfi, checklist]
+    reset_fields:
+      stage: info_gathering
+      progress: 0
+      engagement_letter: null
+      post_rfi: null
+    date_adjustments:
+      yearly: { commencement_date: "+1 year" }
+      monthly: { commencement_date: "+1 month" }
+
+rfi:
+  fields:
+    engagement_id: { type: reference, ref: engagement, required: true }
+    section_id: { type: reference, ref: section }
+    question: { type: text, required: true }
+    name: { type: text }
+    status: { type: integer, default: 0 }
+    date_requested: { type: datetime }
+    date_resolved: { type: datetime }
+    deadline_date: { type: date }
+    auditor_status: { type: enum, values: [requested, reviewing, queries, received] }
+    client_status: { type: enum, values: [pending, partially_sent, sent] }
+    users: { type: array, items: { type: reference, ref: user } }
+    flag: { type: boolean, default: false }
+    ml_query: { type: boolean, default: false }
+    recreate_with_attachments: { type: boolean, default: false }
+  computed:
+    days_outstanding: "calculateWorkingDays(date_requested, date_resolved || now())"
+    files_count: countRelatedFiles
+    response_count: countRelatedResponses
+  status_machine:
+    waiting:
+      value: 0
+      label: Waiting
+      color: yellow
+      transitions:
+        completed:
+          guard: "files_count > 0 || response_count > 0"
+          role: [manager, partner]
+    completed:
+      value: 1
+      label: Completed
+      color: green
+      transitions:
+        waiting:
+          role: [manager, partner]
+
+review:
+  fields:
+    name: { type: text, required: true }
+    financial_year: { type: text }
+    template_id: { type: reference, ref: template }
+    team_id: { type: reference, ref: team }
+    status: { type: enum, values: [open, closed], default: open }
+    file_url: { type: text }
+    friday_link: { type: reference, ref: engagement }
+    private: { type: boolean, default: false }
+    archived: { type: boolean, default: false }
+    flags: { type: array, items: { type: string } }
+    tags: { type: array, items: { type: string } }
+    wip: { type: decimal }
+    deadline_date: { type: date }
+  display:
+    list_columns: [name, financial_year, status, team.name]
+    tabs: [active, priority, history, archive]
+  highlight_colors:
+    default: "#B0B0B0"
+    partner: "#ff4141"
+    resolved: "#44BBA4"
+    scrolled_to: "#7F7EFF"
+
+highlight:
+  fields:
+    review_id: { type: reference, ref: review, required: true }
+    position: { type: json, required: true }
+    content: { type: json }
+    comment: { type: json }
+    resolved: { type: boolean, default: false }
+    resolved_by: { type: reference, ref: user }
+    resolved_date: { type: datetime }
+    partial_resolved: { type: boolean, default: false }
+    partial_resolved_by: { type: reference, ref: user }
+    partial_resolved_date: { type: datetime }
+    ml_query: { type: boolean, default: false }
+    friday_query: { type: boolean, default: false }
+    created_by: { type: reference, ref: user, required: true }
+
+client:
+  fields:
+    name: { type: text, required: true }
+    entity_type_id: { type: reference, ref: entity_type }
+    status: { type: enum, values: [active, inactive], default: active }
+    address: { type: text }
+    master_email: { type: email }
+
+user:
+  fields:
+    email: { type: email, required: true, unique: true }
+    name: { type: text, required: true }
+    type: { type: enum, values: [auditor, client], required: true }
+    role_id: { type: reference, ref: role }
+    teams: { type: array, items: { type: reference, ref: team } }
+    status: { type: enum, values: [active, inactive], default: active }
+    photo: { type: text }
+    clients: { type: array, items: { type: json } }
+
+team:
+  fields:
+    name: { type: text, required: true }
+    partners: { type: array, items: { type: reference, ref: user } }
+    users: { type: array, items: { type: reference, ref: user } }
+
+template:
+  fields:
+    name: { type: text, required: true }
+    type: { type: enum, values: [standard, tender, friday] }
+    default_checklists: { type: array, items: { type: reference, ref: checklist } }
+    description: { type: text }
+
+checklist:
+  fields:
+    name: { type: text, required: true }
+    section_items: { type: array, items: { type: json } }
+    email_checklist: { type: boolean, default: false }
+
+section:
+  fields:
+    engagement_id: { type: reference, ref: engagement }
+    review_id: { type: reference, ref: review }
+    name: { type: text, required: true }
+    order: { type: integer }
+    checklist_id: { type: reference, ref: checklist }
+
+response:
+  fields:
+    rfi_id: { type: reference, ref: rfi }
+    highlight_id: { type: reference, ref: highlight }
+    checklist_item_id: { type: text }
+    user_id: { type: reference, ref: user, required: true }
+    text: { type: text }
+    datetime: { type: datetime }
+    attachments: { type: array, items: { type: json } }
