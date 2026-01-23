@@ -261,18 +261,72 @@ export function renderLogin(error = null) {
 }
 
 export function renderDashboard(user, stats = {}) {
+  const isClerk = user?.role === 'clerk';
+  const isManager = user?.role === 'manager';
+  const isAdmin = user?.role === 'partner';
+
+  const myRfisSection = (stats.myRfis && stats.myRfis.length > 0) ? `
+    <div class="card bg-white shadow">
+      <div class="card-body">
+        <h2 class="card-title">My Assigned RFIs</h2>
+        <div class="mt-4">
+          <table class="table table-zebra w-full">
+            <thead><tr><th>Title</th><th>Status</th><th>Due Date</th><th>Action</th></tr></thead>
+            <tbody>
+              ${stats.myRfis.map(r => `
+                <tr>
+                  <td>${r.title || 'Untitled'}</td>
+                  <td><span class="badge badge-sm">${r.status || 'open'}</span></td>
+                  <td>${r.due_date ? new Date(r.due_date * 1000).toLocaleDateString() : '-'}</td>
+                  <td><a href="/rfi/${r.id}" class="btn btn-xs btn-primary">View</a></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  ` : '';
+
+  const overdueSection = (stats.overdueRfis && stats.overdueRfis.length > 0) ? `
+    <div class="card bg-white shadow border-l-4 border-red-500">
+      <div class="card-body">
+        <h2 class="card-title text-red-600">Overdue Items</h2>
+        <div class="mt-4">
+          <table class="table table-zebra w-full">
+            <thead><tr><th>Title</th><th>Days Overdue</th><th>Action</th></tr></thead>
+            <tbody>
+              ${stats.overdueRfis.map(r => `
+                <tr class="text-red-600">
+                  <td>${r.title || 'Untitled RFI'}</td>
+                  <td>${r.daysOverdue || 0} days</td>
+                  <td><a href="/rfi/${r.id}" class="btn btn-xs btn-error">View</a></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  ` : '';
+
+  const welcomeMsg = isClerk ? 'Here are your assigned tasks' : (isManager ? 'Team overview' : 'System overview');
+
   const body = `
     <div class="min-h-screen">
       ${renderNav(user)}
 
       <div class="p-6">
-        <h1 class="text-2xl font-bold mb-6">Dashboard</h1>
+        <div class="mb-6">
+          <h1 class="text-2xl font-bold">Dashboard</h1>
+          <p class="text-gray-500">Welcome back, ${user?.name || 'User'}. ${welcomeMsg}</p>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div class="card bg-white shadow">
             <div class="card-body">
-              <h3 class="text-gray-500 text-sm">Engagements</h3>
-              <p class="text-2xl font-bold">${stats.engagements || 0}</p>
+              <h3 class="text-gray-500 text-sm">${isClerk ? 'My RFIs' : 'Engagements'}</h3>
+              <p class="text-2xl font-bold">${isClerk ? (stats.myRfis?.length || 0) : (stats.engagements || 0)}</p>
             </div>
           </div>
           <div class="card bg-white shadow">
@@ -281,10 +335,10 @@ export function renderDashboard(user, stats = {}) {
               <p class="text-2xl font-bold">${stats.clients || 0}</p>
             </div>
           </div>
-          <div class="card bg-white shadow">
+          <div class="card bg-white shadow ${(stats.overdueRfis?.length > 0) ? 'border-l-4 border-red-500' : ''}">
             <div class="card-body">
-              <h3 class="text-gray-500 text-sm">Open RFIs</h3>
-              <p class="text-2xl font-bold">${stats.rfis || 0}</p>
+              <h3 class="text-gray-500 text-sm">${(stats.overdueRfis?.length > 0) ? 'Overdue RFIs' : 'Open RFIs'}</h3>
+              <p class="text-2xl font-bold ${(stats.overdueRfis?.length > 0) ? 'text-red-600' : ''}">${(stats.overdueRfis?.length > 0) ? stats.overdueRfis.length : (stats.rfis || 0)}</p>
             </div>
           </div>
           <div class="card bg-white shadow">
@@ -295,14 +349,22 @@ export function renderDashboard(user, stats = {}) {
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        ${overdueSection}
+        ${myRfisSection}
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           <div class="card bg-white shadow">
             <div class="card-body">
               <h2 class="card-title">Quick Actions</h2>
               <div class="flex flex-wrap gap-2 mt-4">
-                <a href="/engagement/new" class="btn btn-primary btn-sm">New Engagement</a>
-                <a href="/client/new" class="btn btn-outline btn-sm">New Client</a>
-                <a href="/review/new" class="btn btn-outline btn-sm">New Review</a>
+                ${isClerk ? `
+                  <a href="/rfi" class="btn btn-primary btn-sm">View My RFIs</a>
+                  <a href="/engagement" class="btn btn-outline btn-sm">View Engagements</a>
+                ` : `
+                  <a href="/engagement/new" class="btn btn-primary btn-sm">New Engagement</a>
+                  <a href="/client/new" class="btn btn-outline btn-sm">New Client</a>
+                  <a href="/review/new" class="btn btn-outline btn-sm">New Review</a>
+                `}
               </div>
             </div>
           </div>
@@ -314,7 +376,7 @@ export function renderDashboard(user, stats = {}) {
                 <a href="/client" class="btn btn-ghost btn-sm">Clients</a>
                 <a href="/rfi" class="btn btn-ghost btn-sm">RFIs</a>
                 <a href="/review" class="btn btn-ghost btn-sm">Reviews</a>
-                <a href="/user" class="btn btn-ghost btn-sm">Users</a>
+                ${isAdmin ? '<a href="/user" class="btn btn-ghost btn-sm">Users</a>' : ''}
               </div>
             </div>
           </div>
@@ -345,16 +407,6 @@ export function renderEntityList(entityName, items, spec, user) {
   }
 
   const headers = listFields.map(([k, f]) => `<th>${f?.label || k}</th>`).join('');
-  const rows = items.map(item => {
-    const cells = listFields.map(([k]) => `<td>${formatValue(item[k], k, item)}</td>`).join('');
-    const actions = `<td class="flex gap-1">
-      <a href="/${entityName}/${item.id}" class="btn btn-xs btn-ghost">View</a>
-      <a href="/${entityName}/${item.id}/edit" class="btn btn-xs btn-outline">Edit</a>
-      <button onclick="event.stopPropagation(); confirmDelete('${item.id}')" class="btn btn-xs btn-error btn-outline">Delete</button>
-    </td>`;
-    return `<tr class="hover cursor-pointer" onclick="window.location='/${entityName}/${item.id}'">${cells}${actions}</tr>`;
-  }).join('');
-
   const emptyRow = items.length === 0 ? '<tr><td colspan="100" class="text-center py-8 text-gray-500">No items found. <a href="/' + entityName + '/new" class="text-primary hover:underline">Create your first ' + label.toLowerCase() + '</a></td></tr>' : '';
 
   const deleteScript = `
@@ -378,19 +430,46 @@ export function renderEntityList(entityName, items, spec, user) {
     };
   `;
 
+  const searchScript = `
+    const searchInput = document.getElementById('search-input');
+    const tableBody = document.getElementById('table-body');
+    const allRows = Array.from(tableBody.querySelectorAll('tr[data-searchable]'));
+
+    searchInput.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase();
+      allRows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(term) ? '' : 'none';
+      });
+    });
+  `;
+
+  const rowsWithData = items.map(item => {
+    const cells = listFields.map(([k]) => `<td>${formatValue(item[k], k, item)}</td>`).join('');
+    const actions = `<td class="flex gap-1">
+      <a href="/${entityName}/${item.id}" class="btn btn-xs btn-ghost">View</a>
+      <a href="/${entityName}/${item.id}/edit" class="btn btn-xs btn-outline">Edit</a>
+      <button onclick="event.stopPropagation(); confirmDelete('${item.id}')" class="btn btn-xs btn-error btn-outline">Delete</button>
+    </td>`;
+    return `<tr class="hover cursor-pointer" data-searchable onclick="window.location='/${entityName}/${item.id}'">${cells}${actions}</tr>`;
+  }).join('');
+
   const body = `
     <div class="min-h-screen">
       ${renderNav(user)}
       <div class="p-6">
         <div class="flex justify-between items-center mb-6">
           <h1 class="text-2xl font-bold">${label}</h1>
-          <a href="/${entityName}/new" class="btn btn-primary">Create New</a>
+          <div class="flex gap-2">
+            <input type="text" id="search-input" placeholder="Search..." class="input input-bordered input-sm" style="width: 200px" />
+            <a href="/${entityName}/new" class="btn btn-primary btn-sm">Create New</a>
+          </div>
         </div>
 
         <div class="card bg-white shadow" style="overflow-x:auto">
           <table class="table table-zebra w-full">
             <thead><tr>${headers}<th>Actions</th></tr></thead>
-            <tbody>${rows || emptyRow}</tbody>
+            <tbody id="table-body">${rowsWithData || emptyRow}</tbody>
           </table>
         </div>
       </div>
@@ -407,7 +486,7 @@ export function renderEntityList(entityName, items, spec, user) {
     </div>
   `;
 
-  return generateHtml(label, body, [deleteScript]);
+  return generateHtml(label, body, [deleteScript, searchScript]);
 }
 
 export function renderEntityDetail(entityName, item, spec, user) {
@@ -481,8 +560,11 @@ export function renderEntityForm(entityName, item, spec, user, isNew = false) {
   const label = spec?.label || entityName;
   const fields = spec?.fields || {};
 
+  const userRoleOptions = ['partner', 'manager', 'clerk', 'client_admin', 'client_user'];
+  const userStatusOptions = ['active', 'inactive', 'pending'];
+
   const formFields = Object.entries(fields)
-    .filter(([k, f]) => k !== 'id' && !f.auto && !f.readOnly)
+    .filter(([k, f]) => k !== 'id' && !f.auto && !f.readOnly && k !== 'password_hash')
     .map(([k, f]) => {
       const val = item?.[k] ?? f.default ?? '';
       const required = f.required ? 'required' : '';
@@ -493,6 +575,14 @@ export function renderEntityForm(entityName, item, spec, user, isNew = false) {
                  : f.type === 'bool' ? 'checkbox'
                  : 'text';
 
+      if (entityName === 'user' && k === 'role') {
+        const opts = userRoleOptions.map(o => `<option value="${o}" ${val === o ? 'selected' : ''}>${o.charAt(0).toUpperCase() + o.slice(1).replace('_', ' ')}</option>`).join('');
+        return `<div class="form-group"><label class="form-label">Role${reqMarker}</label><select name="role" class="select select-bordered w-full" ${required}>${opts}</select></div>`;
+      }
+      if (entityName === 'user' && k === 'status') {
+        const opts = userStatusOptions.map(o => `<option value="${o}" ${val === o ? 'selected' : ''}>${o.charAt(0).toUpperCase() + o.slice(1)}</option>`).join('');
+        return `<div class="form-group"><label class="form-label">Status</label><select name="status" class="select select-bordered w-full">${opts}</select></div>`;
+      }
       if (f.type === 'textarea') {
         return `<div class="form-group"><label class="form-label">${f.label || k}${reqMarker}</label><textarea name="${k}" class="textarea textarea-bordered w-full" ${required}>${val}</textarea></div>`;
       }
@@ -510,6 +600,12 @@ export function renderEntityForm(entityName, item, spec, user, isNew = false) {
       return `<div class="form-group"><label class="form-label">${f.label || k}${reqMarker}</label><input type="${type}" name="${k}" value="${val}" class="input input-bordered w-full" ${required}/></div>`;
     }).join('\n');
 
+  const passwordField = entityName === 'user' ? `
+    <div class="form-group">
+      <label class="form-label">New Password <small class="text-gray-500">(leave blank to keep unchanged)</small></label>
+      <input type="password" name="new_password" class="input input-bordered w-full" placeholder="Enter new password" autocomplete="new-password"/>
+    </div>` : '';
+
   const body = `
     <div class="min-h-screen">
       ${renderNav(user)}
@@ -523,6 +619,7 @@ export function renderEntityForm(entityName, item, spec, user, isNew = false) {
           <div class="card-body">
             <form id="entity-form" class="space-y-4">
               ${formFields}
+              ${passwordField}
               <div class="flex gap-2 pt-4">
                 <button type="submit" id="submit-btn" class="btn btn-primary">Save</button>
                 <a href="/${entityName}" class="btn btn-ghost">Cancel</a>
@@ -581,7 +678,254 @@ export function renderEntityForm(entityName, item, spec, user, isNew = false) {
   return generateHtml(`${isNew ? 'Create' : 'Edit'} ${label}`, body, [script]);
 }
 
+export function renderSettings(user, config = {}) {
+  const body = `
+    <div class="min-h-screen">
+      ${renderNav(user)}
+      <div class="p-6">
+        <h1 class="text-2xl font-bold mb-6">System Settings</h1>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="card bg-white shadow">
+            <div class="card-body">
+              <h2 class="card-title">System Information</h2>
+              <div class="space-y-4 mt-4">
+                <div class="flex justify-between py-2 border-b">
+                  <span class="text-gray-500">Database Type</span>
+                  <span class="font-medium">${config.database?.type || 'SQLite'}</span>
+                </div>
+                <div class="flex justify-between py-2 border-b">
+                  <span class="text-gray-500">Server Port</span>
+                  <span class="font-medium">${config.server?.port || 3004}</span>
+                </div>
+                <div class="flex justify-between py-2 border-b">
+                  <span class="text-gray-500">Session TTL</span>
+                  <span class="font-medium">${config.thresholds?.cache?.session_ttl_seconds || 3600}s</span>
+                </div>
+                <div class="flex justify-between py-2 border-b">
+                  <span class="text-gray-500">Page Size (Default)</span>
+                  <span class="font-medium">${config.thresholds?.system?.default_page_size || 50}</span>
+                </div>
+                <div class="flex justify-between py-2 border-b">
+                  <span class="text-gray-500">Page Size (Max)</span>
+                  <span class="font-medium">${config.thresholds?.system?.max_page_size || 500}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-white shadow">
+            <div class="card-body">
+              <h2 class="card-title">RFI Configuration</h2>
+              <div class="space-y-4 mt-4">
+                <div class="flex justify-between py-2 border-b">
+                  <span class="text-gray-500">Max Days Outstanding</span>
+                  <span class="font-medium">${config.thresholds?.rfi?.max_days_outstanding || 90} days</span>
+                </div>
+                <div class="flex justify-between py-2 border-b">
+                  <span class="text-gray-500">Escalation Delay</span>
+                  <span class="font-medium">${config.thresholds?.rfi?.escalation_delay_hours || 24} hours</span>
+                </div>
+                <div class="flex justify-between py-2 border-b">
+                  <span class="text-gray-500">Notification Days</span>
+                  <span class="font-medium">${(config.thresholds?.rfi?.notification_days || [7,3,1,0]).join(', ')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-white shadow">
+            <div class="card-body">
+              <h2 class="card-title">Email Configuration</h2>
+              <div class="space-y-4 mt-4">
+                <div class="flex justify-between py-2 border-b">
+                  <span class="text-gray-500">Batch Size</span>
+                  <span class="font-medium">${config.thresholds?.email?.send_batch_size || 10}</span>
+                </div>
+                <div class="flex justify-between py-2 border-b">
+                  <span class="text-gray-500">Max Retries</span>
+                  <span class="font-medium">${config.thresholds?.email?.send_max_retries || 3}</span>
+                </div>
+                <div class="flex justify-between py-2 border-b">
+                  <span class="text-gray-500">Rate Limit Delay</span>
+                  <span class="font-medium">${config.thresholds?.email?.rate_limit_delay_ms || 6000}ms</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-white shadow">
+            <div class="card-body">
+              <h2 class="card-title">Workflow Configuration</h2>
+              <div class="space-y-4 mt-4">
+                <div class="flex justify-between py-2 border-b">
+                  <span class="text-gray-500">Stage Transition Lockout</span>
+                  <span class="font-medium">${config.thresholds?.workflow?.stage_transition_lockout_minutes || 5} minutes</span>
+                </div>
+                <div class="flex justify-between py-2 border-b">
+                  <span class="text-gray-500">Collaborator Default Expiry</span>
+                  <span class="font-medium">${config.thresholds?.collaborator?.default_expiry_days || 7} days</span>
+                </div>
+                <div class="flex justify-between py-2 border-b">
+                  <span class="text-gray-500">Collaborator Max Expiry</span>
+                  <span class="font-medium">${config.thresholds?.collaborator?.max_expiry_days || 30} days</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  return generateHtml('System Settings', body, []);
+}
+
+export function renderAuditDashboard(user, auditData = {}) {
+  const { summary = {}, recentActivity = [] } = auditData;
+
+  const activityRows = recentActivity.slice(0, 20).map(a => `
+    <tr>
+      <td>${new Date((a.timestamp || a.created_at) * 1000).toLocaleString()}</td>
+      <td><span class="badge badge-sm">${a.action || '-'}</span></td>
+      <td>${a.entity_type || '-'}</td>
+      <td class="text-xs">${a.entity_id || '-'}</td>
+      <td>${a.user_name || a.user_id || '-'}</td>
+      <td class="text-xs text-gray-500">${a.reason || '-'}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="6" class="text-center py-4 text-gray-500">No audit records found</td></tr>';
+
+  const body = `
+    <div class="min-h-screen">
+      ${renderNav(user)}
+      <div class="p-6">
+        <h1 class="text-2xl font-bold mb-6">Audit Dashboard</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div class="card bg-white shadow">
+            <div class="card-body">
+              <h3 class="text-gray-500 text-sm">Total Actions (30d)</h3>
+              <p class="text-2xl font-bold">${summary.total_actions || 0}</p>
+            </div>
+          </div>
+          <div class="card bg-white shadow">
+            <div class="card-body">
+              <h3 class="text-gray-500 text-sm">Permission Grants</h3>
+              <p class="text-2xl font-bold text-green-600">${summary.grants || 0}</p>
+            </div>
+          </div>
+          <div class="card bg-white shadow">
+            <div class="card-body">
+              <h3 class="text-gray-500 text-sm">Permission Revokes</h3>
+              <p class="text-2xl font-bold text-red-600">${summary.revokes || 0}</p>
+            </div>
+          </div>
+          <div class="card bg-white shadow">
+            <div class="card-body">
+              <h3 class="text-gray-500 text-sm">Role Changes</h3>
+              <p class="text-2xl font-bold text-blue-600">${summary.role_changes || 0}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card bg-white shadow">
+          <div class="card-body">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="card-title">Recent Activity</h2>
+              <a href="/permission_audit" class="btn btn-sm btn-outline">View All Records</a>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="table table-zebra w-full">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Action</th>
+                    <th>Entity Type</th>
+                    <th>Entity ID</th>
+                    <th>User</th>
+                    <th>Reason</th>
+                  </tr>
+                </thead>
+                <tbody>${activityRows}</tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  return generateHtml('Audit Dashboard', body, []);
+}
+
+export function renderSystemHealth(user, healthData = {}) {
+  const { database = {}, server = {}, entities = {} } = healthData;
+
+  const entityRows = Object.entries(entities).map(([name, count]) => `
+    <tr>
+      <td>${name}</td>
+      <td class="text-right">${count}</td>
+    </tr>
+  `).join('') || '<tr><td colspan="2" class="text-center py-4">No data</td></tr>';
+
+  const body = `
+    <div class="min-h-screen">
+      ${renderNav(user)}
+      <div class="p-6">
+        <h1 class="text-2xl font-bold mb-6">System Health</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div class="card bg-white shadow">
+            <div class="card-body">
+              <h3 class="text-gray-500 text-sm">Server Status</h3>
+              <p class="text-2xl font-bold text-green-600">Online</p>
+              <p class="text-xs text-gray-500 mt-2">Port: ${server.port || 3004}</p>
+            </div>
+          </div>
+          <div class="card bg-white shadow">
+            <div class="card-body">
+              <h3 class="text-gray-500 text-sm">Database</h3>
+              <p class="text-2xl font-bold text-green-600">${database.status || 'Connected'}</p>
+              <p class="text-xs text-gray-500 mt-2">Size: ${database.size || 'N/A'}</p>
+            </div>
+          </div>
+          <div class="card bg-white shadow">
+            <div class="card-body">
+              <h3 class="text-gray-500 text-sm">Uptime</h3>
+              <p class="text-2xl font-bold">${server.uptime || 'N/A'}</p>
+              <p class="text-xs text-gray-500 mt-2">Started: ${server.startTime || 'N/A'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="card bg-white shadow">
+          <div class="card-body">
+            <h2 class="card-title mb-4">Entity Counts</h2>
+            <table class="table w-full">
+              <thead>
+                <tr><th>Entity</th><th class="text-right">Count</th></tr>
+              </thead>
+              <tbody>${entityRows}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  return generateHtml('System Health', body, []);
+}
+
 function renderNav(user) {
+  const isAdmin = user?.role === 'partner';
+  const isManager = user?.role === 'manager';
+  const adminLinks = isAdmin ? `
+    <a href="/user" class="btn btn-ghost btn-sm">Users</a>
+    <a href="/team" class="btn btn-ghost btn-sm">Teams</a>
+    <a href="/admin/audit" class="btn btn-ghost btn-sm">Audit</a>
+    <a href="/admin/health" class="btn btn-ghost btn-sm">Health</a>
+    <a href="/admin/settings" class="btn btn-ghost btn-sm">Settings</a>
+  ` : (isManager ? `
+    <a href="/admin/audit" class="btn btn-ghost btn-sm">Audit</a>
+  ` : '');
+
   return `
     <nav class="navbar bg-white shadow-sm px-4">
       <div class="navbar-start">
@@ -591,6 +935,7 @@ function renderNav(user) {
           <a href="/client" class="btn btn-ghost btn-sm">Clients</a>
           <a href="/rfi" class="btn btn-ghost btn-sm">RFIs</a>
           <a href="/review" class="btn btn-ghost btn-sm">Reviews</a>
+          ${adminLinks}
         </div>
       </div>
       <div class="navbar-end">
@@ -601,7 +946,7 @@ function renderNav(user) {
             </div>
           </button>
           <ul class="dropdown-menu mt-2 w-52">
-            <li class="dropdown-header">${user?.email || ''}</li>
+            <li class="dropdown-header">${user?.email || ''}<br/><small class="text-gray-500">${user?.role || ''}</small></li>
             <li><a href="/api/auth/logout">Logout</a></li>
           </ul>
         </div>

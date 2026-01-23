@@ -692,11 +692,66 @@ entities:
     state_machine: true
     has_notifications: true
     fields:
+      id:
+        type: id
+        required: true
+      title:
+        type: text
+        required: true
+        search: true
+        list: true
+        label: Title
       engagement_id:
         type: ref
         ref: engagement
         required: true
+        list: true
+        label: Engagement
         description: Parent engagement
+      status:
+        type: enum
+        options:
+          - value: open
+            label: Open
+            color: yellow
+          - value: pending_response
+            label: Pending Response
+            color: blue
+          - value: responded
+            label: Responded
+            color: green
+          - value: closed
+            label: Closed
+            color: gray
+        default: open
+        list: true
+        label: Status
+      assigned_to:
+        type: ref
+        ref: user
+        list: true
+        label: Assigned To
+      due_date:
+        type: date
+        list: true
+        label: Due Date
+      description:
+        type: textarea
+        label: Description
+      priority:
+        type: enum
+        options:
+          - value: low
+            label: Low
+            color: gray
+          - value: medium
+            label: Medium
+            color: yellow
+          - value: high
+            label: High
+            color: red
+        default: medium
+        label: Priority
     field_overrides:
       response_count:
         type: number
@@ -988,11 +1043,50 @@ entities:
     auto_complete_when: all_items_done
     has_pdf_generation: true
     fields:
+      id:
+        type: id
+        required: true
       review_id:
         type: ref
         ref: review
         required: true
         description: Parent review
+      name:
+        type: text
+        required: true
+        search: true
+        label: Checklist Name
+      section_items:
+        type: json
+        label: Section Items
+        description: JSON array of checklist items
+      email_checklist:
+        type: bool
+        default: false
+        label: Email Checklist
+      type:
+        type: text
+        label: Checklist Type
+      description:
+        type: textarea
+        label: Description
+      created_at:
+        type: timestamp
+        required: true
+        auto: now
+        auto_generate: true
+        readOnly: true
+      updated_at:
+        type: timestamp
+        auto: update
+        auto_generate: true
+        readOnly: true
+      created_by:
+        type: ref
+        ref: user
+        auto: user
+        auto_generate: true
+        readOnly: true
     children:
     - checklist_item
   checklist_item:

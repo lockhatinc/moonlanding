@@ -116,13 +116,15 @@ const server = http.createServer(async (req, res) => {
           console.log(`[${req.method}] ${req.url} ${res.statusCode} ${elapsed}ms (redirect)`);
           return;
         }
-        if (html) {
+        if (html && html !== REDIRECT) {
           if (!res.headersSent) {
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             res.setHeader('Content-Length', Buffer.byteLength(html, 'utf-8'));
             res.writeHead(200);
           }
-          res.end(html);
+          if (!res.writableEnded) {
+            res.end(html);
+          }
           const elapsed = Date.now() - startTime;
           console.log(`[${req.method}] ${req.url} 200 ${elapsed}ms (page)`);
           return;

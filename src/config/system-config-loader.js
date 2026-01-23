@@ -101,6 +101,14 @@ export class SystemConfigLoader {
         log('Warning: Could not register entity handlers', hookError.message);
       }
 
+      try {
+        const { registerUserPasswordHook } = await import('../lib/hooks/user-password-hook.js');
+        registerUserPasswordHook();
+        log('User password hook registered');
+      } catch (hookError) {
+        log('Warning: Could not register user password hook', hookError.message);
+      }
+
       // Seed initial users if needed
       try {
         const { seedUsers } = await import('./seed-users.js');

@@ -1,12 +1,15 @@
 import { getUser, setCurrentRequest } from '@/engine.server.js';
 import { getSpec } from '@/config/spec-helpers.js';
-import { list, get } from '@/lib/query-engine.js';
+import { list, get, count } from '@/lib/query-engine.js';
 import {
   renderLogin,
   renderDashboard,
   renderEntityList,
   renderEntityDetail,
   renderEntityForm,
+  renderSettings,
+  renderAuditDashboard,
+  renderSystemHealth,
   REDIRECT
 } from './renderer.js';
 
@@ -67,8 +70,38 @@ export async function handlePage(pathname, req, res) {
   }
 
   if (normalized === '/' || normalized === '/dashboard') {
-    const stats = await getDashboardStats();
+    const stats = await getDashboardStats(user);
     return renderDashboard(user, stats);
+  }
+
+  if (normalized === '/admin/settings') {
+    if (user.role !== 'partner') {
+      res.writeHead(302, { Location: '/' });
+      res.end();
+      return REDIRECT;
+    }
+    const config = await getSystemConfig();
+    return renderSettings(user, config);
+  }
+
+  if (normalized === '/admin/audit') {
+    if (user.role !== 'partner' && user.role !== 'manager') {
+      res.writeHead(302, { Location: '/' });
+      res.end();
+      return REDIRECT;
+    }
+    const auditData = await getAuditData();
+    return renderAuditDashboard(user, auditData);
+  }
+
+  if (normalized === '/admin/health') {
+    if (user.role !== 'partner') {
+      res.writeHead(302, { Location: '/' });
+      res.end();
+      return REDIRECT;
+    }
+    const healthData = await getSystemHealth();
+    return renderSystemHealth(user, healthData);
   }
 
   if (segments.length === 1) {
@@ -111,21 +144,100 @@ export async function handlePage(pathname, req, res) {
   return null;
 }
 
-async function getDashboardStats() {
+async function getDashboardStats(user) {
   try {
     const engagements = list('engagement', {});
     const clients = list('client', {});
     const rfis = list('rfi', {});
     const reviews = list('review', {});
 
+    const myRfis = user ? rfis.filter(r => r.assigned_to === user.id) : [];
+    const now = Math.floor(Date.now() / 1000);
+    const overdueRfis = rfis.filter(r => {
+      if (r.status === 'closed') return false;
+      if (!r.due_date) return false;
+      return r.due_date < now;
+    }).map(r => ({
+      ...r,
+      daysOverdue: Math.floor((now - r.due_date) / 86400)
+    }));
+
     return {
       engagements: engagements.length,
       clients: clients.length,
       rfis: rfis.length,
-      reviews: reviews.length
+      reviews: reviews.length,
+      myRfis,
+      overdueRfis
     };
   } catch (e) {
     console.error('[Dashboard Stats]', e.message);
-    return { engagements: 0, clients: 0, rfis: 0, reviews: 0 };
+    return { engagements: 0, clients: 0, rfis: 0, reviews: 0, myRfis: [], overdueRfis: [] };
+  }
+}
+
+async function getSystemConfig() {
+  try {
+    const { getConfigEngineSync } = await import('@/lib/config-generator-engine.js');
+    const engine = getConfigEngineSync();
+    const config = engine.getConfig();
+    return {
+      database: config.system?.database || {},
+      server: config.system?.server || {},
+      thresholds: config.thresholds || {}
+    };
+  } catch (e) {
+    console.error('[getSystemConfig]', e.message);
+    return {};
+  }
+}
+
+async function getAuditData() {
+  try {
+    const audits = list('permission_audit', {});
+    const thirtyDaysAgo = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
+    const recentAudits = audits.filter(a => (a.timestamp || a.created_at) > thirtyDaysAgo);
+
+    const summary = {
+      total_actions: recentAudits.length,
+      grants: recentAudits.filter(a => a.action === 'grant').length,
+      revokes: recentAudits.filter(a => a.action === 'revoke').length,
+      role_changes: recentAudits.filter(a => a.action === 'role_change').length
+    };
+
+    return {
+      summary,
+      recentActivity: audits.slice(0, 50)
+    };
+  } catch (e) {
+    console.error('[getAuditData]', e.message);
+    return { summary: {}, recentActivity: [] };
+  }
+}
+
+async function getSystemHealth() {
+  try {
+    const entityCounts = {};
+    const entities = ['user', 'client', 'engagement', 'rfi', 'review', 'team'];
+    for (const e of entities) {
+      try {
+        entityCounts[e] = count(e);
+      } catch (err) {
+        entityCounts[e] = 0;
+      }
+    }
+
+    const uptimeSeconds = process.uptime();
+    const hours = Math.floor(uptimeSeconds / 3600);
+    const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+
+    return {
+      database: { status: 'Connected', type: 'SQLite' },
+      server: { port: 3004, uptime: `${hours}h ${minutes}m` },
+      entities: entityCounts
+    };
+  } catch (e) {
+    console.error('[getSystemHealth]', e.message);
+    return {};
   }
 }
