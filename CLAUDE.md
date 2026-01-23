@@ -44,10 +44,5 @@ Position data uses PDF coordinates (bottom-left origin). Zoom/rotate breaks posi
 ### Module Cache
 Custom module cache can become stale. Clear with: `rm -f data/app.db data/app.db-wal data/app.db-shm`
 
-## Rebuild Spec
-
-See `docs/` for configuration-driven rebuild spec targeting webjsx + Ripple UI:
-- `spec.js` - Feature analysis, schemas, migration plan
-- `entities.yaml` - Entity definitions with stage workflows
-- `system.yaml` - Thresholds, automation, integrations
-- `permissions.yaml` - Role-based permission matrix
+### Password Hashing
+User passwords use bcrypt. When seeding users, generate hash with `bcrypt.hash('password', 12)`.
