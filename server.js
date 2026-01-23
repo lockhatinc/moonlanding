@@ -7,16 +7,6 @@ import { register } from 'module';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = 3004;
 
-const hooks = {
-  resolve(specifier, context, nextResolve) {
-    if (specifier.startsWith('@/')) {
-      const resolved = specifier.replace('@/', `${__dirname}/src/`);
-      return nextResolve(`${resolved}`, context);
-    }
-    return nextResolve(specifier, context);
-  },
-};
-
 register('./import-hook.js', import.meta.url);
 
 let systemInitialized = false;
@@ -25,9 +15,11 @@ const moduleCache = new Map();
 const watchedDirs = [
   path.join(__dirname, 'src/config'),
   path.join(__dirname, 'src/app/api'),
+  path.join(__dirname, 'src/ui'),
 ];
 
 watchedDirs.forEach((dir) => {
+  if (!fs.existsSync(dir)) return;
   fs.watch(dir, { recursive: true }, async (eventType, filename) => {
     if (filename && (filename.endsWith('.js') || filename.endsWith('.jsx') || filename.endsWith('.yml'))) {
       moduleCache.clear();
@@ -98,49 +90,30 @@ const server = http.createServer(async (req, res) => {
 
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
-    // Handle client-side bundle requests FIRST (before page renderer)
-    if (pathname.startsWith('/client/')) {
-      const clientFile = pathname.slice(8); // Remove '/client/' prefix
-      let filePath = path.join(__dirname, `src/client/${clientFile}`);
-
-      // Try with .jsx extension if not provided
-      if (!fs.existsSync(filePath) && !filePath.endsWith('.jsx')) {
-        filePath = filePath + '.jsx';
-      }
-
-      if (fs.existsSync(filePath) && (filePath.endsWith('.jsx') || filePath.endsWith('.js'))) {
-        try {
-          // Read and transpile the file with esbuild
-          const code = fs.readFileSync(filePath, 'utf-8');
-          const { transform } = await import('esbuild');
-          const result = await transform(code, { loader: 'jsx', format: 'esm' });
-          res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-          res.writeHead(200);
-          res.end(result.code);
-          const elapsed = Date.now() - startTime;
-          console.log(`[${req.method}] ${req.url} 200 ${elapsed}ms (client bundle)`);
-          return;
-        } catch (err) {
-          console.error('[Client Bundle] Error:', err.message);
-          res.writeHead(500);
-          res.end(JSON.stringify({ error: 'Error transpiling bundle: ' + err.message }));
-          return;
-        }
+    // Serve webjsx library files
+    if (pathname.startsWith('/lib/webjsx/')) {
+      const file = pathname.slice(12);
+      const filePath = path.join(__dirname, 'node_modules/webjsx/dist', file);
+      if (fs.existsSync(filePath)) {
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        res.writeHead(200);
+        res.end(fs.readFileSync(filePath, 'utf-8'));
+        return;
       }
       res.writeHead(404);
-      res.end(JSON.stringify({ error: 'Client bundle not found' }));
+      res.end('Not found');
       return;
     }
 
-    // Handle page requests (non-API routes)
+    // Handle page requests (non-API routes) with new Ripple UI renderer
     if (!pathname.startsWith('/api/')) {
       try {
-        const { renderPageToHtml, REDIRECT_HANDLED } = await loadModule(path.join(__dirname, 'src/lib/page-renderer.js'));
-        const html = await renderPageToHtml(pathname, req, res);
-        if (html === REDIRECT_HANDLED) {
-          // Redirect was already handled and response sent
+        const { handlePage } = await loadModule(path.join(__dirname, 'src/ui/page-handler.js'));
+        const { REDIRECT } = await loadModule(path.join(__dirname, 'src/ui/renderer.js'));
+        const html = await handlePage(pathname, req, res);
+        if (html === REDIRECT) {
           const elapsed = Date.now() - startTime;
-          console.log(`[${req.method}] ${req.url} ${res.statusCode} ${elapsed}ms (page redirect)`);
+          console.log(`[${req.method}] ${req.url} ${res.statusCode} ${elapsed}ms (redirect)`);
           return;
         }
         if (html) {
@@ -153,7 +126,7 @@ const server = http.createServer(async (req, res) => {
           return;
         }
       } catch (err) {
-        console.error('[Page Renderer] Error:', err.message);
+        console.error('[Page Handler] Error:', err.message, err.stack);
       }
       // Fall through to 404 if page rendering fails
     }
@@ -358,9 +331,10 @@ async function readBody(req) {
 globalThis.NextRequest = NextRequest;
 globalThis.NextResponse = NextResponse;
 
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n▲ Zero-Build Runtime Server`);
   console.log(`- Local:        http://localhost:${PORT}`);
+  console.log(`- Network:      http://0.0.0.0:${PORT}`);
   console.log(`- Environments: .env.local, .env`);
   console.log(`✓ Ready in 0.1s\n`);
 });

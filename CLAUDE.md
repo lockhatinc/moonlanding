@@ -31,6 +31,13 @@ tsconfig.json must include `"jsx": "react-jsx"` for tsx to transpile JSX in .js 
 ### SQLite Concurrency
 Database locks on write. High concurrency causes "database is locked" errors.
 
+### Server Network Binding
+Server must bind to `0.0.0.0` for external access (browser automation, Docker):
+```js
+server.listen(PORT, '0.0.0.0', () => {...})
+```
+Binding to localhost only blocks external connections.
+
 ### PDF Coordinates
 Position data uses PDF coordinates (bottom-left origin). Zoom/rotate breaks positioning - must recalculate after display transform.
 
