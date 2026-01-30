@@ -1,0 +1,248 @@
+# Feature Comparison & Integration Work
+
+## Analysis Complete ✓
+
+### MOONLANDING Current State
+Entities: 24 (engagement, rfi, review, highlight, collaborator, checklist, user, team, client, tender, letter, flag, message, file, email, etc.)
+Roles: 5 (partner, manager, clerk, client_admin, client_user)
+Stack: Node.js/sqlite, tsx, zero-build runtime, RBAC with permissions audit
+
+### FRIDAY-STAGING Features Missing from Moonlanding
+HIGH PRIORITY:
+- [ ] Service Worker/PWA offline support (useOnlineStatus.tsx)
+- [ ] Multiple engagement status types workflow tracking (complex staging system)
+  - EngagementStatus, EngagementStaging, EngagementClientStatus, EngagementAuditorStatus
+  - EngagementLetterClientStatus, EngagementLetterAuditorStatus
+  - EngagementPostRFIClientStatus, EngagementPostRFIAuditorStatus
+- [ ] Online status indicator/detection
+
+### MYWORKREVIEW-STAGING Features Missing from Moonlanding
+HIGH PRIORITY (User-Facing):
+- [ ] Real-time chat component (FlexUpChat.tsx - 46KB)
+- [ ] Emoji reactions on highlights
+- [ ] Side-by-side PDF comparison mode
+- [ ] Reusable review templates system
+- [ ] Google Drive integration
+- [ ] PDF generation (Puppeteer integration)
+- [ ] Nodemailer email templates
+
+MEDIUM PRIORITY (Infrastructure):
+- [ ] Service Worker offline caching (Workbox integration)
+- [ ] Version history tracking for documents
+- [ ] Weekly checklist automation emails
+- [ ] AI/ML query console (FileReviewMLQueryConsol.tsx)
+- [ ] Highlight suggestions from ML
+
+LOW PRIORITY (Enhancement):
+- [ ] Mentions & @-notifications on comments
+- [ ] Comment emoji reactions
+- [ ] Rich mention formatting
+
+### Implementation Work Items
+
+#### Phase 1: Status & Workflow Enhancement
+- [ ] 1.1 Add engagement status type system to match friday-staging
+- [ ] 1.2 Implement EngagementStaging workflow with 6 stages
+- [ ] 1.3 Add EngagementClientStatus tracking
+- [ ] 1.4 Add EngagementAuditorStatus tracking
+- [ ] 1.5 Add EngagementLetterStatus variants
+- [ ] 1.6 Create status transition validation rules
+
+#### Phase 2: Offline & Real-time
+- [ ] 2.1 Add Service Worker setup
+- [ ] 2.2 Implement Workbox offline caching strategy
+- [ ] 2.3 Add useOnlineStatus hook for UI indicator
+- [ ] 2.4 Implement offline queue for API operations
+
+#### Phase 3: Communication Features
+- [ ] 3.1 Implement real-time chat component
+- [ ] 3.2 Add emoji reaction picker for highlights
+- [ ] 3.3 Implement @-mention detection in comments
+- [ ] 3.4 Add comment mention notifications
+
+#### Phase 4: PDF & Document Features
+- [ ] 4.1 Implement side-by-side PDF comparison viewer
+- [ ] 4.2 Add reusable templates entity and management
+- [ ] 4.3 Integrate Puppeteer for PDF generation
+- [ ] 4.4 Create PDF export workflow
+
+#### Phase 5: Integration & Automation
+- [ ] 5.1 Integrate Google Drive API
+- [ ] 5.2 Add Nodemailer email templates for weekly emails
+- [ ] 5.3 Implement weekly checklist email scheduler
+- [ ] 5.4 Create email rendering pipeline for templates
+
+#### Phase 6: AI/ML Features
+- [ ] 6.1 Implement ML query console component
+- [ ] 6.2 Add highlight suggestion engine
+- [ ] 6.3 Create query-based filtering
+
+### Additional Leads & Ideas - DETAILED
+- [ ] **ChatGPT/AI:** FileReviewMLQueryConsol.tsx (AI/ML query console for document analysis)
+- [ ] **Cloud Functions:** Both projects use extensive Cloud Functions
+  - myworkreview: puppeteer-core, chrome-aws-lambda (PDF generation with puppeteer!)
+  - myworkreview: 68KB functions/index.js with API endpoints for file upload, attachment management
+  - friday-staging: 161KB index.js with engagement/RFI workflows, client emails, recreation
+- [ ] **Email System:** Both use nodemailer + firebase-functions
+  - friday-staging: clientWeeklyEmails.js (weekly email automation)
+  - friday-staging: emailUtils.js (72KB - extensive email templates)
+  - myworkreview: weeklyChecklistEmails.js + collaboratorReviewChanges.js
+- [ ] **Google Drive Integration:** googleapis dependency in both projects
+  - friday-staging: Google Drive API integration
+  - myworkreview: Google Drive file handling
+- [ ] **Workbox & PWA:** myworkreview has 10+ workbox-* dependencies for offline caching
+- [ ] **PDF Handling:** Both have pdf-lib (@react-pdf/renderer) for rendering
+  - friday-staging: PDF editor with coordinate system (AreaHighlight.tsx, etc.)
+  - myworkreview: PDF annotation with zoom/rotate support
+- [ ] **Service Worker:** myworkreview has "service-worker" dependency
+- [ ] **Obfuscation:** myworkreview uses javascript-obfuscator and webpack-obfuscator for prod builds
+- [ ] **Version Comparison:** Both projects have comparison UI components
+- [ ] **Engagement Ratings:** client_admin role has can_rate_engagement permission
+- [ ] **Tender Tracking:** Both have tender entity but may have different feature sets
+- [ ] **Template System:** myworkreview has ReviewTemplateManage.tsx (40+ components)
+- [ ] **Checklist Features:** myworkreview has ReviewChecklistManage.tsx
+- [ ] **Collaboration UI:** Both have collaborator management components
+
+### Component Inventory - MyWorkReview (40+ components)
+**PDF/Annotation (8):**
+- PdfHighlighter.tsx, PdfLoader.tsx, AreaHighlight.tsx, Highlight.tsx
+- HighlightLayer.tsx, MouseMonitor.tsx, MouseSelection.tsx, TipContainer.tsx/Tip.tsx
+
+**Dialogs & Forms (7):**
+- FileReviewTagsDialog.tsx, FileReviewDateDialog.tsx, FileReviewValueDialog.tsx
+- FileReviewInfoBubble.tsx, RetryHighlightDialog.tsx, FridayDueDateDialog.tsx, FridayTeamDialog.tsx
+
+**Management (4):**
+- ReviewChecklistManage.tsx, ReviewTemplateManage.tsx, FlexAttachmentPreview.tsx, QuickViewAttachment.tsx
+
+**Communication (3):**
+- FlexUpChat.tsx (1540 lines!), FlexUpFridayChat.tsx, UserAvatar.tsx
+
+**Views & Pages (4):**
+- FlexUpView.tsx (engagement/Friday module), FlexUpReport.tsx, GetFlexUpReport.tsx, HomeTabs.tsx
+
+**AI/Tools (2):**
+- FileReviewMLQueryConsol.tsx (ML query console), AiTool.tsx, PushQueriesToMyFridayDialog.tsx
+
+**Utilities (12+):**
+- MobileReviewCard.tsx, MobileEngagementCard.tsx, StatusLabel.tsx, SearchReviewField.tsx
+- HomeLinearProgressLabel.tsx, LinearProgressLabel.tsx, FridayLinearProgressLabel.tsx, CircularProgressLabel.tsx
+- EmptyContainer.tsx, Popup.tsx, etc.
+
+### Cloud Function Endpoints - MyWorkReview
+- POST /api/friday-get-reviews
+- POST /api/get-checklists
+- POST /api/push-mwr-checklist
+- POST /api/upload-file
+- POST /api/replace-drive-file
+- POST /api/fetch-review, /api/fetch-review-cached
+- POST /api/get-attachment-file
+- POST /api/send-bug-report
+- POST /api/upload-attachment-file
+- POST /api/delete-attachment-file
+- POST /api/send-notification
+- POST /generate-custom-token
+- GET /api/hello
+
+### Cloud Function Endpoints - Friday-Staging
+- (161KB index.js - extensive engagement/RFI workflow API)
+- Client weekly emails scheduler
+- Engagement recreation automation (monthly/yearly)
+- User management (activate, list, sync)
+
+### Database Collections Comparison
+**Friday-Staging (Firebase):**
+- friday/clients/list
+- friday/engagements/list
+- friday/rfis/list
+- friday/users/list
+
+**MyWorkReview (Firebase):**
+- myworkreview/users/list (96 docs)
+- myworkreview/teams/list (7 docs)
+- myworkreview/reviews/list (1216+ docs with nested highlights)
+- myworkreview/checklists/list (23 docs)
+- myworkreview/templates/list (16 docs)
+- myworkreview/sections/list (2 docs)
+
+### Critical Integration Needs
+1. **Puppeteer Integration:** Must add PDF generation capability
+2. **Email Templates:** Expand from current job_execution_log to full email template system
+3. **Service Worker:** Add offline-first capability matching myworkreview PWA model
+4. **Chat Component:** Real-time messaging is a major feature gap
+5. **PDF Comparison:** Side-by-side view requires new component architecture
+
+## FEATURE ANALYSIS COMPLETE
+
+### Features Already Implemented in Moonlanding
+✓ PDF viewer (pdf.js-based)
+✓ Highlight collaboration (multi-user, realtime sync)
+✓ Chat merge (Friday engagement with MWR review)
+✓ Priority reviews (user-specific lists)
+✓ PDF comparison (side-by-side with sync scroll)
+✓ Temporary collaborator access (time-limited with auto-revoke)
+✓ Tender deadline warning (tracking & notifications)
+✓ Engagement recreation (monthly/yearly automation)
+✓ Engagement letter generation (Google Drive integration)
+✓ Client feedback & rating system (client_admin role)
+✓ Post-RFI workflow
+✓ 6-stage engagement lifecycle with auto-transitions
+✓ Role-based access control (5 roles)
+✓ Permission auditing
+✓ Job automation & execution logging
+✓ Email integration
+✓ File storage & management
+
+### Features NOT Yet Implemented
+**From Friday-Staging:**
+1. Service Worker offline support
+2. Online status indicator (useOnlineStatus.tsx pattern)
+3. Multiple engagement status tracking variants
+   (EngagementClientStatus, EngagementAuditorStatus, EngagementLetterStatus variants)
+
+**From MyWorkReview-Staging:**
+1. Real-time chat (FlexUpChat.tsx, FlexUpFridayChat.tsx)
+2. Emoji reactions on highlights/comments
+3. AI/ML query console (FileReviewMLQueryConsol.tsx)
+4. Weekly email automation (weeklyChecklistEmails.js pattern)
+5. Puppeteer PDF generation for exports
+6. Mention & @-notification system
+7. Comment emoji reactions
+8. Template management (ReviewTemplateManage.tsx)
+9. Checklist management UI (ReviewChecklistManage.tsx)
+10. Google Drive integration (googleapis)
+11. Workbox offline caching
+12. Code obfuscation (javascript-obfuscator)
+
+### Implementation Priority (Effort vs Impact)
+
+**P0 - Critical (Needed for Feature Parity):**
+- Service Worker setup (enables offline mode)
+- Real-time chat component
+- Engagement status variants (client, auditor, letter tracking)
+
+**P1 - High Value:**
+- Emoji reactions
+- AI/ML query console
+- Weekly email automation
+- Puppeteer PDF generation
+
+**P2 - Nice to Have:**
+- Mention system
+- Code obfuscation
+- Template UI
+- Checklist UI
+
+### Known Challenges
+1. **Puppeteer in Cloud Functions:** Requires chrome-aws-lambda for serverless environment
+2. **Service Worker:** Must coordinate with tsx runtime and hot reload
+3. **Real-time Chat:** Requires chat message history persistence and notifications
+4. **Email Automation:** Needs scheduler integration with job execution system
+5. **PDF Comparison:** Already in features list - just needs UI implementation
+
+### Next Steps
+1. Review friday-staging/src/components/pdfEditor for coordinate system (PDF math)
+2. Extract FlexUpChat.tsx pattern from myworkreview for chat implementation
+3. Plan Service Worker integration without breaking dev hot reload
+4. Design email template system expanding current email entity
+5. Evaluate puppeteer vs alternatives for PDF generation
