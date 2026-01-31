@@ -552,6 +552,139 @@ thresholds:
     max_api_calls: 50
     max_errors: 100
     max_permission_cache: 1000
+
+engagement_status_types:
+  engagement_client_status:
+    description: Tracks engagement status from client perspective
+    options:
+      - value: pending
+        label: Pending
+        color: grey
+        description: Awaiting client action
+      - value: in_progress
+        label: In Progress
+        color: blue
+        description: Client reviewing engagement details
+      - value: responded
+        label: Responded
+        color: green
+        description: Client has provided feedback
+      - value: completed
+        label: Completed
+        color: green
+        description: Engagement complete from client view
+  engagement_letter_client_status:
+    description: Tracks engagement letter status from client perspective
+    options:
+      - value: pending
+        label: Pending
+        color: grey
+        description: Letter not yet received
+      - value: received
+        label: Received
+        color: blue
+        description: Letter received by client
+      - value: accepted
+        label: Accepted
+        color: green
+        description: Letter accepted by client
+      - value: cancelled
+        label: Cancelled
+        color: red
+        description: Letter cancelled
+  engagement_letter_auditor_status:
+    description: Tracks engagement letter status from auditor perspective
+    options:
+      - value: pending
+        label: Pending
+        color: grey
+        description: Letter generation not started
+      - value: draft
+        label: Draft
+        color: blue
+        description: Letter in draft stage
+      - value: sent
+        label: Sent
+        color: blue
+        description: Letter sent to client
+      - value: accepted
+        label: Accepted
+        color: green
+        description: Client accepted letter
+      - value: cancelled
+        label: Cancelled
+        color: red
+        description: Letter cancelled
+  engagement_post_rfi_client_status:
+    description: Tracks post-RFI status from client perspective
+    options:
+      - value: pending
+        label: Pending
+        color: grey
+        description: Awaiting post-RFI submission
+      - value: received
+        label: Received
+        color: blue
+        description: Post-RFI received from client
+      - value: accepted
+        label: Accepted
+        color: green
+        description: Post-RFI accepted
+      - value: rejected
+        label: Rejected
+        color: red
+        description: Post-RFI requires revision
+  engagement_post_rfi_auditor_status:
+    description: Tracks post-RFI status from auditor perspective
+    options:
+      - value: pending
+        label: Pending
+        color: grey
+        description: Post-RFI not yet issued
+      - value: issued
+        label: Issued
+        color: blue
+        description: Post-RFI issued to client
+      - value: under_review
+        label: Under Review
+        color: blue
+        description: Post-RFI response under review
+      - value: accepted
+        label: Accepted
+        color: green
+        description: Post-RFI accepted
+      - value: needs_revision
+        label: Needs Revision
+        color: red
+        description: Post-RFI needs revision
+  engagement_auditor_status:
+    description: Tracks engagement status from auditor perspective
+    options:
+      - value: requested
+        label: Requested
+        color: grey
+        description: Engagement created
+      - value: in_progress
+        label: In Progress
+        color: blue
+        description: Team actively working on engagement
+      - value: under_partner_review
+        label: Under Partner Review
+        color: blue
+        description: Partner reviewing work
+      - value: pending_finalization
+        label: Pending Finalization
+        color: amber
+        description: Awaiting finalization
+      - value: completed
+        label: Completed
+        color: green
+        description: Engagement work complete
+      - value: closed_out
+        label: Closed Out
+        color: green
+        description: Engagement closed out
+
 entities:
   engagement:
     label: Engagement
@@ -646,6 +779,24 @@ entities:
         type: enum
         options: engagement_lifecycle.stages[].name
         validator: lifecycle_stage_transition
+      client_status:
+        type: enum
+        options: engagement_client_status
+      letter_client_status:
+        type: enum
+        options: engagement_letter_client_status
+      letter_auditor_status:
+        type: enum
+        options: engagement_letter_auditor_status
+      post_rfi_client_status:
+        type: enum
+        options: engagement_post_rfi_client_status
+      post_rfi_auditor_status:
+        type: enum
+        options: engagement_post_rfi_auditor_status
+      auditor_status:
+        type: enum
+        options: engagement_auditor_status
       year:
         min: $thresholds.engagement.min_year
         max: $thresholds.engagement.max_year
@@ -2849,6 +3000,69 @@ status_enums:
       color: red
     accepted:
       label: "Accepted"
+      color: green
+
+  engagement_client_status:
+    pending:
+      label: Pending
+      color: yellow
+    partial:
+      label: Partially Sent
+      color: amber
+    sent:
+      label: Sent
+      color: green
+
+  engagement_letter_client_status:
+    pending:
+      label: Pending
+      color: yellow
+    sent:
+      label: Sent
+      color: green
+
+  engagement_post_rfi_client_status:
+    pending:
+      label: Pending
+      color: yellow
+    queries:
+      label: Queries
+      color: amber
+    accepted:
+      label: Accepted
+      color: green
+
+  engagement_post_rfi_auditor_status:
+    pending:
+      label: Pending
+      color: yellow
+    sent:
+      label: Sent
+      color: green
+
+  engagement_letter_auditor_status:
+    pending:
+      label: Pending
+      color: yellow
+    queries:
+      label: Queries
+      color: amber
+    received:
+      label: Accepted
+      color: green
+
+  engagement_auditor_status:
+    requested:
+      label: Requested
+      color: red
+    reviewing:
+      label: Reviewing
+      color: blue
+    queries:
+      label: Queries
+      color: amber
+    received:
+      label: Accepted
       color: green
 
   rfi_response_type:
