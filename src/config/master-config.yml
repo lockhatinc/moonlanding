@@ -1537,6 +1537,111 @@ entities:
     document_type: engagement_letter
     has_google_drive_integration: true
     has_template_variables: true
+  review_template:
+    label: Review Template
+    label_plural: Review Templates
+    icon: FileText
+    order: 9.5
+    permission_template: standard_auditor
+    parent: null
+    children:
+    - template_section
+    fields:
+      id:
+        type: id
+        required: true
+      name:
+        type: text
+        required: true
+        search: true
+        label: Template Name
+      description:
+        type: textarea
+        label: Description
+      type:
+        type: enum
+        options:
+        - standard
+        - complex
+        - financial
+        - compliance
+        default: standard
+        label: Template Type
+        search: true
+      content:
+        type: textarea
+        label: Template Content
+        required: true
+      variables:
+        type: json
+        label: Template Variables
+        description: JSON array of variable names used in template
+      is_active:
+        type: bool
+        default: true
+        label: Is Active
+      created_at:
+        type: timestamp
+        required: true
+        auto: now
+        auto_generate: true
+        readOnly: true
+      updated_at:
+        type: timestamp
+        required: true
+        auto: update
+        auto_generate: true
+        readOnly: true
+      created_by:
+        type: ref
+        ref: user
+        auto: user
+        auto_generate: true
+        readOnly: true
+  template_section:
+    label: Template Section
+    label_plural: Template Sections
+    icon: Folder
+    order: 10
+    permission_template: standard_auditor
+    parent: review_template
+    fields:
+      id:
+        type: id
+        required: true
+      template_id:
+        type: ref
+        ref: review_template
+        required: true
+        search: true
+      name:
+        type: text
+        required: true
+        search: true
+      order:
+        type: int
+        default: 0
+      content:
+        type: textarea
+        required: true
+      created_at:
+        type: timestamp
+        required: true
+        auto: now
+        auto_generate: true
+        readOnly: true
+      updated_at:
+        type: timestamp
+        required: true
+        auto: update
+        auto_generate: true
+        readOnly: true
+      created_by:
+        type: ref
+        ref: user
+        auto: user
+        auto_generate: true
+        readOnly: true
   rfi_section:
     label: RFI Section
     label_plural: RFI Sections
@@ -1601,13 +1706,24 @@ entities:
     order: 15
     permission_template: client_response
     parent: rfi
+    has_email_integration: true
+    has_emoji_reactions: true
     fields:
       rfi_id:
         type: ref
         ref: rfi
         required: true
         description: Parent RFI
-    has_email_integration: true
+      reactions:
+        type: json
+        default: '{}'
+        label: Reactions
+        description: Map of emoji to array of user IDs who reacted
+      mentions:
+        type: json
+        default: '[]'
+        label: Mentions
+        description: Array of mentioned user names
   file:
     label: File
     label_plural: Files
@@ -2012,6 +2128,45 @@ entities:
       updated_by:
         type: ref
         ref: user
+
+domains:
+  friday:
+    label: Friday Engagements
+    description: Friday engagement and RFI workflow
+    enabled: true
+    entities:
+    - engagement
+    - rfi
+    - rfi_section
+    - letter
+    - client
+    - user
+    - team
+    - client_user
+  mwr:
+    label: MyWorkReview
+    description: Review and collaboration platform
+    enabled: true
+    entities:
+    - review
+    - highlight
+    - highlight_comment
+    - removedHighlight
+    - collaborator
+    - checklist
+    - checklist_item
+    - tender
+    - message
+    - file
+    - rfi_response
+    - review_template
+    - template_section
+    - flag
+    - user
+    - team
+    - email
+    - job_execution_log
+    - permission_audit
 
 automation:
   schedules:
@@ -2516,642 +2671,3 @@ highlights:
     border_width: 2
     z_index: 100
     animation_duration_ms: 200
-domains:
-  friday:
-    name: Friday
-    label: Engagement Management
-    description: Engagement lifecycle, RFI workflow, client communication
-    enabled: true
-    primary_color: '#3B82F6'
-    icon: Briefcase
-    features:
-      engagement_management: true
-      rfi_workflow: true
-      engagement_letter: true
-      client_feedback: true
-      recreation: true
-      team_management: true
-      client_management: true
-    entities:
-    - engagement
-    - rfi
-    - client
-    - client_user
-    - letter
-    - rfi_section
-    - message
-    - file
-    - rfi_response
-    - email
-    - user
-    - team
-  mwr:
-    name: MWR
-    label: My Work Review
-    description: PDF review collaboration, highlights, checklists, tenders
-    enabled: true
-    primary_color: '#10B981'
-    icon: FileText
-    features:
-      review_management: true
-      pdf_viewer: true
-      highlight_collaboration: true
-      checklist_management: true
-      tender_tracking: true
-      pdf_comparison: true
-      priority_reviews: true
-      chat_merge: true
-      collaborator_management: true
-    entities:
-    - review
-    - highlight
-    - collaborator
-    - checklist
-    - checklist_item
-    - tender
-    - flag
-    - user
-    - team
-  shared:
-    description: Entities shared across both domains
-    entities:
-    - user
-    - team
-    - notification
-features:
-  engagement_letter:
-    enabled: true
-    domain: friday
-    workflow_stage: commencement
-    description: Generate engagement letters via Google Drive
-    requires:
-    - google_drive
-    entity: letter
-  client_feedback:
-    enabled: true
-    domain: friday
-    workflow_stage: finalization
-    description: Client feedback and rating system
-    roles:
-    - client_admin
-    entity: engagement
-  post_rfi:
-    enabled: true
-    domain: friday
-    workflow_stage: finalization
-    description: Post-RFI workflow for finalization queries
-    entity: rfi
-  pdf_viewer:
-    enabled: true
-    domain: mwr
-    description: PDF.js-based PDF viewer with text selection
-    entity: review
-    min_browser_version:
-      chrome: 90
-      firefox: 88
-      safari: 14
-  highlight_collaboration:
-    enabled: true
-    domain: mwr
-    description: Multi-user highlight collaboration on PDFs
-    entity: highlight
-    requires:
-    - pdf_viewer
-    realtime_sync: true
-  chat_merge:
-    enabled: true
-    domain: mwr
-    description: Merge Friday engagement with MWR review
-    integration: friday_mwr
-    requires:
-    - review.review_link
-  priority_reviews:
-    enabled: true
-    domain: mwr
-    description: User-specific priority review lists
-    entity: user
-    field: priority_reviews
-  pdf_comparison:
-    enabled: true
-    domain: mwr
-    description: Side-by-side PDF comparison with sync scroll
-    entity: review
-    sync_scroll: true
-  temporary_collaborator_access:
-    enabled: true
-    domain: mwr
-    description: Time-limited collaborator access with auto-revoke
-    entity: collaborator
-    expiry_days: $thresholds.collaborator.default_expiry_days
-    max_expiry_days: $thresholds.collaborator.max_expiry_days
-  tender_deadline_warning:
-    enabled: true
-    domain: mwr
-    description: Tender deadline tracking and notifications
-    entity: tender
-    warning_days: $thresholds.tender.warning_days_before
-  engagement_recreation:
-    enabled: true
-    domain: friday
-    description: Automatic engagement recreation (monthly/yearly)
-    entity: engagement
-    intervals:
-    - once
-    - monthly
-    - yearly
-  stage_auto_transition:
-    enabled: true
-    domain: friday
-    description: Automatic stage transitions on commencement date
-    entity: engagement
-    workflow: engagement_lifecycle
-  rfi_state_unification:
-    enabled: true
-    domain: friday
-    description: Unified RFI state machine with dual display states
-    entity: rfi
-  user_sync:
-    enabled: true
-    domain: global
-    description: Google Workspace user sync
-    integration: google_workspace
-    schedule: 0 3 * * *
-file_storage:
-  friday_rfi_attachments:
-    path_pattern: /{clientId}/{engagementId}/{rfiId}/{questionId}/{fileName}_{timestamp}
-    description: Friday RFI Attachments - no database lookups
-    domain: friday
-    type: rfi_attachment
-  friday_master_files:
-    path_pattern: /LockhatInc/{clientId}/{engagementId}/{fileName}_{timestamp}
-    description: Friday Master Files
-    domain: friday
-    type: master_file
-  mwr_chat_attachments:
-    path_pattern: /{org}/{reviewId}/{filename}_{timestamp}
-    description: MWR Chat Attachments
-    domain: mwr
-    type: chat_attachment
-  mwr_reviews:
-    path_pattern: /1LZwInex0XVr6UKqyY_w6G2JeUyeUiiPG/{reviewId}/{filename}
-    description: MWR Reviews - fixed folder ID
-    domain: mwr
-    type: review
-integrations:
-  google_workspace:
-    enabled: true
-    description: Google Workspace user directory sync
-    schedule: $automation.schedules[user_sync].trigger
-    action: sync_users_from_google_workspace
-    scopes:
-    - https://www.googleapis.com/auth/admin.directory.user.readonly
-    env_vars:
-    - USER_SYNC_SCRIPT_URL
-    - USER_SYNC_KEY
-    rate_limits:
-      requests_per_minute: 300
-      requests_per_day: 10000
-  google_drive:
-    enabled: true
-    description: Google Drive document generation and file storage
-    actions:
-    - generate_letter
-    - copy_files_on_recreation
-    - upload_rfi_files
-    template_variables: $document_generation.templates
-    scopes:
-    - https://www.googleapis.com/auth/drive.file
-    - https://www.googleapis.com/auth/drive.readonly
-    env_vars:
-    - DRIVE_ENGAGEMENT_LETTER_FOLDER
-    - GOOGLE_SERVICE_ACCOUNT_KEY
-    rate_limits:
-      requests_per_100_seconds: 1000
-      quota_per_user_per_day: 10000000000
-    max_file_size_mb: 25
-  google_gmail:
-    enabled: true
-    description: Gmail API for sending notifications and emails
-    actions:
-    - send_notifications
-    - receive_email_attachments
-    - send_rfi_emails
-    scopes:
-    - https://www.googleapis.com/auth/gmail.send
-    - https://www.googleapis.com/auth/gmail.readonly
-    rate_limits:
-      per_user_per_minute: 100
-      per_project_per_day: 10000
-    env_vars:
-    - GMAIL_SERVICE_ACCOUNT_KEY
-    max_attachment_size_mb: 25
-  google_oauth:
-    enabled: true
-    description: Google OAuth 2.0 authentication
-    scopes:
-    - https://www.googleapis.com/auth/userinfo.email
-    - https://www.googleapis.com/auth/userinfo.profile
-    env_vars:
-    - GOOGLE_CLIENT_ID
-    - GOOGLE_CLIENT_SECRET
-    - GOOGLE_REDIRECT_URI
-    token_expiry_hours: 1
-    refresh_token_rotation: true
-validation:
-  engagement_stage_transition:
-    description: Validate engagement stage transitions
-    rule: "if (current_stage == 'info_gathering' && date > commencement_date) {\n\
-      \  error: \"Cannot manually set to InfoGathering after commencement_date\"\n\
-      }\nif (to_stage == 'close_out' && role != 'partner') {\n  error: \"Only Partner\
-      \ can transition to CloseOut\"\n}\nif (to_stage == 'close_out') {\n  require:\
-      \ engagement_letter.status == 'accepted' OR progress == 0\n  error: \"Engagement\
-      \ letter must be accepted or engagement cancelled before CloseOut\"\n}\nif (to_stage\
-      \ NOT IN allowed_forward_transitions[current_stage]) {\n  error: \"Invalid stage\
-      \ transition\"\n}\n"
-  rfi_completion:
-    description: Validate RFI completion requirements
-    rule: 'require: files_count > 0 OR response.text_length > 0
-
-      error: "RFI must have file upload OR text response to mark complete"
-
-      '
-  recreation_allowed:
-    description: Validate engagement recreation eligibility
-    rule: 'require: repeat_interval != ''once''
-
-      error: "Cannot recreate engagement with repeat_interval=''once''"
-
-      require: status == ''active''
-
-      error: "Cannot recreate inactive engagement"
-
-      '
-  date_range_validation:
-    description: Validate start and end date ranges
-    rule: "if (start_date && end_date) {\n  require: start_date < end_date\n  error:\
-      \ \"Start date must be before end date\"\n}\n"
-  collaborator_expiry_validation:
-    description: Validate collaborator expiry dates
-    rule: "if (access_type == 'temporary') {\n  require: expires_at IS NOT NULL\n\
-      \  error: \"Temporary access requires expiry date\"\n  require: expires_at >\
-      \ now()\n  error: \"Expiry date must be in the future\"\n  require: expires_at\
-      \ <= now() + (max_expiry_days * 86400)\n  error: \"Expiry date cannot exceed\
-      \ ${max_expiry_days} days\"\n}\n"
-  year_validation:
-    description: Validate engagement year
-    rule: 'require: year >= $thresholds.engagement.min_year
-
-      require: year <= $thresholds.engagement.max_year
-
-      error: "Year must be between ${min_year} and ${max_year}"
-
-      '
-  tender_deadline_validation:
-    description: Validate tender deadline
-    rule: "require: deadline IS NOT NULL\nerror: \"Tender must have a deadline\"\n\
-      if (tender_status == 'open') {\n  require: deadline > now()\n  error: \"Open\
-      \ tender deadline must be in the future\"\n}\n"
-  tender_value_validation:
-    description: Validate tender estimated and actual values
-    rule: "if (estimated_value IS NOT NULL) {\n  require: estimated_value > 0\n  error:\
-      \ \"Estimated value must be positive\"\n}\nif (actual_value IS NOT NULL) {\n\
-      \  require: actual_value > 0\n  error: \"Actual value must be positive\"\n \
-      \ require: tender_status == 'awarded'\n  error: \"Actual value only allowed\
-      \ after tender is awarded\"\n}\n"
-  tender_status_validation:
-    description: Validate tender status changes and required fields
-    rule: "if (tender_status == 'cancelled') {\n  require: cancelled_reason IS NOT\
-      \ NULL\n  error: \"Cancelled reason required when tender is cancelled\"\n}\n\
-      if (tender_status == 'awarded') {\n  require: awarded_to IS NOT NULL\n  error:\
-      \ \"Winner name required when tender is awarded\"\n}\n"
-  tender_award_date_validation:
-    description: Validate tender award date
-    rule: "if (award_date IS NOT NULL) {\n  require: tender_status == 'awarded'\n\
-      \  error: \"Award date only allowed when tender is awarded\"\n  require: award_date\
-      \ >= created_at\n  error: \"Award date must be after tender creation date\"\n\
-      }\n"
-
-  rfi_response_validation:
-    description: "Validate RFI response requirements"
-    rule: |
-      require: response_text IS NOT NULL AND LENGTH(response_text) > 0
-      error: "Response text is required"
-
-  rfi_response_file_requirements:
-    description: "Validate file attachments for client responses"
-    rule: |
-      if (response_type == 'client_response') {
-        require: file_attachments IS NOT NULL AND JSON_LENGTH(file_attachments) > 0
-        error: "File attachments required for client responses"
-      }
-
-  rfi_response_rejection_reason:
-    description: "Validate rejection reason requirement"
-    rule: |
-      if (status == 'rejected') {
-        require: rejection_reason IS NOT NULL AND LENGTH(rejection_reason) > 0
-        error: "Rejection reason required when response is rejected"
-      }
-
-  rfi_response_review_timestamp:
-    description: "Validate review timestamp"
-    rule: |
-      if (status IN ['reviewed', 'accepted', 'rejected']) {
-        require: reviewed_at IS NOT NULL
-        error: "Review timestamp required for reviewed/accepted/rejected responses"
-        require: reviewed_by IS NOT NULL
-        error: "Reviewer ID required for reviewed/accepted/rejected responses"
-        require: reviewed_at >= response_date
-        error: "Review timestamp must be after submission timestamp"
-      }
-
-  rfi_response_chain_integrity:
-    description: "Validate response chain integrity"
-    rule: |
-      if (parent_response_id IS NOT NULL) {
-        require: response_chain_id IS NOT NULL
-        error: "Response chain ID required when parent response exists"
-      }
-
-  rfi_response_completeness:
-    description: "Validate response completeness flags"
-    rule: |
-      if (is_complete == true AND clarification_needed == true) {
-        error: "Response cannot be both complete and need clarification"
-      }
-status_enums:
-  standard_status:
-    pending:
-      label: Pending
-      color: yellow
-    active:
-      label: Active
-      color: blue
-    completed:
-      label: Completed
-      color: green
-    archived:
-      label: Archived
-      color: gray
-  lifecycle_status:
-    pending:
-      label: Pending
-      color: yellow
-    active:
-      label: Active
-      color: blue
-    inactive:
-      label: Inactive
-      color: gray
-  rfi_client_status:
-    pending:
-      label: Pending
-      color: yellow
-    sent:
-      label: Sent
-      color: blue
-    responded:
-      label: Responded
-      color: amber
-    completed:
-      label: Completed
-      color: green
-  rfi_auditor_status:
-    requested:
-      label: Requested
-      color: red
-    reviewing:
-      label: Reviewing
-      color: blue
-    queries:
-      label: Queries
-      color: amber
-    received:
-      label: Received
-      color: green
-  highlight_status:
-    unresolved:
-      label: Unresolved
-      color: red
-    partially_resolved:
-      label: Partially Resolved
-      color: yellow
-    resolved:
-      label: Resolved
-      color: green
-  review_status:
-    open:
-      label: Open
-      color: yellow
-    closed:
-      label: Closed
-      color: green
-  engagement_stage:
-    info_gathering:
-      label: Info Gathering
-      color: blue
-    commencement:
-      label: Commencement
-      color: blue
-    team_execution:
-      label: Team Execution
-      color: amber
-    partner_review:
-      label: Partner Review
-      color: amber
-    finalization:
-      label: Finalization
-      color: green
-    close_out:
-      label: Close Out
-      color: green
-  user_status:
-    active:
-      label: Active
-      color: green
-    inactive:
-      label: Inactive
-      color: gray
-    pending:
-      label: Pending
-      color: yellow
-  letter_status:
-    draft:
-      label: Draft
-      color: gray
-    sent:
-      label: Sent
-      color: blue
-    accepted:
-      label: Accepted
-      color: green
-    rejected:
-      label: Rejected
-      color: red
-  rfi_response_status:
-    submitted:
-      label: "Submitted"
-      color: blue
-    reviewed:
-      label: "Reviewed"
-      color: amber
-    rejected:
-      label: "Rejected"
-      color: red
-    accepted:
-      label: "Accepted"
-      color: green
-
-  engagement_client_status:
-    pending:
-      label: Pending
-      color: yellow
-    partial:
-      label: Partially Sent
-      color: amber
-    sent:
-      label: Sent
-      color: green
-
-  engagement_letter_client_status:
-    pending:
-      label: Pending
-      color: yellow
-    sent:
-      label: Sent
-      color: green
-
-  engagement_post_rfi_client_status:
-    pending:
-      label: Pending
-      color: yellow
-    queries:
-      label: Queries
-      color: amber
-    accepted:
-      label: Accepted
-      color: green
-
-  engagement_post_rfi_auditor_status:
-    pending:
-      label: Pending
-      color: yellow
-    sent:
-      label: Sent
-      color: green
-
-  engagement_letter_auditor_status:
-    pending:
-      label: Pending
-      color: yellow
-    queries:
-      label: Queries
-      color: amber
-    received:
-      label: Accepted
-      color: green
-
-  engagement_auditor_status:
-    requested:
-      label: Requested
-      color: red
-    reviewing:
-      label: Reviewing
-      color: blue
-    queries:
-      label: Queries
-      color: amber
-    received:
-      label: Accepted
-      color: green
-
-  rfi_response_type:
-    client_response:
-      label: "Client Response"
-      color: blue
-    auditor_response:
-      label: "Auditor Response"
-      color: green
-    clarification:
-      label: "Clarification"
-      color: amber
-
-  tender_type:
-    government:
-      label: Government
-      color: blue
-    private_sector:
-      label: Private Sector
-      color: green
-    nonprofit:
-      label: Non-Profit
-      color: purple
-    education:
-      label: Education
-      color: amber
-    other:
-      label: Other
-      color: gray
-  tender_status:
-    open:
-      label: Open
-      color: green
-    closed:
-      label: Closed
-      color: gray
-    awarded:
-      label: Awarded
-      color: blue
-    cancelled:
-      label: Cancelled
-      color: red
-  tender_priority:
-    low:
-      label: Low
-      color: gray
-    medium:
-      label: Medium
-      color: blue
-    high:
-      label: High
-      color: amber
-    critical:
-      label: Critical
-      color: red
-system:
-  database:
-    type: sqlite
-    path: ./data/database.db
-    backup_path: ./data/backups
-    foreign_keys: false
-    wal_mode: true
-    max_connections: 10
-  server:
-    port: 3000
-    host: 0.0.0.0
-    cors_enabled: true
-    session_secret_env: SESSION_SECRET
-    timezone: UTC
-    default_user_role: clerk
-  polling:
-    default_interval_ms: 2000
-    max_interval_ms: 10000
-    deduplication_window_ms: 1000
-  pagination:
-    default_page_size: 50
-    max_page_size: 500
-  logging:
-    level: info
-    format: json
-    log_api_calls: true
-    log_sql_queries: false
-    log_file: ./logs/app.log
-  security:
-    bcrypt_rounds: 10
-    session_max_age_hours: 24
-    csrf_protection: true
-    helmet_enabled: true
-  performance:
-    enable_compression: true
-    enable_etag: true
-    cache_static_assets: true
