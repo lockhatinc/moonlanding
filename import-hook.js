@@ -23,6 +23,12 @@ function resolveFile(filePath) {
 }
 
 export async function resolve(specifier, context, nextResolve) {
+  // Shim Mantine imports to compatibility layer during migration
+  if (specifier === '@mantine/core' || specifier === '@mantine/hooks' || specifier === '@mantine/notifications') {
+    const shimPath = path.join(__dirname, 'src/lib/mantine-shim.js');
+    return nextResolve(`file://${shimPath}`, context);
+  }
+
   // Shim next/server for buildless environment
   if (specifier === 'next/server') {
     const shimPath = path.join(__dirname, 'next-server-shim.js');
