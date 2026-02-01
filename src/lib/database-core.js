@@ -164,6 +164,61 @@ export const migrate = () => {
     console.error('[Database] Audit logs index creation failed:', e.message);
   }
 
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS rfis (
+      id TEXT PRIMARY KEY,
+      engagement_id TEXT NOT NULL,
+      status TEXT DEFAULT 'draft',
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      FOREIGN KEY (engagement_id) REFERENCES engagement(id)
+    )`);
+  } catch (e) {
+    console.error('[Database] RFIs table creation failed:', e.message);
+  }
+
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS rfi_questions (
+      id TEXT PRIMARY KEY,
+      rfi_id TEXT NOT NULL,
+      question TEXT NOT NULL,
+      category TEXT,
+      assigned_to TEXT,
+      due_date TEXT,
+      status TEXT DEFAULT 'pending',
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      FOREIGN KEY (rfi_id) REFERENCES rfis(id),
+      FOREIGN KEY (assigned_to) REFERENCES users(id)
+    )`);
+  } catch (e) {
+    console.error('[Database] RFI questions table creation failed:', e.message);
+  }
+
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS rfi_responses (
+      id TEXT PRIMARY KEY,
+      question_id TEXT NOT NULL,
+      response TEXT,
+      attachments TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      FOREIGN KEY (question_id) REFERENCES rfi_questions(id)
+    )`);
+  } catch (e) {
+    console.error('[Database] RFI responses table creation failed:', e.message);
+  }
+
+  try {
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_rfis_engagement ON rfis(engagement_id)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_rfis_status ON rfis(status)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_rfi_questions_rfi ON rfi_questions(rfi_id)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_rfi_questions_status ON rfi_questions(status)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_rfi_responses_question ON rfi_responses(question_id)`);
+  } catch (e) {
+    console.error('[Database] RFI index creation failed:', e.message);
+  }
+
   console.log('[Database] Migration complete');
 };
 
