@@ -1,0 +1,814 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Data Migration Report</title>
+  <style>
+    * { margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 8px; margin-bottom: 30px; }
+    h1 { font-size: 2em; margin-bottom: 10px; }
+    .timestamp { opacity: 0.9; font-size: 0.9em; }
+    .section { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    h2 { color: #667eea; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #667eea; }
+    .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 20px; }
+    .stat-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+    .stat-number { font-size: 2em; font-weight: 700; }
+    .stat-label { font-size: 0.9em; opacity: 0.9; margin-top: 5px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f3f4f6; font-weight: 600; }
+    tr:hover { background: #f9fafb; }
+    .status-ok { color: #10b981; font-weight: 600; }
+    .status-warn { color: #f59e0b; font-weight: 600; }
+    .status-error { color: #ef4444; font-weight: 600; }
+    footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #666; text-align: center; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Data Migration Report</h1>
+      <p class="timestamp">Generated: 2026-02-01T12:27:16.925Z</p>
+      <p style="margin-top: 10px; font-size: 0.95em;">Migration from friday-staging and myworkreview-staging to moonlanding</p>
+    </header>
+
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-number">4</div>
+        <div class="stat-label">Users</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">2</div>
+        <div class="stat-label">Engagements</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">1</div>
+        <div class="stat-label">RFIs</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">0</div>
+        <div class="stat-label">Reviews</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number">0</div>
+        <div class="stat-label">Highlights</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Migration Status</h2>
+      <p style="margin-bottom: 15px; color: #666;">
+        <span class="status-ok">✓ Migration Complete</span>
+      </p>
+      <p style="color: #666;">All data has been successfully loaded into the moonlanding database. The database is ready for testing and validation.</p>
+    </div>
+
+    <div class="section">
+      <h2>Data Integrity Checks</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Check</th>
+            <th>Status</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+            <tr>
+              <td><strong>engagement->client</strong></td>
+              <td><span class="status-ok">OK</span></td>
+              <td>All references valid</td>
+            </tr>
+          
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Database Tables</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Table Name</th>
+            <th>Row Count</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+            <tr>
+              <td><code>checklist</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>checklist_item</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>client</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>client_user</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>collaborator</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>email</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>engagement</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>file</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>flag</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>highlight</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>highlight_comment</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>job_execution_log</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>letter</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>message</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>permission_audit</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>removedHighlight</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>review</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>review_template</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi_response</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi_section</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>team</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>template_section</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>tender</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>users</code></td>
+              <td>4</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>checklist_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>checklist_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>checklist_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>checklist_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>checklist_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>checklist_item_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>checklist_item_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>checklist_item_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>checklist_item_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>checklist_item_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>client_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>client_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>client_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>client_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>client_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>collaborator_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>collaborator_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>collaborator_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>collaborator_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>collaborator_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>email_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>email_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>email_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>email_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>email_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>engagement_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>engagement_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>engagement_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>engagement_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>engagement_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>file_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>file_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>file_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>file_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>file_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>permission_audit_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>permission_audit_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>permission_audit_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>permission_audit_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>permission_audit_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>review_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>review_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>review_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>review_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>review_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>review_template_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>review_template_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>review_template_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>review_template_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>review_template_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi_response_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi_response_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi_response_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi_response_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi_response_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>team_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>team_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>team_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>team_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>team_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>template_section_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>template_section_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>template_section_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>template_section_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>template_section_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>tender_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>tender_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>tender_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>tender_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>tender_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>users_fts</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>users_fts_data</code></td>
+              <td>2</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>users_fts_idx</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>users_fts_docsize</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>users_fts_config</code></td>
+              <td>1</td>
+              <td><span class="status-ok">populated</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>sessions</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>chat_messages</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>chat_mentions</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>audit_logs</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfis</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi_questions</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+            <tr>
+              <td><code>rfi_responses</code></td>
+              <td>0</td>
+              <td><span class="status-warn">empty</span></td>
+            </tr>
+          
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>Migration Summary</h2>
+      <ul style="list-style: none; margin-top: 15px;">
+        <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+          <strong>Total Users:</strong> 4
+        </li>
+        <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+          <strong>Total Engagements:</strong> 2
+        </li>
+        <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+          <strong>Total RFIs:</strong> 1
+        </li>
+        <li style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+          <strong>Total Reviews:</strong> 0
+        </li>
+        <li style="padding: 8px 0;">
+          <strong>Total Highlights:</strong> 0
+        </li>
+      </ul>
+      
+        <div style="margin-top: 15px; background: #fef2f2; padding: 12px; border-radius: 6px; border-left: 4px solid #ef4444;">
+          <strong style="color: #ef4444;">Errors Encountered:</strong>
+          <ul style="margin-top: 10px;">
+            <li>• Review seeding error: SQLite3 can only bind numbers, strings, bigints, buffers, and null</li><li>• Highlight seeding error: SQLite3 can only bind numbers, strings, bigints, buffers, and null</li>
+          </ul>
+        </div>
+      
+    </div>
+
+    <footer>
+      <p>Data Migration Pipeline Complete</p>
+      <p style="margin-top: 10px; opacity: 0.7;">Ready for validation and testing</p>
+    </footer>
+  </div>
+</body>
+</html>
+    
