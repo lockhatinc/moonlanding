@@ -57,6 +57,7 @@ function PDFPanel({
   onSelectHighlight,
   scrollContainerRef,
   syncScrollEnabled,
+  onHighlightCreate,
 }) {
   const pageHighlights = highlights.filter((h) => h.page_number === currentPage);
 
@@ -144,6 +145,8 @@ export function PDFComparison({
   highlights2 = [],
   onHighlight1,
   onHighlight2,
+  onHighlightCreate1,
+  onHighlightCreate2,
   selectedHighlight,
   onSelectHighlight,
 }) {
@@ -382,6 +385,7 @@ export function PDFComparison({
             onSelectHighlight={onSelectHighlight}
             scrollContainerRef={scrollRef1}
             syncScrollEnabled={syncScroll}
+            onHighlightCreate={onHighlightCreate1}
           />
         </Box>
 
@@ -412,6 +416,7 @@ export function PDFComparison({
             onSelectHighlight={onSelectHighlight}
             scrollContainerRef={scrollRef2}
             syncScrollEnabled={syncScroll}
+            onHighlightCreate={onHighlightCreate2}
           />
         </Box>
       </Box>
