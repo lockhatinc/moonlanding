@@ -140,6 +140,30 @@ export const migrate = () => {
     console.error('[Database] Chat mentions table creation failed:', e.message);
   }
 
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS audit_logs (
+      id TEXT PRIMARY KEY,
+      entity_type TEXT NOT NULL,
+      entity_id TEXT NOT NULL,
+      action TEXT NOT NULL,
+      user_id TEXT,
+      before_state TEXT,
+      after_state TEXT,
+      created_at INTEGER NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )`);
+  } catch (e) {
+    console.error('[Database] Audit logs table creation failed:', e.message);
+  }
+
+  try {
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at)`);
+  } catch (e) {
+    console.error('[Database] Audit logs index creation failed:', e.message);
+  }
+
   console.log('[Database] Migration complete');
 };
 

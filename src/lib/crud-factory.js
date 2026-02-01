@@ -14,6 +14,7 @@ import { parse as parseQuery } from '@/lib/query-string-adapter';
 import { withErrorHandler } from '@/lib/with-error-handler';
 import { getDomainLoader } from '@/lib/domain-loader';
 import { now } from '@/lib/database-core';
+import { logAction } from '@/lib/audit-logger';
 import { coerceFieldValue } from '@/lib/field-registry';
 
 export const createCrudHandlers = (entityName) => {
@@ -328,6 +329,7 @@ export const createCrudHandlers = (entityName) => {
       const sanitized = sanitizeData(data, spec);
       const ctx = await executeHook(`create:${entityName}:before`, sanitized, { context: { entity: entityName, user } });
       const result = create(entityName, ctx.data, user);
+      logAction(entityName, result.id, 'create', user?.id, null, result);
       await executeHook(`create:${entityName}:after`, { entity: entityName, data: result, user });
       broadcastUpdate(API_ENDPOINTS.entity(entityName), 'create', permissionService.filterFields(user, spec, result));
       return created(permissionService.filterFields(user, spec, result));
@@ -375,6 +377,7 @@ export const createCrudHandlers = (entityName) => {
       const updateData = ctx?.data?.data !== undefined ? ctx.data.data : sanitized;
       update(ctx.entity || entityName, ctx.id || id, updateData, user);
       const result = get(entityName, id);
+      logAction(entityName, id, 'update', user?.id, prev, result);
       await executeHook(`update:${entityName}:after`, { entity: entityName, id, data: result, user });
       broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'update', permissionService.filterFields(user, spec, result));
       broadcastUpdate(API_ENDPOINTS.entity(entityName), 'update', permissionService.filterFields(user, spec, result));
@@ -401,10 +404,13 @@ export const createCrudHandlers = (entityName) => {
           archived_by: user.id
         };
         update(entityName, ctx.id || id, archiveData, user);
+        logAction(entityName, id, 'archive', user?.id, record, archiveData);
       } else if (spec.fields.status) {
         update(entityName, ctx.id || id, { status: 'deleted' }, user);
+        logAction(entityName, id, 'delete', user?.id, record, { status: 'deleted' });
       } else {
         remove(entityName, ctx.id || id);
+        logAction(entityName, id, 'delete', user?.id, record, null);
       }
 
       await executeHook(`delete:${entityName}:after`, { entity: entityName, id, record, user });

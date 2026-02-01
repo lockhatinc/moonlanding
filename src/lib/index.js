@@ -36,6 +36,7 @@ export { eventEmitter, onEntity, offEntity, emitEntity, onWorkflow, offWorkflow,
 export { createApiHandler } from '@/lib/api';
 export * from '@/lib/errors';
 export { getDatabase, migrate, genId, now } from '@/lib/database-core';
+export { logAction, getAuditHistory, getEntityAuditTrail, getActionStats, getUserStats } from '@/lib/audit-logger';
 export * from '@/lib/error-wrapper';
 export * from '@/lib/client-debug';
 export * from '@/lib/realtime-server';
