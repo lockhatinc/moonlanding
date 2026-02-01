@@ -131,7 +131,7 @@ export const createCrudHandlers = (entityName) => {
       const finalPageSize = Math.min(requestedPageSize, MAX_PAGE_SIZE);
 
       if (q) {
-        const { items, pagination } = await searchWithPagination(entityName, q, {}, finalPage, finalPageSize);
+        const { items, pagination } = await searchWithPagination(entityName, q, {}, page, finalPageSize);
         const filtered = permissionService.filterRecords(user, spec, items);
         return paginated(filtered.map(item => permissionService.filterFields(user, spec, item)), pagination);
       }
@@ -144,7 +144,7 @@ export const createCrudHandlers = (entityName) => {
         }
       }
 
-      const { items, pagination } = await listWithPagination(entityName, coercedFilters, finalPage, finalPageSize);
+      const { items, pagination } = await listWithPagination(entityName, coercedFilters, page, finalPageSize);
       const filtered = permissionService.filterRecords(user, spec, items);
       return paginated(filtered.map(item => permissionService.filterFields(user, spec, item)), pagination);
     },
@@ -264,7 +264,8 @@ export const createCrudHandlers = (entityName) => {
     if (!spec) throw new NotFoundErrorClass(`Entity "${entityName}" not found`);
 
     const user = await requireAuth();
-    const { id, childKey } = context.params || {};
+    const params = context?.params || {};
+    const { id, childKey } = params;
     const { action } = await parseQuery(request);
     const method = request.method;
 
