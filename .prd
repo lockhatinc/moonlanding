@@ -1,0 +1,528 @@
+# Moonlanding Platform - Product Requirements & Status
+
+## Executive Summary
+
+**Moonlanding** is an ultra-minimal unified platform combining engagement management, document review, and collaboration features. Built with **zero-build architecture** (tsx runtime), **SQLite** local database, and **Lucia** authentication.
+
+**Current Status:** Feature parity with friday-staging & myworkreview-staging in progress
+**Architecture:** Intentionally lightweight to enable rapid iteration and no vendor lock-in
+**Deployment:** Single Node.js server, buildless, fully control
+
+---
+
+## Comprehensive Feature Inventory
+
+### Implemented Features ✅
+
+#### 1. Core Platform
+- ✅ Zero-build runtime (tsx transpilation)
+- ✅ SQLite database (better-sqlite3)
+- ✅ Lucia authentication + Arctic OAuth
+- ✅ Custom HTTP server (no Express bloat)
+- ✅ Hot module reloading for configs
+- ✅ Module cache invalidation
+
+#### 2. Entity Management
+- ✅ Entity CRUD operations via API
+- ✅ Dynamic entity rendering
+- ✅ Field render system (date, enum, text, etc)
+- ✅ Status color coding
+- ✅ Bulk actions toolbar
+- ✅ Pagination support
+
+#### 3. Review/Engagement System
+- ✅ Review detail view with tabs
+- ✅ Engagement lifecycle tracking
+- ✅ Status transitions
+- ✅ WIP value tracking
+- ✅ Team assignment
+- ✅ Financial year tracking
+
+#### 4. PDF Management
+- ✅ PDF viewer component
+- ✅ File upload handling
+- ✅ PDF rendering via Puppeteer
+- ✅ MIME type detection
+- ✅ Drive file integration
+
+#### 5. Collaboration Features
+- ✅ Checklist tracker
+- ✅ Collaborator manager
+- ✅ Comment section
+- ✅ Chat panel (basic)
+- ✅ Highlight layer
+- ✅ Highlight annotator
+
+#### 6. Email & Notifications
+- ✅ Nodemailer integration
+- ✅ Email template system
+- ✅ SMTP configuration
+- ✅ Transactional emails
+
+#### 7. UI Components (66 total)
+- ✅ Form components
+- ✅ Dialog/modal system
+- ✅ Table rendering
+- ✅ Dashboard widgets
+- ✅ Navigation components
+- ✅ Status indicators
+
+#### 8. Data Import/Export
+- ✅ YAML config import
+- ✅ CSV/JSON export support
+- ✅ Bulk data operations
+- ✅ Template management
+
+#### 9. Configuration System
+- ✅ Master config engine
+- ✅ Dynamic enum options
+- ✅ Workflow stage definitions
+- ✅ Entity field definitions
+- ✅ Icon configuration
+- ✅ Theme configuration
+
+#### 10. Google Integration
+- ✅ Google Drive file handling
+- ✅ googleapis library integrated
+- ✅ Service account authentication
+- ✅ File upload to Drive
+
+---
+
+### Missing Features (HIGH PRIORITY) ❌
+
+#### 1. Role-Based Access Control (RBAC)
+**Status:** Not implemented
+**Location needed:** src/lib/, src/config/
+**Pattern source:** myworkreview-staging uses CASL
+**What's needed:**
+- CASL library integration
+- Permission matrix for roles (Partner, Manager, Clerk, Admin)
+- Role-based component rendering
+- Permission checks in API handlers
+- Layout variants by role
+- Feature flags by permission
+
+**Implementation plan:**
+```
+src/lib/casl.js - Permission definitions
+src/lib/use-permissions.js - Hook for permission checks
+src/components/protected-component.jsx - Wrapper
+Update all API handlers with permission checks
+```
+
+#### 2. Real-time Chat with Attachments
+**Status:** Partial (basic chat panel exists, no persistence)
+**Location needed:** src/components/chat-panel.jsx (enhance)
+**Pattern source:** myworkreview-staging FlexUpChat (46KB component)
+**What's needed:**
+- Message persistence to database
+- User avatars and online status
+- Attachment upload in messages
+- Real-time updates (WebSocket or polling)
+- Message search
+- @mentions with notifications
+- Emoji reactions
+
+**Database schema needed:**
+```sql
+CREATE TABLE chat_messages (
+  id TEXT PRIMARY KEY,
+  entity_id TEXT,
+  user_id TEXT,
+  content TEXT,
+  attachments JSON,
+  created_at DATETIME,
+  updated_at DATETIME
+);
+CREATE TABLE chat_mentions (
+  id TEXT PRIMARY KEY,
+  message_id TEXT,
+  user_id TEXT,
+  resolved BOOLEAN DEFAULT false
+);
+```
+
+#### 3. Advanced PDF Annotation & Comparison
+**Status:** Viewer exists, no annotation/comparison
+**Location needed:** src/components/pdf-comparison.jsx (new), enhance pdf-viewer.jsx
+**Pattern source:** myworkreview-staging PdfHighlighter + comparison mode
+**What's needed:**
+- Text/area highlight creation
+- Color-coded highlights by category
+- Persistent highlight storage
+- Highlight resolution workflow
+- Side-by-side PDF comparison
+- Zoom/rotation controls
+- Coordinate recalculation after transforms
+- Highlight export
+
+**Database schema needed:**
+```sql
+CREATE TABLE pdf_highlights (
+  id TEXT PRIMARY KEY,
+  pdf_id TEXT,
+  user_id TEXT,
+  page_number INTEGER,
+  coordinates JSON,
+  text TEXT,
+  color TEXT,
+  category TEXT,
+  resolved BOOLEAN DEFAULT false,
+  created_at DATETIME
+);
+```
+
+#### 4. Audit Trail & Action Logging
+**Status:** Not implemented
+**Location needed:** src/lib/audit-logger.js (new)
+**Pattern source:** myworkreview-staging logs all actions
+**What's needed:**
+- Action logging middleware
+- Database audit table
+- Action history retrieval
+- Filtered audit reports
+- Entity change tracking
+- User action attribution
+
+**Database schema needed:**
+```sql
+CREATE TABLE audit_logs (
+  id TEXT PRIMARY KEY,
+  entity_type TEXT,
+  entity_id TEXT,
+  action TEXT,
+  user_id TEXT,
+  before_state JSON,
+  after_state JSON,
+  created_at DATETIME
+);
+```
+
+#### 5. RFI (Request For Information) System
+**Status:** Not implemented
+**Location needed:** src/components/rfi-*/, src/app/api/rfi/
+**Pattern source:** friday-staging RFI system (17+ components)
+**What's needed:**
+- RFI template management
+- Question creation and assignment
+- Response tracking
+- Deadline management
+- Status workflow
+- Response attachments
+- RFI reports and analytics
+
+**Database schema needed:**
+```sql
+CREATE TABLE rfis (
+  id TEXT PRIMARY KEY,
+  engagement_id TEXT,
+  status TEXT,
+  created_at DATETIME
+);
+CREATE TABLE rfi_questions (
+  id TEXT PRIMARY KEY,
+  rfi_id TEXT,
+  question TEXT,
+  category TEXT,
+  assigned_to TEXT,
+  due_date DATE
+);
+CREATE TABLE rfi_responses (
+  id TEXT PRIMARY KEY,
+  question_id TEXT,
+  response TEXT,
+  attachments JSON,
+  created_at DATETIME
+);
+```
+
+---
+
+### Missing Features (MEDIUM PRIORITY) 🟡
+
+#### 6. Tender Management
+**Status:** Basic fields exist (tender_id), no system
+**What's needed:**
+- Tender CRUD operations
+- Bid tracking
+- Deadline management
+- Status workflow
+- Client integration
+
+#### 7. Google Drive Advanced Integration
+**Status:** Basic upload/download exists
+**What's needed:**
+- Folder structure templates
+- Batch operations
+- Permissions sync
+- File versioning
+- Webhook integration
+
+#### 8. Email Notification System
+**Status:** Nodemailer installed, not integrated
+**What's needed:**
+- Event-triggered emails
+- Email templates
+- Recipient configuration
+- Notification preferences
+- Digest emails
+- Unsubscribe handling
+
+#### 9. Search & Filtering
+**Status:** Basic pagination exists
+**What's needed:**
+- Full-text search
+- Advanced filters
+- Saved filters
+- Search history
+- Faceted search
+
+#### 10. Workflow Automation
+**Status:** Manual workflows only
+**What's needed:**
+- Automation rules
+- Triggers (time, status change, etc)
+- Actions (email, status update, etc)
+- Conditional logic
+- Approvals workflow
+
+---
+
+### Missing Features (LOW PRIORITY) 🟢
+
+#### 11. Performance Monitoring
+- Error tracking
+- Page performance metrics
+- API response times
+- User activity analytics
+
+#### 12. Data Analytics Dashboard
+- Engagement metrics
+- Team productivity
+- Status distribution
+- Timeline insights
+
+#### 13. Mobile PWA Features
+- Offline support
+- Push notifications
+- Home screen install
+- Background sync
+
+#### 14. Advanced Export Options
+- PDF reports with charts
+- Excel workbooks
+- Custom export templates
+- Scheduled exports
+
+---
+
+## Architecture & Technical Decisions
+
+### Why Zero-Build is Superior
+- **Development speed:** No build step = instant code changes
+- **Debugging:** Direct source code, no sourcemaps needed
+- **Deployment:** Just copy files, run with tsx
+- **Vendor lock-in:** No build tool dependencies
+- **Bundle size:** No webpack bloat, minimal runtime
+
+### Why SQLite Over Firebase
+- **Cost:** Zero per-request costs
+- **Control:** Full data ownership, local backup
+- **Latency:** Sub-millisecond queries
+- **Offline:** Can work offline with sync later
+- **Simplicity:** No async complexities, sync API
+- **Testing:** In-memory database for tests
+
+### Why Not Mantine/MUI
+- **Bloat:** Mantine = 2MB, MUI = 3MB+
+- **Bundle:** Brings in emotion, floating-ui, etc
+- **Maintenance:** Large API surface to learn
+- **RippleUI alternative:** 40KB CSS, 36 components, TailwindCSS
+
+### Why WebJSX + RippleUI
+- **Minimal:** ~100 lines for createElement + applyDiff
+- **Standards-based:** Just Web Components, no framework bloat
+- **CSS-first:** RippleUI provides semantic CSS classes
+- **Zero dependencies:** No package updates breaking code
+- **Buildless:** Perfect complement to tsx runtime
+
+---
+
+## Dependency Management Strategy
+
+### Current (Problematic)
+- **Mantine 7.13:** ~2MB, many sub-dependencies
+- **@mantine/hooks:** Custom hooks library
+- **@mantine/notifications:** Toast/alert system
+- **Total top-level:** ~30 dependencies
+
+### Target (After Migration)
+- **Remove:** Mantine, @mantine/*, @tabler/icons-react
+- **Keep:** React, React-DOM (essential), Better-sqlite3, Lucia, googleapis, puppeteer, nodemailer
+- **Add:** RippleUI CSS (~40KB), WebJSX (~5KB)
+- **Total top-level:** ~20 dependencies
+- **Reduction:** ~40% smaller node_modules
+
+---
+
+## Database Schema Evolution
+
+### Current Tables
+```
+users, authentications, sessions, entities, 
+entity_definitions, relationships, checklists, 
+comments, attachments, ...
+```
+
+### To Add (From Missing Features)
+```
+chat_messages, chat_mentions, pdf_highlights,
+audit_logs, rfis, rfi_questions, rfi_responses,
+workflows, notifications, saved_searches
+```
+
+---
+
+## API Endpoints Status
+
+### Implemented
+```
+/api/[entity]/        - CRUD
+/api/[entity]/[id]    - Details
+/api/auth/*           - Authentication
+/api/upload           - File upload
+/api/config           - Configuration
+```
+
+### To Add
+```
+/api/chat/           - Messages
+/api/highlights/     - PDF annotations
+/api/audit/          - Action logs
+/api/rfis/           - RFI operations
+/api/permissions/    - RBAC checks
+/api/workflows/      - Automation
+```
+
+---
+
+## Component Migration Plan
+
+### Phase 1: UI Framework Migration (RippleUI)
+- [ ] Replace MantineProvider with native structure
+- [ ] Replace each Mantine component with RippleUI equivalent
+- [ ] Update globals.css to use RippleUI styles
+- [ ] Test all pages render correctly
+- [ ] Remove Mantine from package.json
+
+### Phase 2: RBAC System
+- [ ] Implement CASL permission definitions
+- [ ] Add role-based layouts
+- [ ] Update API handlers with permission checks
+- [ ] Add protected component wrappers
+- [ ] Update database with user roles
+
+### Phase 3: Chat System Enhancement
+- [ ] Persist messages to database
+- [ ] Add online status tracking
+- [ ] Implement attachment upload
+- [ ] Add real-time updates
+- [ ] Build chat history UI
+
+### Phase 4: PDF Advanced Features
+- [ ] Add highlight creation
+- [ ] Add comparison mode
+- [ ] Persistent highlight storage
+- [ ] Resolution workflow
+- [ ] Export highlights
+
+### Phase 5: Audit Trail
+- [ ] Create audit logging middleware
+- [ ] Log all data mutations
+- [ ] Build audit report UI
+- [ ] Add filtering by user/entity/action
+
+### Phase 6: RFI System
+- [ ] Design RFI templates
+- [ ] Build RFI CRUD UI
+- [ ] Question assignment workflow
+- [ ] Response tracking
+- [ ] RFI reports
+
+---
+
+## Known Issues & TODOs
+
+### Code Quality
+- [ ] Domain.jsx is 194 lines - consider splitting
+- [ ] FileReview.tsx in myworkreview is 183KB - avoid this pattern
+- [ ] Add JSDoc comments to API handlers
+- [ ] Improve error messages across API
+
+### Performance
+- [ ] Add query optimization for large datasets
+- [ ] Implement pagination throughout
+- [ ] Optimize PDF rendering for large files
+- [ ] Add caching for config system
+
+### Testing
+- [ ] Add end-to-end tests for all workflows
+- [ ] Test RBAC enforcement
+- [ ] Test offline behavior
+- [ ] Load test with 1000+ entities
+
+### Security
+- [ ] Add CSRF protection if needed
+- [ ] Validate all file uploads
+- [ ] Sanitize HTML in comments
+- [ ] Rate limit API endpoints
+
+---
+
+## Version & Deployment
+
+**Current Version:** 1.0.0
+**Target Version:** 2.0.0 (after feature completion)
+**Deployment:** npm run dev (local), npm run build (production if needed)
+**Server Port:** 3004
+**Database:** data/app.db (SQLite)
+
+---
+
+## Comparison Matrix with Other Projects
+
+| Feature | moonlanding | friday-staging | myworkreview |
+|---------|-------------|-----------------|--------------|
+| Zero-build | ✅ | ❌ | ❌ |
+| SQLite | ✅ | ❌ | ❌ |
+| RBAC | ❌ | ❌ | ✅ |
+| Real-time Chat | 🟡 | ❌ | ✅ |
+| PDF Annotation | 🟡 | ✅ | ✅ |
+| RFI System | ❌ | ✅ | ❌ |
+| Email System | 🟡 | ✅ | ✅ |
+| Audit Trail | ❌ | ❌ | ✅ |
+| Component Count | 66 | 17 | 40+ |
+| Dependencies | ~30 | ~50+ | ~50+ split |
+
+---
+
+## Success Criteria
+
+✅ **Phase 1 Complete:** All UI migrated to RippleUI, Mantine removed, no visual regressions
+✅ **Phase 2 Complete:** RBAC implemented, all endpoints protected, permissions enforced
+✅ **Phase 3 Complete:** Chat system persists messages, supports attachments, real-time updates
+✅ **Phase 4 Complete:** PDF annotations, comparison mode, highlight export working
+✅ **Phase 5 Complete:** All actions logged, audit trail queryable
+✅ **Phase 6 Complete:** RFI system fully functional with templates and reporting
+✅ **Final:** Zero build dependencies, all 10 core features working, under 200 lines per file
+
+---
+
+## Next Steps
+
+1. ✅ Analyze comparison with other projects (DONE)
+2. 🔄 Begin Phase 1: RippleUI migration
+3. Implement missing high-priority features in order
+4. End-to-end testing
+5. Production deployment
