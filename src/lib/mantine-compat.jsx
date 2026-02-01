@@ -588,9 +588,31 @@ export const Modal = ({ opened, onClose, title, children, centered = true, class
   );
 };
 
-export const Popover = ({ children, position = 'bottom', className = '', style = {}, ...props }) => (
+export const Popover = ({ children, position = 'bottom', withArrow = false, className = '', style = {}, ...props }) => (
   <div className={`dropdown ${className}`} style={style} {...props}>{children}</div>
 );
+
+export const Popover_Target = ({ children }) => (
+  <div className="dropdown-toggle">{children}</div>
+);
+Popover.Target = Popover_Target;
+
+export const Popover_Dropdown = ({ children, p = 'md', className = '', style = {}, ...props }) => {
+  const paddingClass = {
+    'xs': 'p-1',
+    'sm': 'p-2',
+    'md': 'p-4',
+    'lg': 'p-6',
+    'xl': 'p-8',
+  }[p] || 'p-4';
+  
+  return (
+    <ul className={`dropdown-content menu shadow bg-base-100 rounded-box z-[1] ${paddingClass} ${className}`} style={style} {...props}>
+      {children}
+    </ul>
+  );
+};
+Popover.Dropdown = Popover_Dropdown;
 
 // Table Components
 export const Table = ({ children, className = '', style = {}, striped = false, ...props }) => (
@@ -729,9 +751,30 @@ export const Tooltip = ({ label, children, className = '', style = {}, position 
   <div className={`tooltip tooltip-${position}`} data-tip={label} style={style} {...props}>{children}</div>
 );
 
-export const Menu = ({ children, className = '', style = {}, ...props }) => (
-  <div className={`dropdown-content menu p-2 shadow bg-base-100 rounded-box ${className}`} style={style} {...props}>{children}</div>
+export const Menu = ({ children, shadow = 'md', position = 'bottom', className = '', style = {}, ...props }) => (
+  <div className={`dropdown ${className}`} style={style} {...props}>{children}</div>
 );
+
+export const Menu_Target = ({ children }) => (
+  <div className="dropdown-toggle">{children}</div>
+);
+Menu.Target = Menu_Target;
+
+export const Menu_Dropdown = ({ children, className = '', style = {}, ...props }) => (
+  <ul className={`dropdown-content menu p-2 shadow bg-base-100 rounded-box z-[1] w-52 ${className}`} style={style} {...props}>
+    {children}
+  </ul>
+);
+Menu.Dropdown = Menu_Dropdown;
+
+export const Menu_Item = ({ children, onClick, color, className = '', style = {}, ...props }) => (
+  <li className={className} style={style} {...props}>
+    <a onClick={onClick} className={color === 'red' ? 'text-error' : ''}>
+      {children}
+    </a>
+  </li>
+);
+Menu.Item = Menu_Item;
 
 export const SegmentedControl = ({ data, value, onChange, className = '', style = {}, ...props }) => (
   <div className={`btn-group ${className}`} style={style} {...props}>

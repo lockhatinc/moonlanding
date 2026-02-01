@@ -108,6 +108,38 @@ export const migrate = () => {
     throw e;
   }
 
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS chat_messages (
+      id TEXT PRIMARY KEY,
+      rfi_id TEXT,
+      user_id TEXT,
+      content TEXT,
+      attachments TEXT,
+      reactions TEXT DEFAULT '{}',
+      mentions TEXT DEFAULT '[]',
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER,
+      FOREIGN KEY (rfi_id) REFERENCES rfi(id),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )`);
+  } catch (e) {
+    console.error('[Database] Chat messages table creation failed:', e.message);
+  }
+
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS chat_mentions (
+      id TEXT PRIMARY KEY,
+      message_id TEXT NOT NULL,
+      user_id TEXT,
+      resolved BOOLEAN DEFAULT 0,
+      created_at INTEGER NOT NULL,
+      FOREIGN KEY (message_id) REFERENCES chat_messages(id),
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )`);
+  } catch (e) {
+    console.error('[Database] Chat mentions table creation failed:', e.message);
+  }
+
   console.log('[Database] Migration complete');
 };
 

@@ -1,120 +1,151 @@
 'use client';
 
-import { useState, useCallback, memo, useEffect } from 'react';
-import { Paper, Stack, Group, Text, ActionIcon, Avatar, Textarea, Box, Title, ScrollArea, Checkbox, Popover, SimpleGrid } from '@mantine/core';
+import { useState, useCallback, memo, useEffect, useRef } from 'react';
+import { Paper, Stack, Group, Text, ActionIcon, Textarea, Box, Title, ScrollArea, Button } from '@mantine/core';
 import { ACTION_ICONS } from '@/config/icon-config';
-import { formatDate } from '@/lib/utils-client';
-import { useMessages } from '@/lib/hooks/use-messages';
 import { CONTAINER_HEIGHTS } from '@/config';
-
-const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🔥', '👀'];
-
-const ReactionBubble = memo(({ emoji, count, onClick, isUserReacted }) => (
-  <ActionIcon
-    size="xs"
-    variant={isUserReacted ? 'filled' : 'light'}
-    color={isUserReacted ? 'blue' : 'gray'}
-    onClick={onClick}
-    style={{ fontSize: '12px', padding: '2px 6px', height: 'auto' }}
-  >
-    {emoji} {count > 0 && count}
-  </ActionIcon>
-));
-
-const MessageItem = memo(({ msg, user, formatTime, onReact }) => {
-  const [showReactions, setShowReactions] = useState(false);
-  const reactions = msg.reactions || {};
-  const reactionList = Object.entries(reactions).map(([emoji, users]) => ({ emoji, count: users.length, users }));
-
-  return (
-    <Group key={msg.id} gap="sm" align="flex-start" style={{ flexDirection: msg.created_by === user?.id ? 'row-reverse' : 'row' }}>
-      <Avatar src={msg.created_by_display?.avatar} size="sm" radius="xl">{msg.created_by_display?.name?.[0] || '?'}</Avatar>
-      <Box maw="70%">
-        <Group gap="xs" mb={4} style={{ justifyContent: msg.created_by === user?.id ? 'flex-end' : 'flex-start' }}>
-          <Text size="xs" c="dimmed">{msg.created_by_display?.name || 'Unknown'}</Text>
-          <Text size="xs" c="dimmed">{formatTime(msg.created_at)}</Text>
-          {msg.is_team_only && <Group gap={4}><ACTION_ICONS.lock size={12} color="orange" /><Text size="xs" c="orange">Team only</Text></Group>}
-        </Group>
-        <Paper p="sm" bg={msg.created_by === user?.id ? 'blue' : 'gray.1'} c={msg.created_by === user?.id ? 'white' : undefined} radius="md">
-          <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</Text>
-        </Paper>
-        {reactionList.length > 0 && (
-          <Group gap="xs" mt={6}>
-            {reactionList.map(({ emoji, count, users }) => (
-              <ReactionBubble
-                key={emoji}
-                emoji={emoji}
-                count={count}
-                isUserReacted={users.includes(user?.id)}
-                onClick={() => onReact(msg.id, emoji)}
-              />
-            ))}
-          </Group>
-        )}
-        <Group gap="xs" mt={4}>
-          <Popover position="bottom" withArrow>
-            <Popover.Target>
-              <ActionIcon size="xs" variant="subtle" onClick={() => setShowReactions(!showReactions)}>
-                <ACTION_ICONS.emoji size={14} />
-              </ActionIcon>
-            </Popover.Target>
-            <Popover.Dropdown p={8}>
-              <SimpleGrid cols={4} spacing="xs">
-                {EMOJI_REACTIONS.map(emoji => (
-                  <ActionIcon
-                    key={emoji}
-                    size="lg"
-                    variant="light"
-                    onClick={() => {
-                      onReact(msg.id, emoji);
-                      setShowReactions(false);
-                    }}
-                  >
-                    {emoji}
-                  </ActionIcon>
-                ))}
-              </SimpleGrid>
-            </Popover.Dropdown>
-          </Popover>
-        </Group>
-      </Box>
-    </Group>
-  );
-});
+import { MessageItem } from '@/components/message-item';
 
 function ChatPanelComponent({ entityType, entityId, user }) {
-  const { messages, loading, sendMessage, refetch } = useMessages(entityType, entityId);
-  const [isTeamOnly, setIsTeamOnly] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [content, setContent] = useState('');
   const [sending, setSending] = useState(false);
-  const formatTime = (ts) => formatDate(ts, 'datetime') || '';
+  const [editingId, setEditingId] = useState(null);
+  const [editContent, setEditContent] = useState('');
+  const pollIntervalRef = useRef(null);
+
+  const rfiId = entityId;
+
+  const fetchMessages = useCallback(async () => {
+    if (!rfiId) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/message?rfi_id=${rfiId}`);
+      if (!res.ok) throw new Error('Failed to fetch messages');
+      const data = await res.json();
+      setMessages(data.data || data || []);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
+      setLoading(false);
+    }
+  }, [rfiId]);
+
+  useEffect(() => {
+    fetchMessages();
+    pollIntervalRef.current = setInterval(fetchMessages, 2000);
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, [rfiId, fetchMessages]);
 
   const handleSend = useCallback(async () => {
     if (!content.trim()) return;
+
     setSending(true);
     try {
       const mentions = extractMentions(content);
-      await sendMessage(content.trim(), { is_team_only: isTeamOnly, mentions });
+      const res = await fetch('/api/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rfi_id: rfiId,
+          content: content.trim(),
+          mentions,
+          attachments: []
+        })
+      });
+
+      if (!res.ok) throw new Error('Failed to send message');
+
       setContent('');
+      await fetchMessages();
     } catch (error) {
       console.error('Failed to send message:', error);
     } finally {
       setSending(false);
     }
-  }, [content, isTeamOnly, sendMessage]);
+  }, [content, rfiId, fetchMessages]);
 
   const handleReact = useCallback(async (messageId, emoji) => {
     try {
-      await fetch(`/api/message/${messageId}/react`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emoji })
-      });
-      await refetch();
-    } catch (err) {
-      console.error('Failed to add reaction:', err);
+      const message = messages.find(m => m.id === messageId);
+      if (!message) return;
+
+      const reactions = message.reactions || {};
+      if (!reactions[emoji]) {
+        reactions[emoji] = [];
+      }
+
+      const userIndex = (reactions[emoji] || []).indexOf(user.id);
+      if (userIndex > -1) {
+        reactions[emoji].splice(userIndex, 1);
+        if (reactions[emoji].length === 0) {
+          delete reactions[emoji];
+        }
+      } else {
+        reactions[emoji].push(user.id);
+      }
+
+      const updatedMessages = messages.map(m =>
+        m.id === messageId ? { ...m, reactions } : m
+      );
+      setMessages(updatedMessages);
+    } catch (error) {
+      console.error('Failed to react:', error);
     }
-  }, [refetch]);
+  }, [messages, user.id]);
+
+  const handleEdit = useCallback(async (msg) => {
+    if (editingId === msg.id) {
+      if (!editContent.trim()) {
+        setEditingId(null);
+        setEditContent('');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/message/${msg.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: editContent.trim() })
+        });
+
+        if (!res.ok) throw new Error('Failed to update message');
+
+        setEditingId(null);
+        setEditContent('');
+        await fetchMessages();
+      } catch (error) {
+        console.error('Failed to edit message:', error);
+      }
+    } else {
+      setEditingId(msg.id);
+      setEditContent(msg.content);
+    }
+  }, [editingId, editContent, fetchMessages]);
+
+  const handleDelete = useCallback(async (messageId) => {
+    if (!window.confirm('Delete this message?')) return;
+
+    try {
+      const res = await fetch(`/api/message/${messageId}`, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) throw new Error('Failed to delete message');
+      await fetchMessages();
+    } catch (error) {
+      console.error('Failed to delete message:', error);
+    }
+  }, [fetchMessages]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -127,18 +158,31 @@ function ChatPanelComponent({ entityType, entityId, user }) {
     <Paper p="md" withBorder>
       <Title order={4} mb="md">Chat</Title>
       <Stack h={CONTAINER_HEIGHTS.chat}>
-        <ScrollArea flex={1}>
-          {messages.length === 0 ? (
+        <ScrollArea flex={1} type="auto">
+          {loading ? (
+            <Text ta="center" c="dimmed" py="xl">Loading messages...</Text>
+          ) : messages.length === 0 ? (
             <Text ta="center" c="dimmed" py="xl">No messages yet. Start the conversation!</Text>
           ) : (
-            <Stack gap="md">
+            <Stack gap="md" pr="md">
               {messages.map((msg) => (
-                <MessageItem key={msg.id} msg={msg} user={user} formatTime={formatTime} onReact={handleReact} />
+                <MessageItem
+                  key={msg.id}
+                  msg={msg}
+                  user={user}
+                  onReact={handleReact}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  isEditing={editingId === msg.id}
+                  editContent={editContent}
+                  onEditChange={setEditContent}
+                />
               ))}
             </Stack>
           )}
         </ScrollArea>
-        <Group align="flex-end">
+
+        <Group align="flex-end" gap="sm">
           <Textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -146,15 +190,18 @@ function ChatPanelComponent({ entityType, entityId, user }) {
             placeholder="Type your message... Use @name to mention"
             style={{ flex: 1 }}
             rows={2}
-            disabled={sending}
+            disabled={sending || loading}
           />
-          <ActionIcon onClick={handleSend} size="lg" loading={sending} disabled={!content.trim() || sending}>
+          <ActionIcon
+            onClick={handleSend}
+            size="lg"
+            loading={sending}
+            disabled={!content.trim() || sending}
+            color="blue"
+          >
             <ACTION_ICONS.send size={18} />
           </ActionIcon>
         </Group>
-        {user?.type === 'auditor' && (
-          <Checkbox label="Team members only" checked={isTeamOnly} onChange={(e) => setIsTeamOnly(e.currentTarget.checked)} mt="xs" />
-        )}
       </Stack>
     </Paper>
   );
