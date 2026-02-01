@@ -91,27 +91,7 @@
 
 ### Missing Features (HIGH PRIORITY) ❌
 
-#### 1. Role-Based Access Control (RBAC)
-**Status:** Not implemented
-**Location needed:** src/lib/, src/config/
-**Pattern source:** myworkreview-staging uses CASL
-**What's needed:**
-- CASL library integration
-- Permission matrix for roles (Partner, Manager, Clerk, Admin)
-- Role-based component rendering
-- Permission checks in API handlers
-- Layout variants by role
-- Feature flags by permission
-
-**Implementation plan:**
-```
-src/lib/casl.js - Permission definitions
-src/lib/use-permissions.js - Hook for permission checks
-src/components/protected-component.jsx - Wrapper
-Update all API handlers with permission checks
-```
-
-#### 2. Real-time Chat with Attachments
+#### 1. Real-time Chat with Attachments
 **Status:** Partial (basic chat panel exists, no persistence)
 **Location needed:** src/components/chat-panel.jsx (enhance)
 **Pattern source:** myworkreview-staging FlexUpChat (46KB component)
@@ -143,7 +123,7 @@ CREATE TABLE chat_mentions (
 );
 ```
 
-#### 3. Advanced PDF Annotation & Comparison
+#### 2. Advanced PDF Annotation & Comparison
 **Status:** Viewer exists, no annotation/comparison
 **Location needed:** src/components/pdf-comparison.jsx (new), enhance pdf-viewer.jsx
 **Pattern source:** myworkreview-staging PdfHighlighter + comparison mode
@@ -173,7 +153,7 @@ CREATE TABLE pdf_highlights (
 );
 ```
 
-#### 4. Audit Trail & Action Logging
+#### 3. Audit Trail & Action Logging
 **Status:** Not implemented
 **Location needed:** src/lib/audit-logger.js (new)
 **Pattern source:** myworkreview-staging logs all actions
@@ -199,7 +179,7 @@ CREATE TABLE audit_logs (
 );
 ```
 
-#### 5. RFI (Request For Information) System
+#### 4. RFI (Request For Information) System
 **Status:** Not implemented
 **Location needed:** src/components/rfi-*/, src/app/api/rfi/
 **Pattern source:** friday-staging RFI system (17+ components)
@@ -409,13 +389,6 @@ workflows, notifications, saved_searches
 
 ## Component Migration Plan
 
-### Phase 2: RBAC System
-- [ ] Implement CASL permission definitions
-- [ ] Add role-based layouts
-- [ ] Update API handlers with permission checks
-- [ ] Add protected component wrappers
-- [ ] Update database with user roles
-
 ### Phase 3: Chat System Enhancement
 - [ ] Persist messages to database
 - [ ] Add online status tracking
@@ -489,25 +462,25 @@ workflows, notifications, saved_searches
 |---------|-------------|-----------------|--------------|
 | Zero-build | ✅ | ❌ | ❌ |
 | SQLite | ✅ | ❌ | ❌ |
-| RBAC | ❌ | ❌ | ✅ |
+| RBAC | ✅ | ❌ | ✅ |
 | Real-time Chat | 🟡 | ❌ | ✅ |
 | PDF Annotation | 🟡 | ✅ | ✅ |
 | RFI System | ❌ | ✅ | ❌ |
 | Email System | 🟡 | ✅ | ✅ |
 | Audit Trail | ❌ | ❌ | ✅ |
 | Component Count | 66 | 17 | 40+ |
-| Dependencies | ~30 | ~50+ | ~50+ split |
+| Dependencies | ~25 | ~50+ | ~50+ split |
 
 ---
 
 ## Success Criteria
 
 ✅ **Phase 1 Complete:** All UI migrated to RippleUI, Mantine removed, no visual regressions
-🔄 **Phase 2 Complete:** RBAC implemented, all endpoints protected, permissions enforced
-✅ **Phase 3 Complete:** Chat system persists messages, supports attachments, real-time updates
-✅ **Phase 4 Complete:** PDF annotations, comparison mode, highlight export working
-✅ **Phase 5 Complete:** All actions logged, audit trail queryable
-✅ **Phase 6 Complete:** RFI system fully functional with templates and reporting
+✅ **Phase 2 Complete:** RBAC implemented, all endpoints protected, permissions enforced
+🔄 **Phase 3 Complete:** Chat system persists messages, supports attachments, real-time updates
+🔄 **Phase 4 Complete:** PDF annotations, comparison mode, highlight export working
+🔄 **Phase 5 Complete:** All actions logged, audit trail queryable
+🔄 **Phase 6 Complete:** RFI system fully functional with templates and reporting
 ✅ **Final:** Zero build dependencies, all 10 core features working, under 200 lines per file
 
 ---
@@ -516,7 +489,8 @@ workflows, notifications, saved_searches
 
 1. ✅ Analyze comparison with other projects (DONE)
 2. ✅ Phase 1: RippleUI migration complete (DONE)
-3. 🔄 Begin Phase 2: RBAC implementation
-4. Implement missing high-priority features in order (Phase 3-6)
-5. End-to-end testing
-6. Production deployment
+3. ✅ Phase 2: RBAC implementation complete (DONE)
+4. 🔄 Begin Phase 3: Chat system enhancement
+5. Implement missing high-priority features in order (Phase 4-6)
+6. End-to-end testing
+7. Production deployment
