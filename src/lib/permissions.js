@@ -1,7 +1,15 @@
+import { defineAbilityFor, canPerformAction, getPermissionMatrix } from '@/lib/casl';
+
 export async function can(user, spec, action) {
   if (!user) return false;
-  const allowedRoles = spec.permissions?.[action] || [];
-  return Array.isArray(allowedRoles) && allowedRoles.includes(user.role);
+  
+  try {
+    const ability = defineAbilityFor(user);
+    return canPerformAction(ability, action, spec.name);
+  } catch (e) {
+    const allowedRoles = spec.permissions?.[action] || [];
+    return Array.isArray(allowedRoles) && allowedRoles.includes(user.role);
+  }
 }
 
 export function check(user, spec, action) {
@@ -41,6 +49,11 @@ export function filterRecordsByAccess(user, spec, records = []) {
 
 export function filterFieldsByAccess(user, spec, fields = []) {
   return fields;
+}
+
+export function getPermissionsForRole(role) {
+  const matrix = getPermissionMatrix();
+  return matrix[role] || {};
 }
 
 export function clearCache() {

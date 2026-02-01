@@ -10,6 +10,7 @@
     "../dynamic-react-renderer"
   ],
   "dependencies": {
+    "@casl/ability": "^6.8.0",
     "@lucia-auth/adapter-sqlite": "^3.0.2",
     "@sequentialos/dynamic-react-renderer": "file:../dynamic-react-renderer",
     "arctic": "^1.9.2",
