@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Checkbox, Button, Progress, Stack, Group, Text, Input, Alert, ActionIcon, LoadingOverlay, Skeleton, Modal } from '@mantine/core';
 import { useChecklist } from '@/lib/hooks/use-checklist';
 import { showSuccess, showError } from '@/lib/notifications';
 import { ACTION_ICONS } from '@/config/icon-config';
@@ -23,7 +22,7 @@ export function ChecklistTracker({ checklistId, reviewId, onUpdate }) {
   }, [success]);
 
   if (loading && !items.length) {
-    return <Skeleton height={300} />;
+    return <div className="h-80 bg-gray-200 rounded-md animate-pulse" />;
   }
 
   const handleToggleItem = async (itemId) => {
@@ -82,103 +81,118 @@ export function ChecklistTracker({ checklistId, reviewId, onUpdate }) {
   };
 
   return (
-    <Stack gap="md" className="checklist-tracker">
+    <div className="flex flex-col gap-4 checklist-tracker">
       <div>
-        <Group justify="space-between" mb="xs">
-          <Text fw={500}>Progress</Text>
-          <Text size="sm">{progress}%</Text>
-        </Group>
-        <Progress value={progress} color={progress === 100 ? 'green' : 'blue'} />
+        <div className="flex justify-between items-center mb-2">
+          <span className="font-semibold">Progress</span>
+          <span className="text-sm">{progress}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className={`h-2 rounded-full transition-all ${progress === 100 ? 'bg-green-500' : 'bg-blue-500'}`}
+            style={{ width: `${progress}%` }}
+          />
+        </div>
       </div>
 
       {success && (
-        <Alert color="green" title="Success" onClose={() => setSuccess('')}>
-          {success}
-        </Alert>
+        <div className="alert alert-success flex justify-between items-center">
+          <span>{success}</span>
+          <button onClick={() => setSuccess('')} className="text-lg">&times;</button>
+        </div>
       )}
 
       {error && (
-        <Alert color="red" title="Error" onClose={() => setError(null)}>
-          {error}
-          <Button size="xs" onClick={refetch} mt="xs">Retry</Button>
-        </Alert>
+        <div className="alert alert-error flex flex-col gap-2">
+          <span>{error}</span>
+          <button onClick={refetch} className="btn btn-sm btn-outline mt-2">Retry</button>
+        </div>
       )}
 
       <div>
         {items.length === 0 ? (
-          <Stack align="center" py="xl">
-            <ACTION_ICONS.checklist size={48} style={{ opacity: 0.5, color: 'var(--mantine-color-gray-5)' }} />
-            <Text c="dimmed">No checklist items yet</Text>
-            <Text size="xs" c="dimmed">Add your first item below to get started</Text>
-          </Stack>
+          <div className="flex flex-col items-center py-8 gap-2">
+            <ACTION_ICONS.checklist size={48} style={{ opacity: 0.5, color: '#999' }} />
+            <p className="text-gray-500">No checklist items yet</p>
+            <p className="text-xs text-gray-500">Add your first item below to get started</p>
+          </div>
         ) : (
-          <Stack gap="xs">
+          <div className="flex flex-col gap-2">
             {items.map((item) => (
               editingId === item.id ? (
-                <Group key={item.id} gap="sm">
-                  <Input
+                <div key={item.id} className="flex gap-2">
+                  <input
+                    type="text"
+                    className="input flex-1"
                     value={editText}
                     onChange={(e) => setEditText(e.currentTarget.value)}
                     placeholder="Edit item..."
-                    style={{ flex: 1 }}
                     autoFocus
                   />
-                  <Button size="xs" onClick={() => handleEditSave(item.id)}>Save</Button>
-                  <Button size="xs" variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
-                </Group>
+                  <button onClick={() => handleEditSave(item.id)} className="btn btn-sm">Save</button>
+                  <button onClick={() => setEditingId(null)} className="btn btn-sm btn-outline">Cancel</button>
+                </div>
               ) : (
-                <Group key={item.id} gap="sm" justify="space-between">
-                  <Group gap="sm" style={{ flex: 1 }}>
-                    <Checkbox
+                <div key={item.id} className="flex gap-2 justify-between items-center p-2 border rounded">
+                  <div className="flex gap-2 flex-1">
+                    <input
+                      type="checkbox"
+                      className="checkbox"
                       checked={item.is_done}
                       onChange={() => handleToggleItem(item.id)}
                     />
-                    <Text
-                      style={{
-                        textDecoration: item.is_done ? 'line-through' : 'none',
-                        color: item.is_done ? 'var(--mantine-color-gray-5)' : 'inherit',
-                        flex: 1
-                      }}
+                    <span
+                      className={`flex-1 ${item.is_done ? 'line-through text-gray-400' : ''}`}
                     >
                       {item.text}
-                    </Text>
-                  </Group>
-                  <ActionIcon onClick={() => handleEditStart(item)} variant="subtle" aria-label="Edit item">
+                    </span>
+                  </div>
+                  <button onClick={() => handleEditStart(item)} className="btn btn-sm btn-ghost" aria-label="Edit item">
                     <ACTION_ICONS.edit size={16} />
-                  </ActionIcon>
-                  <ActionIcon color="red" variant="subtle" onClick={() => setDeleteConfirm(item)} aria-label="Delete item">
+                  </button>
+                  <button className="btn btn-sm btn-ghost text-red-500" onClick={() => setDeleteConfirm(item)} aria-label="Delete item">
                     <ACTION_ICONS.delete size={16} />
-                  </ActionIcon>
-                </Group>
+                  </button>
+                </div>
               )
             ))}
-          </Stack>
+          </div>
         )}
       </div>
 
-      <Group>
-        <Input
+      <div className="flex gap-2">
+        <input
+          type="text"
+          className="input flex-1"
           placeholder="Add new item..."
           value={newItem}
           onChange={(e) => setNewItem(e.currentTarget.value)}
-          style={{ flex: 1 }}
           disabled={submitting}
           onKeyDown={(e) => {
             if (e.key === 'Enter') handleAddItem();
           }}
         />
-        <Button onClick={handleAddItem} size="sm" loading={submitting} disabled={!newItem.trim()}>
-          Add
-        </Button>
-      </Group>
+        <button
+          onClick={handleAddItem}
+          className="btn btn-sm"
+          disabled={!newItem.trim() || submitting}
+        >
+          {submitting ? 'Adding...' : 'Add'}
+        </button>
+      </div>
 
-      <Modal opened={!!deleteConfirm} onClose={() => setDeleteConfirm(null)} title="Delete Item">
-        <Text mb="md">Delete "{deleteConfirm?.text}"? This cannot be undone.</Text>
-        <Group justify="flex-end">
-          <Button variant="default" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
-          <Button color="red" onClick={() => deleteConfirm && handleDeleteItem(deleteConfirm.id)}>Delete</Button>
-        </Group>
-      </Modal>
-    </Stack>
+      {deleteConfirm && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg">Delete Item</h3>
+            <p className="py-4">Delete "{deleteConfirm?.text}"? This cannot be undone.</p>
+            <div className="modal-action">
+              <button onClick={() => setDeleteConfirm(null)} className="btn">Cancel</button>
+              <button onClick={() => deleteConfirm && handleDeleteItem(deleteConfirm.id)} className="btn btn-error">Delete</button>
+            </div>
+          </div>
+        </dialog>
+      )}
+    </div>
   );
 }

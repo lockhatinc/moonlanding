@@ -11,11 +11,7 @@
   ],
   "dependencies": {
     "@lucia-auth/adapter-sqlite": "^3.0.2",
-    "@mantine/core": "^7.13.0",
-    "@mantine/hooks": "^7.13.0",
-    "@mantine/notifications": "^7.13.0",
     "@sequentialos/dynamic-react-renderer": "file:../dynamic-react-renderer",
-    "@tabler/icons-react": "^3.36.0",
     "arctic": "^1.9.2",
     "bcrypt": "^5.1.1",
     "better-sqlite3": "^11.10.0",
@@ -28,6 +24,7 @@
     "puppeteer": "^21.6.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "rippleui": "^1.12.1",
     "tsx": "^4.7.0",
     "webjsx": "^0.0.73"
   },
