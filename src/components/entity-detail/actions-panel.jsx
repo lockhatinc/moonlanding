@@ -1,6 +1,6 @@
 import { Paper, Title, Group, Button } from '@mantine/core';
 import { Icons } from '@/config/icon-config';
-import { can } from '@/lib/permissions';
+import { can } from '@/services/permission.service';
 
 export function ActionsPanel({ spec, user, onActionClick }) {
   if (!spec.actions?.length) return null;

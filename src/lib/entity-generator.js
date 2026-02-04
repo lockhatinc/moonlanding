@@ -2,7 +2,7 @@ import dynamic from '@/lib/next-polyfills';
 import { specs, getSpec } from '@/config/spec-helpers';
 import { ERROR_MESSAGES } from '@/config';
 import { list, search, searchWithPagination, get, getChildren, batchGetChildren, listWithPagination, create, update, remove } from '@/engine';
-import { can } from '@/lib/permissions';
+import { can } from '@/services/permission.service';
 import { loadFormOptions } from '@/lib/utils';
 import { withPageAuth } from '@/lib/auth-middleware';
 import { UnauthorizedError, PermissionError } from '@/lib/error-handler';

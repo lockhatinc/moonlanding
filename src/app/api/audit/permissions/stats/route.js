@@ -1,6 +1,6 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { getUser, setCurrentRequest } from '@/engine.server';
-import { permissionAuditService } from '@/services';
+import { permissionAuditService } from '@/services/permission-audit.service';
 
 export async function GET(request) {
   setCurrentRequest(request);

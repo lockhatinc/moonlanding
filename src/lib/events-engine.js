@@ -1,12 +1,10 @@
 import { hookEngine } from './hook-engine.js';
 import { list, get, update, create, remove } from '../engine.js';
 import { queueEmail } from '../engine/email-templates.js';
-import { getRfiStates, getEngagementStages } from './status-helpers.js';
+import { getEngagementStages } from './status-helpers.js';
 import { safeJsonParse } from './safe-json.js';
-import { registerEngagementStageHooks } from './hooks/engagement-stage-validator.js';
+import { registerEngagementStageHooks } from './lifecycle-engine.js';
 import { registerChecklistHooks } from './hooks/checklist-hooks.js';
-import { registerRfiResponseHooks } from './hooks/rfi-response-hooks.js';
-import { REPEAT_INTERVALS, LETTER_AUDITOR_STATUS } from '@/config/constants';
 
 const logActivity = (t, id, act, msg, u, d) =>
   create('activity_log', { entity_type: t, entity_id: id, action: act, message: msg, details: d ? JSON.stringify(d) : null, user_email: u?.email }, u);
@@ -49,7 +47,12 @@ const activateWorkflowsForStage = async (engagementId, stage, user) => {
 export const registerEntityHandlers = () => {
   registerEngagementStageHooks(hookEngine);
   registerChecklistHooks(hookEngine);
-  registerRfiResponseHooks(hookEngine);
+
+  hookEngine.on('create:rfi_response:after', async (ctx) => {
+    if (!ctx.data?.rfi_id) return;
+    const rfi = get('rfi', ctx.data.rfi_id);
+    if (rfi) update('rfi', ctx.data.rfi_id, { response_count: (rfi.response_count || 0) + 1, last_response_date: Math.floor(Date.now() / 1000) });
+  });
 
   hookEngine.on('engagement:afterCreate', async (engagement, user) => {
     if (engagement.client_id) {
@@ -175,9 +178,4 @@ export const registerEntityHandlers = () => {
       await queueEmail('collaborator_added', { review, collaborator: collabUser, type: collaborator.type, expiresAt: collaborator.expires_at, recipients: 'collaborator' });
     }
   });
-};
-
-export const emit = async (entityName, event, ...args) => {
-  const eventName = `${entityName}:${event}`;
-  await hookEngine.execute(eventName, ...args, { fallthrough: true });
 };

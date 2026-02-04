@@ -1,7 +1,7 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { get, create } from '@/engine';
 import { withPageAuth } from '@/lib/auth-middleware';
-import { validateResponseSubmission } from '@/lib/rfi-response-lifecycle';
+import { validateResponseSubmission } from '@/lib/rfi-engine';
 
 export async function POST(request, { params }) {
   try {

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { usePermissions, useHasRole } from '@/lib/use-permissions';
-import { getAllRoles, getRoleLabel, getRoleDescription, getPermissionMatrix } from '@/lib/casl';
+import { getAllRoles, getRoleLabel, getRoleDescription, getPermissionMatrix } from '@/services/permission.service';
 import { ProtectedComponent } from '@/components/protected-component';
 
 export function RoleManagementDashboard({ user }) {

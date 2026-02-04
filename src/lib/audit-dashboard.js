@@ -1,4 +1,4 @@
-import { permissionAuditService } from '@/services';
+import { permissionAuditService } from '@/services/permission-audit.service';
 import { getConfigEngine } from '@/lib/config-generator-engine';
 
 export class AuditDashboard {

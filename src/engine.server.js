@@ -3,7 +3,7 @@ import { BetterSqlite3Adapter } from '@lucia-auth/adapter-sqlite';
 import { Google } from 'arctic';
 import db from '@/engine';
 import { config, hasGoogleAuth } from '@/config';
-import { can, check } from '@/lib/permissions';
+import { can, check } from '@/services/permission.service';
 import { cookies } from '@/lib/next-polyfills';
 
 const adapter = new BetterSqlite3Adapter(db, { user: 'users', session: 'sessions' });

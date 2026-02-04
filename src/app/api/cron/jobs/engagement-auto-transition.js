@@ -1,5 +1,5 @@
 import { list, update } from '@/engine';
-import { transitionEngagement, shouldAutoTransition } from '@/lib/engagement-lifecycle-engine';
+import { transitionEngagement, shouldAutoTransition } from '@/lib/lifecycle-engine';
 
 export async function engagementAutoTransitionJob() {
   console.log('[engagement-auto-transition] Starting daily job');

@@ -1,7 +1,7 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { get } from '@/engine';
 import { withPageAuth } from '@/lib/auth-middleware';
-import { transitionEngagement, getAvailableTransitions, validateStageTransition } from '@/lib/engagement-lifecycle-engine';
+import { transitionEngagement, getAvailableTransitions, validateStageTransition } from '@/lib/lifecycle-engine';
 
 export async function GET(request) {
   try {

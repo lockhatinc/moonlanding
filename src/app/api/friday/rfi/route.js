@@ -1,7 +1,7 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { list, listWithPagination } from '@/engine';
 import { withPageAuth } from '@/lib/auth-middleware';
-import { getCurrentState } from '@/lib/rfi-dual-state-engine';
+import { getCurrentState } from '@/lib/rfi-engine';
 import { paginated } from '@/lib/response-formatter';
 
 export async function GET(request) {

@@ -31,8 +31,6 @@ export { SESSION, TOKEN, AUTH_CONFIG } from './auth-config';
 export { MODAL_SIZES, CONTAINER_HEIGHTS, SPACING, GRID_BREAKPOINTS, LAYOUT } from './ui-config';
 export { ERROR_MESSAGES, SUCCESS_MESSAGES, LOG_PREFIXES } from './messages-config';
 export { DATE_FORMATS, TIME_ZONES, RELATIVE_TIME_THRESHOLDS } from './format-config';
-export { VALIDATION_MESSAGES, VALIDATION_DEFAULTS } from './validation-config';
-export { VALIDATION_RULES, createValidator, validationRuleGenerators } from './validation-rules';
 export { THEME, getStatusColor, getStageColor, getSeverityColor, getBadgeProps, getColorMapping } from './theme-config';
 export { ENTITY_ICONS, STATUS_ICONS, ACTION_ICONS, NAVIGATION_ICONS, UI_ICONS, getEntityIcon, getStatusIcon, getActionIcon, getNavigationIcon, getUIIcon, Icons } from './icon-config';
 export { SpecBuilder, spec } from './spec-builder';

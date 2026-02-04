@@ -3,7 +3,7 @@
 import { memo } from 'react';
 import { dynamic } from '@/lib/next-polyfills';
 import { Tabs, Loader } from '@mantine/core';
-import { can } from '@/lib/permissions';
+import { can } from '@/services/permission.service';
 
 const ListBuilder = dynamic(() => import('../builders/list-builder').then(m => ({ default: m.ListBuilder })), { loading: () => <Loader />, ssr: false });
 const ChatPanel = dynamic(() => import('../chat-panel').then(m => ({ default: m.ChatPanel })), { loading: () => <Loader />, ssr: false });

@@ -9,7 +9,7 @@ import { AppError, NotFoundError as NotFoundErrorClass, ValidationError } from '
 import { NotFoundError } from '@/lib/error-handler';
 import { ok, created, paginated } from '@/lib/response-formatter';
 import { HTTP } from '@/config/api-constants';
-import { permissionService } from '@/services';
+import { permissionService } from '@/services/permission.service';
 import { parse as parseQuery } from '@/lib/query-string-adapter';
 import { withErrorHandler } from '@/lib/with-error-handler';
 import { getDomainLoader } from '@/lib/domain-loader';

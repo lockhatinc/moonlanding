@@ -1,7 +1,7 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { get, list, create, remove } from '@/engine';
 import { withPageAuth } from '@/lib/auth-middleware';
-import { addCollaborator, getReviewCollaborators, revokeCollaborator } from '@/lib/collaborator-access-control';
+import { addCollaborator, getReviewCollaborators, revokeCollaborator } from '@/services/collaborator-role.service';
 
 export async function GET(request, { params }) {
   try {

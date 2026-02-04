@@ -1,7 +1,7 @@
 import { requireAuth } from '@/lib/auth-middleware';
 import { withErrorHandler } from '@/lib/with-error-handler';
 import { ok } from '@/lib/response-formatter';
-import { listTemplates, getTemplate } from '@/lib/rfi-templates';
+import { listTemplates, getTemplate } from '@/lib/rfi-engine';
 
 export const GET = withErrorHandler(async (request) => {
   const user = await requireAuth();

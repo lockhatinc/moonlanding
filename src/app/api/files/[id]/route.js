@@ -1,9 +1,9 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { requireUser } from '@/engine.server';
-import { can } from '@/lib/permissions';
+import { permissionService } from '@/services/permission.service';
 import { get } from '@/engine';
 import { getSpec } from '@/config/spec-helpers';
-import { fileService } from '@/services';
+import { fileService } from '@/services/file.service';
 import { HTTP } from '@/config/api-constants';
 import { notFound } from '@/lib/response-formatter';
 
@@ -13,7 +13,7 @@ export async function GET(request, { params }) {
     const { id } = params;
 
     const spec = getSpec('file');
-    if (!can(user, spec, 'view')) {
+    if (!permissionService.checkAccess(user, spec, 'view')) {
       return NextResponse.json({ error: 'Permission denied' }, { status: HTTP.FORBIDDEN });
     }
 

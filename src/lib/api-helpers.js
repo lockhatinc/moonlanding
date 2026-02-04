@@ -3,7 +3,7 @@ import { NextResponse } from '@/lib/next-polyfills';
 import { getSpec } from '@/config/spec-helpers';
 import { migrate } from '@/engine';
 import { getUser } from '@/engine.server';
-import { can } from '@/lib/permissions';
+import { can } from '@/services/permission.service';
 import { logger } from '@/lib/logger';
 import { HTTP } from '@/config/api-constants';
 import { ERROR_MESSAGES } from '@/config';

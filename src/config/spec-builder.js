@@ -1,5 +1,11 @@
-import { ROLES } from './constants.js';
-import { validateSpec } from './validation-helpers.js';
+import { ROLES, SQL_TYPES } from './constants.js';
+
+function validateSpec(spec) {
+  if (!spec.fields.id) throw new Error(`Spec ${spec.name} must have id field`);
+  for (const [, field] of Object.entries(spec.fields)) {
+    if (!SQL_TYPES[field.type]) throw new Error(`Unknown field type: ${field.type}`);
+  }
+}
 
 const DEFAULT_ACCESS = {
   list: Object.values(ROLES),

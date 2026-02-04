@@ -1,6 +1,6 @@
 import { getUser } from '@/engine.server';
 import { getSpec } from '@/config/spec-helpers';
-import { can } from '@/lib/permissions';
+import { can } from '@/services/permission.service';
 import { UnauthorizedError, PermissionError, NotFoundError } from '@/lib/error-handler';
 
 const actionMap = { list: 'list', get: 'view', view: 'view', create: 'create', update: 'edit', edit: 'edit', delete: 'delete' };

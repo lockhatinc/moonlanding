@@ -4,7 +4,13 @@ import { useState, useCallback, memo } from 'react';
 import { Paper, Stack, Group, Text, ActionIcon, Avatar, Textarea, Box, Button } from '@mantine/core';
 import { ACTION_ICONS } from '@/config/icon-config';
 import { formatDate } from '@/lib/utils-client';
-import { mentionNotificationService } from '@/services/mention-notification.service';
+function extractMentions(text) {
+  const mentions = [];
+  const regex = /@(\w+)/g;
+  let match;
+  while ((match = regex.exec(text)) !== null) mentions.push(match[1]);
+  return [...new Set(mentions)];
+}
 
 const CommentItem = memo(({ comment, user, formatTime, onDelete }) => {
   const isMine = comment.author_id === user?.id;
@@ -48,7 +54,7 @@ function CommentSectionComponent({ entityType, entityId, comments = [], user, on
     if (!content.trim()) return;
     setSending(true);
     try {
-      const mentions = mentionNotificationService.extractMentions(content);
+      const mentions = extractMentions(content);
       await onAddComment?.({
         text: content.trim(),
         mentions,
@@ -56,12 +62,6 @@ function CommentSectionComponent({ entityType, entityId, comments = [], user, on
         entity_id: entityId
       });
       setContent('');
-      await mentionNotificationService.processMentions(
-        content.trim(),
-        entityType,
-        entityId,
-        user?.id
-      );
     } catch (error) {
       console.error('Failed to send comment:', error);
     } finally {

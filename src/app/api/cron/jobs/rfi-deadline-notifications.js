@@ -1,5 +1,5 @@
 import { list, update } from '@/engine';
-import { calculateDaysOutstanding, checkEscalationTrigger } from '@/lib/rfi-dual-state-engine';
+import { calculateDaysOutstanding, checkEscalationTrigger } from '@/lib/rfi-engine';
 
 export async function rfiDeadlineNotificationsJob() {
   console.log('[rfi-deadline-notifications] Starting daily job');

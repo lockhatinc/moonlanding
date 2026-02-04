@@ -1,6 +1,6 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { lucia } from '@/engine.server';
-import { permissionAuditService } from '@/services';
+import { permissionAuditService } from '@/services/permission-audit.service';
 import { cookies } from '@/lib/next-polyfills';
 
 async function getUser() {

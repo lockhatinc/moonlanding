@@ -6,7 +6,7 @@ import { parse as parseQuery } from '@/lib/query-string-adapter';
 import { list, get } from '@/lib/query-engine';
 import { ok } from '@/lib/response-formatter';
 import { mergeChatMessages } from '@/lib/chat-merger';
-import { permissionService } from '@/services';
+import { permissionService } from '@/services/permission.service';
 import { getSpec } from '@/config/spec-helpers';
 
 const customGetHandler = withErrorHandler(async (request) => {

@@ -19,86 +19,6 @@ WAVE 1 - DEAD CODE AND REDUNDANCY ELIMINATION (no dependencies, all parallel)
 WAVE 2 - PERMISSION SYSTEM CONSOLIDATION (depends on wave 1 dead code removal)
 ================================================================================
 
-[B1] CONSOLIDATE 3 permission systems into 1 config-driven system
-  FILES TO MERGE:
-    src/services/permission.service.js (330 lines) - the main one, KEEP and reduce
-    src/lib/permissions.js (63 lines) - DELETE, duplicates permissionService
-    src/lib/unified-permission-system.js (112 lines) - DELETE, merges into permissionService
-    src/lib/permission-predicates.js (70 lines) - DELETE, merge predicates into permissionService
-    src/lib/casl.js (177 lines) - DELETE if not used, or merge
-    src/lib/use-permissions.js (64 lines) - client-side hook, keep but reduce
-    src/lib/highlight-collaboration-perms.js (193 lines) - REDUCE, merge into permissionService
-    src/lib/collaborator-access-control.js (171 lines) - REDUCE, merge into permissionService
-    src/lib/rfi-permission-validator.js (122 lines) - REDUCE, merge into permissionService
-    src/lib/mwr-permission-enforcer.js (62 lines) - DELETE, merge into permissionService
-    src/lib/auth-middleware.js - keep but reduce
-    src/config/permission-defaults.js - already deleted in A5
-    src/config/permissions.js - already deleted in A6
-    src/framework/plugins/permission-plugin.js (86 lines) - DELETE, unused parallel system
-  STRATEGY: All permission logic derives from master-config.yml permission_templates.
-    ConfigGeneratorEngine already resolves templates. permissionService should read
-    resolved permissions from config, not hardcode them.
-  BEFORE: 14 files, ~1,450 lines of permission code
-  AFTER: 2 files (permissionService + client hook), ~200 lines
-  REDUCTION: -1,250 lines, -12 files
-  blocks: [C1]
-  blocked_by: [A5]
-  wave: 2
-
-[B2] CONSOLIDATE 3 event systems into 1
-  FILES TO MERGE:
-    src/services/event.service.js (73 lines) - DELETE (A3)
-    src/lib/event-emitter.js - DELETE or KEEP as the one
-    src/lib/events-engine.js (183 lines) - DELETE or KEEP as the one
-    src/framework/hook-registry.js - overlaps with hook system
-  STRATEGY: Use Node.js EventEmitter. One instance. All event code routes through it.
-  BEFORE: 3+ files, ~300 lines
-  AFTER: 1 file, ~30 lines
-  REDUCTION: -270 lines, -2 files
-  blocks: [C2]
-  blocked_by: none
-  wave: 2
-
-[B3] CONSOLIDATE hook system (6 files overlap)
-  FILES:
-    src/lib/hook-engine.js (132 lines) - core hook execution
-    src/lib/hook-executor.js (106 lines) - another hook executor
-    src/lib/hook-history.js (35 lines) - hook execution history
-    src/lib/hook-plugins.js (52 lines) - hook plugin adapter
-    src/lib/hook-registry.js (73 lines) - hook registration (ALSO src/framework/hook-registry.js)
-    src/lib/hooks.js (67 lines) - hook utilities
-    src/lib/init-hooks.js - hook initialization
-    src/framework/hook-registry.js - duplicates src/lib/hook-registry.js
-  STRATEGY: One hook engine. Registration + execution + history in one file.
-  BEFORE: 8 files, ~500 lines
-  AFTER: 1 file, ~80 lines
-  REDUCTION: -420 lines, -7 files
-  blocks: [C2]
-  blocked_by: none
-  wave: 2
-
-[B4] CONSOLIDATE validation system (5 files overlap)
-  FILES:
-    src/services/validation.service.js (80 lines) - validation service
-    src/lib/validate.js (261 lines) - validation logic
-    src/lib/validation-rules.js (164 lines) - validation rules
-    src/lib/validation-generator.js (68 lines) - generates rules from spec
-    src/lib/validator-helpers.js - individual validators
-    src/lib/form-validation.js (283 lines) - client-side form validation
-    src/config/validation-rules.js (114 lines) - config for validation
-    src/config/validation-helpers.js - config helpers
-    src/config/validation-config.js - validation config
-  STRATEGY: master-config.yml field definitions include type, required, min, max, etc.
-    Validation should be AUTO-GENERATED from field types. A text field with required:true
-    needs no explicit validation rule file. A number field with min:0 max:5 needs no rule file.
-    One universal validator that reads field spec and validates.
-  BEFORE: 9 files, ~1,000+ lines
-  AFTER: 1 file, ~100 lines (universal field validator from spec)
-  REDUCTION: -900 lines, -8 files
-  blocks: [C2]
-  blocked_by: none
-  wave: 2
-
 [B5] ELIMINATE services/index.js barrel and thin service wrappers
   FILES:
     src/services/index.js (8 lines) - barrel re-export
@@ -172,7 +92,7 @@ WAVE 3 - METAPROGRAMMING AND CONVENTION SYSTEMS (depends on wave 2 consolidation
     - permissionService becomes ~100 lines: access check, field filter, row filter
   REDUCTION: eliminates need for separate permission configuration files entirely
   blocks: [D1]
-  blocked_by: [B1, B5, A5, A14, A15]
+  blocked_by: [B5, A5, A14, A15]
   wave: 3
 
 [C2] UNIVERSAL CONFIG-DRIVEN WORKFLOW ENGINE
@@ -191,7 +111,7 @@ WAVE 3 - METAPROGRAMMING AND CONVENTION SYSTEMS (depends on wave 2 consolidation
   AFTER: 1 file, ~150 lines (universal workflow engine from config)
   REDUCTION: -1,850 lines
   blocks: [D1]
-  blocked_by: [B3, B6, B7]
+  blocked_by: [B6, B7]
   wave: 3
 
 [C3] DYNAMIC COMPONENT REGISTRY FROM CONFIG
@@ -659,11 +579,11 @@ FILES TO DELETE ENTIRELY (estimated 200+ files):
   src/lib/hook-registry.js (73 lines)
   src/lib/hooks.js (67 lines)
   src/lib/init-hooks.js
-  src/lib/permissions.js (63 lines)
-  src/lib/unified-permission-system.js (112 lines)
-  src/lib/permission-predicates.js (70 lines)
-  src/lib/casl.js (177 lines)
-  src/lib/mwr-permission-enforcer.js (62 lines)
+  src/lib/permissions.js (63 lines) - DELETED in B1
+  src/lib/unified-permission-system.js (112 lines) - DELETED in B1
+  src/lib/permission-predicates.js (70 lines) - DELETED in B1
+  src/lib/casl.js (177 lines) - DELETED in B1
+  src/lib/mwr-permission-enforcer.js (62 lines) - DELETED in B1
   src/lib/engagement-lifecycle-engine.js (247 lines)
   src/lib/lifecycle-engine.js (290 lines)
   src/lib/engagement-status-transitions.js (220 lines)
@@ -681,9 +601,9 @@ FILES TO DELETE ENTIRELY (estimated 200+ files):
   src/lib/notification-helpers.js
   src/lib/notifications.js
   src/lib/use-disclosure.js
-  src/lib/highlight-collaboration-perms.js (193 lines)
-  src/lib/collaborator-access-control.js (171 lines)
-  src/lib/rfi-permission-validator.js (122 lines)
+  src/lib/highlight-collaboration-perms.js (193 lines) - DELETED in B1
+  src/lib/collaborator-access-control.js (171 lines) - DELETED in B1
+  src/lib/rfi-permission-validator.js (122 lines) - DELETED in B1
   src/lib/list-data-transform.js
   src/lib/display-config.js
   src/lib/state-builder-factory.js
@@ -731,8 +651,8 @@ FILES TO HEAVILY REDUCE (keep but shrink):
   src/lib/crud-factory.js: 490 -> ~200 lines
   src/lib/audit-dashboard.js: 374 -> ~100 lines
   src/services/permission-audit.service.js: 371 -> ~80 lines
-  src/services/permission.service.js: 330 -> ~100 lines
-  src/services/collaborator-role.service.js: 245 -> ~100 lines
+  src/services/permission.service.js: 330 -> 223 lines (DONE in B1, consolidated 8 files into 1)
+  src/services/collaborator-role.service.js: 245 -> 105 lines (DONE in B1, absorbed collaborator-access-control)
   src/lib/permission-audit-hooks.js: 303 -> ~50 lines
   src/config/entity-statuses.js: 213 -> ~33 lines
   src/config/domain-constants.js: 106 -> ~26 lines

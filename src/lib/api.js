@@ -1,7 +1,7 @@
 import { getUser } from '@/engine.server';
 import { getSpec } from '@/config/spec-helpers';
 import { API_ENDPOINTS } from '@/config';
-import { can } from '@/lib/permissions';
+import { can } from '@/services/permission.service';
 import { list, get, create, update, remove, listWithPagination, search } from '@/lib/query-engine';
 import { validateEntity, validateUpdate, hasErrors } from '@/lib/validate';
 import { broadcastUpdate } from '@/lib/realtime-server';

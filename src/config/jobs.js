@@ -7,7 +7,6 @@ import { ROLES, USER_TYPES, REVIEW_STATUS, LOG_PREFIXES } from '@/config/constan
 import { safeJsonParse } from '@/lib/safe-json';
 import { autoAllocateEmail } from '@/lib/email-parser';
 import { getDatabase, genId, now } from '@/lib/database-core';
-import { notifyExpiringCollaborators } from '@/services/collaborator-notifier';
 import { getWorkingDaysDiff, dateToSeconds } from '@/lib/date-utils';
 import { getEngagementStages, getRfiStates } from '@/lib/status-helpers';
 
@@ -162,29 +161,24 @@ export const SCHEDULED_JOBS = {
     name: 'daily_engagement_auto_transitions',
     schedule: '0 4 * * *',
     description: 'Auto-transition engagements through lifecycle stages based on conditions',
-    config: {
-      max_attempts: 3
-    }
+    config: { max_attempts: 3 }
   }, async (cfg) => {
-    const { checkAndTransitionEngagements } = await import('@/lib/lifecycle-engine');
-
-    const candidateEngagements = list('engagement').filter(e =>
-      e.status === 'active' && (e.stage === 'info_gathering' || e.stage === 'commencement')
-    );
-
-    if (candidateEngagements.length === 0) {
-      console.log(`${LOG_PREFIXES.job} No engagements require auto-transition check`);
-      return { total: 0, transitioned: 0, failed: 0, skipped: 0 };
+    const { shouldAutoTransition, transitionEngagement } = await import('@/lib/lifecycle-engine');
+    const candidates = list('engagement').filter(e => e.status === 'active' && shouldAutoTransition(e));
+    const results = { total: candidates.length, transitioned: 0, failed: 0, skipped: 0 };
+    const systemUser = { id: 'system', role: 'partner', email: 'system@auto-transition' };
+    for (const eng of candidates) {
+      try {
+        if ((eng.transition_attempts || 0) >= (cfg.max_attempts || 3)) { results.skipped++; continue; }
+        transitionEngagement(eng.id, 'commencement', systemUser, 'auto_transition_commencement_date_reached');
+        results.transitioned++;
+      } catch (e) {
+        results.failed++;
+        update('engagement', eng.id, { transition_attempts: (eng.transition_attempts || 0) + 1 }, systemUser);
+        console.error(`${LOG_PREFIXES.job} Auto-transition failed for ${eng.id}:`, e.message);
+      }
     }
-
-    const results = await checkAndTransitionEngagements(candidateEngagements, cfg);
-
-    console.log(`${LOG_PREFIXES.job} Auto-transition complete: ${results.transitioned}/${results.total} transitioned, ${results.failed} failed, ${results.skipped} skipped`);
-
-    if (results.errors.length > 0) {
-      console.error(`${LOG_PREFIXES.job} Errors during auto-transition:`, results.errors);
-    }
-
+    console.log(`${LOG_PREFIXES.job} Auto-transition: ${results.transitioned}/${results.total} transitioned`);
     return results;
   }),
 
@@ -288,14 +282,24 @@ export const SCHEDULED_JOBS = {
   }),
 
   daily_collaborator_expiry_notifications: defineJob(JOBS_CONFIG.dailyCollaboratorExpiryNotifications, async () => {
-    try {
-      const result = await notifyExpiringCollaborators();
-      console.log(`${LOG_PREFIXES.job} Collaborator expiry notifications: ${result.notified} sent, ${result.failed} failed`);
-      return result;
-    } catch (error) {
-      console.error(`${LOG_PREFIXES.job} Collaborator expiry notifications error:`, error.message);
-      throw error;
+    const nowSec = Math.floor(Date.now() / 1000);
+    const sevenDaysFromNow = nowSec + (7 * 86400);
+    const startOfDay = Math.floor(sevenDaysFromNow / 86400) * 86400;
+    const endOfDay = startOfDay + 86400;
+    const collaborators = list('collaborator').filter(c => c.expires_at && !c.notified_at && c.expires_at >= startOfDay && c.expires_at < endOfDay);
+    let notified = 0;
+    for (const c of collaborators) {
+      try {
+        const review = get('review', c.review_id);
+        if (!review) continue;
+        const expiresDate = new Date(c.expires_at * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        await queueEmail('collaborator_expiry_7day_warning', { collaborator: c, review, collaborator_name: c.name || c.email, review_name: review.name || review.title, expires_date: expiresDate, recipients: 'collaborator_email' });
+        update('collaborator', c.id, { notified_at: nowSec });
+        notified++;
+      } catch (e) { console.error(`${LOG_PREFIXES.job} Failed to notify collaborator ${c.id}:`, e.message); }
     }
+    console.log(`${LOG_PREFIXES.job} Collaborator expiry: ${notified} notified of ${collaborators.length} found`);
+    return { notified, total_found: collaborators.length };
   }),
 
   daily_temp_access_cleanup: defineJob(JOBS_CONFIG.dailyTempAccessCleanup, async () => {

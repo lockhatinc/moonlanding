@@ -1,6 +1,6 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { withPageAuth } from '@/lib/auth-middleware';
-import { revokeCollaborator } from '@/lib/collaborator-access-control';
+import { revokeCollaborator } from '@/services/collaborator-role.service';
 
 export async function DELETE(request, { params }) {
   try {
