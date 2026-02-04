@@ -40,10 +40,3 @@ export {
 export {
   LOG_PREFIXES,
 } from './messages-config.js';
-
-export const HIGHLIGHT_PALETTE = {
-  grey: { color: '#B0B0B0', label: 'Unresolved', status: 'open' },
-  green: { color: '#44BBA4', label: 'Resolved', status: 'resolved' },
-  red: { color: '#FF4141', label: 'Priority', status: 'high_priority' },
-  purple: { color: '#7F7EFF', label: 'Active Focus', status: 'scrolled_to' }
-};

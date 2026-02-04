@@ -19,27 +19,12 @@ export {
   VALIDATION,
 } from './constants';
 
-export {
-  STANDARD_STATUS_OPTIONS,
-  LIFECYCLE_STATUS_OPTIONS,
-  SEVERITY_OPTIONS,
-  PRIORITY_OPTIONS,
-  RFI_CLIENT_STATUS_OPTIONS,
-  RFI_AUDITOR_STATUS_OPTIONS,
-  HIGHLIGHT_STATUS_OPTIONS,
-  REVIEW_STATUS_OPTIONS,
-  RFI_STATUS_OPTIONS,
-  ENGAGEMENT_STAGE_OPTIONS,
-} from './enum-options';
-
 import { getFormFields, getListFields } from '@/lib/field-iterator';
 export { fieldQuery, is, getFormFields, getListFields, getDisplayFields, getEditableFields, getRequiredFields, getSearchFields, getFilterableFields, getRefFields, getField, getFieldType, forEachField, iterateCreateFields, iterateUpdateFields } from '@/lib/field-iterator';
 
 export const buildFormFields = getFormFields;
 export const buildListColumns = getListFields;
 
-export { checkPermission } from './permissions';
-export { loadSpec, loadAllSpecs, loadConfig, clearCache } from './config-loader';
 export { HTTP_RESPONSES, RESPONSE_MAPPERS } from './responses';
 export { config, VALIDATORS, hasGoogleAuth, hasDriveConfig, hasEmailConfig, EMAIL_RESOLVERS } from './env';
 export { SESSION, TOKEN, AUTH_CONFIG } from './auth-config';
@@ -51,8 +36,6 @@ export { VALIDATION_RULES, createValidator, validationRuleGenerators } from './v
 export { THEME, getStatusColor, getStageColor, getSeverityColor, getBadgeProps, getColorMapping } from './theme-config';
 export { ENTITY_ICONS, STATUS_ICONS, ACTION_ICONS, NAVIGATION_ICONS, UI_ICONS, getEntityIcon, getStatusIcon, getActionIcon, getNavigationIcon, getUIIcon, Icons } from './icon-config';
 export { SpecBuilder, spec } from './spec-builder';
-export { createSimpleEntity } from './spec-factory';
-export { PERMISSION_DEFAULTS, getDefaultAccess, PARTNER_ONLY_ACCESS, PARTNER_MANAGER_ACCESS, ALL_STAFF_ACCESS, READ_ONLY_ACCESS } from './permission-defaults';
 export { FIELD_DISPLAY_RULES, LIST_DISPLAY_RULES, DISPLAY_LIMITS, TRUNCATION_INDICATORS } from './display-rules';
 export { SQL_OPERATORS, QUERY_PATTERNS, DEFAULT_LIMITS, QUERY_DEFAULTS, FIELD_TYPES, SQL_KEYWORDS, QUERY_BUILDING, SORT_DIRECTIONS, AGGREGATE_FUNCTIONS } from './query-config';
 export { COMPONENT_PATHS, COMPONENT_REGISTRY, getComponent, getComponentPath, getComponentFilePath, getComponentLoader, createComponentLoader, hasComponent, listComponents, listCategories } from './component-paths';
@@ -62,8 +45,6 @@ export { TABLE_DEFAULTS, TABLE_COLUMN_DEFAULTS, TABLE_GROUP_DEFAULTS, TABLE_PAGI
 export { HTTP_STATUS_CODES, HTTP_STATUS_MESSAGES, ERROR_STATUS_CODES, HTTP_RETRY_CONFIG, HTTP_TIMEOUT_CONFIG } from './http-status-config';
 export { DATABASE_LIMITS, MEMORY_LIMITS, QUERY_LIMITS, VALIDATION_LIMITS, FILE_LIMITS, API_LIMITS, SEARCH_LIMITS } from './system-limits-config';
 export { POLLING_CONFIG, RETRY_TIMING, NOTIFICATION_TIMING, CACHE_TTL, DEBOUNCE_TIMING, THROTTLE_TIMING, SESSION_TIMING, ANIMATION_TIMING, API_TIMING, MAINTENANCE_TIMING } from './timing-config';
-export { BasePlugin, BaseService, BaseEngine, PluginManager, globalPluginManager, FieldRendererPlugin, NotificationPlugin, AuditLogPlugin, SearchPlugin, PermissionPlugin } from '@/framework';
-export { STATUS_ENUMS, getStatusValues, getEnumStatusColor, getStatusLabel, getStatusOptions, isValidStatus } from './status-enum-config';
 export { TimelineEngine, timelineEngine } from '@/lib/timeline-engine';
 
 export const API_ENDPOINTS = {

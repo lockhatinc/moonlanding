@@ -1,23 +1,4 @@
-/**
- * Mantine Compatibility Layer - RippleUI Edition
- * 
- * Provides Mantine-like API using RippleUI CSS classes.
- * This allows gradual migration from Mantine to RippleUI.
- */
-
 import React from 'react';
-
-// Spacing helpers
-const getSpacing = (value) => {
-  const map = {
-    xs: '0.25rem',
-    sm: '0.5rem',
-    md: '1rem',
-    lg: '1.5rem',
-    xl: '2rem',
-  };
-  return map[value] || value;
-};
 
 const getGapClass = (gap) => {
   const map = {
@@ -41,7 +22,6 @@ const getPaddingClass = (padding) => {
   return map[padding] || 'p-4';
 };
 
-// Layout Components
 export const Stack = ({ children, gap = 'md', className = '', style = {}, ...props }) => (
   <div className={`flex flex-col ${getGapClass(gap)} ${className}`} style={style} {...props}>
     {children}
@@ -102,7 +82,6 @@ export const Container = ({ children, className = '', style = {}, ...props }) =>
   </div>
 );
 
-// Text Components
 export const Text = ({ children, size = 'md', c, fw, className = '', style = {}, component = 'span', ...props }) => {
   const sizeClass = {
     xs: 'text-xs',
@@ -143,7 +122,6 @@ export const Code = ({ children, className = '', style = {}, ...props }) => (
   <code className={`bg-gray-100 px-2 py-1 rounded font-mono text-sm ${className}`} style={style} {...props}>{children}</code>
 );
 
-// Button Components
 export const Button = ({ 
   children, 
   variant = 'filled', 
@@ -234,7 +212,6 @@ export const UnstyledButton = ({ children, onClick, className = '', style = {}, 
   <button className={`btn btn-ghost no-animation ${className}`} onClick={onClick} style={style} {...props}>{children}</button>
 );
 
-// Form Components
 export const TextInput = ({ 
   value, 
   onChange, 
@@ -466,7 +443,6 @@ export const Input = ({ className = '', style = {}, ...props }) => (
   />
 );
 
-// Feedback Components
 export const Alert = ({ children, color = 'blue', title, onClose, icon, className = '', style = {}, ...props }) => {
   const colors = {
     red: 'alert-error',
@@ -567,7 +543,6 @@ export const RingProgress = ({ children, section, ...props }) => (
   <div className="radial-progress" {...props}>{children}</div>
 );
 
-// Modal/Dialog Components
 export const Modal = ({ opened, onClose, title, children, centered = true, className = '', style = {}, ...props }) => {
   if (!opened) return null;
   
@@ -614,7 +589,6 @@ export const Popover_Dropdown = ({ children, p = 'md', className = '', style = {
 };
 Popover.Dropdown = Popover_Dropdown;
 
-// Table Components
 export const Table = ({ children, className = '', style = {}, striped = false, ...props }) => (
   <table className={`table table-zebra ${className}`} style={style} {...props}>{children}</table>
 );
@@ -625,7 +599,6 @@ Table.Tr = ({ children }) => <tr>{children}</tr>;
 Table.Th = ({ children }) => <th>{children}</th>;
 Table.Td = ({ children }) => <td>{children}</td>;
 
-// Navigation Components
 export const Breadcrumbs = ({ children, className = '', style = {}, ...props }) => (
   <nav className={`breadcrumbs text-sm ${className}`} style={style} {...props}>
     <ul>{children}</ul>
@@ -673,29 +646,6 @@ export const NavLink = ({ children, label, active, onClick, className = '', styl
   </li>
 );
 
-// Drawer/Sidebar Components
-export const Drawer = ({ opened, onClose, title, children, position = 'left', ...props }) => {
-  if (!opened) return null;
-  return (
-    <div className={`drawer drawer-${position}`} {...props}>
-      <input id="drawer-toggle" type="checkbox" className="drawer-toggle" defaultChecked={opened} onChange={(e) => !e.target.checked && onClose?.()} />
-      <div className="drawer-content"></div>
-      <div className="drawer-side">
-        <label htmlFor="drawer-toggle" className="drawer-overlay"></label>
-        <div className="menu p-4 w-80 bg-base-100">
-          {title && <h2 className="font-bold mb-4">{title}</h2>}
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export const Sidebar = ({ children, className = '', style = {}, ...props }) => (
-  <aside className={`sidebar bg-base-100 ${className}`} style={style} {...props}>{children}</aside>
-);
-
-// Other Components
 export const ScrollArea = ({ children, className = '', style = {}, ...props }) => (
   <div className={`overflow-y-auto ${className}`} style={style} {...props}>{children}</div>
 );
@@ -842,7 +792,6 @@ export const Burger = ({ opened, onClick, size = 'md', className = '', style = {
   </button>
 );
 
-// Hooks
 export const useDisclosure = (initialValue = false) => {
   const [value, setValue] = React.useState(initialValue);
   return {
@@ -868,7 +817,6 @@ export const useHotkeys = (keybinds) => {
   }, [keybinds]);
 };
 
-// Notifications system
 let toastQueue = [];
 let toastRender = null;
 
@@ -917,15 +865,10 @@ export const notifications = {
   },
 };
 
-// Providers
 export const MantineProvider = ({ children }) => <>{children}</>;
-export const ModalsProvider = ({ children }) => <>{children}</>;
-export const NotificationsProvider = ({ children }) => <>{children}</>;
 
-// Image (alias)
 export const Image = ({ src, alt, className = '', style = {}, ...props }) => (
   <img src={src} alt={alt} className={className} style={style} {...props} />
 );
 
-// Stub for ColorSchemeScript
 export const ColorSchemeScript = () => null;

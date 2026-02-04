@@ -1,84 +1,54 @@
-// Dynamic constant access from ConfigGeneratorEngine
-// These are now loaded from master-config.yml at runtime
-// This file is server-side only and should not be bundled with client code
+import { getConfigEngineSync } from '@/lib/config-generator-engine';
 
-let _cachedEngine = null;
-
-const _getConfigEngine = () => {
-  // Lazy-load config engine on first access (server-side only)
-  if (typeof window !== 'undefined') {
-    // Client-side: return null to use fallback values
-    return null;
-  }
-
-  if (!_cachedEngine) {
-    try {
-      // This dynamic import pattern works on server-side only
-      // webpackIgnore: true prevents webpack from trying to bundle this on client side
-      const configModule = eval('require')('@/lib/config-generator-engine');
-      _cachedEngine = configModule.getConfigEngine();
-    } catch (err) {
-      // Config engine not available yet, will use fallback values
-    }
-  }
-  return _cachedEngine;
+const _engine = () => {
+  try { return getConfigEngineSync(); } catch { return null; }
 };
 
-const _getRolesFromConfig = () => {
-  try {
-    const engine = _getConfigEngine();
-    if (engine) {
-      return engine.getRoles();
-    }
-  } catch (err) {
-    console.warn('[domain-constants] Failed to get roles from config:', err.message);
+const _roleNames = () => {
+  const engine = _engine();
+  if (engine) {
+    const roles = engine.getRoles();
+    const result = {};
+    for (const key of Object.keys(roles)) result[key] = key;
+    return result;
   }
-  // Fallback to hardcoded values if config not available
-  return {
-    partner: 'partner',
-    manager: 'manager',
-    clerk: 'clerk',
-    auditor: 'auditor',
-    client: 'client',
-    admin: 'admin',
-  };
+  return { partner: 'partner', manager: 'manager', clerk: 'clerk', client_admin: 'client_admin', client_user: 'client_user' };
 };
 
-const _getRepeatIntervalsFromConfig = () => {
-  try {
-    const engine = _getConfigEngine();
-    if (engine) {
-      return engine.getRepeatIntervals();
-    }
-  } catch (err) {
-    console.warn('[domain-constants] Failed to get repeat intervals from config:', err.message);
-  }
-  // Fallback to hardcoded values if config not available
-  return {
-    once: 'once',
-    monthly: 'monthly',
-    yearly: 'yearly',
-  };
-};
-
-// Export as getters to maintain interface compatibility
 export const ROLES = new Proxy({}, {
-  get: (target, prop) => {
-    const roles = _getRolesFromConfig();
+  get: (_, prop) => {
+    if (typeof prop === 'symbol') return undefined;
+    const roles = _roleNames();
     return roles[String(prop).toLowerCase()];
-  }
+  },
+  ownKeys: () => Object.keys(_roleNames()),
+  getOwnPropertyDescriptor: (_, prop) => {
+    const roles = _roleNames();
+    const key = String(prop).toLowerCase();
+    if (key in roles) return { configurable: true, enumerable: true, value: roles[key] };
+    return undefined;
+  },
 });
 
-export const USER_TYPES = {
-  AUDITOR: 'auditor',
-  CLIENT: 'client',
+export const USER_TYPES = { AUDITOR: 'auditor', CLIENT: 'client' };
+
+const _intervals = () => {
+  const engine = _engine();
+  return engine ? engine.getRepeatIntervals() : { once: 'once', monthly: 'monthly', yearly: 'yearly' };
 };
 
 export const REPEAT_INTERVALS = new Proxy({}, {
-  get: (target, prop) => {
-    const intervals = _getRepeatIntervalsFromConfig();
-    return intervals[String(prop).toLowerCase()];
-  }
+  get: (_, prop) => {
+    if (typeof prop === 'symbol') return undefined;
+    return _intervals()[String(prop).toLowerCase()];
+  },
+  ownKeys: () => Object.keys(_intervals()),
+  getOwnPropertyDescriptor: (_, prop) => {
+    const intervals = _intervals();
+    const key = String(prop).toLowerCase();
+    if (key in intervals) return { configurable: true, enumerable: true, value: intervals[key] };
+    return undefined;
+  },
 });
 
 export const COLORS = {

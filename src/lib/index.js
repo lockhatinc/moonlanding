@@ -32,7 +32,6 @@ export {
 } from '@/lib/error-handler';
 export { pluginSystem, createPlugin, loadPlugin, loadPlugins } from '@/lib/plugin-system';
 export { componentRegistry, registerComponent, getComponent, hasComponent } from '@/lib/component-registry';
-export { eventEmitter, onEntity, offEntity, emitEntity, onWorkflow, offWorkflow, emitWorkflow, onSync, offSync, emitSync } from '@/lib/event-emitter';
 export { createApiHandler } from '@/lib/api';
 export * from '@/lib/errors';
 export { getDatabase, migrate, genId, now } from '@/lib/database-core';

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button, Stack, Textarea, Group, Badge, ActionIcon, Alert, Modal, Text, Tooltip } from '@mantine/core';
-import { HIGHLIGHT_PALETTE } from '@/config/constants';
+import { HIGHLIGHT_PALETTE } from '@/lib/mwr-core-engines';
 import { ACTION_ICONS } from '@/config/icon-config';
 import { useHighlights } from '@/lib/hooks/use-highlights';
 import { showSuccess, showError } from '@/lib/notifications';

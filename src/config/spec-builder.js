@@ -1,6 +1,13 @@
 import { ROLES } from './constants.js';
-import { PERMISSION_DEFAULTS } from './permission-defaults.js';
 import { validateSpec } from './validation-helpers.js';
+
+const DEFAULT_ACCESS = {
+  list: Object.values(ROLES),
+  view: Object.values(ROLES),
+  create: [ROLES.PARTNER, ROLES.MANAGER],
+  edit: [ROLES.PARTNER, ROLES.MANAGER],
+  delete: [ROLES.PARTNER],
+};
 
 export class SpecBuilder {
   constructor(name) {
@@ -14,7 +21,7 @@ export class SpecBuilder {
         updated_at: { type: 'timestamp', auto: 'update', hidden: true, label: 'Updated' },
       },
       options: {},
-      access: { ...PERMISSION_DEFAULTS },
+      access: { ...DEFAULT_ACCESS },
     };
   }
 
