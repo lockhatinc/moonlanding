@@ -71,8 +71,8 @@ export class EngagementMigrator extends BaseMigrator {
 
     const stmt = this.db.prepare(`
       INSERT INTO engagements
-      (id, client_id, status, stage, start_date, end_date, workflow_config, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (id, client_id, status, stage, created_at, commencement_date, description)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     engagements.forEach(eng => {
@@ -92,11 +92,9 @@ export class EngagementMigrator extends BaseMigrator {
           transformed.client_id,
           transformed.status,
           transformed.stage,
-          transformed.start_date,
-          transformed.end_date,
-          transformed.workflow_config,
           transformed.created_at,
-          transformed.updated_at
+          transformed.commencement_date,
+          transformed.description
         );
 
         this.stats.migrated++;

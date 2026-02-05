@@ -239,18 +239,16 @@ export class MigrationOrchestrator {
     try {
       const stmt = this.db.prepare(`
         INSERT OR IGNORE INTO clients
-        (id, name, industry, status, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?)
+        (id, name, status, created_at)
+        VALUES (?, ?, ?, ?)
       `);
 
       clients.forEach(client => {
         stmt.run(
           client.id,
           client.name,
-          client.industry,
           client.status || 'active',
-          client.created_at,
-          client.updated_at
+          client.created_at
         );
       });
 
