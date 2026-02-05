@@ -1,6 +1,6 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { getUser, setCurrentRequest } from '@/engine.server';
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 
 export async function GET(request) {
   setCurrentRequest(request);

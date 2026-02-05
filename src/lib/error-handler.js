@@ -1,4 +1,4 @@
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 import { ERROR_MESSAGES, LOG_PREFIXES } from '@/config';
 import { AppError } from '@/lib/errors';
 

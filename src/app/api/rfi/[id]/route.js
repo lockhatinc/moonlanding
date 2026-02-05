@@ -3,7 +3,7 @@ import { getDatabase, now } from '@/lib/database-core';
 import { withErrorHandler } from '@/lib/with-error-handler';
 import { ok, notFound } from '@/lib/response-formatter';
 import { AppError } from '@/lib/error-handler';
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 import { logAction } from '@/lib/audit-logger';
 
 const db = getDatabase();

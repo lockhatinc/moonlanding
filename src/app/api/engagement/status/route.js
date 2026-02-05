@@ -2,7 +2,7 @@ import { get, update } from '@/engine';
 import { getConfigEngineSync } from '@/lib/config-generator-engine';
 import { setCurrentRequest } from '@/engine.server';
 import { AppError } from '@/lib/error-handler';
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 
 const STATUS_FIELDS = [
   'client_status', 'letter_client_status', 'letter_auditor_status',

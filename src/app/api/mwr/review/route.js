@@ -6,7 +6,7 @@ import { requireAuth, requirePermission } from '@/lib/auth-middleware';
 import { paginated } from '@/lib/response-formatter';
 import { withErrorHandler } from '@/lib/with-error-handler';
 import { AppError } from '@/lib/error-handler';
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 import { parse as parseQuery } from '@/lib/query-string-adapter';
 import { setCurrentRequest } from '@/engine.server';
 

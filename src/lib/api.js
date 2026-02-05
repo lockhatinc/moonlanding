@@ -9,7 +9,7 @@ import { UnauthorizedError, PermissionError, NotFoundError, ValidationError, App
 import { ok, created, paginated } from '@/lib/response-formatter';
 import { QueryAdapter } from '@/lib/query-string-adapter';
 import { withErrorHandler } from '@/lib/with-error-handler';
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 
 const createHandler = (entity, action) => async (request, { params, searchParams }) => {
   const user = await getUser();

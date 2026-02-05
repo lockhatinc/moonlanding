@@ -1,6 +1,6 @@
 import { list, get, update, create } from '@/engine';
 import { AppError } from '@/lib/error-handler';
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 
 const COLLABORATOR_ROLE_PERMISSIONS = {
   viewer: ['view', 'view_highlights', 'view_pdfs'],

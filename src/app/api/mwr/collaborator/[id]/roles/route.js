@@ -1,7 +1,7 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { getDomainLoader } from '@/lib/domain-loader';
 import { AppError } from '@/lib/error-handler';
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 import { get } from '@/engine';
 import {
   getCollaboratorRole,

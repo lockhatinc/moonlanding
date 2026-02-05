@@ -4,7 +4,7 @@ import { permissionService } from '@/services/permission.service';
 import { get } from '@/engine';
 import { getSpec } from '@/config/spec-helpers';
 import { fileService } from '@/services/file.service';
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 import { notFound } from '@/lib/response-formatter';
 
 export async function GET(request, { params }) {

@@ -1,42 +1,144 @@
-export {
-  ROLES,
-  USER_TYPES,
-  REPEAT_INTERVALS,
-  COLORS,
-  BADGE_COLORS_MANTINE,
-} from './domain-constants.js';
+import { getConfigEngineSync } from '@/lib/config-generator-engine';
 
-export {
-  RFI_STATUS,
-  RFI_CLIENT_STATUS,
-  RFI_AUDITOR_STATUS,
-  ENGAGEMENT_STATUS,
-  ENGAGEMENT_STAGE,
-  REVIEW_STATUS,
-  HIGHLIGHT_STATUS,
-  USER_STATUS,
-  LETTER_AUDITOR_STATUS,
-  NOTIFICATION_STATUS,
-  CHECKLIST_STATUS,
-  CLIENT_STATUS,
-  RECORD_STATUS,
-  EMAIL_STATUS,
-  STAGE_TRANSITIONS,
-} from './entity-statuses.js';
+// HTTP status codes - standard and don't change
+export const HTTP = {
+  OK: 200,
+  CREATED: 201,
+  ACCEPTED: 202,
+  NO_CONTENT: 204,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  CONFLICT: 409,
+  UNPROCESSABLE_ENTITY: 422,
+  INTERNAL_ERROR: 500,
+  SERVICE_UNAVAILABLE: 503,
+};
 
-export {
-  HTTP,
-  ERRORS,
-  GOOGLE_SCOPES,
-  GOOGLE_APIS,
-} from './api-constants.js';
+// Error messages
+export const ERRORS = {
+  UNAUTHORIZED: 'Unauthorized',
+  PERMISSION_DENIED: 'Permission denied',
+  NOT_FOUND: 'Not found',
+  INVALID_INPUT: 'Invalid input',
+  INVALID_STATUS: 'Invalid status transition',
+  DUPLICATE_ENTRY: 'Entry already exists',
+  CANNOT_DELETE: 'Cannot delete this item',
+  INVALID_DATE: 'Invalid date format',
+  FILE_TOO_LARGE: 'File is too large',
+  INVALID_EMAIL: 'Invalid email address',
+  DATABASE_ERROR: 'Database operation failed',
+  EXTERNAL_API_ERROR: 'External API request failed',
+};
 
-export {
-  SQL_TYPES,
-  DISPLAY,
-  VALIDATION,
-} from './data-constants.js';
+// Google API scopes
+export const GOOGLE_SCOPES = {
+  drive: [
+    'https://www.googleapis.com/auth/drive',
+    'https://www.googleapis.com/auth/drive.file',
+  ],
+  gmail: [
+    'https://www.googleapis.com/auth/gmail.send',
+    'https://www.googleapis.com/auth/gmail.readonly',
+  ],
+  docs: ['https://www.googleapis.com/auth/documents'],
+};
 
-export {
-  LOG_PREFIXES,
-} from './messages-config.js';
+// Google APIs
+export const GOOGLE_APIS = {
+  oauth2: 'https://www.googleapis.com/oauth2/v1/userinfo',
+};
+
+// SQL types
+export const SQL_TYPES = {
+  id: 'TEXT PRIMARY KEY',
+  text: 'TEXT',
+  textarea: 'TEXT',
+  email: 'TEXT',
+  int: 'INTEGER',
+  decimal: 'REAL',
+  bool: 'INTEGER',
+  date: 'INTEGER',
+  timestamp: 'INTEGER',
+  json: 'TEXT',
+  image: 'TEXT',
+  ref: 'TEXT',
+  enum: 'TEXT',
+};
+
+// Display constants
+export const DISPLAY = {
+  URL_PREVIEW: 100,
+  MAX_API_CALLS_HISTORY: 100,
+  API_TIMEOUT_MS: 30000,
+  POLLING_INTERVAL_MS: 2000,
+  MAX_INLINE_ITEMS: 5,
+  MAX_UPLOAD_SIZE_MB: 100,
+  MAX_FILE_NAME_LENGTH: 255,
+  MAX_FIELD_NAME_LENGTH: 100,
+  TOAST_DURATION_MS: 3000,
+  MAX_NOTIFICATIONS: 50,
+  DEBOUNCE_SEARCH_MS: 300,
+  DEBOUNCE_FORM_CHANGE_MS: 500,
+};
+
+// Validation
+export const VALIDATION = {
+  EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  PASSWORD_MIN_LENGTH: 8,
+};
+
+// Log prefixes
+export const LOG_PREFIXES = {
+  API: '[API]',
+  DB: '[DB]',
+  AUTH: '[AUTH]',
+  CONFIG: '[Config]',
+  SERVICE: '[Service]',
+};
+
+// Dynamic config from ConfigGeneratorEngine
+function getRolesFromConfig() {
+  try {
+    const engine = getConfigEngineSync();
+    const roles = engine.getRoles();
+    return Object.entries(roles).map(([name]) => name);
+  } catch {
+    return ['partner', 'manager', 'clerk', 'client_admin', 'client_user', 'auditor'];
+  }
+}
+
+function getRepeatIntervalsFromConfig() {
+  try {
+    const engine = getConfigEngineSync();
+    return engine.getRepeatIntervals() || [];
+  } catch {
+    return [];
+  }
+}
+
+export const ROLES = getRolesFromConfig();
+export const USER_TYPES = ROLES;
+export const REPEAT_INTERVALS = getRepeatIntervalsFromConfig();
+
+// Status enums - empty, read from config when needed
+export const RFI_STATUS = {};
+export const RFI_CLIENT_STATUS = {};
+export const RFI_AUDITOR_STATUS = {};
+export const ENGAGEMENT_STATUS = {};
+export const ENGAGEMENT_STAGE = {};
+export const REVIEW_STATUS = {};
+export const HIGHLIGHT_STATUS = {};
+export const USER_STATUS = {};
+export const LETTER_AUDITOR_STATUS = {};
+export const NOTIFICATION_STATUS = {};
+export const CHECKLIST_STATUS = {};
+export const CLIENT_STATUS = {};
+export const RECORD_STATUS = 'active';
+export const EMAIL_STATUS = 'pending';
+export const STAGE_TRANSITIONS = {};
+
+// Placeholder colors - use ConfigGeneratorEngine for actual theme
+export const COLORS = {};
+export const BADGE_COLORS_MANTINE = {};

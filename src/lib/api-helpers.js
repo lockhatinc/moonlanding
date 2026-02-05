@@ -5,7 +5,7 @@ import { migrate } from '@/engine';
 import { getUser } from '@/engine.server';
 import { can } from '@/services/permission.service';
 import { logger } from '@/lib/logger';
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 import { ERROR_MESSAGES } from '@/config';
 
 let dbInit = false;

@@ -1,4 +1,4 @@
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 
 export class AppError extends Error {
   constructor(message, code = 'ERROR', statusCode = HTTP.INTERNAL_ERROR, context = {}) {

@@ -1,7 +1,7 @@
 import { get, update, create } from '@/engine';
 import { getConfigEngineSync } from '@/lib/config-generator-engine';
 import { AppError } from '@/lib/error-handler';
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 
 const LOCKOUT_SECONDS = 300;
 const workflowCache = new Map();

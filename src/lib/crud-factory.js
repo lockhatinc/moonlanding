@@ -8,7 +8,7 @@ import { executeHook } from '@/lib/hook-engine';
 import { AppError, NotFoundError as NotFoundErrorClass, ValidationError } from '@/lib/errors';
 import { NotFoundError } from '@/lib/error-handler';
 import { ok, created, paginated } from '@/lib/response-formatter';
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 import { permissionService } from '@/services/permission.service';
 import { parse as parseQuery } from '@/lib/query-string-adapter';
 import { withErrorHandler } from '@/lib/with-error-handler';

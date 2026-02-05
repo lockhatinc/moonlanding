@@ -1,7 +1,7 @@
 import { get, update, list, create } from '@/engine';
 import { getConfigEngine } from '@/lib/config-generator-engine';
 import { AppError } from '@/lib/error-handler';
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 
 let cachedStages = null;
 

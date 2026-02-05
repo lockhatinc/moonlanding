@@ -1,6 +1,6 @@
 import { AppError, normalizeError, createErrorLogger } from '@/lib/error-handler';
 import { apiError } from '@/lib/response-formatter';
-import { HTTP } from '@/config/api-constants';
+import { HTTP } from '@/config/constants';
 
 export const withErrorHandler = (handler, operation = 'Operation') => {
   const logger = createErrorLogger(operation);
