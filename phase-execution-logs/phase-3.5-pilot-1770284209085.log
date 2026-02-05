@@ -1,0 +1,31 @@
+[2026-02-05T09:36:49.094Z] ========== STARTING MIGRATION ORCHESTRATOR ==========
+[2026-02-05T09:36:49.094Z] Initializing database connections...
+[2026-02-05T09:36:49.095Z] ✓ Target database connected
+[2026-02-05T09:36:49.095Z] Creating backup: pre-migration
+[2026-02-05T09:36:49.096Z] ✓ Backup created: /home/user/lexco/moonlanding/data/backups/app-pre-migration-1770284209095.db
+[2026-02-05T09:36:49.096Z] Beginning transaction...
+[2026-02-05T09:36:49.096Z] 
+--- MIGRATING USERS ---
+[2026-02-05T09:36:49.096Z] Creating user_id_mapping table
+[2026-02-05T09:36:49.097Z] user_id_mapping table created
+[2026-02-05T09:36:49.097Z] Processing 1 Friday users
+[2026-02-05T09:36:49.097Z] Analyzing existing Moonlanding users
+[2026-02-05T09:36:49.097Z] Found 0 unique emails in existing Moonlanding users
+[2026-02-05T09:36:49.098Z] Friday users processed: 1 new, 0 deduplicated, 0 errors
+[2026-02-05T09:36:49.098Z] Saving 1 user ID mappings
+[2026-02-05T09:36:49.098Z] Saved 1/1 mappings
+[2026-02-05T09:36:49.098Z] Processing 1 MyWorkReview users
+[2026-02-05T09:36:49.098Z] Analyzing existing Moonlanding users
+[2026-02-05T09:36:49.098Z] Found 0 unique emails in existing Moonlanding users
+[2026-02-05T09:36:49.099Z] MWR users processed: 0 new, 1 deduplicated with Friday, 0 deduplicated with existing, 0 errors
+[2026-02-05T09:36:49.099Z] Saving 1 user ID mappings
+[2026-02-05T09:36:49.099Z] Saved 1/1 mappings
+[2026-02-05T09:36:49.099Z] Inserting 1 new users...
+[2026-02-05T09:36:49.099Z] Verifying user deduplication
+[2026-02-05T09:36:49.099Z] Deduplication verification: 1/1 unique emails
+[2026-02-05T09:36:49.100Z] ✓ Users migrated: 1 new, 1 deduplicated
+[2026-02-05T09:36:49.100Z] 
+--- MIGRATING CLIENTS ---
+[2026-02-05T09:36:49.100Z] ERROR: Client migration failed - table clients has no column named industry
+[2026-02-05T09:36:49.100Z] ERROR: Migration failed - rolling back - table clients has no column named industry
+[2026-02-05T09:36:49.100Z] ✓ Rollback completed

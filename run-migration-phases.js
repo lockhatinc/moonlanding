@@ -217,153 +217,30 @@ class Phase35Executor {
 
   initializeDatabase(dbPath) {
     try {
+      const sourceDb = path.join(MOONLANDING_DIR, 'data/app.db');
+
+      // Copy server-initialized database as template
+      if (fs.existsSync(sourceDb) && dbPath !== sourceDb) {
+        fs.copyFileSync(sourceDb, dbPath);
+        this.logger.log(`✓ Database template copied from server initialization: ${dbPath}`);
+      } else if (dbPath === sourceDb) {
+        this.logger.log(`✓ Using server-initialized database: ${dbPath}`);
+      } else {
+        this.logger.error('Cannot initialize database - server template not found at ' + sourceDb);
+        throw new Error('Server database template not found. Run server first with: npm run dev');
+      }
+
+      // Verify database is valid
       const db = new Database(dbPath);
       db.pragma('journal_mode = WAL');
       db.pragma('busy_timeout = 5000');
       db.pragma('synchronous = NORMAL');
       db.pragma('foreign_keys = ON');
 
-      // Create minimal schema for testing
-      db.exec(`
-        CREATE TABLE IF NOT EXISTS users (
-          id TEXT PRIMARY KEY,
-          email TEXT UNIQUE,
-          name TEXT,
-          role TEXT,
-          type TEXT,
-          phone TEXT,
-          metadata TEXT,
-          created_at INTEGER,
-          updated_at INTEGER
-        );
-
-        CREATE TABLE IF NOT EXISTS clients (
-          id TEXT PRIMARY KEY,
-          name TEXT,
-          status TEXT DEFAULT 'active',
-          created_at INTEGER
-        );
-
-        CREATE TABLE IF NOT EXISTS engagements (
-          id TEXT PRIMARY KEY,
-          client_id TEXT,
-          status TEXT,
-          stage TEXT,
-          created_at INTEGER,
-          commencement_date INTEGER,
-          description TEXT,
-          FOREIGN KEY(client_id) REFERENCES clients(id)
-        );
-
-        CREATE TABLE IF NOT EXISTS rfis (
-          id TEXT PRIMARY KEY,
-          engagement_id TEXT,
-          title TEXT,
-          status TEXT,
-          client_status TEXT,
-          due_date INTEGER,
-          created_at INTEGER,
-          assigned_user_id TEXT,
-          description TEXT,
-          FOREIGN KEY(engagement_id) REFERENCES engagements(id),
-          FOREIGN KEY(assigned_user_id) REFERENCES users(id)
-        );
-
-        CREATE TABLE IF NOT EXISTS reviews (
-          id TEXT PRIMARY KEY,
-          engagement_id TEXT,
-          reviewer_id TEXT,
-          status TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          document_name TEXT,
-          FOREIGN KEY(engagement_id) REFERENCES engagements(id),
-          FOREIGN KEY(reviewer_id) REFERENCES users(id)
-        );
-
-        CREATE TABLE IF NOT EXISTS highlights (
-          id TEXT PRIMARY KEY,
-          review_id TEXT,
-          page INTEGER,
-          x REAL,
-          y REAL,
-          width INTEGER,
-          height INTEGER,
-          text TEXT,
-          status TEXT,
-          color TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          FOREIGN KEY(review_id) REFERENCES reviews(id)
-        );
-
-        CREATE TABLE IF NOT EXISTS messages (
-          id TEXT PRIMARY KEY,
-          engagement_id TEXT,
-          sender_id TEXT,
-          content TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          FOREIGN KEY(engagement_id) REFERENCES engagements(id),
-          FOREIGN KEY(sender_id) REFERENCES users(id)
-        );
-
-        CREATE TABLE IF NOT EXISTS collaborators (
-          id TEXT PRIMARY KEY,
-          engagement_id TEXT,
-          email TEXT,
-          name TEXT,
-          role TEXT,
-          expires_at INTEGER,
-          created_at INTEGER,
-          is_permanent INTEGER,
-          FOREIGN KEY(engagement_id) REFERENCES engagements(id)
-        );
-
-        CREATE TABLE IF NOT EXISTS checklists (
-          id TEXT PRIMARY KEY,
-          engagement_id TEXT,
-          title TEXT,
-          status TEXT,
-          created_at INTEGER,
-          updated_at INTEGER,
-          FOREIGN KEY(engagement_id) REFERENCES engagements(id)
-        );
-
-        CREATE TABLE IF NOT EXISTS checklist_items (
-          id TEXT PRIMARY KEY,
-          checklist_id TEXT,
-          title TEXT,
-          completed INTEGER,
-          completed_at INTEGER,
-          FOREIGN KEY(checklist_id) REFERENCES checklists(id)
-        );
-
-        CREATE TABLE IF NOT EXISTS files (
-          id TEXT PRIMARY KEY,
-          engagement_id TEXT,
-          filename TEXT,
-          size INTEGER,
-          created_at INTEGER,
-          uploaded_by TEXT,
-          FOREIGN KEY(engagement_id) REFERENCES engagements(id),
-          FOREIGN KEY(uploaded_by) REFERENCES users(id)
-        );
-
-        CREATE TABLE IF NOT EXISTS activity_logs (
-          id TEXT PRIMARY KEY,
-          entity_type TEXT,
-          entity_id TEXT,
-          action TEXT,
-          message TEXT,
-          created_at INTEGER,
-          user_id TEXT,
-          FOREIGN KEY(user_id) REFERENCES users(id)
-        );
-      `);
-
+      const tables = db.prepare(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).all();
       db.close();
-      this.logger.log(`✓ Database initialized: ${dbPath}`);
+
+      this.logger.log(`✓ Database ready with ${tables.length} tables`);
     } catch (err) {
       this.logger.error('Database initialization failed', err);
       throw err;

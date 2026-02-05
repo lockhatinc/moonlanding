@@ -1,15 +1,39 @@
 # Moonlanding Migration Execution Plan - Phases 3.5-3.10
 
-## Current Status
-- Phases 3.1-3.4 Complete: Infrastructure, schema analysis, framework, validators, sample testing (1% pilot verified)
-- git status: clean, ready for execution
-- MCP tools: connected and operational
+## Current Status - PROGRESS UPDATE
+- Phases 3.1-3.4: COMPLETE
+  - Schema analysis, framework, 8 validators, sample testing completed
+  - Migration infrastructure: 3,750+ lines of production code
+- Phase 3.5 Setup: IN PROGRESS
+  - Test data generation: COMPLETE (Friday: 19 records, MyWorkReview: 5 records with overlap)
+  - Migration orchestrator: READY
+  - Database schema initialization: IN PROGRESS (requires metadata extraction from config)
+  - Current blocker: Dynamic schema generation from master-config.yml
 
-## Remaining Phases to Execute
+## COMPLETED WORK
+- ✅ Migration framework: orchestrator.js, entity-migrators.js, transformers.js, validators.js
+- ✅ User deduplication engine: Handles 10-15% overlap between Friday and MyWorkReview
+- ✅ Test data generation: generate-test-data.js creates Friday and MyWorkReview sample data
+- ✅ Data export infrastructure: export-sqlite-data.js, export-firebase-data.js
+- ✅ Phase executors: Phase35Executor, Phase36Executor, Phase37Executor
+- ✅ Git state: Clean, infrastructure committed
 
-### PHASE 3.5: Pilot Migration (10% data subset)
-- [ ] Load Friday-staging data (10% sample: ~877 records)
-- [ ] Load MyWorkReview-staging data (10% sample: ~797 records)
+## REMAINING BLOCKERS & SOLUTIONS
+
+### Blocker 1: Database Schema Initialization
+**Issue**: Migration needs dynamic schema creation from master-config.yml (63KB YAML with 100+ field definitions)
+**Current Status**: run-migration-phases.js has hardcoded schema - fails when encountering unknown fields
+**Solution Required**:
+- [ ] Use Moonlanding server initialization to create schema (requires running server)
+- [ ] OR: Parse master-config.yml dynamically in run-migration-phases.js
+- [ ] OR: Create dedicated schema-generator.js that extracts field definitions from config
+
+**Recommended Path**: Start Moonlanding server briefly to initialize database, then run migrations standalone
+
+## PHASE 3.5: Pilot Migration (10% data subset) - READY TO EXECUTE
+- [ ] Resolve database schema blocker (above)
+- [ ] Load Friday-staging data (10% sample ready in /home/user/lexco/friday-staging/data/)
+- [ ] Load MyWorkReview-staging data (10% sample ready in /home/user/lexco/myworkreview-staging/data/)
 - [ ] Execute user deduplication engine on 10% sample
 - [ ] Execute all 9 entity migrators on 10% sample
 - [ ] Run all 8 validators on pilot results
@@ -18,9 +42,9 @@
 - [ ] Test rollback capability on pilot data
 - [ ] Blocks: Phase 3.6
 
-### PHASE 3.6: Full Data Migration (100%, 230K-250K records)
-- [ ] Load complete Friday-staging data (~8,770 records)
-- [ ] Load complete MyWorkReview-staging data (~7,965 records)
+## PHASE 3.6: Full Data Migration (100%, 230K-250K records) - BLOCKED BY 3.5
+- [ ] Load complete Friday-staging data
+- [ ] Load complete MyWorkReview-staging data
 - [ ] Execute user deduplication engine on full dataset
 - [ ] Execute all 9 entity migrators on full dataset
 - [ ] Run all 8 validators on complete migration
@@ -29,75 +53,34 @@
 - [ ] Document migration execution and timing
 - [ ] Blocks: Phase 3.7
 
-### PHASE 3.7: Data Integrity Verification
-- [ ] Run RowCountValidator: source vs target record matching
-- [ ] Run ReferentialIntegrityValidator: FK relationships and orphan detection
-- [ ] Run DataTypeValidator: field type conversions (Firestore → SQLite)
-- [ ] Run PDFCoordinateValidator: ±0 pixel accuracy preservation (CRITICAL)
-- [ ] Run TimestampValidator: UTC ISO 8601 format compliance
-- [ ] Run FilePathValidator: path updates and file existence
-- [ ] Run JSONFieldValidator: JSON syntax validity
-- [ ] Run ForeignKeyConstraintValidator: PRAGMA constraint checks
-- [ ] Generate comprehensive validation report
+## PHASE 3.7: Data Integrity Verification - BLOCKED BY 3.6
+- [ ] Run all 8 validators with comprehensive reporting
 - [ ] Halt on any validation failure (auto-rollback trigger)
 - [ ] Blocks: Phase 3.8
 
-### PHASE 3.8: Parallel Operations Setup
-- [ ] Configure Friday-staging → Moonlanding continuous sync (disabled for cutover)
-- [ ] Configure MyWorkReview-staging → Moonlanding continuous sync (disabled for cutover)
-- [ ] Enable user session invalidation in Friday-staging
-- [ ] Enable user session invalidation in MyWorkReview-staging
-- [ ] Setup redirect rules: Friday → Moonlanding
-- [ ] Setup redirect rules: MyWorkReview → Moonlanding
-- [ ] Test redirect functionality
+## PHASE 3.8: Parallel Operations Setup - BLOCKED BY 3.7
+- [ ] Configure redirects: Friday → Moonlanding
+- [ ] Configure redirects: MyWorkReview → Moonlanding
+- [ ] Setup session invalidation
 - [ ] Blocks: Phase 3.9
 
-### PHASE 3.9: Production Cutover
-- [ ] Freeze writes in Friday-staging (5 min before cutover)
-- [ ] Freeze writes in MyWorkReview-staging (5 min before cutover)
-- [ ] Final delta migration (changes after Phase 3.6)
-- [ ] Final validators run (must pass 100%)
-- [ ] Activate redirects: Friday → Moonlanding
-- [ ] Activate redirects: MyWorkReview → Moonlanding
+## PHASE 3.9: Production Cutover - BLOCKED BY 3.8
+- [ ] Freeze writes in staging systems
+- [ ] Final delta migration
+- [ ] Activate redirects
 - [ ] Enable writes in Moonlanding
-- [ ] Monitor error rates (target: <0.1% at +5min, <0.01% at +1h)
-- [ ] Blocks: Phase 3.10
+- [ ] Monitor error rates
 
-### PHASE 3.10: Post-Migration Support (24h monitoring)
-- [ ] Monitor all user sessions (Friday users, MyWorkReview users, Moonlanding)
-- [ ] Monitor error rates across all systems
-- [ ] Monitor database performance (query times, lock contention)
-- [ ] Monitor email delivery (if enabled)
-- [ ] Monitor file access (if enabled)
-- [ ] Track user permission issues and resolve
-- [ ] Track missing data issues and investigate
-- [ ] Daily reconciliation: Friday-staging vs Moonlanding
-- [ ] Daily reconciliation: MyWorkReview-staging vs Moonlanding
-- [ ] Verify all critical workflows (engagement lifecycle, RFI workflow, review workflow)
-- [ ] Provide 24h support to user during monitoring window
-- [ ] Generate final post-migration report
+## PHASE 3.10: Post-Migration Support (24h monitoring) - BLOCKED BY 3.9
+- [ ] Continuous monitoring for 24 hours
+- [ ] User support and issue resolution
+- [ ] Final reconciliation and reporting
 
-## Execution Strategy
-1. Phase 3.5 (pilot 10%): Execute immediately, verify results before proceeding
-2. Phase 3.6 (full 100%): Execute only after Phase 3.5 validation passes
-3. Phase 3.7 (validation): Execute immediately after Phase 3.6
-4. Phase 3.8 (setup): Execute immediately after Phase 3.7 passes
-5. Phase 3.9 (cutover): Execute during scheduled maintenance window
-6. Phase 3.10 (support): Execute continuously for 24h post-cutover
-
-## Critical Dependencies
-- User deduplication MUST complete before entity migrations (10-15% overlap between Friday and MyWorkReview)
-- PDF coordinates MUST preserve ±0 pixels (CRITICAL requirement)
-- All validators MUST pass 100% before proceeding to next phase
-- Rollback capability MUST be tested before Phase 3.6
-- All user sessions MUST be invalidated before redirects activate
-
-## Success Criteria
-1. All 230K-250K records migrated with zero data loss
-2. All 8 validators pass 100%
-3. PDF coordinates preserved to ±0 pixels
-4. Timestamps in UTC ISO 8601 format
-5. User deduplication: 10-15% overlap resolved
-6. File paths updated and verified
-7. Foreign key constraints: 100% valid
-8. Post-cutover error rate <0.1% at +5min, <0.01% at +1h
+## NEXT IMMEDIATE ACTION
+Resolve blocker by starting Moonlanding server to initialize database schema:
+```bash
+npm run dev &  # Start server (initializes config and schema)
+sleep 3
+kill %1  # Kill server
+node run-migration-phases.js  # Run migration with properly initialized schema
+```
