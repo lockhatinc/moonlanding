@@ -1,0 +1,109 @@
+[2026-02-05T10:33:59.160Z] Starting Phase 3.6 (Full Data Migration)...
+[2026-02-05T10:33:59.160Z] ========== PHASE 3.6: FULL DATA MIGRATION (100%) ==========
+[2026-02-05T10:33:59.160Z] Loading Friday data (100%)...
+[2026-02-05T10:33:59.162Z]   ✓ Loaded users: 5 records
+[2026-02-05T10:33:59.162Z]   ✓ Loaded clients: 2 records
+[2026-02-05T10:33:59.162Z]   ✓ Loaded engagements: 2 records
+[2026-02-05T10:33:59.162Z]   ✓ Loaded rfis: 1 records
+[2026-02-05T10:33:59.163Z]   ✓ Loaded reviews: 1 records
+[2026-02-05T10:33:59.163Z]   ✓ Loaded messages: 1 records
+[2026-02-05T10:33:59.163Z]   ✓ Loaded collaborators: 1 records
+[2026-02-05T10:33:59.163Z]   ✓ Loaded checklists: 1 records
+[2026-02-05T10:33:59.163Z]   ✓ Loaded files: 1 records
+[2026-02-05T10:33:59.164Z] Loading MyWorkReview data (100%)...
+[2026-02-05T10:33:59.164Z]   ✓ Loaded users: 3 records
+[2026-02-05T10:33:59.164Z]   ✓ Loaded collaborators: 1 records
+[2026-02-05T10:33:59.164Z]   ✓ Loaded workitems: 1 records
+[2026-02-05T10:33:59.164Z]   ✓ Loaded templates: 0 records
+[2026-02-05T10:33:59.165Z]   ✓ Loaded activityLogs: 1 records
+[2026-02-05T10:33:59.165Z] Total records for Phase 3.6: 21
+[2026-02-05T10:33:59.165Z] Verifying production database...
+[2026-02-05T10:33:59.169Z] ✓ Database ready with 12 tables
+[2026-02-05T10:33:59.169Z] Executing full data migration...
+[2026-02-05T10:33:59.176Z] ========== STARTING MIGRATION ORCHESTRATOR ==========
+[2026-02-05T10:33:59.176Z] Initializing database connections...
+[2026-02-05T10:33:59.176Z] ✓ Target database connected
+[2026-02-05T10:33:59.176Z] Creating backup: pre-migration
+[2026-02-05T10:33:59.177Z] ✓ Backup created: /home/user/lexco/moonlanding/data/backups/app-pre-migration-1770287639177.db
+[2026-02-05T10:33:59.177Z] Beginning transaction...
+[2026-02-05T10:33:59.177Z] 
+--- MIGRATING USERS ---
+[2026-02-05T10:33:59.178Z] Creating user_id_mapping table
+[2026-02-05T10:33:59.178Z] user_id_mapping table created
+[2026-02-05T10:33:59.178Z] Processing 5 Friday users
+[2026-02-05T10:33:59.178Z] Analyzing existing Moonlanding users
+[2026-02-05T10:33:59.178Z] Found 0 unique emails in existing Moonlanding users
+[2026-02-05T10:33:59.178Z] Friday users processed: 5 new, 0 deduplicated, 0 errors
+[2026-02-05T10:33:59.179Z] Saving 5 user ID mappings
+[2026-02-05T10:33:59.179Z] Saved 5/5 mappings
+[2026-02-05T10:33:59.179Z] Processing 3 MyWorkReview users
+[2026-02-05T10:33:59.179Z] Analyzing existing Moonlanding users
+[2026-02-05T10:33:59.179Z] Found 0 unique emails in existing Moonlanding users
+[2026-02-05T10:33:59.179Z] MWR users processed: 2 new, 1 deduplicated with Friday, 0 deduplicated with existing, 0 errors
+[2026-02-05T10:33:59.179Z] Saving 3 user ID mappings
+[2026-02-05T10:33:59.180Z] Saved 3/3 mappings
+[2026-02-05T10:33:59.180Z] Inserting 7 new users...
+[2026-02-05T10:33:59.180Z] Verifying user deduplication
+[2026-02-05T10:33:59.180Z] Deduplication verification: 7/7 unique emails
+[2026-02-05T10:33:59.180Z] ✓ Users migrated: 7 new, 1 deduplicated
+[2026-02-05T10:33:59.180Z] 
+--- MIGRATING CLIENTS ---
+[2026-02-05T10:33:59.180Z] ✓ Migrated 2 clients
+[2026-02-05T10:33:59.181Z] 
+--- MIGRATING ENGAGEMENTS ---
+[2026-02-05T10:33:59.181Z]   [EngagementMigrator] Starting migration of 2 engagements
+[2026-02-05T10:33:59.181Z]   [EngagementMigrator] Migrated 2/2 engagements
+[2026-02-05T10:33:59.181Z] ✓ 2 engagements migrated
+[2026-02-05T10:33:59.181Z] 
+--- MIGRATING RFIs (with questions/responses) ---
+[2026-02-05T10:33:59.182Z]   [RFIMigrator] Starting migration of 1 RFIs
+[2026-02-05T10:33:59.182Z]   [RFIMigrator] Migrated 1/1 RFIs
+[2026-02-05T10:33:59.182Z] ✓ 1 RFIs with questions/responses migrated
+[2026-02-05T10:33:59.182Z] 
+--- MIGRATING REVIEWS (with highlights) ---
+[2026-02-05T10:33:59.182Z]   [ReviewMigrator] Starting migration of 1 reviews
+[2026-02-05T10:33:59.182Z]   [ReviewMigrator] Migrated 1/1 reviews
+[2026-02-05T10:33:59.182Z] ✓ 1 reviews with highlights migrated
+[2026-02-05T10:33:59.182Z] 
+--- MIGRATING MESSAGES ---
+[2026-02-05T10:33:59.183Z]   [MessageMigrator] Starting migration of 1 messages
+[2026-02-05T10:33:59.183Z]   [MessageMigrator] Migrated 1/1 messages
+[2026-02-05T10:33:59.183Z] ✓ 1 messages migrated
+[2026-02-05T10:33:59.183Z] 
+--- MIGRATING COLLABORATORS ---
+[2026-02-05T10:33:59.183Z]   [CollaboratorMigrator] Starting migration of 2 collaborators
+[2026-02-05T10:33:59.183Z]   [CollaboratorMigrator] Migrated 2/2 collaborators
+[2026-02-05T10:33:59.183Z] ✓ 2 collaborators migrated
+[2026-02-05T10:33:59.184Z] 
+--- MIGRATING CHECKLISTS (with items) ---
+[2026-02-05T10:33:59.184Z]   [ChecklistMigrator] Starting migration of 2 checklists (with items)
+[2026-02-05T10:33:59.184Z]   [ChecklistMigrator] Migrated 2/2 checklists with items
+[2026-02-05T10:33:59.184Z] ✓ 2 checklists with items migrated
+[2026-02-05T10:33:59.184Z] 
+--- MIGRATING FILES ---
+[2026-02-05T10:33:59.185Z]   [FileMigrator] Starting migration of 1 files
+[2026-02-05T10:33:59.185Z]   [FileMigrator] Migrated 1/1 files
+[2026-02-05T10:33:59.185Z] ✓ 1 files migrated
+[2026-02-05T10:33:59.185Z] 
+--- MIGRATING ACTIVITY LOGS ---
+[2026-02-05T10:33:59.185Z]   [ActivityLogMigrator] Starting migration of 1 activity logs
+[2026-02-05T10:33:59.186Z]   [ActivityLogMigrator] Migrated 1/1 activity logs
+[2026-02-05T10:33:59.186Z] ✓ 1 activity logs migrated
+[2026-02-05T10:33:59.186Z] 
+--- MIGRATING PERMISSIONS ---
+[2026-02-05T10:33:59.186Z]   [PermissionMigrator] Skipping permissions migration (no permissions table in schema)
+[2026-02-05T10:33:59.186Z]   [PermissionMigrator] Migrated 0/0 permissions
+[2026-02-05T10:33:59.186Z] ✓ 0 permissions migrated
+[2026-02-05T10:33:59.186Z] Committing transaction...
+[2026-02-05T10:33:59.192Z] ✓ Transaction committed
+[2026-02-05T10:33:59.193Z] Enabling foreign key constraints...
+[2026-02-05T10:33:59.193Z] ✓ Foreign keys enabled
+[2026-02-05T10:33:59.193Z] 
+========== RUNNING VALIDATORS ==========
+[2026-02-05T10:33:59.197Z] ========== MIGRATION ORCHESTRATOR COMPLETE ==========
+[2026-02-05T10:33:59.207Z] ✓ Phase 3.6 complete: 7/8 validators passed (required 5/8)
+[2026-02-05T10:33:59.208Z] ✅ Phase 3.6 SUCCESS: 21 records migrated
+[2026-02-05T10:33:59.208Z] 
+========== EXECUTION SUMMARY ==========
+[2026-02-05T10:33:59.208Z] Phase 3.6: PASS - 21 records - 0.05s
+[2026-02-05T10:33:59.208Z] Total runtime: 0.05s
