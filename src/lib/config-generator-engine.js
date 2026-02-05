@@ -944,6 +944,252 @@ export class ConfigGeneratorEngine {
     }
     return result;
   }
+
+  getRoles() {
+    const config = this._getConfig();
+    if (!config.roles) {
+      return {};
+    }
+    const cacheKey = 'roles:all';
+    if (this.specCache.has(cacheKey)) {
+      return this._deepFreeze(this._deepClone(this.specCache.get(cacheKey)));
+    }
+    const roles = this._deepFreeze(this._deepClone(config.roles));
+    this.specCache.set(cacheKey, roles);
+    if (this.debugMode) {
+      console.log('[ConfigGeneratorEngine] Retrieved all roles');
+    }
+    return this._deepFreeze(this._deepClone(roles));
+  }
+
+  getRole(roleName) {
+    if (!roleName || typeof roleName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] getRole: roleName must be a non-empty string');
+    }
+    const config = this._getConfig();
+    if (!config.roles || !config.roles[roleName]) {
+      throw new Error(`[ConfigGeneratorEngine] Role "${roleName}" not found`);
+    }
+    const cacheKey = `role:${roleName}`;
+    if (this.specCache.has(cacheKey)) {
+      return this._deepFreeze(this._deepClone(this.specCache.get(cacheKey)));
+    }
+    const role = this._deepClone(config.roles[roleName]);
+    this.specCache.set(cacheKey, role);
+    if (this.debugMode) {
+      console.log(`[ConfigGeneratorEngine] Retrieved role ${roleName}`);
+    }
+    return this._deepFreeze(role);
+  }
+
+  getStatus(entityName, statusName) {
+    if (!entityName || typeof entityName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] getStatus: entityName must be a non-empty string');
+    }
+    if (!statusName || typeof statusName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] getStatus: statusName must be a non-empty string');
+    }
+    const config = this._getConfig();
+    const enumName = `${entityName}_status`;
+    if (!config.status_enums || !config.status_enums[enumName] || !config.status_enums[enumName][statusName]) {
+      throw new Error(`[ConfigGeneratorEngine] Status "${statusName}" not found for enum "${enumName}"`);
+    }
+    const cacheKey = `status:${entityName}:${statusName}`;
+    if (this.specCache.has(cacheKey)) {
+      return this._deepFreeze(this._deepClone(this.specCache.get(cacheKey)));
+    }
+    const status = this._deepClone(config.status_enums[enumName][statusName]);
+    this.specCache.set(cacheKey, status);
+    if (this.debugMode) {
+      console.log(`[ConfigGeneratorEngine] Retrieved status ${entityName}.${statusName}`);
+    }
+    return this._deepFreeze(status);
+  }
+
+  getStatuses(enumName) {
+    if (!enumName || typeof enumName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] getStatuses: enumName must be a non-empty string');
+    }
+    const config = this._getConfig();
+    if (!config.status_enums || !config.status_enums[enumName]) {
+      throw new Error(`[ConfigGeneratorEngine] Status enum "${enumName}" not found`);
+    }
+    const cacheKey = `statuses:${enumName}`;
+    if (this.specCache.has(cacheKey)) {
+      return this._deepFreeze(this._deepClone(this.specCache.get(cacheKey)));
+    }
+    const statuses = this._deepClone(config.status_enums[enumName]);
+    this.specCache.set(cacheKey, statuses);
+    if (this.debugMode) {
+      console.log(`[ConfigGeneratorEngine] Retrieved statuses for enum ${enumName}`);
+    }
+    return this._deepFreeze(statuses);
+  }
+
+  getEntity(entityName) {
+    if (!entityName || typeof entityName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] getEntity: entityName must be a non-empty string');
+    }
+    const config = this._getConfig();
+    if (!config.entities || !config.entities[entityName]) {
+      throw new Error(`[ConfigGeneratorEngine] Entity "${entityName}" not found`);
+    }
+    const cacheKey = `entity:${entityName}`;
+    if (this.specCache.has(cacheKey)) {
+      return this._deepFreeze(this._deepClone(this.specCache.get(cacheKey)));
+    }
+    const entity = this._deepClone(config.entities[entityName]);
+    this.specCache.set(cacheKey, entity);
+    if (this.debugMode) {
+      console.log(`[ConfigGeneratorEngine] Retrieved entity ${entityName}`);
+    }
+    return this._deepFreeze(entity);
+  }
+
+  getFieldValue(entityName, fieldName) {
+    if (!entityName || typeof entityName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] getFieldValue: entityName must be a non-empty string');
+    }
+    if (!fieldName || typeof fieldName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] getFieldValue: fieldName must be a non-empty string');
+    }
+    const spec = this.generateEntitySpec(entityName);
+    if (!spec.fields || !spec.fields[fieldName]) {
+      throw new Error(`[ConfigGeneratorEngine] Field "${fieldName}" not found for entity "${entityName}"`);
+    }
+    return this._deepFreeze(this._deepClone(spec.fields[fieldName]));
+  }
+
+  getRolePermissions(roleName, entityName) {
+    if (!roleName || typeof roleName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] getRolePermissions: roleName must be a non-empty string');
+    }
+    if (!entityName || typeof entityName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] getRolePermissions: entityName must be a non-empty string');
+    }
+    const spec = this.generateEntitySpec(entityName);
+    if (!spec.permissions || !spec.permissions[roleName]) {
+      return [];
+    }
+    return [...spec.permissions[roleName]];
+  }
+
+  canRoleDoAction(roleName, entityName, actionName) {
+    if (!roleName || typeof roleName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] canRoleDoAction: roleName must be a non-empty string');
+    }
+    if (!entityName || typeof entityName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] canRoleDoAction: entityName must be a non-empty string');
+    }
+    if (!actionName || typeof actionName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] canRoleDoAction: actionName must be a non-empty string');
+    }
+    const permissions = this.getRolePermissions(roleName, entityName);
+    return permissions.includes(actionName) || permissions.includes('all');
+  }
+
+  getTimingConfig() {
+    const cacheKey = 'thresholds:timing';
+    if (this.specCache.has(cacheKey)) {
+      return this._deepFreeze(this._deepClone(this.specCache.get(cacheKey)));
+    }
+    const timing = this.getThreshold('timing');
+    this.specCache.set(cacheKey, timing);
+    if (this.debugMode) {
+      console.log('[ConfigGeneratorEngine] Retrieved timing config');
+    }
+    return this._deepFreeze(this._deepClone(timing));
+  }
+
+  getSystemLimitsConfig() {
+    const cacheKey = 'thresholds:system';
+    if (this.specCache.has(cacheKey)) {
+      return this._deepFreeze(this._deepClone(this.specCache.get(cacheKey)));
+    }
+    const limits = this.getThreshold('system');
+    this.specCache.set(cacheKey, limits);
+    if (this.debugMode) {
+      console.log('[ConfigGeneratorEngine] Retrieved system limits config');
+    }
+    return this._deepFreeze(this._deepClone(limits));
+  }
+
+  getUIConfig() {
+    const cacheKey = 'thresholds:ui';
+    if (this.specCache.has(cacheKey)) {
+      return this._deepFreeze(this._deepClone(this.specCache.get(cacheKey)));
+    }
+    const ui = this.getThreshold('ui');
+    this.specCache.set(cacheKey, ui);
+    if (this.debugMode) {
+      console.log('[ConfigGeneratorEngine] Retrieved UI config');
+    }
+    return this._deepFreeze(this._deepClone(ui));
+  }
+
+  getPollingConfig() {
+    const cacheKey = 'thresholds:polling';
+    if (this.specCache.has(cacheKey)) {
+      return this._deepFreeze(this._deepClone(this.specCache.get(cacheKey)));
+    }
+    const polling = this.getThreshold('polling');
+    this.specCache.set(cacheKey, polling);
+    if (this.debugMode) {
+      console.log('[ConfigGeneratorEngine] Retrieved polling config');
+    }
+    return this._deepFreeze(this._deepClone(polling));
+  }
+
+  getTheme() {
+    const config = this._getConfig();
+    const cacheKey = 'theme:all';
+    if (this.specCache.has(cacheKey)) {
+      return this._deepFreeze(this._deepClone(this.specCache.get(cacheKey)));
+    }
+    const theme = config.theme || {};
+    this.specCache.set(cacheKey, theme);
+    if (this.debugMode) {
+      console.log('[ConfigGeneratorEngine] Retrieved theme config');
+    }
+    return this._deepFreeze(this._deepClone(theme));
+  }
+
+  getIcons() {
+    const config = this._getConfig();
+    const cacheKey = 'icons:all';
+    if (this.specCache.has(cacheKey)) {
+      return this._deepFreeze(this._deepClone(this.specCache.get(cacheKey)));
+    }
+    const icons = config.icons || {};
+    this.specCache.set(cacheKey, icons);
+    if (this.debugMode) {
+      console.log('[ConfigGeneratorEngine] Retrieved icons config');
+    }
+    return this._deepFreeze(this._deepClone(icons));
+  }
+
+  getIcon(iconType, iconName) {
+    if (!iconType || typeof iconType !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] getIcon: iconType must be a non-empty string');
+    }
+    if (!iconName || typeof iconName !== 'string') {
+      throw new Error('[ConfigGeneratorEngine] getIcon: iconName must be a non-empty string');
+    }
+    const config = this._getConfig();
+    const icons = config.icons || {};
+    const typeIcons = icons[iconType] || {};
+    const icon = typeIcons[iconName];
+    if (!icon) {
+      if (this.debugMode) {
+        console.warn(`[ConfigGeneratorEngine] Icon "${iconType}.${iconName}" not found`);
+      }
+      return null;
+    }
+    if (this.debugMode) {
+      console.log(`[ConfigGeneratorEngine] Retrieved icon ${iconType}.${iconName}`);
+    }
+    return icon;
+  }
 }
 
 // Use global scope to persist across module instances in Next.js
