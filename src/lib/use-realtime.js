@@ -1,8 +1,14 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { POLLING_CONFIG } from '@/config/polling-config';
 import { useApi, apiClient } from '@/lib/api-client-unified';
+
+const POLLING_CONFIG = {
+  interval: 3000,
+  maxBackoff: 30000,
+  backoffMultiplier: 2,
+  maxRetries: 3,
+};
 
 const listeners = new Map();
 const pendingRequests = new Map();

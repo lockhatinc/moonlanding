@@ -34,7 +34,6 @@ export { SpecBuilder, spec } from './spec-builder';
 export { COMPONENT_PATHS, COMPONENT_REGISTRY, getComponent, getComponentPath, getComponentFilePath, getComponentLoader, createComponentLoader, hasComponent, listComponents, listCategories } from './component-paths';
 export { EMAIL_DEFAULTS, EMAIL_TEMPLATES, getEmailTemplate, EMAIL_RESOLVERS as RECIPIENT_RESOLVERS, resolveRecipientsForTemplate as resolveRecipients } from '@/engine/notification-engine';
 export { DATABASE_LIMITS, MEMORY_LIMITS, QUERY_LIMITS, VALIDATION_LIMITS, FILE_LIMITS, API_LIMITS, SEARCH_LIMITS } from './system-limits-config';
-export { POLLING_CONFIG, RETRY_TIMING, NOTIFICATION_TIMING, CACHE_TTL, DEBOUNCE_TIMING, THROTTLE_TIMING, SESSION_TIMING, ANIMATION_TIMING, API_TIMING, MAINTENANCE_TIMING } from './timing-config';
 export { TimelineEngine, timelineEngine } from '@/lib/timeline-engine';
 
 export const API_ENDPOINTS = {
