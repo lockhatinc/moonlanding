@@ -1,618 +1,1183 @@
-CODEBASE REDUCTION PRD - BLACK MAGIC MAXIMIZATION
-===================================================
-CURRENT STATE: 380 files, 39,266 lines across src/
-TARGET: Maximum convention-over-configuration, metaprogramming, dynamic dispatch
-PRINCIPLE: master-config.yml IS the codebase. Code exists only to interpret config.
+CODEBASE REDUCTION PRD - WAVE 4 - DEEP CONVENTION APPLICATION
+================================================================
+
+CURRENT STATE (POST WAVE 3):
+  - Total files: 292 (.js/.jsx only)
+  - Total lines: 28,070 code lines
+  - 4 universal engines created (notification, job, workflow, config-generator)
+  - All business logic consolidated
+  - Config-generator-engine ready for deep application
+  - master-config.yml: 2,673 lines (source of truth)
+
+TARGET (END OF WAVE 4):
+  - Total files: ~120 files
+  - Total lines: ~12,000 code lines
+  - Reduction: ~16,000 lines eliminated, ~170 files deleted
+  - 100% config-driven: All role, status, entity names from master-config.yml
+  - Generic components + engines: 5 generic components + 4 universal engines
+  - Zero hardcoded values anywhere in code (except config engine internals)
 
 DEPENDENCY GRAPH LEGEND:
-  [Xn] = item ID
+  [Dn] = item ID (D1-D6 are Wave 4 items)
   blocks: items that cannot start until this completes
   blocked_by: items that must complete before this can start
   wave: parallel execution group (items in same wave are independent)
+  status: pending/in_progress/completed
 
 ================================================================================
-WAVE 1 - DEAD CODE AND REDUNDANCY ELIMINATION (no dependencies, all parallel)
+WAVE 4 - DEEP CONVENTION APPLICATION - 5 PARALLEL INDEPENDENT TRACKS
 ================================================================================
 
+CRITICAL SUCCESS METRICS:
+  - Hardcoded role names: 32 occurrences → 0
+  - Hardcoded status values: 43 occurrences → 0
+  - Entity-specific hooks: 25+ → 3 generic hooks
+  - Entity-specific components: 25+ → 5 generic + 6 PDF/custom
+  - Config files: 44+ → 8 files
+  - Test: System boots cleanly, zero broken imports, all CRUD works
 
 ================================================================================
-WAVE 3 - METAPROGRAMMING AND CONVENTION SYSTEMS - COMPLETED
+PARALLEL TRACK 1: [D1] CONFIG AS SINGLE SOURCE OF TRUTH (INDEPENDENT)
 ================================================================================
 
-SUMMARY: Wave 3 consolidation complete. All 10 consolidation items (C1-C10)
-are fully implemented, tested, and committed. Core reduction: -4,344 net lines,
-27 files deleted, 4 new universal engines created.
+OBJECTIVE: Replace all hardcoded role/status/entity/field definitions with
+config lookups. Zero string literals matching entity/role/status names in code.
 
-COMPLETED ITEMS:
+PHASES:
 
-[C1] UNIVERSAL CONFIG-DRIVEN PERMISSION RESOLUTION - DONE
-  - ConfigGeneratorEngine.generateEntitySpec() resolves permission_template to access objects
-  - permissionService uses resolved access from generated spec
-  - No hardcoded role checks in code
-  - All permission logic: spec.access[action].includes(user.role)
-  Status: VERIFIED - permission templates resolve correctly
-
-[C2] UNIVERSAL CONFIG-DRIVEN WORKFLOW ENGINE - DONE
-  - Created src/lib/workflow-engine.js (216 lines)
-  - Validates state transitions (forward/backward arrays from config)
-  - Enforces role requirements (requires_role from config)
-  - Handles readonly states and transition history
-  - Integrated in engagement transition routes
-  - Replaced: 8+ workflow files (engagement-lifecycle-engine, rfi-dual-state-engine, etc.)
-  Status: VERIFIED - workflow engine imports and transitions work
-
-[C3] DYNAMIC COMPONENT REGISTRY FROM CONFIG - DONE
-  - field-types.js reduced to ~50 lines
-  - field-registry.js maintained as config lookup
-  - Components use field types from generated spec
-  Status: REDUCED - field rendering config files deleted
-
-[C4] AUTO-GENERATE API ROUTES FROM CONFIG - DONE
-  - Dynamic [entity]/[[...path]]/route.js handles all entity CRUD
-  - crud-factory.js consolidated (314 lines)
-  - Domain route files deleted (friday/[entity], mwr/[entity])
-  Status: VERIFIED - API routes auto-generate from config
-
-[C5] MAKE CRUD-FACTORY HANDLE CUSTOM ACTIONS FROM CONFIG - DONE
-  - Custom actions in crud-factory now config-driven
-  - Action handlers dispatch based on workflow state actions
-  Status: REDUCED - hardcoded action handlers consolidated
-
-[C6] ELIMINATE RENDERER.JS HTML TEMPLATE EXPLOSION - DONE
-  - renderer.js: 1,131 -> 283 lines (-848 lines, 75% reduction)
-  - CSS extracted to src/ui/styles.css (116 lines)
-  - STAGE_COLORS and STATUS_COLORS read from config
-  - Generic page template with config-driven sections
-  Status: VERIFIED - renderer.js heavily reduced
-
-[C7] CONSOLIDATE NOTIFICATION SYSTEM - DONE
-  - Created src/engine/notification-engine.js (171 lines)
-  - Consolidated all email templates and sending logic
-  - notification-engine reads templates from config
-  - Deleted: notification.service.js, notification-triggers.js, email config files
-  - Integrated in actions.js and events-engine
-  Status: VERIFIED - notification engine imports and queues emails
-
-[C8] CONSOLIDATE CRON/JOB SYSTEM - DONE
-  - Created src/engine/job-engine.js (283 lines)
-  - SCHEDULE_MAP in job-engine replaces jobs.js config (430 lines)
-  - All cron job handlers in one universal executor
-  - Deleted: job-framework.js, 5 individual job files, jobs.js config
-  - Integrated in cron/trigger route
-  Status: VERIFIED - job engine imports and schedules work
-
-[C9] CONSOLIDATE AUDIT SYSTEM - DONE
-  - Deleted: audit-dashboard.js, permission-audit-activity.js, permission-audit-hooks.js, permission-audit.service.js
-  - Audit now uses generic entity CRUD
-  - Dashboard is view over audit entity with aggregation
-  Status: REDUCED - audit system consolidated
-
-[C10] CONSOLIDATE QUERY/DATABASE LAYER - DONE
-  - Deleted: query-wrapper.js, data-ops-server.js, database-triggers.js, query-config.js
-  - query-engine.js maintained (core query execution)
-  - database-triggers converted to hooks
-  Status: REDUCED - query/database layer consolidated
-
-FILES DELETED IN WAVE 3 (27 total):
-    src/app/api/friday/[entity]/route.js - domain-filtered CRUD
-    src/app/api/mwr/[entity]/route.js - domain-filtered CRUD
-    src/app/api/friday/engagement/route.js - engagement CRUD with domain
-    src/app/api/friday/rfi/route.js - rfi CRUD with domain
-    src/app/api/mwr/review/route.js - review CRUD with domain
-    src/app/api/mwr/template/route.js - template CRUD with domain
-    src/app/api/rfi/route.js - rfi CRUD (duplicate of [entity] handler)
-    src/app/api/rfi/[id]/route.js - rfi detail (duplicate)
-    src/app/api/rfi/[id]/questions/route.js - child entity CRUD
-    src/app/api/rfi/[id]/questions/[qid]/route.js - nested child CRUD
-    src/app/api/rfi/[id]/questions/[qid]/responses/route.js - deeply nested CRUD
-    src/app/api/message/route.js - message CRUD
-    src/app/api/message/[id]/route.js - message detail
-    src/app/api/mwr/review/[id]/highlights/route.js - child CRUD
-    src/app/api/mwr/review/[id]/highlights/[highlightId]/route.js - child detail
-    src/app/api/mwr/review/[id]/checklists/route.js - child CRUD
-    src/app/api/mwr/review/[id]/checklists/[checklistId]/items/route.js - nested child
-    src/app/api/mwr/review/[id]/collaborators/route.js - child CRUD
-    src/app/api/mwr/review/[id]/collaborators/[collaboratorId]/route.js - child detail
-    src/app/api/mwr/review/[id]/tender/[tenderId]/route.js - child detail
-    src/app/api/files/route.js - file CRUD
-    src/app/api/files/[id]/route.js - file detail
-  STRATEGY: Extend crud-factory to handle:
-    1. Domain filtering (pass domain from URL prefix)
-    2. Parent-child relationships (spec.parent defines foreign key)
-    3. Nested resource resolution (review -> highlights, engagement -> rfis)
-    All defined by master-config.yml entity.parent and entity.children.
-  BEFORE: 65 route files, ~5,325 lines
-  AFTER: 1 dynamic route + 15 genuinely custom routes (auth, email, chat, health, etc.), ~2,000 lines
-  REDUCTION: -3,325 lines, -50 files
-  ROUTES THAT MUST REMAIN (genuinely custom logic, not CRUD):
-    auth/* (login, logout, me, google/*, mwr-bridge) - auth flow
-    email/send, email/receive, email/allocate/* - email processing
-    engagement/rate - client rating (custom action, could be config-driven action)
-    engagement/status - status transitions (could be generic workflow action)
-    chat/route.js - AI chat
-    cron/trigger - cron job trigger
-    csrf-token - CSRF
-    health - health check
-    audit/* - audit dashboard (could be generic)
-    mwr/review/[id]/ml-query - ML query (custom)
-    mwr/review/[id]/export-pdf - PDF export (custom)
-    mwr/review/[id]/highlight-suggestions - AI suggestions (custom)
-    mwr/collaborator-role - role management (custom)
-    highlight/[id]/react, message/[id]/react - emoji reactions (custom action)
-    friday/engagement/transition - stage transition (should be generic workflow action)
-    friday/features, mwr/features - feature flags
-  blocks: [D1]
+PHASE D1.1: AUDIT AND DOCUMENT HARDCODED VALUES
   blocked_by: none
-  wave: 3
+  blocks: D1.2
+  status: pending
 
-[C5] MAKE CRUD-FACTORY HANDLE CUSTOM ACTIONS FROM CONFIG
-  STRATEGY: crud-factory.js already handles custom actions (lines 34-77) but they are
-    hardcoded if/else chains:
-    - respond
-    - upload_files
-    - resolve_highlight
-    - reopen_highlight
-    - manage_flags
-    - change_status
-    - manage_collaborators
-    - manage_highlights
-  master-config.yml workflow states already define actions per state (e.g., highlight_resolution
-    states have actions: [resolve_highlight], [reopen_highlight]).
-  STRATEGY: Make custom actions config-driven:
-    1. Read workflow state actions from config
-    2. Generic action handler: validate permission, execute hook, update state, broadcast
-    3. All the specific handlers (handleHighlightResolve, handleHighlightReopen, etc.)
-       become data in config rather than code
-  BEFORE: crud-factory.js 490 lines with hardcoded action handlers
-  AFTER: crud-factory.js ~200 lines with generic action dispatch
-  REDUCTION: -290 lines
-  blocks: [D1]
-  blocked_by: none
-  wave: 3
+  Actions:
+    1. Find all hardcoded role names: 'partner', 'clerk', 'manager', 'auditor', 'client_admin', 'client_user'
+       - Search: grep -r "'partner'\|'clerk'\|'manager'\|'auditor'" /src --include='*.js'
+       - Current count: 32 occurrences
+       - Files affected: permission.service.js, crud-factory.js, permission-audit-logger.js, etc.
 
-[C6] ELIMINATE RENDERER.JS HTML TEMPLATE EXPLOSION
-  FILE: src/ui/renderer.js (1,131 lines) - THE LARGEST FILE
-  PROBLEM: Contains 7 separate HTML page generators, each with:
-    - Inline CSS (185 lines of CSS repeated concept)
-    - Template literal HTML (100+ lines per page)
-    - Inline JavaScript (delete confirmation, search, toast)
-    - Hardcoded stage/status colors (duplicate of master-config.yml)
-  STRATEGY:
-    1. Extract CSS to a single .css file loaded via CDN or static serve (saves ~185 lines inline)
-    2. STAGE_COLORS and STATUS_COLORS: read from master-config.yml (already defined there)
-    3. Generic page template: one generateHtml() + one renderPage(type, data) dispatcher
-    4. Entity list/detail/form pages: already generic, reduce template duplication
-    5. renderDashboard, renderSettings, renderAuditDashboard, renderSystemHealth:
-       These are specific pages but share 90% structure (nav + breadcrumb + cards + table)
-    6. Unify: renderPage(layout, sections) where sections are config-driven cards/tables
-    7. Delete/search/toast scripts: extract once, reuse
-  BEFORE: 1,131 lines, 1 file
-  AFTER: ~300 lines (template engine + CSS file)
-  REDUCTION: -831 lines
-  blocks: [D2]
-  blocked_by: none
-  wave: 3
+    2. Find all hardcoded status values: 'engaged', 'completed', 'review', 'closed', 'active', 'draft'
+       - Search: grep -r "'engaged'\|'completed'\|'review'\|'closed'" /src --include='*.js'
+       - Current count: 43 occurrences
+       - Files affected: query-engine.js, events-engine.js, crud-factory.js, rendering-engine.js
 
-[C7] CONSOLIDATE NOTIFICATION SYSTEM
-  FILES:
-    src/services/notification.service.js (96 lines) - Gmail notification sender
-    src/lib/notification-triggers.js (203 lines) - trigger handlers
-    src/lib/notification-helpers.js - helper functions
-    src/lib/notifications.js - notification core
-    src/services/collaborator-notifier.js - collaborator-specific notifications
-    src/services/mention-notification.service.js - mention notifications
-    src/config/email-templates.js (203 lines) - email templates
-    src/engine/email-templates.js (147 lines) - ANOTHER set of email templates
-    src/config/email-config.js (53 lines) - email config
-    src/config/email-rendering-pipeline-config.js (179 lines) - rendering pipeline
-    src/framework/plugins/notification-plugin.js (75 lines) - unused plugin
-  PROBLEM: master-config.yml already defines notifications section with triggers, recipients,
-    templates, channels. But the code ignores the config and hardcodes everything.
-  STRATEGY: One notification engine that reads master-config.yml notifications section:
-    - trigger: determines when to fire
-    - recipients: determines who to notify (role-based or entity-based)
-    - template: determines email template
-    - channels: email, in_app
-    Templates defined as simple string interpolation from config.
-  BEFORE: 11 files, ~1,000 lines
-  AFTER: 2 files (notification engine + email sender), ~200 lines
-  REDUCTION: -800 lines, -9 files
-  blocks: [D1]
-  blocked_by: none
-  wave: 3
+    3. Find all hardcoded entity names: 'engagement', 'rfi', 'highlight', 'checklist', 'collaborator', 'message'
+       - Search: grep -r "'engagement'\|'rfi'\|'highlight'" /src --include='*.js'
+       - Map all string literals to config paths
 
-[C8] CONSOLIDATE CRON/JOB SYSTEM
-  FILES:
-    src/config/jobs.js (430 lines) - THE SECOND LARGEST CONFIG FILE
-    src/lib/job-framework.js - job execution framework
-    src/app/api/cron/trigger/route.js (75 lines) - cron trigger
-    src/app/api/cron/jobs/collaborator-expiry.js (133 lines)
-    src/app/api/cron/jobs/engagement-auto-transition.js
-    src/app/api/cron/jobs/rfi-deadline-notifications.js (141 lines)
-    src/app/api/cron/jobs/rfi-escalation-notifications.js (128 lines)
-    src/app/api/cron/jobs/weekly-checklist-emails.js
-  PROBLEM: master-config.yml automation.schedules already defines ALL cron jobs with:
-    - name, trigger (cron expression), action, entity, enabled, rule, config
-    But src/config/jobs.js ALSO defines jobs. Double definition.
-  STRATEGY: Job framework reads automation.schedules from master-config.yml.
-    Each job action maps to a generic handler pattern:
-    - filter entities by rule
-    - execute action (send notification, transition status, cleanup)
-    - log result
-    Individual job files become unnecessary - actions are generic operations.
-  BEFORE: 8 files, ~900 lines
-  AFTER: 1 file (generic job executor from config), ~150 lines
-  REDUCTION: -750 lines, -7 files
-  blocks: [D1]
-  blocked_by: none
-  wave: 3
+    4. Create inventory document:
+       - Per-file mapping of hardcoded → config path
+       - Expected reduction per file
+       - Dependencies (which files must be fixed first)
 
-[C9] CONSOLIDATE AUDIT SYSTEM
-  FILES:
-    src/lib/audit-logger.js (152 lines)
-    src/lib/audit-dashboard.js (374 lines)
-    src/lib/permission-audit-hooks.js (303 lines)
-    src/lib/permission-audit-activity.js (214 lines)
-    src/services/permission-audit.service.js (371 lines)
-    src/framework/plugins/audit-log-plugin.js (84 lines) - in-memory audit (unused)
-    src/app/api/audit/route.js (79 lines)
-    src/app/api/audit/dashboard/route.js (142 lines)
-    src/app/api/audit/permissions/route.js (176 lines)
-    src/app/api/audit/permissions/[id]/route.js (66 lines)
-    src/app/api/audit/permissions/stats/route.js
-  STRATEGY: Audit is just another entity (permission_audit) defined in master-config.yml.
-    CRUD operations handled by generic entity CRUD.
-    Dashboard is a view over the audit entity with aggregation.
-    audit-log-plugin.js is an in-memory system that duplicates the DB-based audit.
-  BEFORE: 11 files, ~1,900 lines
-  AFTER: 2 files (audit logger hook + dashboard aggregation), ~200 lines
-  REDUCTION: -1,700 lines, -9 files
-  blocks: [D1]
-  blocked_by: none
-  wave: 3
+    Expected output: Comprehensive audit of all 75+ hardcoded values
 
-[C10] CONSOLIDATE QUERY/DATABASE LAYER
-  FILES:
-    src/lib/query-engine.js (217 lines) - query execution
-    src/lib/query-wrapper.js - query wrapper
-    src/lib/query-string-adapter.js - URL query parsing
-    src/lib/database-core.js (235 lines) - database setup
-    src/lib/database-triggers.js (209 lines) - database triggers
-    src/config/query-config.js (100 lines) - query config
-    src/lib/data-ops-server.js - data operations
-  STRATEGY: Database layer is already relatively lean. Main reduction:
-    - query-config.js: constants from master-config.yml thresholds.query
-    - database-triggers.js: triggers should be hooks on entity operations
-    - query-wrapper.js: merge into query-engine.js
-    - data-ops-server.js: merge into query-engine.js
-  BEFORE: 7 files, ~800 lines
-  AFTER: 3 files (database-core, query-engine, query-string-adapter), ~400 lines
-  REDUCTION: -400 lines, -4 files
+PHASE D1.2: EXTEND CONFIG-GENERATOR-ENGINE WITH ACCESSOR METHODS
+  blocked_by: D1.1
+  blocks: D1.3
+  status: pending
+
+  Actions:
+    1. Extend ConfigGeneratorEngine (currently 1,013 lines) with new accessor methods:
+
+       getRoles(): -> { partner: {...}, clerk: {...}, ... }
+         Returns all roles from config.roles
+         Usage: config.getRoles()['partner'].label
+
+       getRole(roleName): -> { hierarchy, label, type, ... }
+         Returns single role definition
+         Usage: config.getRole('clerk').label
+
+       getStatus(entityName, statusName): -> { label, color, ... }
+         Returns status definition from status_enums
+         Usage: config.getStatus('engagement', 'engaged').color
+
+       getStatuses(enumName): -> { engaged: {...}, completed: {...}, ... }
+         Returns all statuses for an enum
+         Usage: config.getStatuses('engagement_status')
+
+       getEntity(entityName): -> { name, label, ... }
+         Returns entity definition
+         Usage: config.getEntity('engagement').label
+
+       getAllEntityNames(): -> ['engagement', 'rfi', 'highlight', ...]
+         Returns all entity names
+         Usage: config.getAllEntityNames()
+
+       getFieldValue(entityName, fieldName): -> field definition
+         Returns field config
+         Usage: config.getFieldValue('engagement', 'status').type
+
+       getWorkflowStages(workflowName): -> ['info_gathering', 'commencement', ...]
+         Already exists, verify it works
+
+       getThreshold(path): -> value
+         Already exists, verify it works with timing/system limits
+
+    2. Add methods to ConfigGeneratorEngine for permissions:
+
+       getPermissionTemplate(templateName): -> permission matrix
+         Already exists, verify
+
+       getRolePermissions(roleName, entityName): -> ['list', 'view', 'create', ...]
+         Helper to look up what actions a role can do on entity
+         Usage: config.getRolePermissions('clerk', 'engagement')
+
+       canRoleDoAction(role, entity, action): -> boolean
+         Helper to check if role can do action on entity
+         Usage: if (config.canRoleDoAction('manager', 'engagement', 'delete'))
+
+    3. Add caching for all lookups (reuse LRUCache existing pattern)
+
+    4. Add debug mode logging for all lookups (helpful for debugging)
+
+    Expected output:
+      - ConfigGeneratorEngine: 1,013 → ~1,200 lines (added 15-20 new methods)
+      - All accessor methods tested
+      - All methods log in debug mode
+
+PHASE D1.3: REPLACE HARDCODED ROLE NAMES IN CODE
+  blocked_by: D1.2
+  blocks: D1.4
+  status: pending
+
+  Files to fix:
+
+    src/services/permission.service.js:
+      - Line: if (role === 'partner')
+      - Replace: const roles = config.getRoles(); if (role === Object.keys(roles)[0])
+      - OR: Extract to config and use config.canRoleDoAction(role, entity, action)
+      - Strategy: Replace all role === 'X' with config accessor
+
+    src/lib/audit-logger.js:
+      - Search for hardcoded role checks
+      - Replace with config.getRolePermissions(role)
+
+    src/app/api/[entity]/[[...path]]/route.js:
+      - Permission checks against hardcoded roles
+      - Replace with config-driven checks
+
+    src/lib/crud-factory.js:
+      - Role-based action filtering
+      - Replace with config workflow state actions
+
+    src/lib/events-engine.js:
+      - Role-based event emission
+      - Replace with config-driven event triggers
+
+    src/lib/query-engine.js:
+      - Role-based filtering in queries
+      - Replace with config permissions
+
+    Expected output:
+      - 32 hardcoded role occurrences → 0
+      - All role checks use config.getRoles() or config.getRole()
+
+PHASE D1.4: REPLACE HARDCODED STATUS VALUES IN CODE
+  blocked_by: D1.3
+  blocks: D1.5
+  status: pending
+
+  Files to fix:
+
+    src/lib/query-engine.js:
+      - Line: if (status === 'engaged')
+      - Replace: const statuses = config.getStatuses('engagement_status'); if (status === statuses.engaged.value)
+      - OR: if (Object.keys(config.getStatuses('engagement_status')).includes(status))
+
+    src/lib/events-engine.js:
+      - Status-based event triggers
+      - Replace with workflow state lookup
+
+    src/lib/rendering-engine.js:
+      - Status colors hardcoded
+      - Use config.getStatus(entityName, statusName).color
+
+    src/ui/renderer.js:
+      - Status colors in template
+      - Use config getters
+
+    src/lib/crud-factory.js:
+      - Status validation
+      - Use config workflow validation rules
+
+    src/app/api/[entity]/[[...path]]/route.js:
+      - Status transition validation
+      - Use workflow engine (already config-driven)
+
+    Expected output:
+      - 43 hardcoded status occurrences → 0
+      - All status references use config.getStatus() or config.getStatuses()
+
+PHASE D1.5: REPLACE HARDCODED ENTITY NAMES IN CODE
+  blocked_by: D1.4
+  blocks: D1.6
+  status: pending
+
+  Strategy: Entity names are harder because they appear as:
+    - API endpoint paths: already dynamic in route.js
+    - Component props: will be fixed in D2 (generic components)
+    - Database queries: use entity from request context
+    - Permission checks: will be fixed when permissions are config-driven
+
+  Files to scan:
+
+    src/lib/config-generator-engine.js:
+      - Line: const actualEntityName = entityName;
+      - This is internal, OK to keep entity name handling here
+      - Add comment: "Entity name resolution from config"
+
+    src/config/spec-builder.js:
+      - Any hardcoded entity name mappings
+      - Replace with config lookups
+
+    src/lib/field-registry.js:
+      - Field registration per entity
+      - Verify uses config.getEntity()
+
+    src/lib/rendering-engine.js:
+      - Entity-specific rendering
+      - Should already be generic, verify no hardcoded names
+
+    Expected output:
+      - Zero hardcoded entity name string literals in business logic
+      - All entity references use dynamic lookup or function parameters
+
+PHASE D1.6: VERIFY ZERO HARDCODED FIELD DEFINITIONS
+  blocked_by: D1.5
+  blocks: D1.7
+  status: pending
+
+  Actions:
+    1. Audit field definitions:
+       - All field types (text, number, enum, ref, etc.) defined in master-config.yml
+       - Field validation rules defined in config
+       - Field render hints (list, form, detail) defined in config
+
+    2. Verify no hardcoded field defaults in code:
+       - Should read from config field_overrides or field_defaults
+       - Use config.getFieldValue(entity, field)
+
+    3. Verify no hardcoded field ordering:
+       - Field order should come from config
+
+    Expected output:
+      - All field definitions config-driven
+      - Zero hardcoded field lists in code
+
+PHASE D1.7: VERIFY ZERO HARDCODED TRANSITION RULES
+  blocked_by: D1.6
+  blocks: D1.8
+  status: pending
+
+  Actions:
+    1. Verify workflow transitions all from config:
+       - WorkflowEngine reads transitions from config.workflow.stages[].forward/backward
+       - No hardcoded transition rules in code
+
+    2. Verify transition validation rules from config:
+       - validation: [hasBasicInfo, hasEngagementLetter] → config
+
+    Expected output:
+      - All transitions config-driven via WorkflowEngine
+      - Zero hardcoded transition paths
+
+PHASE D1.8: VERIFY ZERO HARDCODED PERMISSION TEMPLATES
+  blocked_by: D1.7
+  blocks: D1.9
+  status: pending
+
+  Actions:
+    1. Verify all permission checks use config.permission_templates
+    2. Verify no hardcoded role→action mappings
+    3. Test: PermissionService resolves permissions correctly
+
+    Expected output:
+      - All permissions from config_templates
+      - Zero hardcoded role arrays
+
+PHASE D1.9: VERIFY ZERO HARDCODED NOTIFICATION TRIGGERS
+  blocked_by: D1.8
+  blocks: D1.10
+  status: pending
+
+  Actions:
+    1. Verify NotificationEngine reads triggers from config.notifications[].trigger
+    2. Verify no hardcoded notification conditions in code
+
+    Expected output:
+      - All notification triggers from config
+      - Zero hardcoded trigger conditions
+
+PHASE D1.10: VERIFY ZERO HARDCODED CRON SCHEDULES
+  blocked_by: D1.9
   blocks: none
+  status: pending
+
+  Actions:
+    1. Verify JobEngine reads schedules from config.automation.schedules
+    2. Verify no hardcoded cron expressions in code
+
+    Expected output:
+      - All job schedules from config
+      - Zero hardcoded cron expressions
+      - Total D1 reduction: ~500 lines of code eliminated
+      - D1 completion: All hardcoded values replaced with config lookups
+
+================================================================================
+PARALLEL TRACK 2: [D2] UNIVERSAL RENDERING ENGINE (INDEPENDENT)
+================================================================================
+
+OBJECTIVE: After C3 (dynamic component registry) and C6 (renderer.js reduction),
+consolidate rendering to one generic template system.
+
+BLOCKED_BY: [C3, C6] ✓ already complete from Wave 3
+BLOCKS: none
+STATUS: pending
+
+PHASE D2.1: VERIFY RENDERER.JS IS GENERIC
   blocked_by: none
-  wave: 3
+  blocks: D2.2
+  status: pending
 
-================================================================================
-WAVE 4 - DEEP CONVENTION APPLICATION (depends on wave 3 systems)
-================================================================================
+  Actions:
+    1. Review src/ui/renderer.js (currently 283 lines after C6 reduction)
+    2. Verify it has:
+       - Generic page template (not entity-specific)
+       - List page iterator over spec.fields where list=true
+       - Detail page iterator over all spec.fields
+       - Form page iterator over spec.fields where !auto && !readOnly
+       - No entity name string literals
 
-[D1] MAKE CONFIG THE SINGLE SOURCE OF TRUTH
-  AFTER waves 1-3, verify:
-  - ZERO hardcoded role names in code (all from config)
-  - ZERO hardcoded status values in code (all from config)
-  - ZERO hardcoded entity names in code (all from config)
-  - ZERO hardcoded field definitions in code (all from config)
-  - ZERO hardcoded transition rules in code (all from config)
-  - ZERO hardcoded permission templates in code (all from config)
-  - ZERO hardcoded notification triggers in code (all from config)
-  - ZERO hardcoded cron schedules in code (all from config)
-  SCAN FOR: string literals matching entity names, role names, status values
-  REPLACE WITH: config lookups
-  blocks: [E1]
-  blocked_by: [C1, C2, C4, C5, C7, C8, C9]
-  wave: 4
+    Expected: renderer.js is already generic from C6
 
-[D2] UNIVERSAL RENDERING ENGINE
-  STRATEGY: After C3 and C6, the rendering system should be:
-    1. Server-side: renderer.js generates HTML from spec + data
-       - list page: iterate spec.fields where field.list=true
-       - detail page: iterate all spec.fields
-       - form page: iterate spec.fields where !field.auto && !field.readOnly
-       - dashboard: aggregate entity counts
-    2. Client-side: webjsx components read spec from API
-  No component needs to know entity names. Components are generic:
-    EntityList, EntityDetail, EntityForm
-  These already exist conceptually but are bloated with special cases.
-  SPECIFIC COMPONENT REDUCTIONS:
-    src/components/entity-detail.jsx - generic detail, keep
-    src/components/entity-detail/actions-panel.jsx - merge into entity-detail
-    src/components/entity-detail/child-tabs.jsx - config-driven children
-    src/components/entity-detail/detail-fields.jsx - config-driven fields
-    src/components/entity-detail/detail-header.jsx - generic header
-    src/components/builders/form-builder.jsx - generic form, keep
-    src/components/builders/list-builder.jsx (254 lines) - generic list, keep
-  blocks: [E1]
-  blocked_by: [C3, C6]
-  wave: 4
+PHASE D2.2: VERIFY ENTITY DETAIL COMPONENT IS GENERIC
+  blocked_by: D2.1
+  blocks: D2.3
+  status: pending
 
+  Actions:
+    1. Review src/components/entity-detail.jsx:
+       - Takes entity and spec props
+       - Renders fields based on spec.fields
+       - No entity-specific logic
 
-[D4] REDUCE CLIENT-SIDE HOOKS TO GENERIC PATTERNS
-  PROBLEM: 25+ client-side hooks in src/lib/hooks/ follow identical patterns:
-    - useState + useEffect + fetch from API
-    - Loading/error state management
-    - Refetch on dependency change
-  SPECIFIC HOOKS THAT ARE IDENTICAL PATTERNS:
-    use-checklist.js (86 lines) - fetch + CRUD for checklists
-    use-collaborators.js (66 lines) - fetch + CRUD for collaborators
-    use-highlights.js (71 lines) - fetch + CRUD for highlights
-    use-messages.js (40 lines) - fetch + CRUD for messages
-    use-tender.js (51 lines) - fetch + CRUD for tenders
-    use-priority-reviews.js (82 lines) - fetch + CRUD for priority reviews
-    use-highlight-reactions.js (22 lines) - reaction toggle
-    use-form-select-data.js (32 lines) - fetch reference data for forms
-  STRATEGY: One generic useEntityData(entityName, parentId) hook that:
-    - Fetches list from API
-    - Provides create/update/delete mutations
-    - Handles loading/error state
-    - Refetches on dependency change
-  BEFORE: 25 hook files, ~800 lines
-  AFTER: 3 hook files (useEntityData, useForm, useUI), ~150 lines
-  REDUCTION: -650 lines, -22 files
+    2. Review src/components/entity-detail/ subdirectory:
+       - actions-panel.jsx: generic
+       - child-tabs.jsx: generic (config-driven children)
+       - detail-fields.jsx: generic (spec-driven)
+       - detail-header.jsx: generic
+
+    3. Consolidate if needed:
+       - Can merge actions-panel into entity-detail.jsx
+       - Can merge detail-header into entity-detail.jsx
+       - Keep child-tabs and detail-fields for modularity
+
+    Expected reduction: ~0-50 lines (already consolidated in C6)
+
+PHASE D2.3: VERIFY ENTITY LIST COMPONENT IS GENERIC
+  blocked_by: D2.2
+  blocks: D2.4
+  status: pending
+
+  Actions:
+    1. Review src/components/builders/list-builder.jsx (254 lines):
+       - Takes entity and spec props
+       - Renders columns based on spec.fields where list=true
+       - No entity-specific logic
+       - Supports search, filter, sort, pagination
+
+    2. Rename to src/components/entity-list.jsx or keep as ListBuilder
+
+    Expected: Already generic from C3
+
+PHASE D2.4: VERIFY ENTITY FORM COMPONENT IS GENERIC
+  blocked_by: D2.3
+  blocks: D2.5
+  status: pending
+
+  Actions:
+    1. Review src/components/builders/form-builder.jsx:
+       - Takes entity and spec props
+       - Renders form fields based on spec.fields
+       - Handles validation from config
+       - Submits to API
+
+    Expected: Already generic from C3
+
+PHASE D2.5: CONSOLIDATE ENTITY-SPECIFIC COMPONENTS
+  blocked_by: D2.4
+  blocks: D2.6
+  status: pending
+
+  Files to delete/merge:
+
+    src/components/rfi-list.jsx (143 lines) → delete, use EntityList
+    src/components/rfi-detail.jsx (307 lines) → delete, use EntityDetail
+    src/components/rfi-response-form.jsx (162 lines) → delete, use EntityForm
+    src/components/rfi-response-panel.jsx (127 lines) → delete, use generic panel
+    src/components/highlight-list.jsx (282 lines) → delete, use EntityList
+    src/components/highlight-filter.jsx (174 lines) → delete, use generic filter from config
+    src/components/checklist-tracker.jsx (198 lines) → delete, use EntityList
+    src/components/collaborator-manager.jsx (179 lines) → delete, use EntityDetail+EntityForm
+    src/components/template-manager.jsx (145 lines) → delete, use EntityList+EntityForm
+    src/components/role-management.jsx (145 lines) → delete, use EntityList+EntityForm
+    src/components/audit-trail.jsx (121 lines) → delete, use EntityList
+    src/components/domain.jsx (193 lines) → delete, use EntityList+EntityForm
+    src/components/priority-reviews-sidebar.jsx (181 lines) → delete, use EntityList
+    src/components/tender-tracker.jsx → delete, use EntityList
+    src/components/client-rating.jsx (117 lines) → delete, create generic action component
+    src/components/engagement-stage-transition.jsx (185 lines) → delete, use generic workflow UI
+    src/components/comment-section.jsx (119 lines) → delete, use generic message list
+    src/components/message-item.jsx (154 lines) → delete, use generic item display
+    src/components/delete-button.jsx (121 lines) → delete, inline in generic components
+    src/components/status-indicators.jsx → delete, use config-driven badges
+    src/components/empty-state.jsx → delete, inline in components
+    src/components/breadcrumbs.jsx → delete, inline in layout
+    src/components/bulk-actions-toolbar.jsx → delete, inline in EntityList
+
+  Total: ~2,500 lines deleted, 19 files removed
+
+  Keep (PDF/canvas/custom):
+    src/components/highlight-annotator.jsx (193 lines) - PDF annotation, genuinely custom
+    src/components/highlight-layer.jsx (194 lines) - PDF rendering layer, custom
+    src/components/pdf-viewer.jsx - custom PDF viewing
+    src/components/pdf-annotator.jsx - custom PDF annotation
+    src/components/pdf-comparison.jsx - custom PDF comparison
+    src/components/pdf-wrapper.jsx - custom PDF wrapper
+
+  Expected output:
+    - 19 entity-specific component files deleted
+    - 6 PDF/custom components kept
+    - ~2,500 lines eliminated
+    - All CRUD UIs now generic + config-driven
+
+PHASE D2.6: CREATE GENERIC ACTION COMPONENT
+  blocked_by: D2.5
+  blocks: D2.7
+  status: pending
+
+  Actions:
+    1. Create src/components/generic-action.jsx:
+       - Takes entity, action, data props
+       - Renders based on action config from spec
+       - Submits via API /api/{entity}/{id}?action={action}
+       - Used for: rate engagement, resolve highlight, change status, etc.
+
+    2. Replace all action-specific components with this generic component
+
+    Expected: ~100 lines, covers all custom actions via config
+
+PHASE D2.7: CREATE GENERIC FILTER COMPONENT
+  blocked_by: D2.6
+  blocks: D2.8
+  status: pending
+
+  Actions:
+    1. Create src/components/generic-filter.jsx:
+       - Takes entity and spec props
+       - Renders filter UI based on spec.fields where filterable=true
+       - Returns filter object for API query
+
+    2. Replace highlight-filter.jsx and other filter components
+
+    Expected: ~80 lines, covers all entity-specific filters
+
+PHASE D2.8: CREATE GENERIC WORKFLOW UI COMPONENT
+  blocked_by: D2.7
+  blocks: D2.9
+  status: pending
+
+  Actions:
+    1. Create src/components/generic-workflow-ui.jsx:
+       - Takes entity, currentStage, and spec props
+       - Renders next possible stages based on workflow
+       - Renders stage transition buttons
+       - Calls /api/{entity}/{id}?action=transition_stage
+
+    2. Replace engagement-stage-transition.jsx
+
+    Expected: ~100 lines, covers all workflow transitions
+
+PHASE D2.9: VERIFY ALL PAGES USE GENERIC COMPONENTS
+  blocked_by: D2.8
   blocks: none
-  blocked_by: none
-  wave: 4
+  status: pending
 
-[D5] REDUCE DOMAIN-SPECIFIC COMPONENTS TO GENERIC + CONFIG
-  COMPONENTS THAT ARE ENTITY-SPECIFIC BUT FOLLOW GENERIC PATTERNS:
-    src/components/rfi-list.jsx (143 lines) - list of RFIs -> EntityList with config
-    src/components/rfi-detail.jsx (307 lines) - RFI detail -> EntityDetail with config
-    src/components/rfi-response-form.jsx (162 lines) - form -> EntityForm
-    src/components/rfi-response-panel.jsx (127 lines) - panel -> generic panel
-    src/components/highlight-list.jsx (282 lines) - list -> EntityList
-    src/components/highlight-filter.jsx (174 lines) - filter -> generic filter from config
-    src/components/highlight-annotator.jsx (193 lines) - KEEP (PDF-specific)
-    src/components/highlight-layer.jsx (194 lines) - KEEP (PDF/canvas specific)
-    src/components/checklist-tracker.jsx (198 lines) - list + toggle -> generic
-    src/components/collaborator-manager.jsx (179 lines) - CRUD -> generic
-    src/components/template-manager.jsx (145 lines) - CRUD -> generic
-    src/components/role-management.jsx (145 lines) - CRUD -> generic
-    src/components/tender-tracker.jsx - tracker -> generic
-    src/components/client-rating.jsx (117 lines) - custom action component
-    src/components/engagement-stage-transition.jsx (185 lines) - workflow transition UI
-    src/components/comment-section.jsx (119 lines) - generic comment pattern
-    src/components/message-item.jsx (154 lines) - message display
-    src/components/audit-trail.jsx (121 lines) - audit list -> EntityList
-    src/components/domain.jsx (193 lines) - domain management
+  Actions:
+    1. Audit all page components in src/app/[entity]:
+       - Should import EntityList, EntityDetail, EntityForm
+       - Should pass entity name and spec from getServerSideProps/API
+       - Should not contain entity-specific rendering logic
+
+    2. Example page structure:
+       ```jsx
+       export default function EngagementListPage({ spec }) {
+         return <EntityList entity="engagement" spec={spec} />;
+       }
+
+       export async function getServerSideProps() {
+         const spec = await getConfigEngine().generateEntitySpec('engagement');
+         return { props: { spec } };
+       }
+       ```
+
+    3. Verify all ~15 entity pages follow this pattern
+
+    Expected output:
+      - All pages are now ~10-20 lines each
+      - Total page reduction: ~500 lines
+      - D2 completion: Universal rendering engine fully implemented
+
+================================================================================
+PARALLEL TRACK 3: [D4] REDUCE CLIENT-SIDE HOOKS TO GENERIC PATTERNS (INDEPENDENT)
+================================================================================
+
+OBJECTIVE: Consolidate 25+ entity-specific hooks into 3 generic hooks.
+
+BLOCKED_BY: none
+BLOCKS: none
+STATUS: pending
+
+PHASE D4.1: AUDIT EXISTING HOOKS
+  blocked_by: none
+  blocks: D4.2
+  status: pending
+
+  Actions:
+    1. List all hooks in src/lib/hooks/:
+       - use-checklist.js (86 lines)
+       - use-collaborators.js (66 lines)
+       - use-highlights.js (71 lines)
+       - use-messages.js (40 lines)
+       - use-tender.js (51 lines)
+       - use-priority-reviews.js (82 lines)
+       - use-highlight-reactions.js (22 lines)
+       - use-form-select-data.js (32 lines)
+       - And ~17 more similar hooks
+
+    2. Analyze pattern:
+       - All follow: useState + useEffect + fetch + error handling
+       - All provide: list, create, update, delete, refetch
+       - All have: loading, error state
+       - Difference: API endpoint and data transformation
+
+    Expected output: Hook inventory showing all hooks are identical patterns
+
+PHASE D4.2: CREATE GENERIC useEntityData HOOK
+  blocked_by: D4.1
+  blocks: D4.3
+  status: pending
+
+  File: src/lib/hooks/use-entity-data.js (~100 lines)
+
+  Signature:
+    function useEntityData(entityName, parentId = null, options = {}) {
+      // Returns:
+      // { data: [], loading, error, refetch, create, update, delete, ... }
+    }
+
+  Implementation:
+    1. Build API URL based on entityName and parentId
+       - Single entity: /api/{entityName}
+       - Child entity: /api/{parentEntity}/{parentId}/{entityName}
+
+    2. Fetch from API (with caching)
+
+    3. Provide mutations:
+       - create(data): POST /api/{entityName}
+       - update(id, data): PUT /api/{entityName}/{id}
+       - delete(id): DELETE /api/{entityName}/{id}
+
+    4. Auto-refetch on dependency change
+
+    5. Error handling, loading states
+
+    Expected: ~100 lines, replaces 25+ hooks
+
+PHASE D4.3: CREATE GENERIC useForm HOOK
+  blocked_by: D4.2
+  blocks: D4.4
+  status: pending
+
+  File: src/lib/hooks/use-form.js (~80 lines)
+
+  Signature:
+    function useForm(entityName, initialData = {}, options = {}) {
+      // Returns:
+      // { formData, setFormData, errors, validate, submit, reset, ... }
+    }
+
+  Implementation:
+    1. Manage form state (data, errors, touched)
+    2. Validate against spec.fields constraints from config
+    3. Submit via POST (create) or PUT (update)
+    4. Convert form data types (number fields, etc.)
+    5. Handle validation errors
+
+    Expected: ~80 lines, replaces form-specific hooks
+
+PHASE D4.4: CREATE GENERIC useUI HOOK
+  blocked_by: D4.3
+  blocks: D4.5
+  status: pending
+
+  File: src/lib/hooks/use-ui.js (~50 lines)
+
+  Signature:
+    function useUI(feature = 'default') {
+      // Returns:
+      // { isOpen, open, close, toggle, reset, ... }
+    }
+
+  Implementation:
+    1. Manage modal/drawer/popover open/close state
+    2. Generic enough for any UI state (dialogs, sidebars, etc.)
+    3. Auto-reset on unmount
+
+    Expected: ~50 lines, replaces modal/drawer/panel hooks
+
+PHASE D4.5: DELETE ENTITY-SPECIFIC HOOKS
+  blocked_by: D4.4
+  blocks: D4.6
+  status: pending
+
+  Files to delete (estimated 22+ files):
+    src/lib/hooks/use-checklist.js
+    src/lib/hooks/use-collaborators.js
+    src/lib/hooks/use-highlights.js
+    src/lib/hooks/use-messages.js
+    src/lib/hooks/use-tender.js
+    src/lib/hooks/use-priority-reviews.js
+    src/lib/hooks/use-highlight-reactions.js
+    src/lib/hooks/use-form-select-data.js
+    src/lib/hooks/use-engagement-details.js
+    src/lib/hooks/use-rfi-details.js
+    src/lib/hooks/use-review-details.js
+    src/lib/hooks/use-template-details.js
+    src/lib/hooks/use-collaborator-roles.js
+    src/lib/hooks/use-user-list.js
+    src/lib/hooks/use-team-list.js
+    src/lib/hooks/use-domain-list.js
+    src/lib/hooks/use-status-transitions.js
+    src/lib/hooks/use-highlight-suggestions.js
+    src/lib/hooks/use-notification-list.js
+    src/lib/hooks/use-audit-log.js
+    src/lib/hooks/use-activity-log.js
+    (and more)
+
+  Total: ~650 lines deleted, 22+ files removed
+
+  Expected output:
+    - 25+ hooks consolidated to 3 generic hooks
+    - 650 lines eliminated
+    - 22+ files deleted
+    - D4 completion: All hooks are now generic and config-driven
+
+PHASE D4.6: UPDATE ALL HOOK IMPORTS
+  blocked_by: D4.5
+  blocks: none
+  status: pending
+
+  Actions:
+    1. Find all imports of deleted hooks:
+       - import { useChecklist } from '@/lib/hooks/use-checklist'
+       - Replace with: const { data, ...} = useEntityData('checklist', parentId)
+
+    2. Update component code to use generic hooks:
+       - Old: const { checklists, createChecklist } = useChecklist(reviewId)
+       - New: const { data: checklists, create: createChecklist } = useEntityData('checklist', reviewId)
+
+    3. Verify all imports resolved
+
+    Expected: All components using generic hooks, zero import errors
+
+================================================================================
+PARALLEL TRACK 4: [D5] REDUCE DOMAIN-SPECIFIC COMPONENTS TO GENERIC + CONFIG (INDEPENDENT)
+================================================================================
+
+OBJECTIVE: Consolidate 25+ domain-specific components into 5 generic + 6 PDF/custom.
+
+BLOCKED_BY: [C3] ✓ already complete from Wave 3
+BLOCKS: none
+STATUS: pending
+
+PHASE D5.1: IDENTIFY ALL ENTITY-SPECIFIC COMPONENTS
+  blocked_by: none
+  blocks: D5.2
+  status: pending
+
+  Actions:
+    1. List all components in src/components/:
+       - Identify which are generic vs. entity-specific
+       - Entity-specific: rfi-*, highlight-*, checklist-*, collaborator-*, etc.
+       - Generic: field-renderer, value-display, icon, button, etc.
+
+    2. Categorize:
+       - Generic (keep): EntityList, EntityDetail, EntityForm, field-renderer, etc.
+       - Entity-specific (delete and replace with generic): 19 files
+       - PDF/Canvas (keep): highlight-annotator, pdf-viewer, etc.
+
+    Expected: Comprehensive component inventory
+
+PHASE D5.2: DELETE ENTITY-SPECIFIC COMPONENTS
+  blocked_by: D5.1
+  blocks: D5.3
+  status: pending
+
+  Delete these 19 files (~2,500 lines):
+    src/components/rfi-list.jsx (143 lines)
+    src/components/rfi-detail.jsx (307 lines)
+    src/components/rfi-response-form.jsx (162 lines)
+    src/components/rfi-response-panel.jsx (127 lines)
+    src/components/highlight-list.jsx (282 lines)
+    src/components/highlight-filter.jsx (174 lines)
+    src/components/checklist-tracker.jsx (198 lines)
+    src/components/collaborator-manager.jsx (179 lines)
+    src/components/template-manager.jsx (145 lines)
+    src/components/role-management.jsx (145 lines)
+    src/components/audit-trail.jsx (121 lines)
+    src/components/domain.jsx (193 lines)
     src/components/priority-reviews-sidebar.jsx (181 lines)
-    src/components/delete-button.jsx (121 lines) - generic delete (already in renderer)
-    src/components/status-indicators.jsx - status badges (colors from config)
-    src/components/empty-state.jsx - generic empty state
-    src/components/breadcrumbs.jsx - generic breadcrumbs (already in renderer)
-    src/components/bulk-actions-toolbar.jsx - generic toolbar
-  STRATEGY: Most of these are EntityList/EntityDetail/EntityForm with entity-specific
-    field rendering. After C3 (dynamic field renderer), these become:
-    <EntityList entity="rfi" parent={engagement} />
-    <EntityDetail entity="highlight" />
-    <EntityForm entity="collaborator" />
-    Entity-specific rendering comes from config field definitions.
-  EXCEPTION: PDF/canvas components (highlight-annotator, highlight-layer, pdf-viewer,
-    pdf-annotator, pdf-comparison, pdf-wrapper) are genuinely custom and stay.
-  BEFORE: 25 components, ~4,000 lines
-  AFTER: 5 generic components + 6 PDF/custom, ~1,500 lines
-  REDUCTION: -2,500 lines, -19 files
-  blocks: [E1]
-  blocked_by: [C3]
-  wave: 4
+    src/components/tender-tracker.jsx (estimated 150 lines)
+    src/components/client-rating.jsx (117 lines)
+    src/components/engagement-stage-transition.jsx (185 lines)
+    src/components/comment-section.jsx (119 lines)
+    src/components/message-item.jsx (154 lines)
+    src/components/delete-button.jsx (121 lines)
+    (+ 5 more: status-indicators, empty-state, breadcrumbs, bulk-actions, etc.)
 
-[D6] REDUCE CONFIG FILE EXPLOSION
-  44 config files totaling 4,404 lines. After wave 1-3 deletions, remaining config files
-  that duplicate master-config.yml or could be derived from it:
-    src/config/timing-config.js (81 lines) - from thresholds.*
-    src/config/system-limits-config.js (57 lines) - from thresholds.system
-    src/config/polling-config.js - from thresholds.polling
-    src/config/ui-config.js (39 lines) - from thresholds.ui
-    src/config/theme-config.js (139 lines) - could be in master-config.yml
-    src/config/component-paths.js (156 lines) - dynamic lookup from entity name
-    src/config/dialog-registry-config.js (153 lines) - dialogs derivable from entity actions
-    src/config/services-config.js (90 lines) - service registry derivable from entities
-    src/config/http-status-config.js (80 lines) - standard HTTP constants (use library)
-    src/config/response-formatter-config.js (104 lines) - response format config
-    src/config/messages-config.js (66 lines) - log prefixes / messages
-    src/config/data-constants.js (35 lines) - SQL type mappings
-  STRATEGY: ConfigGeneratorEngine already reads master-config.yml.
-    Add thresholds.* lookups for timing, polling, system limits, UI config.
-    Replace 12 config files with config engine accessor methods.
-  BEFORE: 44 config files, 4,404 lines
-  AFTER: 8 config files (master-config.yml loader, spec generation, auth, env, index), ~1,000 lines
-  REDUCTION: -3,400 lines, -36 files
-  blocks: [E1]
-  blocked_by: [C1, C2]
-  wave: 4
+  Expected output:
+    - 19 files deleted
+    - ~2,500 lines eliminated
+    - Zero broken functionality (all replaced by generic + config)
 
-================================================================================
-WAVE 5 - FINAL CONSOLIDATION AND VERIFICATION
-================================================================================
+PHASE D5.3: VERIFY GENERIC COMPONENTS WORK WITH CONFIG
+  blocked_by: D5.2
+  blocks: D5.4
+  status: pending
 
-[E1] VERIFY TOTAL REDUCTION AND SYSTEM INTEGRITY
-  EXPECTED TOTALS:
-    BEFORE: 380 files, 39,266 lines
-    AFTER:  ~80 files, ~10,000 lines
+  Test each generic component:
 
-    TARGET BREAKDOWN:
-      master-config.yml: ~2,700 lines (the source of truth, no code reduction)
-      src/config/: ~1,000 lines (config engine + loaders, down from 4,404)
-      src/lib/: ~4,000 lines (consolidated engines, down from 15,547)
-      src/services/: ~600 lines (email, file, permission, notification, down from 2,236)
-      src/components/: ~2,000 lines (generic + PDF/custom, down from 7,482)
-      src/app/api/: ~1,500 lines (dynamic CRUD + custom routes, down from 5,325)
-      src/ui/: ~400 lines (template engine, down from 1,538)
-      src/framework/: ~150 lines (base plugin if kept, down from 666)
-      src/engine/: ~300 lines (slight reduction from 468)
-      src/app/ (pages): ~500 lines (generic pages, down from 6,569)
+    1. EntityList component:
+       - Render RFI list, Highlight list, Checklist list
+       - Columns from spec.fields where list=true
+       - Search, filter, sort, pagination work
+       - No entity-specific logic
 
-    TOTAL ESTIMATED REDUCTION: ~29,000 lines (~74% reduction)
-    TOTAL ESTIMATED FILE REDUCTION: ~300 files eliminated
+    2. EntityDetail component:
+       - Render engagement, RFI, highlight details
+       - Fields from spec.fields
+       - Children tabs from spec.children
+       - Edit button, delete button
 
-  VERIFICATION CHECKLIST:
-    - All entity CRUD works through dynamic route
-    - All permissions resolved from config
-    - All workflows driven by config state machines
-    - All notifications triggered from config definitions
-    - All cron jobs executed from config schedules
-    - All field rendering derived from config field types
-    - All status/stage colors from config
-    - All validation from config field constraints
-    - No hardcoded entity names, role names, or status values in code
-    - Hot reload works (file watchers trigger config reload)
-    - Database migrations generated from config field definitions
+    3. EntityForm component:
+       - Render create forms for all entities
+       - Validation from spec.fields constraints
+       - Submit works for all entities
+
+    4. GenericActionComponent:
+       - Render action buttons based on spec actions
+       - Submit via /api/{entity}?action={action}
+
+    5. GenericWorkflowUI:
+       - Render stage transitions for all workflows
+       - Next stages from spec.workflow
+
+    Expected: All generic components work with config-driven spec
+
+PHASE D5.4: VERIFY PDF/CUSTOM COMPONENTS STILL WORK
+  blocked_by: D5.3
+  blocks: D5.5
+  status: pending
+
+  Verify these 6 are still functional:
+    src/components/highlight-annotator.jsx (193 lines) - PDF annotation
+    src/components/highlight-layer.jsx (194 lines) - canvas rendering
+    src/components/pdf-viewer.jsx - PDF viewing
+    src/components/pdf-annotator.jsx - PDF annotation
+    src/components/pdf-comparison.jsx - PDF comparison
+    src/components/pdf-wrapper.jsx - PDF wrapper
+
+  Test:
+    - PDF upload works
+    - Annotation works
+    - Comparison works
+    - Export works
+
+  Expected: All PDF components functional
+
+PHASE D5.5: UPDATE ALL COMPONENT IMPORTS
+  blocked_by: D5.4
   blocks: none
-  blocked_by: [D1, D2, D5, D6]
-  wave: 5
+  status: pending
+
+  Actions:
+    1. Find all imports of deleted components:
+       - import { RFIList } from '@/components/rfi-list'
+       - Replace with: import EntityList from '@/components/entity-list'
+
+    2. Update component usage:
+       - Old: <RFIList engagementId={id} />
+       - New: <EntityList entity="rfi" parentId={id} />
+
+    3. Verify all imports resolved
+
+    Expected: All components using generic imports, zero import errors
+
+    D5 completion: Entity-specific components consolidated to generic + config
 
 ================================================================================
-SPECIFIC FILE-LEVEL REDUCTION SUMMARY
+PARALLEL TRACK 5: [D6] REDUCE CONFIG FILE EXPLOSION (INDEPENDENT)
 ================================================================================
 
-FILES TO DELETE ENTIRELY (estimated 200+ files):
-  src/services/engagement.service.js (59 lines)
-  src/services/workflow.service.js (83 lines)
-  src/services/event.service.js (73 lines)
-  src/services/engagement-status.service.js (170 lines)
-  src/services/collaborator-notifier.js
-  src/services/mention-notification.service.js
-  src/services/index.js (8 lines)
-  src/config/permission-defaults.js (46 lines)
-  src/config/permissions.js (8 lines)
-  src/config/config-loader.js (48 lines)
-  src/config/lifecycle-config.js (105 lines)
-  src/config/status-enum-config.js (88 lines)
-  src/config/enum-options.js (64 lines)
-  src/config/spec-templates.js (70 lines)
-  src/config/spec-factory.js (70 lines)
-  src/config/timing-config.js (81 lines)
-  src/config/system-limits-config.js (57 lines)
-  src/config/polling-config.js
-  src/config/ui-config.js (39 lines)
-  src/config/component-paths.js (156 lines)
-  src/config/dialog-registry-config.js (153 lines)
-  src/config/services-config.js (90 lines)
-  src/config/http-status-config.js (80 lines)
-  src/config/response-formatter-config.js (104 lines)
-  src/config/messages-config.js (66 lines)
-  src/config/data-constants.js (35 lines)
-  src/config/field-render-config.js (66 lines)
-  src/config/form-rendering-config.js (53 lines)
-  src/config/table-rendering-config.js (52 lines)
-  src/config/display-rules.js (66 lines)
-  src/config/format-config.js
-  src/config/entities/ (entire directory)
-  src/lib/mantine-shim.js (8 lines)
-  src/lib/mantine-compat.jsx (931 lines)
-  src/lib/event-emitter.js
-  src/lib/events-engine.js (183 lines)
-  src/lib/hook-executor.js (106 lines)
-  src/lib/hook-history.js (35 lines)
-  src/lib/hook-plugins.js (52 lines)
-  src/lib/hook-registry.js (73 lines)
-  src/lib/hooks.js (67 lines)
-  src/lib/init-hooks.js
-  src/lib/permissions.js (63 lines) - DELETED in B1
-  src/lib/unified-permission-system.js (112 lines) - DELETED in B1
-  src/lib/permission-predicates.js (70 lines) - DELETED in B1
-  src/lib/casl.js (177 lines) - DELETED in B1
-  src/lib/mwr-permission-enforcer.js (62 lines) - DELETED in B1
-  src/lib/engagement-lifecycle-engine.js (247 lines)
-  src/lib/lifecycle-engine.js (290 lines)
-  src/lib/engagement-status-transitions.js (220 lines)
-  src/lib/rfi-dual-state-engine.js (155 lines)
-  src/lib/rfi-response-lifecycle.js (185 lines)
-  src/lib/rfi-templates.js (169 lines)
-  src/lib/rfi-update-hooks.js
-  src/lib/field-types.js (159 lines)
-  src/lib/field-registry.js
-  src/lib/field-iterator.js
-  src/lib/validation-rules.js (164 lines)
-  src/lib/validation-generator.js (68 lines)
-  src/lib/form-validation.js (283 lines)
-  src/lib/notification-triggers.js (203 lines)
-  src/lib/notification-helpers.js
-  src/lib/notifications.js
-  src/lib/use-disclosure.js
-  src/lib/highlight-collaboration-perms.js (193 lines) - DELETED in B1
-  src/lib/collaborator-access-control.js (171 lines) - DELETED in B1
-  src/lib/rfi-permission-validator.js (122 lines) - DELETED in B1
-  src/lib/list-data-transform.js
-  src/lib/display-config.js
-  src/lib/state-builder-factory.js
-  src/lib/timeline-engine.js
-  src/lib/status-helpers.js (139 lines)
-  src/lib/plugin-system.js (112 lines)
-  src/lib/middleware-engine.js
-  src/lib/query-wrapper.js
-  src/lib/data-ops-server.js
-  src/config/jobs.js (430 lines)
-  src/config/email-templates.js (203 lines)
-  src/config/email-rendering-pipeline-config.js (179 lines)
-  src/config/email-config.js (53 lines)
-  src/config/theme-config.js (139 lines)
-  src/config/icon-config.js (210 lines)
-  src/framework/plugins/audit-log-plugin.js (84 lines)
-  src/framework/plugins/field-renderer-plugin.js (62 lines)
-  src/framework/plugins/notification-plugin.js (75 lines)
-  src/framework/plugins/permission-plugin.js (86 lines)
-  src/framework/plugins/search-plugin.js (73 lines)
-  src/framework/hook-registry.js (duplicate)
-  src/components/rbac-example.jsx (224 lines)
-  src/components/rfi-list.jsx (143 lines) - replaced by generic EntityList
-  src/components/rfi-response-form.jsx (162 lines) - replaced by generic EntityForm
-  src/components/rfi-response-panel.jsx (127 lines) - replaced by generic panel
-  src/components/checklist-tracker.jsx (198 lines) - replaced by generic list
-  src/components/collaborator-manager.jsx (179 lines) - replaced by generic CRUD
-  src/components/template-manager.jsx (145 lines) - replaced by generic CRUD
-  src/components/role-management.jsx (145 lines) - replaced by generic CRUD
-  src/components/audit-trail.jsx (121 lines) - replaced by generic EntityList
-  src/components/delete-button.jsx (121 lines) - inline in generic components
-  src/components/comment-section.jsx (119 lines) - replaced by generic message list
-  src/components/status-indicators.jsx - config-driven badges
-  src/components/empty-state.jsx - inline in generic components
-  src/components/breadcrumbs.jsx - inline in layout
-  src/components/bulk-actions-toolbar.jsx - inline in EntityList
-  src/components/highlight-filter.jsx (174 lines) - generic filter
-  src/components/client-rating.jsx (117 lines) - generic custom action
-  src/components/engagement-stage-transition.jsx (185 lines) - generic workflow UI
-  ~50 API route files replaced by dynamic CRUD
+OBJECTIVE: Reduce 44+ config files to ~8 files by making them derivable from
+master-config.yml via ConfigGeneratorEngine accessors.
 
-FILES TO HEAVILY REDUCE (keep but shrink):
-  src/ui/renderer.js: 1,131 -> ~300 lines
-  src/lib/config-generator-engine.js: 1,011 -> ~500 lines (remove LRU cache, use Map)
-  src/lib/crud-factory.js: 490 -> ~200 lines
-  src/lib/audit-dashboard.js: 374 -> ~100 lines
-  src/services/permission-audit.service.js: 371 -> ~80 lines
-  src/services/permission.service.js: 330 -> 223 lines (DONE in B1, consolidated 8 files into 1)
-  src/services/collaborator-role.service.js: 245 -> 105 lines (DONE in B1, absorbed collaborator-access-control)
-  src/lib/permission-audit-hooks.js: 303 -> ~50 lines
-  src/config/entity-statuses.js: 213 -> ~33 lines
-  src/config/domain-constants.js: 106 -> ~26 lines
-  src/config/constants.js: 49 -> ~10 lines
-  src/config/spec-builder.js: 234 -> ~100 lines
-  src/lib/database-triggers.js: 209 -> ~50 lines (convert to hooks)
-  src/lib/query-engine.js: 217 -> ~150 lines
-  src/components/highlight-list.jsx: 282 -> ~100 lines
-  src/components/rfi-detail.jsx: 307 -> ~100 lines (generic detail + custom RFI section)
-  src/components/domain.jsx: 193 -> ~50 lines
-  src/components/priority-reviews-sidebar.jsx: 181 -> ~50 lines
+BLOCKED_BY: [C1, C2] ✓ already complete from Wave 3
+BLOCKS: none
+STATUS: pending
+
+PHASE D6.1: AUDIT CONFIG FILES
+  blocked_by: none
+  blocks: D6.2
+  status: pending
+
+  Actions:
+    1. List all config files in src/config/:
+       - Count: 44+ files
+       - Total lines: 4,404 lines of code
+
+    2. Categorize which can be eliminated:
+
+       Derivable from master-config.yml:
+         - timing-config.js (81 lines) → config.getThreshold('timing.*)
+         - system-limits-config.js (57 lines) → config.getThreshold('system.*)
+         - polling-config.js → config.getThreshold('polling.*)
+         - ui-config.js (39 lines) → config.getThreshold('ui.*)
+         - component-paths.js (156 lines) → dynamic lookup from entity
+         - dialog-registry-config.js (153 lines) → dialogs from entity actions
+         - services-config.js (90 lines) → service registry from entities
+         - http-status-config.js (80 lines) → use standard HTTP library
+         - response-formatter-config.js (104 lines) → standard format
+         - messages-config.js (66 lines) → use constants
+         - data-constants.js (35 lines) → use constants
+         - theme-config.js (139 lines) → move to master-config.yml
+         - icon-config.js (210 lines) → move to master-config.yml
+         - (estimated 20+ more identical pattern)
+
+       Keep (non-derivable):
+         - master-config.yml loader (system-config-loader.js)
+         - spec-builder.js (config-driven spec generation)
+         - env.js (environment variables)
+         - auth-config.js (auth setup)
+         - index.js (config re-exports)
+         - constants.js (small constants)
+         - spec-builder.js, field-registry.js
+         - (estimated 8 total)
+
+    Expected output: Config file inventory and elimination strategy
+
+PHASE D6.2: EXTEND CONFIGGENERATORENGINE WITH ACCESSOR METHODS
+  blocked_by: D6.1
+  blocks: D6.3
+  status: pending
+
+  Actions:
+    1. Add threshold accessor methods:
+
+       getTimingConfig(): -> { polling, debounce, animation, ... }
+         Usage: config.getTimingConfig().polling_interval
+
+       getSystemLimitsConfig(): -> { max_concurrent, max_memory, ... }
+         Usage: config.getSystemLimitsConfig().max_queries_per_second
+
+       getUIConfig(): -> { modal_size, container_height, ... }
+         Usage: config.getUIConfig().modal_sizes
+
+       getPollingConfig(): -> { interval, timeout, retry, ... }
+         Usage: config.getPollingConfig().retry_attempts
+
+    2. Add service registry methods:
+
+       getServices(): -> [service definitions from entities]
+         Usage: config.getServices()
+
+       getServiceEndpoint(serviceName): -> endpoint
+         Usage: config.getServiceEndpoint('email')
+
+    3. Add dialog/action registry methods:
+
+       getDialogs(): -> [dialog definitions from entity actions]
+         Usage: config.getDialogs()
+
+       getActions(entityName): -> [actions from spec.workflow]
+         Usage: config.getActions('engagement')
+
+    4. Add HTTP status method:
+
+       getHTTPStatusCode(statusName): -> number
+         Usage: config.getHTTPStatusCode('OK') → 200
+
+    5. All methods cache results (reuse existing LRUCache)
+
+    Expected: ConfigGeneratorEngine extended with 8-10 new accessor methods
+
+PHASE D6.3: DELETE REDUNDANT CONFIG FILES
+  blocked_by: D6.2
+  blocks: D6.4
+  status: pending
+
+  Delete these 36 files (~3,400 lines):
+    src/config/timing-config.js (81 lines)
+    src/config/system-limits-config.js (57 lines)
+    src/config/polling-config.js
+    src/config/ui-config.js (39 lines)
+    src/config/component-paths.js (156 lines)
+    src/config/dialog-registry-config.js (153 lines)
+    src/config/services-config.js (90 lines)
+    src/config/http-status-config.js (80 lines)
+    src/config/response-formatter-config.js (104 lines)
+    src/config/messages-config.js (66 lines)
+    src/config/data-constants.js (35 lines)
+    src/config/theme-config.js (139 lines) - move to master-config.yml
+    src/config/icon-config.js (210 lines) - move to master-config.yml
+    src/config/permission-defaults.js (46 lines)
+    src/config/permissions.js (8 lines)
+    src/config/config-loader.js (48 lines)
+    src/config/lifecycle-config.js (105 lines)
+    src/config/status-enum-config.js (88 lines)
+    src/config/enum-options.js (64 lines)
+    src/config/spec-templates.js (70 lines)
+    src/config/spec-factory.js (70 lines)
+    src/config/field-render-config.js (66 lines)
+    src/config/form-rendering-config.js (53 lines)
+    src/config/table-rendering-config.js (52 lines)
+    src/config/display-rules.js (66 lines)
+    src/config/format-config.js
+    src/config/entities/ (entire directory, estimated 400 lines)
+    (+ 10+ more identical pattern files)
+
+  Total: 36 files, ~3,400 lines eliminated
+
+  Expected output:
+    - 36 config files deleted
+    - ~3,400 lines eliminated
+    - All functionality moved to ConfigGeneratorEngine accessors
+
+PHASE D6.4: UPDATE ALL CONFIG IMPORTS
+  blocked_by: D6.3
+  blocks: D6.5
+  status: pending
+
+  Actions:
+    1. Find all imports of deleted config files:
+       - import { TIMING_CONFIG } from '@/config/timing-config'
+       - Replace with: const timing = configEngine.getTimingConfig()
+
+    2. Update all usages:
+       - Old: TIMING_CONFIG.polling_interval
+       - New: configEngine.getTimingConfig().polling_interval
+
+    3. Verify all imports resolved
+
+    Expected: All config imports use configEngine getters, zero import errors
+
+PHASE D6.5: VERIFY CONFIG ENGINE HAS ALL ACCESSOR METHODS
+  blocked_by: D6.4
+  blocks: D6.6
+  status: pending
+
+  Test that ConfigGeneratorEngine provides:
+    - getRoles()
+    - getRole(name)
+    - getStatus(entityName, statusName)
+    - getStatuses(enumName)
+    - getEntity(name)
+    - getAllEntityNames()
+    - getFieldValue(entityName, fieldName)
+    - getWorkflowStages(workflowName)
+    - getThreshold(path)
+    - getPermissionTemplate(name)
+    - getRolePermissions(role, entity)
+    - canRoleDoAction(role, entity, action)
+    - getTimingConfig()
+    - getSystemLimitsConfig()
+    - getUIConfig()
+    - getPollingConfig()
+    - getServices()
+    - getServiceEndpoint(name)
+    - getDialogs()
+    - getActions(entityName)
+    - getHTTPStatusCode(statusName)
+    - (and 15+ existing methods)
+
+  Expected: 35+ methods in ConfigGeneratorEngine, all tested
+
+PHASE D6.6: MOVE THEME AND ICON CONFIG TO MASTER-CONFIG.YML
+  blocked_by: D6.5
+  blocks: D6.7
+  status: pending
+
+  Actions:
+    1. Add to master-config.yml:
+       - theme: { colors, fonts, spacing, ... } (139 lines)
+       - icons: { entity_icons, status_icons, ... } (210 lines)
+
+    2. Add accessor methods:
+       - getTheme(): -> { colors, fonts, ... }
+       - getIcons(): -> { entity_icons, ... }
+       - getIcon(iconType, name): -> icon
+
+    3. Delete src/config/theme-config.js and src/config/icon-config.js
+
+    Expected: All theme/icon config in master-config.yml
+
+PHASE D6.7: VERIFY ALL CONFIG LOOKUPS WORK
+  blocked_by: D6.6
+  blocks: none
+  status: pending
+
+  Test:
+    1. All threshold lookups return correct values
+    2. All accessor methods cache results
+    3. Debug logging works when enabled
+    4. All imports resolved
+
+    D6 completion: Config file explosion reduced, ConfigGeneratorEngine is now
+                   the single source of truth for all system configuration
 
 ================================================================================
-ARCHITECTURAL PRINCIPLES AFTER REDUCTION
+WAVE 4 INTEGRATION AND TESTING
 ================================================================================
 
-1. master-config.yml is the codebase. Adding a new entity = adding YAML. Zero code changes.
-2. One CRUD handler serves all entities. Parent-child nesting from config.
-3. One workflow engine serves all state machines. Transitions from config.
-4. One permission system. Templates from config.
-5. One notification engine. Triggers and templates from config.
-6. One job executor. Schedules and actions from config.
-7. One field renderer. Types and options from config.
-8. One validation engine. Constraints from config field definitions.
-9. Components are generic: EntityList, EntityDetail, EntityForm.
-10. No entity name appears as a string literal in code (except config engine internals).
+[INTEGRATION] AFTER ALL 5 TRACKS COMPLETE
+  blocked_by: [D1, D2, D4, D5, D6]
+  blocks: none
+  status: pending
+
+  Actions:
+    1. Verify system boots cleanly:
+       npm run dev
+       - No console errors
+       - Server starts on 0.0.0.0:3004
+       - Config loads successfully
+
+    2. Verify zero broken imports:
+       - All deleted files are removed
+       - All imports updated
+       - No dangling import statements
+
+    3. Test all entity CRUD operations:
+       - GET /api/engagement (list)
+       - POST /api/engagement (create)
+       - PUT /api/engagement/{id} (update)
+       - DELETE /api/engagement/{id} (delete)
+       - Same for rfi, highlight, checklist, collaborator, etc.
+
+    4. Test all workflows:
+       - Engagement transitions work
+       - RFI status transitions work
+       - Highlight resolution works
+
+    5. Test all generic components:
+       - EntityList renders all entities
+       - EntityDetail renders all entities
+       - EntityForm creates/updates all entities
+       - GenericAction executes all actions
+
+    6. Test all generic hooks:
+       - useEntityData works for all entities
+       - useForm works for all entities
+       - useUI works for all UI features
+
+    7. Test config-driven rendering:
+       - Status colors from config
+       - Entity icons from config
+       - Field rendering from config
+       - Workflow stages from config
+
+    8. Verify zero hardcoded values:
+       - grep -r "'partner'\|'clerk'" src/ → 0 matches
+       - grep -r "'engaged'\|'completed'" src/ → 0 matches
+       - grep -r "['\"](engagement|rfi|highlight)" src/ → only in config engine internals
+
+    Expected output: System fully functional, zero code smells, all tests pass
+
+================================================================================
+WAVE 4 COMPLETION CHECKLIST
+================================================================================
+
+[D1] CONFIG AS SINGLE SOURCE OF TRUTH: ✓ when complete
+  - All hardcoded role names replaced with config lookups
+  - All hardcoded status values replaced with config lookups
+  - All hardcoded entity names replaced with config lookups
+  - All field definitions from config
+  - All transition rules from config
+  - All permission templates from config
+  - All notification triggers from config
+  - All cron schedules from config
+  - Total reduction: ~500 lines
+
+[D2] UNIVERSAL RENDERING ENGINE: ✓ when complete
+  - renderer.js is generic
+  - EntityList is generic
+  - EntityDetail is generic
+  - EntityForm is generic
+  - 19 entity-specific components deleted
+  - 6 PDF/custom components kept
+  - Total reduction: ~2,500 lines, 19 files deleted
+
+[D4] GENERIC HOOKS: ✓ when complete
+  - useEntityData created
+  - useForm created
+  - useUI created
+  - 25+ entity-specific hooks deleted
+  - All components use generic hooks
+  - Total reduction: ~650 lines, 22+ files deleted
+
+[D5] GENERIC COMPONENTS: (DUPLICATE WITH D2, ALREADY COUNTED)
+  - Total: ~2,500 lines, 19 files deleted
+
+[D6] CONFIG FILE CONSOLIDATION: ✓ when complete
+  - 36 redundant config files deleted
+  - ConfigGeneratorEngine extended with 20+ new accessor methods
+  - All config lookups use engine methods
+  - theme-config.yml and icon-config.yml moved to master-config.yml
+  - Total reduction: ~3,400 lines, 36 files deleted
+
+================================================================================
+WAVE 4 EXPECTED TOTALS
+================================================================================
+
+BEFORE WAVE 4:
+  Files: 292 (.js/.jsx)
+  Lines: 28,070
+  Config files: 44+
+  Config lines: 4,404
+
+AFTER WAVE 4:
+  Files: ~120 (.js/.jsx) = 292 - 75 deleted files + 3 new generic hooks
+  Lines: ~12,000 = 28,070 - 16,000+ lines deleted
+  Config files: ~8 = 44 - 36 deleted + master-config with theme/icons
+  Config lines: ~3,100 = 2,673 + theme (139) + icons (210) + accessors (78)
+
+  NET REDUCTION: ~170 files deleted, ~16,000 lines eliminated (57% reduction)
+
+WAVE 4 SUCCESS METRICS:
+  ✓ All role names from config (0 hardcoded)
+  ✓ All status values from config (0 hardcoded)
+  ✓ All entity names from config (0 hardcoded)
+  ✓ 25+ hooks → 3 generic hooks (650 lines eliminated)
+  ✓ 25+ components → 5 generic + 6 custom (2,500 lines eliminated)
+  ✓ 44 config files → 8 files (3,400 lines eliminated)
+  ✓ Zero broken imports
+  ✓ System boots cleanly
+  ✓ All CRUD operations work
+  ✓ All workflows work
+  ✓ All rendering config-driven
+  ✓ All permissions config-driven
+  ✓ All notifications config-driven
+  ✓ All jobs config-driven
+
+================================================================================
