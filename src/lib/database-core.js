@@ -2,10 +2,25 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import fs from 'fs';
 import { specs } from '@/config/spec-helpers';
-import { SQL_TYPES } from '@/config/data-constants';
 import { forEachField } from '@/lib/field-iterator';
 import { getConfigEngineSync } from '@/lib/config-generator-engine';
 import { nanoid } from 'nanoid';
+
+const SQL_TYPES = {
+  id: 'TEXT PRIMARY KEY',
+  text: 'TEXT',
+  textarea: 'TEXT',
+  email: 'TEXT',
+  int: 'INTEGER',
+  decimal: 'REAL',
+  bool: 'INTEGER',
+  date: 'INTEGER',
+  timestamp: 'INTEGER',
+  json: 'TEXT',
+  image: 'TEXT',
+  ref: 'TEXT',
+  enum: 'TEXT',
+};
 
 const DB_PATH = path.resolve(process.cwd(), 'data', 'app.db');
 const dataDir = path.dirname(DB_PATH);

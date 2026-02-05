@@ -1,6 +1,30 @@
-import { DATE_FORMATS, TIME_ZONES, RELATIVE_TIME_THRESHOLDS } from '@/config/format-config';
-
 const SECONDS_TO_MS = 1000;
+
+const DATE_FORMATS = {
+  short: { month: 'short', day: 'numeric', year: 'numeric' },
+  long: { month: 'long', day: 'numeric', year: 'numeric' },
+  time: { hour: '2-digit', minute: '2-digit' },
+  datetime: {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  },
+  iso: 'iso',
+};
+
+const TIME_ZONES = {
+  default: 'America/New_York',
+  utc: 'UTC',
+};
+
+const RELATIVE_TIME_THRESHOLDS = {
+  minute: 60,
+  hour: 3600,
+  day: 86400,
+  week: 604800,
+};
 
 export function secondsToDate(seconds) {
   return seconds ? new Date(seconds * SECONDS_TO_MS) : null;

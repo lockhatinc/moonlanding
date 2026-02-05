@@ -2,7 +2,13 @@ import React from 'react';
 import { TextInput, Textarea, Select, Checkbox, NumberInput, Avatar, Badge, Text, Image as MImage, Tooltip } from '@mantine/core';
 import { secondsToDate, dateToSeconds } from '@/lib/utils-client';
 import { renderEnumBadge, renderBoolDisplay, renderDateDisplay, renderTimestampDisplay, renderJsonDisplay } from '@/lib/renderer-helpers';
-import { FORM_FIELD_DEFAULTS } from './form-rendering-config';
+
+const FORM_FIELD_DEFAULTS = {
+  textarea: { defaultRows: 3 },
+  numberInput: { intStep: 1, decimalScale: 2 },
+  jsonField: { defaultRows: 4 },
+  imageField: { listHeight: 40, listWidth: 40, detailHeight: 200, placeholder: '—' },
+};
 
 export const EDITABLE_FIELD_RENDERERS = {
   text: (f, v, s, _, __, onBlur, includeNameAttr) => <TextInput {...(includeNameAttr && { name: f.key })} value={v} onChange={(e) => s(f.key, e.target.value)} onBlur={onBlur} required={f.required} aria-required={f.required} aria-label={f.label} aria-describedby={`${f.key}-error`} />,

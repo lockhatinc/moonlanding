@@ -1,29 +1,42 @@
-const ROLE_HIERARCHY = {
-  partner: 0,
-  manager: 1,
-  clerk: 2,
-  client_admin: 3,
-  client_user: 4,
-};
+import { getConfigEngine } from '@/lib/index.js';
 
-const ENTITY_PERMISSIONS = {
-  user: { list: ['partner'], view: ['partner'], create: ['partner'], edit: ['partner'], delete: ['partner'] },
-  team: { list: ['partner'], view: ['partner'], create: ['partner'], edit: ['partner'], delete: ['partner'] },
-  client: { list: ['partner', 'manager', 'clerk'], view: ['partner', 'manager', 'clerk'], create: ['partner', 'manager'], edit: ['partner', 'manager'], delete: ['partner'] },
-  engagement: { list: ['partner', 'manager', 'clerk', 'client_admin'], view: ['partner', 'manager', 'clerk', 'client_admin', 'client_user'], create: ['partner', 'manager'], edit: ['partner', 'manager'], delete: ['partner'] },
-  rfi: { list: ['partner', 'manager', 'clerk', 'client_admin', 'client_user'], view: ['partner', 'manager', 'clerk', 'client_admin', 'client_user'], create: ['partner', 'manager'], edit: ['partner', 'manager', 'clerk'], delete: ['partner'] },
-  review: { list: ['partner', 'manager', 'clerk'], view: ['partner', 'manager', 'clerk'], create: ['partner', 'manager'], edit: ['partner', 'manager'], delete: ['partner'] },
-  highlight: { list: ['partner', 'manager', 'clerk'], view: ['partner', 'manager', 'clerk'], create: ['partner', 'manager', 'clerk'], edit: ['partner', 'manager'], delete: ['partner'] },
-  checklist: { list: ['partner', 'manager', 'clerk'], view: ['partner', 'manager', 'clerk'], create: ['partner', 'manager'], edit: ['partner', 'manager', 'clerk'], delete: ['partner'] },
-  collaborator: { list: ['partner'], view: ['partner'], create: ['partner'], edit: ['partner'], delete: ['partner'] },
-  tender: { list: ['partner', 'manager', 'clerk'], view: ['partner', 'manager', 'clerk'], create: ['partner', 'manager'], edit: ['partner', 'manager'], delete: ['partner'] },
-  permission_audit: { list: ['partner', 'manager'], view: ['partner', 'manager'], create: [], edit: [], delete: [] },
-};
+function getRoleHierarchy() {
+  const config = getConfigEngine();
+  const roles = config.getRoles();
+  const hierarchy = {};
+  let level = 0;
+  for (const [roleName] of Object.entries(roles)) {
+    hierarchy[roleName] = level++;
+  }
+  return hierarchy;
+}
+
+function getEntityPermissions() {
+  const config = getConfigEngine();
+  const entities = config.getAllEntities();
+  const permissions = {};
+
+  for (const entity of entities) {
+    const spec = config.generateEntitySpec(entity.name);
+    permissions[entity.name] = {
+      list: (spec.permission_template?.list || []).map(r => r.name || r),
+      view: (spec.permission_template?.view || []).map(r => r.name || r),
+      create: (spec.permission_template?.create || []).map(r => r.name || r),
+      edit: (spec.permission_template?.edit || []).map(r => r.name || r),
+      delete: (spec.permission_template?.delete || []).map(r => r.name || r),
+    };
+  }
+  return permissions;
+}
 
 export function canAccess(user, entity, action) {
   if (!user?.role) return false;
-  const permissions = ENTITY_PERMISSIONS[entity];
-  if (!permissions) return user.role === 'partner';
+  const config = getConfigEngine();
+  const roles = config.getRoles();
+  const partnerRole = Object.keys(roles)[0];
+
+  const permissions = getEntityPermissions()[entity];
+  if (!permissions) return user.role === partnerRole;
   const allowed = permissions[action] || [];
   return allowed.includes(user.role);
 }
@@ -49,23 +62,38 @@ export function canDelete(user, entity) {
 }
 
 export function isPartner(user) {
-  return user?.role === 'partner';
+  const config = getConfigEngine();
+  const roles = config.getRoles();
+  const partnerRole = Object.keys(roles)[0];
+  return user?.role === partnerRole;
 }
 
 export function isManager(user) {
-  return user?.role === 'manager';
+  const config = getConfigEngine();
+  const roles = config.getRoles();
+  const managerRole = Object.keys(roles)[1];
+  return user?.role === managerRole;
 }
 
 export function isClerk(user) {
-  return user?.role === 'clerk';
+  const config = getConfigEngine();
+  const roles = config.getRoles();
+  const clerkRole = Object.keys(roles)[2];
+  return user?.role === clerkRole;
 }
 
 export function isClientUser(user) {
-  return user?.role === 'client_admin' || user?.role === 'client_user';
+  const config = getConfigEngine();
+  const roles = config.getRoles();
+  const clientRoles = Object.keys(roles).filter(r => r.includes('client'));
+  return clientRoles.includes(user?.role);
 }
 
 export function isAuditor(user) {
-  return ['partner', 'manager', 'clerk'].includes(user?.role);
+  const config = getConfigEngine();
+  const roles = config.getRoles();
+  const auditRoles = Object.keys(roles).filter(r => !r.includes('client'));
+  return auditRoles.includes(user?.role);
 }
 
 export function getNavItems(user) {
