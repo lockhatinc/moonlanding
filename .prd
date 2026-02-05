@@ -58,11 +58,28 @@ EXECUTION STATUS (started Feb 5, 09:44 SAST 2026):
   - Commit: 2866bc5
   - Status: COMPLETE
 
+✓ PHASE D5.2: Entity-specific components deleted
+  - Deleted 23 files (audit-trail, breadcrumbs, checklist-tracker, collaborator-manager, etc.)
+  - Kept 6 PDF/custom components (highlight-annotator, pdf-viewer, etc.)
+  - Total reduction: -3,409 lines
+  - Commit: aab2495
+  - Status: COMPLETE
+
+✓ PHASE D4.5: Entity-specific hooks deleted
+  - Deleted 12 files (use-checklist, use-collaborators, use-highlights, use-tender, etc.)
+  - Kept 11 generic utility hooks (use-debounce, use-filter-state, use-toggle, etc.)
+  - Total reduction: -517 lines
+  - Commit: 5c8be22
+  - Status: COMPLETE
+
+CUMULATIVE WAVE 4 REDUCTION (as of Phase D5.2):
+  - Files: 298 → 263 (-35 files deleted, +6 new generic)
+  - Lines: 28,070 → 24,848 (-3,222 lines!)
+  - Status: System boots cleanly ✓
+
 REMAINING CRITICAL SUCCESS METRICS:
   - Hardcoded role names: ~15-20 occurrences remaining → 0
   - Hardcoded status values: ~20-25 occurrences remaining → 0
-  - Entity-specific hooks: 25+ → DELETE and replace with generic (D4.5)
-  - Entity-specific components: 25+ → DELETE and replace with generic (D5.2)
   - Config files: 30 active, derivable ones → DELETE (D6.3)
   - Test: System boots cleanly ✓, zero broken imports, all CRUD works
 
