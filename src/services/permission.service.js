@@ -30,15 +30,19 @@ class PermissionService {
     if (!user) return false;
     const rowAccess = spec.rowAccess || spec.row_access;
     if (!rowAccess) return true;
+    const roles = getRolesConfig();
+    const partnerRole = Object.keys(roles).find(r => roles[r].hierarchy === 0);
+    const clientAdminRole = Object.keys(roles).find(r => r.includes('client') && r.includes('admin'));
+    const clientUserRole = Object.keys(roles).find(r => r === 'client_user');
     if (rowAccess.scope === 'team' && record.team_id && user.team_id && record.team_id !== user.team_id) return false;
-    if (rowAccess.scope === 'assigned' && record.assigned_to && record.assigned_to !== user.id && user.role !== 'partner') return false;
-    if (rowAccess.scope === 'assigned_or_team' && user.role !== 'partner') {
+    if (rowAccess.scope === 'assigned' && record.assigned_to && record.assigned_to !== user.id && user.role !== partnerRole) return false;
+    if (rowAccess.scope === 'assigned_or_team' && user.role !== partnerRole) {
       if ((!record.assigned_to || record.assigned_to !== user.id) && (!record.team_id || !user.team_id || record.team_id !== user.team_id)) return false;
     }
     if (rowAccess.scope === 'client') {
-      if (user.role === 'client_admin' || user.role === 'client_user') {
+      if ((clientAdminRole && user.role === clientAdminRole) || (clientUserRole && user.role === clientUserRole)) {
         if (record.client_id && user.client_id && record.client_id !== user.client_id) return false;
-        if (user.role === 'client_user' && !this.checkAssignment(user, spec, record)) return false;
+        if (clientUserRole && user.role === clientUserRole && !this.checkAssignment(user, spec, record)) return false;
       } else if (record.client_id && user.client_ids && !user.client_ids.includes(record.client_id)) {
         return false;
       }

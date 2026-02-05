@@ -16,6 +16,7 @@ import { getDomainLoader } from '@/lib/domain-loader';
 import { now } from '@/lib/database-core';
 import { logAction } from '@/lib/audit-logger';
 import { coerceFieldValue } from '@/lib/field-registry';
+import { getConfigEngineSync } from '@/lib/config-generator-engine';
 
 const ACTION_FIELD_MAPS = {
   resolve_highlight: { status: 'resolved', color: 'green' },
@@ -76,14 +77,18 @@ export const createCrudHandlers = (entityName) => {
         return ok({ id, uploaded_files: files });
       }
 
-      if (action === 'manage_flags' && data.operation === 'apply' && user.role === 'manager') {
-        const updateData = { ...data, applied_by: user.id, applied_at: now() };
-        await executeHook(`apply_flag:${entityName}:before`, { entity: entityName, id, data: updateData, user, record });
-        update(entityName, id, updateData, user);
-        const result = get(entityName, id);
-        await executeHook(`apply_flag:${entityName}:after`, { entity: entityName, id, data: result, user });
-        broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'apply_flag', permissionService.filterFields(user, spec, result));
-        return ok(permissionService.filterFields(user, spec, result));
+      if (action === 'manage_flags' && data.operation === 'apply') {
+        const roles = getConfigEngineSync().getRoles();
+        const managerRole = Object.keys(roles).find(r => roles[r].label === 'Manager') || 'manager';
+        if (user.role === managerRole) {
+          const updateData = { ...data, applied_by: user.id, applied_at: now() };
+          await executeHook(`apply_flag:${entityName}:before`, { entity: entityName, id, data: updateData, user, record });
+          update(entityName, id, updateData, user);
+          const result = get(entityName, id);
+          await executeHook(`apply_flag:${entityName}:after`, { entity: entityName, id, data: result, user });
+          broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'apply_flag', permissionService.filterFields(user, spec, result));
+          return ok(permissionService.filterFields(user, spec, result));
+        }
       }
 
       if (action.startsWith('manage_collaborators') || action.startsWith('manage_highlights')) {
