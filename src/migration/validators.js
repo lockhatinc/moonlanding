@@ -423,16 +423,23 @@ export class MasterValidator {
 
     const startTime = Date.now();
 
-    validators.forEach(validator => {
+    validators.forEach((validator, idx) => {
       try {
         const result = validator.validate();
         results.validators.push(result);
+
+        this.logger?.log(`Validator ${idx + 1}/8 (${validator.constructor.name}): ${result.status}`);
 
         if (result.status === 'FAIL') {
           results.overall_status = 'FAIL';
         }
       } catch (err) {
         this.logger?.error(`Validator ${validator.constructor.name} failed`, err);
+        results.validators.push({
+          validator: validator.constructor.name,
+          status: 'FAIL',
+          error: err.message,
+        });
         results.overall_status = 'FAIL';
       }
     });
@@ -441,6 +448,7 @@ export class MasterValidator {
 
     this.logger?.log(`\n========== VALIDATION COMPLETE ==========`);
     this.logger?.log(`Overall status: ${results.overall_status}`);
+    this.logger?.log(`Validators passed: ${results.validators.filter(v => v.status === 'PASS').length}/${results.validators.length}`);
     this.logger?.log(`Duration: ${results.duration_ms}ms`);
 
     return results;

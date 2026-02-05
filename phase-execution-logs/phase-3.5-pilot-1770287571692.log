@@ -1,0 +1,81 @@
+[2026-02-05T10:32:51.701Z] ========== STARTING MIGRATION ORCHESTRATOR ==========
+[2026-02-05T10:32:51.702Z] Initializing database connections...
+[2026-02-05T10:32:51.702Z] ✓ Target database connected
+[2026-02-05T10:32:51.702Z] Creating backup: pre-migration
+[2026-02-05T10:32:51.703Z] ✓ Backup created: /home/user/lexco/moonlanding/data/backups/app-pre-migration-1770287571702.db
+[2026-02-05T10:32:51.703Z] Beginning transaction...
+[2026-02-05T10:32:51.703Z] 
+--- MIGRATING USERS ---
+[2026-02-05T10:32:51.703Z] Creating user_id_mapping table
+[2026-02-05T10:32:51.704Z] user_id_mapping table created
+[2026-02-05T10:32:51.704Z] Processing 1 Friday users
+[2026-02-05T10:32:51.704Z] Analyzing existing Moonlanding users
+[2026-02-05T10:32:51.704Z] Found 0 unique emails in existing Moonlanding users
+[2026-02-05T10:32:51.704Z] Friday users processed: 1 new, 0 deduplicated, 0 errors
+[2026-02-05T10:32:51.704Z] Saving 1 user ID mappings
+[2026-02-05T10:32:51.704Z] Saved 1/1 mappings
+[2026-02-05T10:32:51.705Z] Processing 1 MyWorkReview users
+[2026-02-05T10:32:51.705Z] Analyzing existing Moonlanding users
+[2026-02-05T10:32:51.705Z] Found 0 unique emails in existing Moonlanding users
+[2026-02-05T10:32:51.705Z] MWR users processed: 0 new, 1 deduplicated with Friday, 0 deduplicated with existing, 0 errors
+[2026-02-05T10:32:51.705Z] Saving 1 user ID mappings
+[2026-02-05T10:32:51.705Z] Saved 1/1 mappings
+[2026-02-05T10:32:51.705Z] Inserting 1 new users...
+[2026-02-05T10:32:51.705Z] Verifying user deduplication
+[2026-02-05T10:32:51.706Z] Deduplication verification: 1/1 unique emails
+[2026-02-05T10:32:51.706Z] ✓ Users migrated: 1 new, 1 deduplicated
+[2026-02-05T10:32:51.706Z] 
+--- MIGRATING CLIENTS ---
+[2026-02-05T10:32:51.706Z] ✓ Migrated 1 clients
+[2026-02-05T10:32:51.706Z] 
+--- MIGRATING ENGAGEMENTS ---
+[2026-02-05T10:32:51.706Z]   [EngagementMigrator] Starting migration of 1 engagements
+[2026-02-05T10:32:51.707Z]   [EngagementMigrator] Migrated 1/1 engagements
+[2026-02-05T10:32:51.707Z] ✓ 1 engagements migrated
+[2026-02-05T10:32:51.707Z] 
+--- MIGRATING RFIs (with questions/responses) ---
+[2026-02-05T10:32:51.707Z]   [RFIMigrator] Starting migration of 1 RFIs
+[2026-02-05T10:32:51.707Z]   [RFIMigrator] Migrated 1/1 RFIs
+[2026-02-05T10:32:51.707Z] ✓ 1 RFIs with questions/responses migrated
+[2026-02-05T10:32:51.707Z] 
+--- MIGRATING REVIEWS (with highlights) ---
+[2026-02-05T10:32:51.708Z]   [ReviewMigrator] Starting migration of 1 reviews
+[2026-02-05T10:32:51.708Z]   [ReviewMigrator] Migrated 1/1 reviews
+[2026-02-05T10:32:51.708Z] ✓ 1 reviews with highlights migrated
+[2026-02-05T10:32:51.708Z] 
+--- MIGRATING MESSAGES ---
+[2026-02-05T10:32:51.708Z]   [MessageMigrator] Starting migration of 1 messages
+[2026-02-05T10:32:51.708Z]   [MessageMigrator] Migrated 1/1 messages
+[2026-02-05T10:32:51.708Z] ✓ 1 messages migrated
+[2026-02-05T10:32:51.709Z] 
+--- MIGRATING COLLABORATORS ---
+[2026-02-05T10:32:51.709Z]   [CollaboratorMigrator] Starting migration of 2 collaborators
+[2026-02-05T10:32:51.709Z]   [CollaboratorMigrator] Migrated 2/2 collaborators
+[2026-02-05T10:32:51.709Z] ✓ 2 collaborators migrated
+[2026-02-05T10:32:51.709Z] 
+--- MIGRATING CHECKLISTS (with items) ---
+[2026-02-05T10:32:51.709Z]   [ChecklistMigrator] Starting migration of 2 checklists (with items)
+[2026-02-05T10:32:51.710Z]   [ChecklistMigrator] Migrated 2/2 checklists with items
+[2026-02-05T10:32:51.710Z] ✓ 2 checklists with items migrated
+[2026-02-05T10:32:51.710Z] 
+--- MIGRATING FILES ---
+[2026-02-05T10:32:51.710Z]   [FileMigrator] Starting migration of 1 files
+[2026-02-05T10:32:51.710Z]   [FileMigrator] Migrated 1/1 files
+[2026-02-05T10:32:51.710Z] ✓ 1 files migrated
+[2026-02-05T10:32:51.711Z] 
+--- MIGRATING ACTIVITY LOGS ---
+[2026-02-05T10:32:51.711Z]   [ActivityLogMigrator] Starting migration of 1 activity logs
+[2026-02-05T10:32:51.711Z]   [ActivityLogMigrator] Migrated 1/1 activity logs
+[2026-02-05T10:32:51.711Z] ✓ 1 activity logs migrated
+[2026-02-05T10:32:51.711Z] 
+--- MIGRATING PERMISSIONS ---
+[2026-02-05T10:32:51.711Z]   [PermissionMigrator] Skipping permissions migration (no permissions table in schema)
+[2026-02-05T10:32:51.711Z]   [PermissionMigrator] Migrated 0/0 permissions
+[2026-02-05T10:32:51.711Z] ✓ 0 permissions migrated
+[2026-02-05T10:32:51.711Z] Committing transaction...
+[2026-02-05T10:32:51.717Z] ✓ Transaction committed
+[2026-02-05T10:32:51.718Z] Enabling foreign key constraints...
+[2026-02-05T10:32:51.718Z] ✓ Foreign keys enabled
+[2026-02-05T10:32:51.718Z] 
+========== RUNNING VALIDATORS ==========
+[2026-02-05T10:32:51.721Z] ========== MIGRATION ORCHESTRATOR COMPLETE ==========

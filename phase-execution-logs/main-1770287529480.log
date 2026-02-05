@@ -1,0 +1,32 @@
+[2026-02-05T10:32:09.480Z] Initializing main application database...
+[2026-02-05T10:32:09.480Z] ✓ Using server-initialized database: /home/user/lexco/moonlanding/data/app.db
+[2026-02-05T10:32:09.485Z] ✓ Database ready with 12 tables
+[2026-02-05T10:32:09.485Z] Starting Phase 3.5 (Pilot Migration)...
+[2026-02-05T10:32:09.486Z] ========== PHASE 3.5: PILOT MIGRATION (10% DATA) ==========
+[2026-02-05T10:32:09.486Z] Loading Friday data (10% sample)...
+[2026-02-05T10:32:09.486Z]   ✓ Loaded users: 5 records
+[2026-02-05T10:32:09.487Z]   ✓ Loaded clients: 2 records
+[2026-02-05T10:32:09.487Z]   ✓ Loaded engagements: 2 records
+[2026-02-05T10:32:09.487Z]   ✓ Loaded rfis: 1 records
+[2026-02-05T10:32:09.487Z]   ✓ Loaded reviews: 1 records
+[2026-02-05T10:32:09.487Z]   ✓ Loaded messages: 1 records
+[2026-02-05T10:32:09.487Z]   ✓ Loaded collaborators: 1 records
+[2026-02-05T10:32:09.488Z]   ✓ Loaded checklists: 1 records
+[2026-02-05T10:32:09.488Z]   ✓ Loaded files: 1 records
+[2026-02-05T10:32:09.488Z] Loading MyWorkReview data (10% sample)...
+[2026-02-05T10:32:09.488Z]   ✓ Loaded users: 3 records
+[2026-02-05T10:32:09.488Z]   ✓ Loaded collaborators: 1 records
+[2026-02-05T10:32:09.488Z]   ✓ Loaded workitems: 1 records
+[2026-02-05T10:32:09.489Z]   ✓ Loaded templates: 0 records
+[2026-02-05T10:32:09.489Z]   ✓ Loaded activityLogs: 1 records
+[2026-02-05T10:32:09.489Z] Total records in 10% sample: 13
+[2026-02-05T10:32:09.489Z] Initializing pilot database...
+[2026-02-05T10:32:09.490Z] ✓ Database template copied from server initialization: /home/user/lexco/moonlanding/data/pilot-test.db
+[2026-02-05T10:32:09.491Z] ✓ Database ready with 12 tables
+[2026-02-05T10:32:09.491Z] Executing pilot migration...
+[2026-02-05T10:32:09.529Z] ✓ Phase 3.5 complete: 5/8 validators passed (required 6/8)
+[2026-02-05T10:32:09.529Z] ERROR: Phase 3.5 FAILED
+[2026-02-05T10:32:09.530Z] 
+========== EXECUTION SUMMARY ==========
+[2026-02-05T10:32:09.530Z] Phase 3.5: FAIL - 13 records - 0.04s
+[2026-02-05T10:32:09.530Z] Total runtime: 0.05s
