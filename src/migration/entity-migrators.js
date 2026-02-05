@@ -118,8 +118,8 @@ export class RFIMigrator extends BaseMigrator {
 
     const rfiStmt = this.db.prepare(`
       INSERT INTO rfis
-      (id, engagement_id, status, due_date, metadata, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      (id, engagement_id, title, status, client_status, due_date)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
 
     const questionStmt = this.db.prepare(`
@@ -150,11 +150,10 @@ export class RFIMigrator extends BaseMigrator {
         rfiStmt.run(
           transformed.id,
           transformed.engagement_id,
+          transformed.title,
           transformed.status,
-          transformed.due_date,
-          transformed.metadata,
-          transformed.created_at,
-          transformed.updated_at
+          transformed.client_status,
+          transformed.due_date
         );
 
         this.stats.migrated++;

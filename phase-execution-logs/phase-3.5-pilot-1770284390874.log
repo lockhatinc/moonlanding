@@ -1,0 +1,39 @@
+[2026-02-05T09:39:50.883Z] ========== STARTING MIGRATION ORCHESTRATOR ==========
+[2026-02-05T09:39:50.884Z] Initializing database connections...
+[2026-02-05T09:39:50.884Z] ✓ Target database connected
+[2026-02-05T09:39:50.885Z] Creating backup: pre-migration
+[2026-02-05T09:39:50.885Z] ✓ Backup created: /home/user/lexco/moonlanding/data/backups/app-pre-migration-1770284390885.db
+[2026-02-05T09:39:50.885Z] Beginning transaction...
+[2026-02-05T09:39:50.886Z] 
+--- MIGRATING USERS ---
+[2026-02-05T09:39:50.886Z] Creating user_id_mapping table
+[2026-02-05T09:39:50.886Z] user_id_mapping table created
+[2026-02-05T09:39:50.886Z] Processing 1 Friday users
+[2026-02-05T09:39:50.886Z] Analyzing existing Moonlanding users
+[2026-02-05T09:39:50.887Z] Found 0 unique emails in existing Moonlanding users
+[2026-02-05T09:39:50.887Z] Friday users processed: 1 new, 0 deduplicated, 0 errors
+[2026-02-05T09:39:50.887Z] Saving 1 user ID mappings
+[2026-02-05T09:39:50.887Z] Saved 1/1 mappings
+[2026-02-05T09:39:50.887Z] Processing 1 MyWorkReview users
+[2026-02-05T09:39:50.888Z] Analyzing existing Moonlanding users
+[2026-02-05T09:39:50.888Z] Found 0 unique emails in existing Moonlanding users
+[2026-02-05T09:39:50.888Z] MWR users processed: 0 new, 1 deduplicated with Friday, 0 deduplicated with existing, 0 errors
+[2026-02-05T09:39:50.888Z] Saving 1 user ID mappings
+[2026-02-05T09:39:50.888Z] Saved 1/1 mappings
+[2026-02-05T09:39:50.888Z] Inserting 1 new users...
+[2026-02-05T09:39:50.889Z] Verifying user deduplication
+[2026-02-05T09:39:50.889Z] Deduplication verification: 1/1 unique emails
+[2026-02-05T09:39:50.889Z] ✓ Users migrated: 1 new, 1 deduplicated
+[2026-02-05T09:39:50.889Z] 
+--- MIGRATING CLIENTS ---
+[2026-02-05T09:39:50.889Z] ✓ Migrated 1 clients
+[2026-02-05T09:39:50.889Z] 
+--- MIGRATING ENGAGEMENTS ---
+[2026-02-05T09:39:50.890Z]   [EngagementMigrator] Starting migration of 1 engagements
+[2026-02-05T09:39:50.890Z]   [EngagementMigrator] Migrated 1/1 engagements
+[2026-02-05T09:39:50.890Z] ✓ 1 engagements migrated
+[2026-02-05T09:39:50.890Z] 
+--- MIGRATING RFIs (with questions/responses) ---
+[2026-02-05T09:39:50.891Z]   [RFIMigrator] Starting migration of 1 RFIs (with questions/responses)
+[2026-02-05T09:39:50.891Z] ERROR: Migration failed - rolling back - table rfis has no column named metadata
+[2026-02-05T09:39:50.891Z] ✓ Rollback completed

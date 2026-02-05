@@ -1,0 +1,32 @@
+[2026-02-05T09:39:53.714Z] Initializing main application database...
+[2026-02-05T09:39:53.714Z] ✓ Using server-initialized database: /home/user/lexco/moonlanding/data/app.db
+[2026-02-05T09:39:53.719Z] ✓ Database ready with 12 tables
+[2026-02-05T09:39:53.719Z] Starting Phase 3.5 (Pilot Migration)...
+[2026-02-05T09:39:53.719Z] ========== PHASE 3.5: PILOT MIGRATION (10% DATA) ==========
+[2026-02-05T09:39:53.720Z] Loading Friday data (10% sample)...
+[2026-02-05T09:39:53.720Z]   ✓ Loaded users: 5 records
+[2026-02-05T09:39:53.720Z]   ✓ Loaded clients: 2 records
+[2026-02-05T09:39:53.721Z]   ✓ Loaded engagements: 2 records
+[2026-02-05T09:39:53.721Z]   ✓ Loaded rfis: 1 records
+[2026-02-05T09:39:53.721Z]   ✓ Loaded reviews: 1 records
+[2026-02-05T09:39:53.721Z]   ✓ Loaded messages: 1 records
+[2026-02-05T09:39:53.721Z]   ✓ Loaded collaborators: 1 records
+[2026-02-05T09:39:53.721Z]   ✓ Loaded checklists: 1 records
+[2026-02-05T09:39:53.721Z]   ✓ Loaded files: 1 records
+[2026-02-05T09:39:53.722Z] Loading MyWorkReview data (10% sample)...
+[2026-02-05T09:39:53.722Z]   ✓ Loaded users: 3 records
+[2026-02-05T09:39:53.722Z]   ✓ Loaded collaborators: 1 records
+[2026-02-05T09:39:53.722Z]   ✓ Loaded workitems: 1 records
+[2026-02-05T09:39:53.722Z]   ✓ Loaded templates: 0 records
+[2026-02-05T09:39:53.722Z]   ✓ Loaded activityLogs: 1 records
+[2026-02-05T09:39:53.723Z] Total records in 10% sample: 13
+[2026-02-05T09:39:53.723Z] Initializing pilot database...
+[2026-02-05T09:39:53.723Z] ✓ Database template copied from server initialization: /home/user/lexco/moonlanding/data/pilot-test.db
+[2026-02-05T09:39:53.724Z] ✓ Database ready with 12 tables
+[2026-02-05T09:39:53.724Z] Executing pilot migration...
+[2026-02-05T09:39:53.737Z] ERROR: Phase 3.5 failed - table rfis has no column named metadata
+[2026-02-05T09:39:53.737Z] ERROR: Phase 3.5 FAILED - table rfis has no column named metadata
+[2026-02-05T09:39:53.737Z] 
+========== EXECUTION SUMMARY ==========
+[2026-02-05T09:39:53.737Z] Phase 3.5: FAIL - undefined records - undefineds
+[2026-02-05T09:39:53.737Z] Total runtime: 0.02s
