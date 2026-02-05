@@ -1,0 +1,15 @@
+[2026-02-05T09:32:33.606Z] ========== STARTING MIGRATION ORCHESTRATOR ==========
+[2026-02-05T09:32:33.606Z] Initializing database connections...
+[2026-02-05T09:32:33.609Z] ✓ Target database connected
+[2026-02-05T09:32:33.609Z] Creating backup: pre-migration
+[2026-02-05T09:32:33.610Z] ✓ Backup created: /home/user/lexco/moonlanding/data/backups/app-pre-migration-1770283953609.db
+[2026-02-05T09:32:33.610Z] Beginning transaction...
+[2026-02-05T09:32:33.610Z] 
+--- MIGRATING USERS ---
+[2026-02-05T09:32:33.610Z] Creating user_id_mapping table
+[2026-02-05T09:32:33.610Z] user_id_mapping table created
+[2026-02-05T09:32:33.611Z] Processing 1 Friday users
+[2026-02-05T09:32:33.611Z] Analyzing existing Moonlanding users
+[2026-02-05T09:32:33.611Z] ERROR: User migration failed - no such table: users
+[2026-02-05T09:32:33.611Z] ERROR: Migration failed - rolling back - no such table: users
+[2026-02-05T09:32:33.611Z] ✓ Rollback completed

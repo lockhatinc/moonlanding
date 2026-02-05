@@ -1,0 +1,26 @@
+[2026-02-05T09:34:31.833Z] ========== STARTING MIGRATION ORCHESTRATOR ==========
+[2026-02-05T09:34:31.833Z] Initializing database connections...
+[2026-02-05T09:34:31.834Z] ✓ Target database connected
+[2026-02-05T09:34:31.834Z] Creating backup: pre-migration
+[2026-02-05T09:34:31.834Z] ✓ Backup created: /home/user/lexco/moonlanding/data/backups/app-pre-migration-1770284071834.db
+[2026-02-05T09:34:31.835Z] Beginning transaction...
+[2026-02-05T09:34:31.835Z] 
+--- MIGRATING USERS ---
+[2026-02-05T09:34:31.835Z] Creating user_id_mapping table
+[2026-02-05T09:34:31.835Z] user_id_mapping table created
+[2026-02-05T09:34:31.835Z] Processing 1 Friday users
+[2026-02-05T09:34:31.836Z] Analyzing existing Moonlanding users
+[2026-02-05T09:34:31.836Z] Found 0 unique emails in existing Moonlanding users
+[2026-02-05T09:34:31.836Z] Friday users processed: 1 new, 0 deduplicated, 0 errors
+[2026-02-05T09:34:31.836Z] Saving 1 user ID mappings
+[2026-02-05T09:34:31.838Z] Saved 1/1 mappings
+[2026-02-05T09:34:31.838Z] Processing 1 MyWorkReview users
+[2026-02-05T09:34:31.838Z] Analyzing existing Moonlanding users
+[2026-02-05T09:34:31.838Z] Found 0 unique emails in existing Moonlanding users
+[2026-02-05T09:34:31.838Z] MWR users processed: 0 new, 1 deduplicated with Friday, 0 deduplicated with existing, 0 errors
+[2026-02-05T09:34:31.839Z] Saving 1 user ID mappings
+[2026-02-05T09:34:31.839Z] Saved 1/1 mappings
+[2026-02-05T09:34:31.839Z] Inserting 1 new users...
+[2026-02-05T09:34:31.839Z] ERROR: User migration failed - table users has no column named type
+[2026-02-05T09:34:31.839Z] ERROR: Migration failed - rolling back - table users has no column named type
+[2026-02-05T09:34:31.839Z] ✓ Rollback completed
