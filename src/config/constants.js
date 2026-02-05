@@ -96,6 +96,28 @@ export const LOG_PREFIXES = {
   AUTH: '[AUTH]',
   CONFIG: '[Config]',
   SERVICE: '[Service]',
+  system: '[System]',
+  email: '[Email]',
+  validation: '[Validation]',
+  database: '[DB]',
+};
+
+// Error messages
+export const ERROR_MESSAGES = {
+  notFound: (entity = 'Resource') => `${entity} not found`,
+  invalidRequest: (reason = 'Invalid request') => reason,
+  operationFailed: (operation = 'Operation') => `${operation} failed`,
+  permission: {
+    denied: 'Permission denied',
+  },
+};
+
+// Success messages
+export const SUCCESS_MESSAGES = {
+  created: (entity = 'Item') => `${entity} created successfully`,
+  updated: (entity = 'Item') => `${entity} updated successfully`,
+  deleted: (entity = 'Item') => `${entity} deleted successfully`,
+  saved: 'Changes saved successfully',
 };
 
 // Dynamic config from ConfigGeneratorEngine
