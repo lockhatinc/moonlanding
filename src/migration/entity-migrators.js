@@ -117,19 +117,19 @@ export class RFIMigrator extends BaseMigrator {
     this.logStat(`Starting migration of ${rfis.length} RFIs (with questions/responses)`);
 
     const rfiStmt = this.db.prepare(`
-      INSERT INTO rfi
+      INSERT INTO rfis
       (id, engagement_id, status, due_date, metadata, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     const questionStmt = this.db.prepare(`
-      INSERT INTO rfi_question
+      INSERT INTO rfis_question
       (id, rfi_id, question_text, order, metadata, created_at)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
 
     const responseStmt = this.db.prepare(`
-      INSERT INTO rfi_response
+      INSERT INTO rfis_response
       (id, rfi_question_id, user_id, response_text, metadata, created_at)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
@@ -404,13 +404,13 @@ export class ChecklistMigrator extends BaseMigrator {
     this.logStat(`Starting migration of ${checklists.length} checklists (with items)`);
 
     const checklistStmt = this.db.prepare(`
-      INSERT INTO checklist
+      INSERT INTO checklists
       (id, engagement_id, name, status, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
 
     const itemStmt = this.db.prepare(`
-      INSERT INTO checklist_item
+      INSERT INTO checklists_item
       (id, checklist_id, task_name, completed, completed_at, order, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
@@ -522,7 +522,7 @@ export class ActivityLogMigrator extends BaseMigrator {
     this.logStat(`Starting migration of ${logs.length} activity logs`);
 
     const stmt = this.db.prepare(`
-      INSERT INTO activity_log
+      INSERT INTO activity_logs
       (id, entity_type, entity_id, action, user_id, changes, timestamp)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
