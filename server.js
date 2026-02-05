@@ -119,6 +119,30 @@ const server = http.createServer(async (req, res) => {
     // Handle page requests (non-API routes) with new Ripple UI renderer
     if (!pathname.startsWith('/api/')) {
       try {
+        // Test: Try simple page first
+        if (pathname === '/test') {
+          const { generateTestPage } = await loadModule(path.join(__dirname, 'src/ui/test-page.js'));
+          const html = generateTestPage();
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          res.setHeader('Content-Length', Buffer.byteLength(html, 'utf-8'));
+          res.writeHead(200);
+          res.end(html);
+          return;
+        }
+
+        // Try standalone login page (no dependencies)
+        if (pathname === '/login') {
+          const { renderStandaloneLogin } = await loadModule(path.join(__dirname, 'src/ui/standalone-login.js'));
+          const html = renderStandaloneLogin();
+          if (html) {
+            res.setHeader('Content-Type', 'text/html; charset=utf-8');
+            res.setHeader('Content-Length', Buffer.byteLength(html, 'utf-8'));
+            res.writeHead(200);
+            res.end(html);
+            return;
+          }
+        }
+
         const { handlePage } = await loadModule(path.join(__dirname, 'src/ui/page-handler.js'));
         const { REDIRECT } = await loadModule(path.join(__dirname, 'src/ui/renderer.js'));
         const html = await handlePage(pathname, req, res);
@@ -141,10 +165,12 @@ const server = http.createServer(async (req, res) => {
           return;
         }
       } catch (err) {
-        console.error('[Page Handler] Error:', err.message, err.stack);
+        console.error('[Page Handler] Error:', err.message);
+        if (err.stack) console.error(err.stack);
         if (res.headersSent) return;
       }
-      // Fall through to 404 if page rendering fails
+      // No HTML returned or error occurred, fall through to 404
+      console.log('[Server] Page handler returned null or errored for:', pathname);
     }
 
     if (pathname.startsWith('/api/')) {
