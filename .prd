@@ -72,16 +72,27 @@ EXECUTION STATUS (started Feb 5, 09:44 SAST 2026):
   - Commit: 5c8be22
   - Status: COMPLETE
 
-CUMULATIVE WAVE 4 REDUCTION (as of Phase D5.2):
-  - Files: 298 → 263 (-35 files deleted, +6 new generic)
-  - Lines: 28,070 → 24,848 (-3,222 lines!)
-  - Status: System boots cleanly ✓
+✓ PHASE D6.3: Redundant config files deleted
+  - Deleted 16 zero-usage config files (entity-statuses, domain-constants, data-constants, format-config, etc.)
+  - Merged api-constants.js exports into constants.js
+  - Inlined POLLING_CONFIG into use-realtime.js
+  - Inlined SQL_TYPES, DATE_FORMATS, FORM_FIELD_DEFAULTS into dependent files
+  - Updated 25+ files to fix imports
+  - Commits: 3aed2ad, 31c0cfc, 488c358
+  - Status: COMPLETE
 
-REMAINING CRITICAL SUCCESS METRICS:
-  - Hardcoded role names: ~15-20 occurrences remaining → 0
-  - Hardcoded status values: ~20-25 occurrences remaining → 0
-  - Config files: 30 active, derivable ones → DELETE (D6.3)
-  - Test: System boots cleanly ✓, zero broken imports, all CRUD works
+CUMULATIVE WAVE 4 REDUCTION (as of Phase D6.3):
+  - Files: 298 → 247 (-51 files deleted, +3 new generic)
+  - Lines: 28,070 → 24,362 (-3,708 lines!)
+  - Config files: 31 → 14 (-17 files, -51% reduction)
+  - Status: System boots cleanly ✓, zero broken imports ✓
+
+REMAINING WORK FOR WAVE 4 COMPLETION:
+  - Hardcoded role names: ~82 occurrences (replace with config lookups)
+  - Hardcoded status values: ~127 occurrences (replace with config lookups)
+  - Hardcoded entity names: ~232 occurrences (mostly already config-driven)
+  - Test: System boots cleanly ✓, zero broken imports ✓, run integration tests
+  - Update .prd with final Wave 4 metrics
 
 ================================================================================
 PARALLEL TRACK 1: [D1] CONFIG AS SINGLE SOURCE OF TRUTH (INDEPENDENT)
