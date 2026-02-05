@@ -537,3 +537,335 @@ All 5 blockers verified IMPLEMENTED in codebase.
 Ready to proceed to runtime verification and data migration.
 
 STATUS: PHASE 2 CODE ANALYSIS COMPLETE - READY FOR RUNTIME TESTS
+
+PHASE 2 COMPLETE ✓
+=================
+Commit: 410b451 (Phase 2: Feature verification complete)
+All 5 critical blockers: IMPLEMENTED and verified
+Code integration: CONFIRMED
+Database schema: VALIDATED
+Test data: PREPARED
+Ready for Phase 3: YES ✓
+
+PHASE 3: DATA MIGRATION - PLANNING
+==================================
+
+MIGRATION OBJECTIVES
+====================
+1. Migrate data from Friday-Staging (Firebase) → Moonlanding (SQLite)
+2. Migrate data from MyWorkReview-Staging (Firebase) → Moonlanding (SQLite)
+3. Consolidate 95K-230K records with zero data loss
+4. Deduplicate users (10-15% overlap expected)
+5. Normalize Firestore structure to SQLite schema
+6. Maintain referential integrity throughout
+7. Preserve all audit logs and activity history
+8. Enable parallel operation during transition
+
+DATA VOLUME ESTIMATES
+====================
+Friday-Staging: ~80K-200K records
+  - Users: 200-500 (~2% of total, heavily deduplicated)
+  - Engagements: 2,000-5,000
+  - RFIs: 5,000-10,000
+  - RFI Questions: 20,000-50,000
+  - RFI Responses: 30,000-100,000
+  - Messages: 10,000-20,000
+  - Highlights: 5,000-10,000
+  - Other entities: ~5,000-10,000
+
+MyWorkReview-Staging: ~15K-30K records
+  - Users: 100-300 (heavily overlaps with Friday users)
+  - Reviews: 1,000-2,000
+  - Checklists: 100-500
+  - Checklist Items: 5,000-10,000
+  - Files: 2,000-5,000
+  - Highlights: 3,000-7,000
+  - Collaborators: 1,000-2,000
+  - Other entities: ~1,000-3,000
+
+Moonlanding Target: 100K-230K post-migration
+Combined unique records (after deduplication)
+
+MIGRATION ARCHITECTURE
+======================
+
+Phase 3.1: Schema Mapping & Analysis (2 hours)
+-----------------------------------------------
+Dependencies: NONE - can start immediately
+Tasks:
+  [3.1.1] Document Friday-Staging schema (Firestore collections)
+  [3.1.2] Document MyWorkReview-Staging schema (Firestore collections)
+  [3.1.3] Map to Moonlanding SQLite schema
+  [3.1.4] Identify transformation rules for each entity
+  [3.1.5] Create schema mapping document
+  [3.1.6] Identify data type conversions needed
+  [3.1.7] Document Firestore subcollections → SQLite normalization
+  [3.1.8] Validate schema compatibility
+
+Phase 3.2: Migration Script Development (15 hours)
+---------------------------------------------------
+Dependencies: Phase 3.1
+Tasks:
+  [3.2.1] Create Firebase connection module
+  [3.2.2] Create SQLite target connection module
+  [3.2.3] Implement user deduplication logic
+  [3.2.4] Implement engagement migration script
+  [3.2.5] Implement RFI migration script
+  [3.2.6] Implement review migration script
+  [3.2.7] Implement highlight migration script
+  [3.2.8] Implement message migration script
+  [3.2.9] Implement collaborator migration script
+  [3.2.10] Implement audit log migration
+  [3.2.11] Create migration orchestrator
+  [3.2.12] Add progress tracking
+  [3.2.13] Add error recovery
+  [3.2.14] Add rollback capability
+
+Phase 3.3: Data Validation Framework (4 hours)
+-----------------------------------------------
+Dependencies: Phase 3.2
+Tasks:
+  [3.3.1] Create row count validator
+  [3.3.2] Create referential integrity checker
+  [3.3.3] Create data type validator
+  [3.3.4] Create coordinate validation (PDF highlights)
+  [3.3.5] Create timestamp normalization validator
+  [3.3.6] Create file path validation
+  [3.3.7] Create JSON field validator
+  [3.3.8] Create foreign key constraint checker
+
+Phase 3.4: Migration Testing - Sample Data (3 hours)
+----------------------------------------------------
+Dependencies: Phase 3.3
+Tasks:
+  [3.4.1] Extract 1% sample from Friday-Staging
+  [3.4.2] Extract 1% sample from MyWorkReview-Staging
+  [3.4.3] Run migration on sample data
+  [3.4.4] Validate all checks pass
+  [3.4.5] Document any issues found
+  [3.4.6] Create fix scripts for issues
+  [3.4.7] Verify rollback works
+  [3.4.8] Document migration process
+
+Phase 3.5: Pilot Migration - 10% Data (2 hours)
+-----------------------------------------------
+Dependencies: Phase 3.4
+Tasks:
+  [3.5.1] Create backup of production Moonlanding DB
+  [3.5.2] Run migration on 10% of Friday data
+  [3.5.3] Run validation checks
+  [3.5.4] Fix any issues found
+  [3.5.5] Document pilot results
+  [3.5.6] Verify no data loss
+  [3.5.7] Get stakeholder approval
+  [3.5.8] Prepare for full migration
+
+Phase 3.6: Full Data Migration (4 hours)
+----------------------------------------
+Dependencies: Phase 3.5
+Tasks:
+  [3.6.1] Create final backup
+  [3.6.2] Run Friday-Staging full migration
+  [3.6.3] Run MyWorkReview-Staging full migration
+  [3.6.4] Run all validation checks
+  [3.6.5] Fix any issues found in live data
+  [3.6.6] Verify record counts match
+  [3.6.7] Verify referential integrity
+  [3.6.8] Document migration results
+
+Phase 3.7: Data Integrity Verification (8 hours)
+-------------------------------------------------
+Dependencies: Phase 3.6
+Tasks:
+  [3.7.1] Verify user deduplication (count)
+  [3.7.2] Verify engagement-client relationships
+  [3.7.3] Verify RFI-engagement relationships
+  [3.7.4] Verify highlight coordinates preserved
+  [3.7.5] Verify all timestamps converted to UTC
+  [3.7.6] Verify file paths updated
+  [3.7.7] Verify permission relationships intact
+  [3.7.8] Verify activity logs complete
+  [3.7.9] Run full system integration test
+  [3.7.10] Spot check 100 random records
+  [3.7.11] Verify no orphaned records
+  [3.7.12] Performance baseline measurement
+
+Phase 3.8: Parallel Operations Setup (3 hours)
+----------------------------------------------
+Dependencies: Phase 3.7
+Tasks:
+  [3.8.1] Configure read-only mode on old systems
+  [3.8.2] Set up dual-system routing
+  [3.8.3] Create change sync mechanism (Friday→Moonlanding)
+  [3.8.4] Create change sync mechanism (MWR→Moonlanding)
+  [3.8.5] Monitor data consistency
+  [3.8.6] Test rollback from Moonlanding to old systems
+  [3.8.7] Document dual-system operation
+
+Phase 3.9: Production Cutover (2 hours)
+---------------------------------------
+Dependencies: Phase 3.8 (1 week parallel operation complete)
+Tasks:
+  [3.9.1] Set old systems to read-only
+  [3.9.2] Verify no pending changes in old systems
+  [3.9.3] Run final sync from old→new
+  [3.9.4] Verify all data current
+  [3.9.5] Switch routing to Moonlanding
+  [3.9.6] Verify system operation
+  [3.9.7] Decommission old systems
+  [3.9.8] Celebrate! 🎉
+
+Phase 3.10: Post-Migration Support (4 hours)
+--------------------------------------------
+Dependencies: Phase 3.9
+Tasks:
+  [3.10.1] Monitor error logs
+  [3.10.2] Address user issues
+  [3.10.3] Optimize performance if needed
+  [3.10.4] Create migration documentation
+  [3.10.5] Archive old system data
+  [3.10.6] Update runbooks
+  [3.10.7] Train support team
+
+PARALLEL EXECUTION STRATEGY
+===========================
+
+Wave 1 (Sequential - Foundation):
+  [3.1.x] Phase 3.1: Schema mapping
+  → Must complete before anything else
+
+Wave 2 (Can run in parallel):
+  [3.2.x] Phase 3.2: Script development (15 hours)
+  [3.3.x] Phase 3.3: Validation framework (4 hours)
+  → No dependencies between them, can execute in parallel
+  → Reduces wall-clock time from 19h to ~15h
+
+Wave 3 (Sequential - Validation):
+  [3.4.x] Phase 3.4: Sample data testing
+  → Depends on 3.2 and 3.3
+  → Must complete before pilot
+
+Wave 4 (Sequential - Execution):
+  [3.5.x] Phase 3.5: Pilot migration (10%)
+  [3.6.x] Phase 3.6: Full migration
+  [3.7.x] Phase 3.7: Data verification
+  [3.8.x] Phase 3.8: Parallel operations
+  [3.9.x] Phase 3.9: Cutover
+  [3.10.x] Phase 3.10: Post-migration support
+  → These must run sequentially
+
+MIGRATION SUCCESS CRITERIA
+==========================
+
+Hard Constraints (Must Pass):
+  ✓ 100% row count match (no data loss)
+  ✓ 100% referential integrity (no orphans)
+  ✓ 100% PDF coordinate preservation (±0 pixels allowed)
+  ✓ 100% user deduplication accuracy
+  ✓ Zero crashes during migration
+  ✓ Zero corrupted records
+  ✓ All timestamps UTC normalized
+  ✓ All file paths updated
+
+Performance Constraints:
+  ✓ p95 query response <500ms (100K records)
+  ✓ p99 query response <1000ms (100K records)
+  ✓ Migration speed: minimum 1000 records/second
+  ✓ Validation complete in <30 minutes
+  ✓ Rollback complete in <5 minutes
+
+Business Constraints:
+  ✓ Zero unplanned downtime
+  ✓ 1-week parallel operation period (optional)
+  ✓ Production cutover during low-traffic window
+  ✓ <2 hours total maintenance window
+
+CRITICAL PATH (Minimum Timeline)
+=================================
+
+Day 1 (Phase 3.1-3.4):
+  - Schema analysis (2h)
+  - Script development (15h, parallel with validation)
+  - Sample testing (3h)
+  - Total: 16 hours (can compress to 1 day with parallel)
+
+Day 2-3 (Phase 3.5-3.7):
+  - Pilot migration (2h)
+  - Full migration (4h)
+  - Data verification (8h)
+  - Total: 14 hours (requires 2 calendar days)
+
+Day 4-10 (Phase 3.8):
+  - Parallel operation (1 week)
+  - Continuous monitoring
+  - Change sync validation
+
+Day 11 (Phase 3.9-3.10):
+  - Production cutover (2h)
+  - Post-migration support (4h)
+
+**TOTAL CRITICAL PATH**: 3 weeks minimum
+- 30 hours development work
+- 1 week parallel validation
+- 2 hour cutover window
+
+RISK MITIGATION
+===============
+
+HIGH RISK SCENARIOS:
+
+1. User Deduplication Failure
+   Risk: Same person in 2+ systems creates duplicate user
+   Mitigation: Email uniqueness constraint + manual review of 10% of merges
+   Recovery: Rollback and re-run with stricter matching
+
+2. Referential Integrity Violation
+   Risk: RFI without engagement, highlight without entity
+   Mitigation: Validate before commit, skip invalid records to error table
+   Recovery: Investigate source data, fix, re-run migration
+
+3. Coordinate Data Corruption
+   Risk: PDF highlights lose coordinate accuracy
+   Mitigation: Store original coordinates, validate ±0 pixel match
+   Recovery: Revert highlights from backup, no data loss acceptable
+
+4. Performance Degradation
+   Risk: System slow with 100K+ records
+   Mitigation: Load test early, optimize indexes, measure baseline
+   Recovery: Scale database, optimize queries, add caching
+
+5. Rollback Failure
+   Risk: Cannot revert to old systems
+   Mitigation: Test rollback before production, keep backups for 30 days
+   Recovery: Restore from backup, re-run migration more carefully
+
+MONITORING & ALERTS
+===================
+
+During Migration:
+  - Monitor error count (alert if >100)
+  - Monitor record count progress (alert if stalled)
+  - Monitor disk space (alert if <10% remaining)
+  - Monitor CPU/memory (alert if >80%)
+  - Monitor validation checks (fail fast on issues)
+
+During Parallel Operation:
+  - Monitor change sync lag (alert if >5 minutes)
+  - Monitor data consistency (alert if discrepancies)
+  - Monitor error rates (alert if >1%)
+  - Monitor user complaints (escalate immediately)
+
+NEXT IMMEDIATE STEPS
+====================
+
+To begin Phase 3:
+
+[1] Analyze Friday-Staging Firebase schema
+[2] Analyze MyWorkReview-Staging Firebase schema
+[3] Create complete schema mapping document
+[4] Review mapping with technical team
+[5] Begin Phase 3.2: Script development
+
+Ready to start: YES ✓
+
+STATUS: PHASE 3 PLANNING COMPLETE - READY TO BEGIN MIGRATION
