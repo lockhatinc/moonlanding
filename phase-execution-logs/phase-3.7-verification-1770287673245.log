@@ -1,0 +1,9 @@
+[2026-02-05T10:34:33.245Z] ========== PHASE 3.7: DATA INTEGRITY VERIFICATION (12 CHECKS) ==========
+[2026-02-05T10:34:33.254Z] Check 1/12: Row counts - all entities present - ✓ PASS
+[2026-02-05T10:34:33.254Z]   Details: Total records: 28, Tables: 13
+[2026-02-05T10:34:33.255Z] Check 2/12: Referential integrity - no orphaned records - ✓ PASS
+[2026-02-05T10:34:33.255Z]   Details: FK relationships checked: 7, Orphaned: 0
+[2026-02-05T10:34:33.255Z] Check 3/12: Duplicate detection - no accidental duplicates - ✓ PASS
+[2026-02-05T10:34:33.255Z]   Details: Users unique: true, Engagements unique: true
+[2026-02-05T10:34:33.256Z] ERROR: no such column: mapped_to_id
+[2026-02-05T10:34:33.256Z] ERROR: Cannot read properties of undefined (reading 'passed')
