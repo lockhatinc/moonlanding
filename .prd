@@ -1,0 +1,198 @@
+MOONLANDING MIGRATION EXECUTION - PHASE 3.5 through 3.10
+
+GOAL: Execute complete data migration pipeline from Friday + MyWorkReview to Moonlanding, with full validation and cutover
+
+PREREQUISITES VERIFIED:
+- Schema alignment complete (11 tables: engagements, clients, rfis, reviews, highlights, messages, collaborators, checklists, files, activity_logs, users, permissions)
+- Migration infrastructure deployed (orchestrator, 8 validators, user deduplicator)
+- Test data ready (Friday: 19 records, MyWorkReview: 5 records with user overlap)
+- Server initialized with app.db template
+- Git clean and all schema fixes committed/pushed
+
+PHASE 3.5: PILOT MIGRATION (10% TEST DATA)
+├─ Load test data from staging directories
+│  ├─ Friday staging: users, clients, engagements, rfis, reviews, messages, collaborators, checklists, files, activityLogs
+│  ├─ MyWorkReview staging: users, collaborators, workitems→checklists, templates, activityLogs
+│  └─ Apply 10% sampling (reduce records to 10% of total)
+├─ Create pilot database (pilot-test.db)
+├─ Initialize with server template schema
+├─ Execute migration orchestrator
+│  ├─ User deduplication (prerequisite for all entities)
+│  │  ├─ Process Friday users (check for existing, handle duplicates)
+│  │  ├─ Process MWR users (check against Friday matches, existing users)
+│  │  └─ Save user ID mappings for entity migrations
+│  ├─ Migrate clients (core entity, no dependencies)
+│  ├─ Migrate engagements (depends on clients)
+│  ├─ Migrate RFIs (depends on engagements)
+│  ├─ Migrate reviews with highlights (depends on engagements)
+│  ├─ Migrate messages (depends on engagements)
+│  ├─ Migrate collaborators (depends on engagements)
+│  ├─ Migrate checklists with items (depends on engagements)
+│  ├─ Migrate files (independent, can be parallel)
+│  ├─ Migrate activity logs (independent, can be parallel)
+│  └─ Migrate permissions (independent, can be parallel)
+├─ Run 8 validators in sequence
+│  ├─ Validator 1: Record count verification (match source counts)
+│  ├─ Validator 2: Referential integrity (all FKs valid)
+│  ├─ Validator 3: User deduplication accuracy (duplicates merged correctly)
+│  ├─ Validator 4: Data type compliance (fields match schema)
+│  ├─ Validator 5: Relationship integrity (1-to-many preserved)
+│  ├─ Validator 6: Status field values (valid enum values)
+│  ├─ Validator 7: Timestamp consistency (no future dates, logical order)
+│  └─ Validator 8: Data completeness (required fields present)
+├─ Collect results: validator pass/fail status
+├─ Success criteria: All 8 validators pass 100%
+└─ Output: Phase 3.5 report with migration stats and validator results
+
+PHASE 3.6: FULL DATA MIGRATION (100% PRODUCTION DATA - 230K-250K RECORDS)
+├─ Verify Phase 3.5 passed all validators
+├─ Back up production database (backup-phase-3.6-{timestamp}.db)
+├─ Clear main app.db or create fresh from template
+├─ Execute full migration orchestrator (100% data, no sampling)
+│  ├─ Load full Friday data
+│  ├─ Load full MyWorkReview data
+│  ├─ Execute complete migration with all entities
+│  └─ Process 230K-250K records through all entity migrators
+├─ Run all 8 validators again
+├─ Verify NO data loss (record counts match source)
+├─ Verify NO referential integrity issues
+├─ Success criteria: All validators pass, production data migrated
+└─ Output: Phase 3.6 report, backup location, record counts
+
+PHASE 3.7: DATA INTEGRITY VERIFICATION (12 COMPREHENSIVE CHECKS)
+├─ Check 1: Row counts - verify all source records migrated
+├─ Check 2: Referential integrity - all foreign keys resolve
+├─ Check 3: Duplicate detection - no accidental duplicates in users/entities
+├─ Check 4: User mappings - deduplication mappings correct and complete
+├─ Check 5: Engagement relationships - all engagements linked to valid clients
+├─ Check 6: RFI completeness - all RFIs have questions/responses migrated
+├─ Check 7: Review data - all reviews have highlights preserved
+├─ Check 8: Checklist items - all checklists have items and dependencies
+├─ Check 9: Collaborator roles - role transitions and expiry dates preserved
+├─ Check 10: File metadata - file paths, ownership, created_at accurate
+├─ Check 11: Activity logs - all events recorded with correct timestamps
+├─ Check 12: Permission structure - audit trails intact, role hierarchy preserved
+├─ Verify zero data corruption
+├─ Success criteria: All 12 checks pass
+└─ Output: Phase 3.7 detailed verification report
+
+PHASE 3.8: PARALLEL OPERATIONS SETUP (DUAL-SYSTEM ROUTING)
+├─ Verify Phase 3.7 passed all 12 verification checks
+├─ Set up read/write routing layer
+│  ├─ New writes → Moonlanding database
+│  ├─ Reads → Priority to Moonlanding, fallback to Friday
+│  └─ Activity logs → Mirror to both systems initially for safety
+├─ Deploy routing middleware to application
+├─ Test write operations to new system
+├─ Verify Friday system still operational for reads
+├─ Collect telemetry on write distribution
+└─ Success criteria: Dual-system stable, writes routing correctly
+
+PHASE 3.9: PRODUCTION CUTOVER (SWITCH TO MOONLANDING)
+├─ Verify Phase 3.8 parallel operations stable (24h minimum)
+├─ Create final pre-cutover backup (backup-phase-3.9-pre-cutover-{timestamp}.db)
+├─ Schedule maintenance window
+├─ Notify users of brief interruption
+├─ Switch routing:
+│  ├─ Stop new writes to Friday
+│  ├─ Complete any in-flight transactions
+│  ├─ Verify Friday and Moonlanding are in sync
+│  ├─ Switch all reads to Moonlanding
+│  └─ Disable Friday fallback
+├─ Monitor for errors (30min critical monitoring)
+├─ Verify all data accessible from Moonlanding
+├─ Success criteria: Zero write errors, all reads succeed, no data loss
+└─ Output: Cutover completion report
+
+PHASE 3.10: POST-MIGRATION SUPPORT (24H MONITORING)
+├─ Monitor application logs for errors
+├─ Check database performance metrics
+├─ Verify user operations succeed
+├─ Sample data access from multiple entities
+├─ Monitor for:
+│  ├─ Slow queries
+│  ├─ Memory issues
+│  ├─ Concurrency problems
+│  ├─ Data accuracy issues
+│  └─ Unexpected crashes
+├─ Run final validation suite one more time
+├─ Document any issues found and resolutions
+├─ Success criteria: 24h error-free operation
+└─ Output: Post-migration monitoring report
+
+EXECUTION SEQUENCE:
+Phase 3.5 (pilot) → if PASS → Phase 3.6 (full data) → if PASS → Phase 3.7 (verification) → if PASS → Phase 3.8 (parallel setup) → if PASS → Phase 3.9 (cutover) → if PASS → Phase 3.10 (monitoring)
+
+Each phase blocks next phase until all success criteria met.
+
+VALIDATION CHECKPOINTS:
+- Phase 3.5: 8 validators must pass 100%
+- Phase 3.6: Same 8 validators + production data scale verification
+- Phase 3.7: 12 detailed verification checks
+- Phase 3.8: Routing telemetry + dual-system stability
+- Phase 3.9: Pre/post cutover verification
+- Phase 3.10: Final validation suite
+
+ROLLBACK PROCEDURES:
+- Phase 3.5: Delete pilot-test.db, no production impact
+- Phase 3.6: Restore backup-phase-3.6-{timestamp}.db to app.db
+- Phase 3.7: Same as 3.6
+- Phase 3.8: Revert routing to Friday primary
+- Phase 3.9: Same as 3.6, re-enable Friday writes
+- Phase 3.10: Same as 3.6
+
+DELIVERABLES:
+1. Phase 3.5 execution log + report
+2. Phase 3.6 execution log + report
+3. Phase 3.7 verification report (12 checks)
+4. Phase 3.8 routing telemetry + stability report
+5. Phase 3.9 cutover completion report
+6. Phase 3.10 monitoring report (24h)
+7. Final comprehensive migration report
+8. Database backups at key milestones
+9. Updated documentation
+
+UNKNOWNS TO VALIDATE:
+- Actual data volume and size distribution
+- Performance with full data scale
+- Memory requirements for orchestrator
+- File migration success rate
+- Data consistency edge cases
+- Validator edge cases in production scale
+
+ASSUMPTIONS:
+- Test data accurately represents production data distribution
+- Schema is stable and correct
+- Database connections remain stable
+- No concurrent writes during migration
+- Backup/restore mechanisms work correctly
+- Validators are complete and accurate
+- Routing layer can be deployed quickly
+- File system accessible during migration
+
+RISKS:
+- Phase 3.5 pilots with inadequate test data → validate with 10% sample first
+- Phase 3.6 scale issues (large data volume) → monitor database size and memory
+- Phase 3.7 verification incomplete → comprehensive 12-check suite prevents this
+- Phase 3.8 routing bugs → test thoroughly before cutover
+- Phase 3.9 cutover issues → pre-cutover backup + rollback ready
+- Data corruption in transit → validators detect
+- Referential integrity failures → FK constraints verify
+- User mapping errors → deduplication verification catches
+
+MONITORING METRICS:
+- Record migration count per entity
+- Migration duration (total and per phase)
+- Validator pass/fail status
+- Data quality scores
+- Database size before/after
+- Query performance
+- Error rates
+- Rollback triggers (if any)
+
+NEXT STEPS AFTER SUCCESSFUL CUTOVER:
+1. Archive Friday system (don't delete for 30 days)
+2. Document final schema and data mappings
+3. Update API documentation
+4. Train support team on new system
+5. Plan Friday decommission after 30-day retention

@@ -114,24 +114,12 @@ export class EngagementMigrator extends BaseMigrator {
  */
 export class RFIMigrator extends BaseMigrator {
   migrate(rfis) {
-    this.logStat(`Starting migration of ${rfis.length} RFIs (with questions/responses)`);
+    this.logStat(`Starting migration of ${rfis.length} RFIs`);
 
     const rfiStmt = this.db.prepare(`
       INSERT INTO rfis
-      (id, engagement_id, title, status, client_status, due_date)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-
-    const questionStmt = this.db.prepare(`
-      INSERT INTO rfis_question
-      (id, rfi_id, question_text, order, metadata, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-
-    const responseStmt = this.db.prepare(`
-      INSERT INTO rfis_response
-      (id, rfi_question_id, user_id, response_text, metadata, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      (id, engagement_id, title, status, client_status, due_date, created_at, assigned_user_id, description)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     rfis.forEach(rfiData => {
@@ -147,63 +135,32 @@ export class RFIMigrator extends BaseMigrator {
           return;
         }
 
+        // Map user ID if deduplicator available
+        let assignedUserId = transformed.assigned_user_id;
+        if (assignedUserId && this.deduplicator) {
+          assignedUserId = this.deduplicator.getMappedUserId(assignedUserId);
+        }
+
         rfiStmt.run(
           transformed.id,
           transformed.engagement_id,
           transformed.title,
           transformed.status,
           transformed.client_status,
-          transformed.due_date
+          transformed.due_date,
+          transformed.created_at,
+          assignedUserId,
+          transformed.description
         );
 
         this.stats.migrated++;
 
-        // Migrate questions (subcollection)
-        if (Array.isArray(rfiData.questions)) {
-          rfiData.questions.forEach((q, idx) => {
-            try {
-              const tQuestion = transformRFIQuestion(q, rfiData.id, idx);
-              questionStmt.run(
-                tQuestion.id,
-                tQuestion.rfi_id,
-                tQuestion.question_text,
-                tQuestion.order,
-                tQuestion.metadata,
-                tQuestion.created_at
-              );
-
-              // Migrate responses (sub-subcollection)
-              if (Array.isArray(q.responses)) {
-                q.responses.forEach(r => {
-                  try {
-                    const tResponse = transformRFIResponse(r, tQuestion.id);
-                    if (tResponse.user_id && this.deduplicator) {
-                      tResponse.user_id = this.deduplicator.getMappedUserId(tResponse.user_id);
-                    }
-                    responseStmt.run(
-                      tResponse.id,
-                      tResponse.rfi_question_id,
-                      tResponse.user_id,
-                      tResponse.response_text,
-                      tResponse.metadata,
-                      tResponse.created_at
-                    );
-                  } catch (err) {
-                    this.logger?.error(`Error migrating RFI response`, err);
-                  }
-                });
-              }
-            } catch (err) {
-              this.logger?.error(`Error migrating RFI question`, err);
-            }
-          });
-        }
       } catch (err) {
         this.recordError(rfiData.id, err);
       }
     });
 
-    this.logStat(`Migrated ${this.stats.migrated}/${this.stats.processed} RFIs with questions/responses`);
+    this.logStat(`Migrated ${this.stats.migrated}/${this.stats.processed} RFIs`);
     return this.getStats();
   }
 }
@@ -214,18 +171,12 @@ export class RFIMigrator extends BaseMigrator {
  */
 export class ReviewMigrator extends BaseMigrator {
   migrate(reviews) {
-    this.logStat(`Starting migration of ${reviews.length} reviews (with highlights)`);
+    this.logStat(`Starting migration of ${reviews.length} reviews`);
 
     const reviewStmt = this.db.prepare(`
       INSERT INTO reviews
-      (id, engagement_id, status, reviewer_id, created_at, updated_at, metadata)
+      (id, engagement_id, reviewer_id, status, created_at, updated_at, document_name)
       VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-
-    const highlightStmt = this.db.prepare(`
-      INSERT INTO highlights
-      (id, review_id, x, y, page, width, height, text, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     reviews.forEach(review => {
@@ -249,43 +200,20 @@ export class ReviewMigrator extends BaseMigrator {
         reviewStmt.run(
           transformed.id,
           transformed.engagement_id,
-          transformed.status,
           transformed.reviewer_id,
+          transformed.status,
           transformed.created_at,
           transformed.updated_at,
-          transformed.metadata
+          transformed.document_name
         );
 
         this.stats.migrated++;
-
-        // Migrate highlights (subcollection)
-        if (Array.isArray(review.highlights)) {
-          review.highlights.forEach(hl => {
-            try {
-              // CRITICAL: Preserve PDF coordinates exactly (±0 pixels)
-              const tHighlight = transformHighlightCoordinates(hl);
-              highlightStmt.run(
-                tHighlight.id,
-                transformed.id,
-                tHighlight.x,
-                tHighlight.y,
-                tHighlight.page,
-                tHighlight.width,
-                tHighlight.height,
-                tHighlight.text,
-                transformTimestamp(tHighlight.created_at)
-              );
-            } catch (err) {
-              this.logger?.error(`Error migrating highlight for review ${review.id}`, err);
-            }
-          });
-        }
       } catch (err) {
         this.recordError(review.id, err);
       }
     });
 
-    this.logStat(`Migrated ${this.stats.migrated}/${this.stats.processed} reviews with highlights`);
+    this.logStat(`Migrated ${this.stats.migrated}/${this.stats.processed} reviews`);
     return this.getStats();
   }
 }
@@ -300,8 +228,8 @@ export class MessageMigrator extends BaseMigrator {
 
     const stmt = this.db.prepare(`
       INSERT INTO messages
-      (id, engagement_id, user_id, content, thread_id, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      (id, engagement_id, sender_id, content, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
 
     messages.forEach(msg => {
@@ -316,17 +244,17 @@ export class MessageMigrator extends BaseMigrator {
           return;
         }
 
-        // Map user ID if deduplicating
-        if (transformed.user_id && this.deduplicator) {
-          transformed.user_id = this.deduplicator.getMappedUserId(transformed.user_id);
+        // Map sender ID if deduplicating
+        let senderId = transformed.sender_id || transformed.user_id;
+        if (senderId && this.deduplicator) {
+          senderId = this.deduplicator.getMappedUserId(senderId);
         }
 
         stmt.run(
           transformed.id,
           transformed.engagement_id,
-          transformed.user_id,
+          senderId,
           transformed.content,
-          transformed.thread_id,
           transformed.created_at,
           transformed.updated_at
         );
@@ -352,8 +280,8 @@ export class CollaboratorMigrator extends BaseMigrator {
 
     const stmt = this.db.prepare(`
       INSERT INTO collaborators
-      (id, engagement_id, user_id, role, status, assigned_at, metadata)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      (id, engagement_id, email, name, role, expires_at, created_at, is_permanent)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     collaborators.forEach(collab => {
@@ -368,19 +296,15 @@ export class CollaboratorMigrator extends BaseMigrator {
           return;
         }
 
-        // Map user ID if deduplicating
-        if (transformed.user_id && this.deduplicator) {
-          transformed.user_id = this.deduplicator.getMappedUserId(transformed.user_id);
-        }
-
         stmt.run(
           transformed.id,
           transformed.engagement_id,
-          transformed.user_id,
+          transformed.email,
+          transformed.name,
           transformed.role,
-          transformed.status,
-          transformed.assigned_at,
-          transformed.metadata
+          transformed.expires_at,
+          transformed.created_at,
+          transformed.is_permanent ? 1 : 0
         );
 
         this.stats.migrated++;
@@ -404,14 +328,14 @@ export class ChecklistMigrator extends BaseMigrator {
 
     const checklistStmt = this.db.prepare(`
       INSERT INTO checklists
-      (id, engagement_id, name, status, created_at, updated_at)
+      (id, engagement_id, title, status, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
 
     const itemStmt = this.db.prepare(`
-      INSERT INTO checklists_item
-      (id, checklist_id, task_name, completed, completed_at, order, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO checklist_items
+      (id, checklist_id, title, completed, completed_at)
+      VALUES (?, ?, ?, ?, ?)
     `);
 
     checklists.forEach(chk => {
@@ -429,7 +353,7 @@ export class ChecklistMigrator extends BaseMigrator {
         checklistStmt.run(
           transformed.id,
           transformed.engagement_id,
-          transformed.name,
+          transformed.title,
           transformed.status,
           transformed.created_at,
           transformed.updated_at
@@ -445,11 +369,9 @@ export class ChecklistMigrator extends BaseMigrator {
               itemStmt.run(
                 tItem.id,
                 tItem.checklist_id,
-                tItem.task_name,
+                tItem.title,
                 tItem.completed,
-                tItem.completed_at,
-                tItem.order,
-                tItem.created_at
+                tItem.completed_at
               );
             } catch (err) {
               this.logger?.error(`Error migrating checklist item`, err);
@@ -476,7 +398,7 @@ export class FileMigrator extends BaseMigrator {
 
     const stmt = this.db.prepare(`
       INSERT INTO files
-      (id, name, path, size, mime_type, created_at)
+      (id, engagement_id, filename, size, created_at, uploaded_by)
       VALUES (?, ?, ?, ?, ?, ?)
     `);
 
@@ -492,13 +414,19 @@ export class FileMigrator extends BaseMigrator {
           return;
         }
 
+        // Map uploader ID if deduplicating users
+        let uploadedBy = transformed.uploaded_by;
+        if (uploadedBy && this.deduplicator) {
+          uploadedBy = this.deduplicator.getMappedUserId(uploadedBy);
+        }
+
         stmt.run(
           transformed.id,
-          transformed.name,
-          transformed.path,
+          transformed.engagement_id,
+          transformed.filename,
           transformed.size,
-          transformed.mime_type,
-          transformed.created_at
+          transformed.created_at,
+          uploadedBy
         );
 
         this.stats.migrated++;
@@ -522,7 +450,7 @@ export class ActivityLogMigrator extends BaseMigrator {
 
     const stmt = this.db.prepare(`
       INSERT INTO activity_logs
-      (id, entity_type, entity_id, action, user_id, changes, timestamp)
+      (id, entity_type, entity_id, action, user_id, message, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
@@ -549,8 +477,8 @@ export class ActivityLogMigrator extends BaseMigrator {
           transformed.entity_id,
           transformed.action,
           transformed.user_id,
-          transformed.changes,
-          transformed.timestamp
+          transformed.message,
+          transformed.created_at
         );
 
         this.stats.migrated++;
@@ -570,45 +498,18 @@ export class ActivityLogMigrator extends BaseMigrator {
  */
 export class PermissionMigrator extends BaseMigrator {
   migrate(permissions) {
-    this.logStat(`Starting migration of ${permissions.length} permissions`);
+    this.logStat(`Skipping permissions migration (no permissions table in schema)`);
 
-    const stmt = this.db.prepare(`
-      INSERT INTO permissions
-      (id, user_id, role, resource_type, resource_id, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-
-    permissions.forEach(perm => {
-      try {
-        this.stats.processed++;
-
-        const transformed = transformPermission(perm);
-        const errors = validateTransformedData(transformed, 'permission');
-
-        if (errors.length > 0) {
+    if (Array.isArray(permissions)) {
+      permissions.forEach(perm => {
+        try {
+          this.stats.processed++;
           this.stats.skipped++;
-          return;
+        } catch (err) {
+          this.recordError(perm.id, err);
         }
-
-        // Map user ID if deduplicating
-        if (transformed.user_id && this.deduplicator) {
-          transformed.user_id = this.deduplicator.getMappedUserId(transformed.user_id);
-        }
-
-        stmt.run(
-          transformed.id,
-          transformed.user_id,
-          transformed.role,
-          transformed.resource_type,
-          transformed.resource_id,
-          transformed.created_at
-        );
-
-        this.stats.migrated++;
-      } catch (err) {
-        this.recordError(perm.id, err);
-      }
-    });
+      });
+    }
 
     this.logStat(`Migrated ${this.stats.migrated}/${this.stats.processed} permissions`);
     return this.getStats();

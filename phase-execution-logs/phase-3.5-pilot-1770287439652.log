@@ -1,0 +1,128 @@
+[2026-02-05T10:30:39.660Z] ========== STARTING MIGRATION ORCHESTRATOR ==========
+[2026-02-05T10:30:39.660Z] Initializing database connections...
+[2026-02-05T10:30:39.660Z] ✓ Target database connected
+[2026-02-05T10:30:39.661Z] Creating backup: pre-migration
+[2026-02-05T10:30:39.661Z] ✓ Backup created: /home/user/lexco/moonlanding/data/backups/app-pre-migration-1770287439661.db
+[2026-02-05T10:30:39.661Z] Beginning transaction...
+[2026-02-05T10:30:39.661Z] 
+--- MIGRATING USERS ---
+[2026-02-05T10:30:39.662Z] Creating user_id_mapping table
+[2026-02-05T10:30:39.662Z] user_id_mapping table created
+[2026-02-05T10:30:39.662Z] Processing 1 Friday users
+[2026-02-05T10:30:39.662Z] Analyzing existing Moonlanding users
+[2026-02-05T10:30:39.662Z] Found 0 unique emails in existing Moonlanding users
+[2026-02-05T10:30:39.663Z] Friday users processed: 1 new, 0 deduplicated, 0 errors
+[2026-02-05T10:30:39.663Z] Saving 1 user ID mappings
+[2026-02-05T10:30:39.663Z] Saved 1/1 mappings
+[2026-02-05T10:30:39.663Z] Processing 1 MyWorkReview users
+[2026-02-05T10:30:39.663Z] Analyzing existing Moonlanding users
+[2026-02-05T10:30:39.663Z] Found 0 unique emails in existing Moonlanding users
+[2026-02-05T10:30:39.664Z] MWR users processed: 0 new, 1 deduplicated with Friday, 0 deduplicated with existing, 0 errors
+[2026-02-05T10:30:39.664Z] Saving 1 user ID mappings
+[2026-02-05T10:30:39.664Z] Saved 1/1 mappings
+[2026-02-05T10:30:39.664Z] Inserting 1 new users...
+[2026-02-05T10:30:39.664Z] Verifying user deduplication
+[2026-02-05T10:30:39.664Z] Deduplication verification: 1/1 unique emails
+[2026-02-05T10:30:39.664Z] ✓ Users migrated: 1 new, 1 deduplicated
+[2026-02-05T10:30:39.665Z] 
+--- MIGRATING CLIENTS ---
+[2026-02-05T10:30:39.665Z] ✓ Migrated 1 clients
+[2026-02-05T10:30:39.665Z] 
+--- MIGRATING ENGAGEMENTS ---
+[2026-02-05T10:30:39.665Z]   [EngagementMigrator] Starting migration of 1 engagements
+[2026-02-05T10:30:39.666Z]   [EngagementMigrator] Migrated 1/1 engagements
+[2026-02-05T10:30:39.666Z] ✓ 1 engagements migrated
+[2026-02-05T10:30:39.666Z] 
+--- MIGRATING RFIs (with questions/responses) ---
+[2026-02-05T10:30:39.666Z]   [RFIMigrator] Starting migration of 1 RFIs
+[2026-02-05T10:30:39.666Z]   [RFIMigrator] Migrated 1/1 RFIs
+[2026-02-05T10:30:39.666Z] ✓ 1 RFIs with questions/responses migrated
+[2026-02-05T10:30:39.666Z] 
+--- MIGRATING REVIEWS (with highlights) ---
+[2026-02-05T10:30:39.666Z]   [ReviewMigrator] Starting migration of 1 reviews
+[2026-02-05T10:30:39.667Z]   [ReviewMigrator] Migrated 1/1 reviews
+[2026-02-05T10:30:39.667Z] ✓ 1 reviews with highlights migrated
+[2026-02-05T10:30:39.667Z] 
+--- MIGRATING MESSAGES ---
+[2026-02-05T10:30:39.667Z]   [MessageMigrator] Starting migration of 1 messages
+[2026-02-05T10:30:39.667Z]   [MessageMigrator] Migrated 1/1 messages
+[2026-02-05T10:30:39.667Z] ✓ 1 messages migrated
+[2026-02-05T10:30:39.667Z] 
+--- MIGRATING COLLABORATORS ---
+[2026-02-05T10:30:39.668Z]   [CollaboratorMigrator] Starting migration of 2 collaborators
+[2026-02-05T10:30:39.668Z]   [CollaboratorMigrator] Migrated 2/2 collaborators
+[2026-02-05T10:30:39.668Z] ✓ 2 collaborators migrated
+[2026-02-05T10:30:39.668Z] 
+--- MIGRATING CHECKLISTS (with items) ---
+[2026-02-05T10:30:39.668Z]   [ChecklistMigrator] Starting migration of 2 checklists (with items)
+[2026-02-05T10:30:39.668Z]   [ChecklistMigrator] Migrated 2/2 checklists with items
+[2026-02-05T10:30:39.669Z] ✓ 2 checklists with items migrated
+[2026-02-05T10:30:39.669Z] 
+--- MIGRATING FILES ---
+[2026-02-05T10:30:39.669Z]   [FileMigrator] Starting migration of 1 files
+[2026-02-05T10:30:39.669Z]   [FileMigrator] Migrated 1/1 files
+[2026-02-05T10:30:39.669Z] ✓ 1 files migrated
+[2026-02-05T10:30:39.669Z] 
+--- MIGRATING ACTIVITY LOGS ---
+[2026-02-05T10:30:39.669Z]   [ActivityLogMigrator] Starting migration of 1 activity logs
+[2026-02-05T10:30:39.670Z]   [ActivityLogMigrator] Migrated 1/1 activity logs
+[2026-02-05T10:30:39.670Z] ✓ 1 activity logs migrated
+[2026-02-05T10:30:39.670Z] 
+--- MIGRATING PERMISSIONS ---
+[2026-02-05T10:30:39.670Z]   [PermissionMigrator] Skipping permissions migration (no permissions table in schema)
+[2026-02-05T10:30:39.670Z]   [PermissionMigrator] Migrated 0/0 permissions
+[2026-02-05T10:30:39.670Z] ✓ 0 permissions migrated
+[2026-02-05T10:30:39.670Z] Committing transaction...
+[2026-02-05T10:30:39.676Z] ✓ Transaction committed
+[2026-02-05T10:30:39.676Z] Enabling foreign key constraints...
+[2026-02-05T10:30:39.676Z] ✓ Foreign keys enabled
+[2026-02-05T10:30:39.676Z] 
+========== RUNNING VALIDATORS ==========
+[2026-02-05T10:30:39.676Z] ========== RUNNING ALL 8 VALIDATORS ==========
+[2026-02-05T10:30:39.677Z] [VALIDATOR 1] Row Count Matching
+[2026-02-05T10:30:39.677Z]   users: 1 records 
+[2026-02-05T10:30:39.677Z]   clients: 1 records 
+[2026-02-05T10:30:39.677Z]   engagements: 1 records 
+[2026-02-05T10:30:39.677Z]   rfis: 1 records 
+[2026-02-05T10:30:39.677Z]   reviews: 1 records 
+[2026-02-05T10:30:39.677Z]   highlights: 0 records 
+[2026-02-05T10:30:39.677Z]   messages: 1 records 
+[2026-02-05T10:30:39.678Z]   collaborators: 2 records 
+[2026-02-05T10:30:39.678Z]   checklists: 2 records 
+[2026-02-05T10:30:39.678Z]   checklist_items: 0 records 
+[2026-02-05T10:30:39.678Z]   files: 1 records 
+[2026-02-05T10:30:39.678Z]   activity_logs: 1 records 
+[2026-02-05T10:30:39.678Z]   user_id_mapping: 2 records 
+[2026-02-05T10:30:39.678Z] [VALIDATOR 2] Referential Integrity
+[2026-02-05T10:30:39.679Z]   engagements.client_id → clients: OK
+[2026-02-05T10:30:39.679Z] ERROR: FK check engagements.user_id failed - no such column: t1.user_id
+[2026-02-05T10:30:39.679Z] ERROR: FK check rfi.engagement_id failed - no such table: rfi
+[2026-02-05T10:30:39.679Z] ERROR: FK check rfi_question.rfi_id failed - no such table: rfi_question
+[2026-02-05T10:30:39.679Z] ERROR: FK check rfi_response.rfi_question_id failed - no such table: rfi_response
+[2026-02-05T10:30:39.680Z] ERROR: FK check rfi_response.user_id failed - no such table: rfi_response
+[2026-02-05T10:30:39.680Z] ERROR: FK check reviews.engagement_id failed - this.logger?.warn is not a function
+[2026-02-05T10:30:39.680Z]   reviews.reviewer_id → users: OK
+[2026-02-05T10:30:39.680Z]   highlights.review_id → reviews: OK
+[2026-02-05T10:30:39.681Z]   messages.engagement_id → engagements: OK
+[2026-02-05T10:30:39.681Z] ERROR: FK check messages.user_id failed - no such column: t1.user_id
+[2026-02-05T10:30:39.681Z]   collaborators.engagement_id → engagements: OK
+[2026-02-05T10:30:39.681Z] ERROR: FK check collaborators.user_id failed - no such column: t1.user_id
+[2026-02-05T10:30:39.681Z] ERROR: FK check checklist.engagement_id failed - no such table: checklist
+[2026-02-05T10:30:39.681Z] ERROR: FK check checklist_item.checklist_id failed - no such table: checklist_item
+[2026-02-05T10:30:39.681Z] ERROR: FK check activity_log.user_id failed - no such table: activity_log
+[2026-02-05T10:30:39.682Z] ERROR: FK check permissions.user_id failed - no such table: permissions
+[2026-02-05T10:30:39.682Z] [VALIDATOR 3] Data Type Accuracy
+[2026-02-05T10:30:39.682Z]   engagements.created_at: OK
+[2026-02-05T10:30:39.683Z]   reviews.created_at: OK
+[2026-02-05T10:30:39.683Z]   reviews.updated_at: OK
+[2026-02-05T10:30:39.683Z]   messages.created_at: OK
+[2026-02-05T10:30:39.683Z]   messages.updated_at: OK
+[2026-02-05T10:30:39.683Z]   collaborators.created_at: OK
+[2026-02-05T10:30:39.684Z] [VALIDATOR 4] PDF Coordinate Preservation (±0 pixels)
+[2026-02-05T10:30:39.684Z]   Total highlights: 0
+[2026-02-05T10:30:39.684Z]   Preserved (±0px): 0/0 (100%)
+[2026-02-05T10:30:39.684Z] [VALIDATOR 5] Timestamp Normalization (UTC)
+[2026-02-05T10:30:39.686Z]   Total timestamps checked: 14
+[2026-02-05T10:30:39.686Z]   UTC compliant: 12/14 (85.71%)
+[2026-02-05T10:30:39.686Z] ERROR: Migration failed - rolling back - this.logger?.warn is not a function
+[2026-02-05T10:30:39.686Z] ERROR: Rollback failed - cannot rollback - no transaction is active
