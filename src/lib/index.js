@@ -40,6 +40,7 @@ export * from '@/lib/realtime-server';
 export * from '@/lib/hook-engine';
 export * from '@/lib/migration-engine';
 export * from '@/lib/events-engine';
+export * from '@/lib/workflow-engine';
 export * from '@/lib/field-registry';
 export * from '@/lib/page-factory';
 export * from '@/lib/entity-generator';

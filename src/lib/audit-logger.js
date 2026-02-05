@@ -1,152 +1,177 @@
 import { getDatabase, genId, now } from '@/lib/database-core';
 
+const db = getDatabase();
+
+const parseJson = (val) => val ? JSON.parse(val) : null;
+
+const parseRow = (row) => row ? {
+  ...row,
+  old_permissions: parseJson(row.old_permissions),
+  new_permissions: parseJson(row.new_permissions),
+  metadata: parseJson(row.metadata),
+  before_state: parseJson(row.before_state),
+  after_state: parseJson(row.after_state),
+} : null;
+
 export const logAction = (entityType, entityId, action, userId, beforeState, afterState) => {
-  const db = getDatabase();
   const id = genId();
   const timestamp = now();
-
-  const beforeJson = beforeState ? JSON.stringify(beforeState) : null;
-  const afterJson = afterState ? JSON.stringify(afterState) : null;
-
-  const stmt = db.prepare(`
-    INSERT INTO audit_logs (
-      id, entity_type, entity_id, action, user_id,
-      before_state, after_state, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  stmt.run(
-    id,
-    entityType,
-    entityId,
-    action,
-    userId || null,
-    beforeJson,
-    afterJson,
+  db.prepare(`
+    INSERT INTO audit_logs (id, entity_type, entity_id, action, user_id, before_state, after_state, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, entityType, entityId, action, userId || null,
+    beforeState ? JSON.stringify(beforeState) : null,
+    afterState ? JSON.stringify(afterState) : null,
     timestamp
   );
-
   return { id, timestamp };
 };
 
 export const getAuditHistory = (filters = {}, page = 1, pageSize = 50) => {
-  const db = getDatabase();
-
-  let whereConditions = [];
-  let params = [];
-
-  if (filters.entityType) {
-    whereConditions.push('entity_type = ?');
-    params.push(filters.entityType);
-  }
-
-  if (filters.entityId) {
-    whereConditions.push('entity_id = ?');
-    params.push(filters.entityId);
-  }
-
-  if (filters.userId) {
-    whereConditions.push('user_id = ?');
-    params.push(filters.userId);
-  }
-
-  if (filters.action) {
-    whereConditions.push('action = ?');
-    params.push(filters.action);
-  }
-
-  if (filters.fromDate) {
-    whereConditions.push('created_at >= ?');
-    params.push(filters.fromDate);
-  }
-
-  if (filters.toDate) {
-    whereConditions.push('created_at <= ?');
-    params.push(filters.toDate);
-  }
-
-  const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
-
-  const countStmt = db.prepare(`SELECT COUNT(*) as count FROM audit_logs ${whereClause}`);
-  const { count } = countStmt.get(...params);
-
+  const wc = [], params = [];
+  if (filters.entityType) { wc.push('entity_type = ?'); params.push(filters.entityType); }
+  if (filters.entityId) { wc.push('entity_id = ?'); params.push(filters.entityId); }
+  if (filters.userId) { wc.push('user_id = ?'); params.push(filters.userId); }
+  if (filters.action) { wc.push('action = ?'); params.push(filters.action); }
+  if (filters.fromDate) { wc.push('created_at >= ?'); params.push(filters.fromDate); }
+  if (filters.toDate) { wc.push('created_at <= ?'); params.push(filters.toDate); }
+  const where = wc.length ? 'WHERE ' + wc.join(' AND ') : '';
+  const { count: total } = db.prepare(`SELECT COUNT(*) as count FROM audit_logs ${where}`).get(...params);
   const offset = (page - 1) * pageSize;
-  const stmt = db.prepare(`
-    SELECT id, entity_type, entity_id, action, user_id,
-           before_state, after_state, created_at
-    FROM audit_logs
-    ${whereClause}
-    ORDER BY created_at DESC
-    LIMIT ? OFFSET ?
-  `);
-
-  const items = stmt.all(...params, pageSize, offset);
-
-  const logs = items.map(item => ({
-    id: item.id,
-    entityType: item.entity_type,
-    entityId: item.entity_id,
-    action: item.action,
-    userId: item.user_id,
-    beforeState: item.before_state ? JSON.parse(item.before_state) : null,
-    afterState: item.after_state ? JSON.parse(item.after_state) : null,
-    createdAt: item.created_at
-  }));
-
+  const items = db.prepare(`SELECT * FROM audit_logs ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`).all(...params, pageSize, offset);
   return {
-    items: logs,
-    pagination: {
-      page,
-      pageSize,
-      total: count,
-      totalPages: Math.ceil(count / pageSize)
-    }
+    items: items.map(i => ({
+      id: i.id, entityType: i.entity_type, entityId: i.entity_id, action: i.action,
+      userId: i.user_id, beforeState: parseJson(i.before_state), afterState: parseJson(i.after_state), createdAt: i.created_at,
+    })),
+    pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
   };
 };
 
 export const getEntityAuditTrail = (entityType, entityId) => {
-  const db = getDatabase();
-  const stmt = db.prepare(`
-    SELECT id, action, user_id, before_state, after_state, created_at
-    FROM audit_logs
-    WHERE entity_type = ? AND entity_id = ?
-    ORDER BY created_at DESC
-  `);
-
-  const items = stmt.all(entityType, entityId);
-
-  return items.map(item => ({
-    id: item.id,
-    action: item.action,
-    userId: item.user_id,
-    beforeState: item.before_state ? JSON.parse(item.before_state) : null,
-    afterState: item.after_state ? JSON.parse(item.after_state) : null,
-    createdAt: item.created_at
-  }));
+  return db.prepare(`SELECT * FROM audit_logs WHERE entity_type = ? AND entity_id = ? ORDER BY created_at DESC`).all(entityType, entityId)
+    .map(i => ({ id: i.id, action: i.action, userId: i.user_id, beforeState: parseJson(i.before_state), afterState: parseJson(i.after_state), createdAt: i.created_at }));
 };
 
-export const getActionStats = (fromDate, toDate) => {
-  const db = getDatabase();
-  const stmt = db.prepare(`
-    SELECT action, COUNT(*) as count
-    FROM audit_logs
-    WHERE created_at >= ? AND created_at <= ?
-    GROUP BY action
-    ORDER BY count DESC
-  `);
+export const getActionStats = (fromDate, toDate) =>
+  db.prepare(`SELECT action, COUNT(*) as count FROM audit_logs WHERE created_at >= ? AND created_at <= ? GROUP BY action ORDER BY count DESC`).all(fromDate, toDate);
 
-  return stmt.all(fromDate, toDate);
+export const getUserStats = (fromDate, toDate) =>
+  db.prepare(`SELECT user_id, COUNT(*) as count FROM audit_logs WHERE created_at >= ? AND created_at <= ? GROUP BY user_id ORDER BY count DESC`).all(fromDate, toDate);
+
+export const logPermissionChange = ({
+  userId, entityType, entityId, action, oldPermissions = null, newPermissions = null,
+  reason = null, reasonCode = 'other', affectedUserId = null, ipAddress = null, sessionId = null, metadata = null,
+}) => {
+  if (!userId || !entityType || !entityId || !action) throw new Error('Missing required audit fields');
+  const auditId = genId();
+  const timestamp = now();
+  db.prepare(`
+    INSERT INTO permission_audit (id, user_id, entity_type, entity_id, action, old_permissions, new_permissions,
+      reason, reason_code, timestamp, ip_address, session_id, affected_user_id, metadata, created_at, updated_at, created_by, updated_by)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(auditId, userId, entityType, entityId, action,
+    oldPermissions ? JSON.stringify(oldPermissions) : null, newPermissions ? JSON.stringify(newPermissions) : null,
+    reason, reasonCode, timestamp, ipAddress, sessionId, affectedUserId,
+    metadata ? JSON.stringify(metadata) : null, timestamp, timestamp, userId, userId
+  );
+  return auditId;
 };
 
-export const getUserStats = (fromDate, toDate) => {
-  const db = getDatabase();
-  const stmt = db.prepare(`
-    SELECT user_id, COUNT(*) as count
-    FROM audit_logs
-    WHERE created_at >= ? AND created_at <= ?
-    GROUP BY user_id
-    ORDER BY count DESC
-  `);
+export const auditPermissionChange = async ({ user, entityType, entityId, action, oldPermissions = null,
+  newPermissions = null, affectedUserId = null, reason = null, reasonCode = 'admin_action', metadata = null }) => {
+  try {
+    await logPermissionChange({ userId: user.id, entityType, entityId, action, oldPermissions, newPermissions,
+      reason: reason || `Permission ${action}`, reasonCode, affectedUserId, metadata });
+  } catch (error) {
+    console.error('[Audit] Failed to log permission change:', error);
+  }
+};
 
-  return stmt.all(fromDate, toDate);
+export const auditRoleChange = async ({ user, targetUserId, oldRole, newRole, reason = null, metadata = null }) => {
+  await auditPermissionChange({ user, entityType: 'user', entityId: targetUserId, action: 'role_change',
+    oldPermissions: { role: oldRole }, newPermissions: { role: newRole },
+    affectedUserId: targetUserId, reason: reason || `Role changed from ${oldRole} to ${newRole}`,
+    reasonCode: 'role_change', metadata: { ...metadata, old_role: oldRole, new_role: newRole } });
+};
+
+export const auditCollaboratorAdded = async ({ user, reviewId, collaboratorId, collaboratorUserId, permissions = null, reason = null, metadata = null }) => {
+  await auditPermissionChange({ user, entityType: 'review', entityId: reviewId, action: 'grant',
+    newPermissions: permissions || { access: 'collaborator' }, affectedUserId: collaboratorUserId,
+    reason: reason || 'Collaborator added to review', reasonCode: 'collaborator_added',
+    metadata: { ...metadata, collaborator_id: collaboratorId, review_id: reviewId } });
+};
+
+export const auditCollaboratorRemoved = async ({ user, reviewId, collaboratorId, collaboratorUserId, permissions = null, reason = null, metadata = null }) => {
+  await auditPermissionChange({ user, entityType: 'review', entityId: reviewId, action: 'revoke',
+    oldPermissions: permissions || { access: 'collaborator' }, affectedUserId: collaboratorUserId,
+    reason: reason || 'Collaborator removed from review', reasonCode: 'collaborator_removed',
+    metadata: { ...metadata, collaborator_id: collaboratorId, review_id: reviewId } });
+};
+
+export const auditLifecycleTransition = async ({ user, entityType, entityId, fromStage, toStage, metadata = null }) => {
+  await auditPermissionChange({ user, entityType, entityId, action: 'modify',
+    oldPermissions: { stage: fromStage }, newPermissions: { stage: toStage },
+    reason: `Lifecycle transition: ${fromStage} -> ${toStage}`, reasonCode: 'lifecycle_transition',
+    metadata: { ...metadata, from_stage: fromStage, to_stage: toStage } });
+};
+
+export const auditPermissionModify = async ({ user, entityType, entityId, oldPermissions, newPermissions,
+  affectedUserId = null, reason = null, reasonCode = 'admin_action', metadata = null }) => {
+  await auditPermissionChange({ user, entityType, entityId, action: 'modify',
+    oldPermissions, newPermissions, affectedUserId, reason: reason || 'Permissions modified', reasonCode, metadata });
+};
+
+const queryPermissionAudit = (where, params, limit = 100) => {
+  return db.prepare(`SELECT * FROM permission_audit ${where} ORDER BY timestamp DESC LIMIT ?`).all(...params, limit).map(parseRow);
+};
+
+export const getPermissionAuditTrail = ({ entityType, entityId, userId, affectedUserId, limit = 100, offset = 0 }) => {
+  let sql = 'SELECT * FROM permission_audit WHERE 1=1';
+  const params = [];
+  if (entityType) { sql += ' AND entity_type = ?'; params.push(entityType); }
+  if (entityId) { sql += ' AND entity_id = ?'; params.push(entityId); }
+  if (userId) { sql += ' AND user_id = ?'; params.push(userId); }
+  if (affectedUserId) { sql += ' AND affected_user_id = ?'; params.push(affectedUserId); }
+  sql += ' ORDER BY timestamp DESC LIMIT ? OFFSET ?';
+  return db.prepare(sql).all(...params, limit, offset).map(parseRow);
+};
+
+export const getPermissionAuditById = (auditId) => parseRow(db.prepare('SELECT * FROM permission_audit WHERE id = ?').get(auditId));
+
+export const getPermissionAuditStats = () => db.prepare(`
+  SELECT COUNT(*) as total_audits, COUNT(DISTINCT user_id) as unique_users,
+    COUNT(DISTINCT entity_type) as entity_types, MIN(timestamp) as earliest_change, MAX(timestamp) as latest_change
+  FROM permission_audit
+`).get();
+
+export const getPermissionAuditBreakdown = (field) =>
+  db.prepare(`SELECT ${field}, COUNT(*) as count FROM permission_audit GROUP BY ${field} ORDER BY count DESC`).all();
+
+export const searchPermissionAudit = (searchTerm, limit = 100) => {
+  const pattern = `%${searchTerm}%`;
+  return db.prepare(`SELECT * FROM permission_audit WHERE reason LIKE ? OR entity_type LIKE ? OR entity_id LIKE ? ORDER BY timestamp DESC LIMIT ?`)
+    .all(pattern, pattern, pattern, limit).map(parseRow);
+};
+
+export const getPermissionAuditByDateRange = (startDate, endDate, limit = 100) =>
+  db.prepare(`SELECT * FROM permission_audit WHERE timestamp >= ? AND timestamp <= ? ORDER BY timestamp DESC LIMIT ?`).all(startDate, endDate, limit).map(parseRow);
+
+export const exportPermissionAuditCSV = async (filters = {}) => {
+  const trail = getPermissionAuditTrail({ ...filters, limit: 10000 });
+  const headers = ['Timestamp', 'Changed By', 'Entity Type', 'Entity ID', 'Action', 'Reason Code', 'Reason', 'Affected User', 'IP Address'];
+  const rows = trail.map(a => [
+    new Date(a.timestamp * 1000).toISOString(), a.user_id, a.entity_type, a.entity_id,
+    a.action, a.reason_code, a.reason || '', a.affected_user_id || '', a.ip_address || '',
+  ]);
+  return [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
+};
+
+export const getPermissionDiff = (oldPerms, newPerms) => {
+  const diff = { added: [], removed: [], unchanged: [] };
+  const oldSet = new Set(Array.isArray(oldPerms) ? oldPerms : []);
+  const newSet = new Set(Array.isArray(newPerms) ? newPerms : []);
+  for (const p of newSet) { if (!oldSet.has(p)) diff.added.push(p); else diff.unchanged.push(p); }
+  for (const p of oldSet) { if (!newSet.has(p)) diff.removed.push(p); }
+  return diff;
 };

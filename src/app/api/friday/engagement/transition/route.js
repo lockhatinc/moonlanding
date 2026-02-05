@@ -1,7 +1,7 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { get } from '@/engine';
 import { withPageAuth } from '@/lib/auth-middleware';
-import { transitionEngagement, getAvailableTransitions, validateStageTransition } from '@/lib/lifecycle-engine';
+import { transition, getAvailableTransitions, validateTransition } from '@/lib/workflow-engine';
 
 export async function GET(request) {
   try {
@@ -25,7 +25,7 @@ export async function GET(request) {
       );
     }
 
-    const availableTransitions = getAvailableTransitions(engagement, user);
+    const availableTransitions = getAvailableTransitions('engagement_lifecycle', engagement.stage, user, engagement);
 
     return NextResponse.json({
       success: true,
@@ -66,11 +66,9 @@ export async function POST(request) {
     }
 
     try {
-      // Validate transition
-      validateStageTransition(engagement, toStage, user);
+      validateTransition('engagement_lifecycle', engagement.stage, toStage, user);
 
-      // Execute transition
-      const result = transitionEngagement(engagementId, toStage, user, reason || '');
+      const result = transition('engagement', engagementId, 'engagement_lifecycle', toStage, user, reason || '');
 
       return NextResponse.json({
         success: true,

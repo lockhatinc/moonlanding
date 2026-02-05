@@ -1,27 +1,16 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { getUser, setCurrentRequest } from '@/engine.server';
-import { auditDashboard } from '@/lib/audit-dashboard';
-
-function checkDashboardPermission(user) {
-  if (!user) {
-    return { allowed: false, error: 'Unauthorized' };
-  }
-
-  if (user.role === 'partner' || user.role === 'manager') {
-    return { allowed: true };
-  }
-
-  return { allowed: false, error: 'Permission denied: Only partners and managers can access audit dashboard' };
-}
+import {
+  getPermissionAuditTrail, getPermissionAuditStats, getPermissionAuditBreakdown,
+  getPermissionAuditByDateRange, searchPermissionAudit, getPermissionDiff,
+} from '@/lib/audit-logger';
 
 export async function GET(request) {
   setCurrentRequest(request);
   try {
     const user = await getUser();
-    const permCheck = checkDashboardPermission(user);
-
-    if (!permCheck.allowed) {
-      return NextResponse.json({ error: permCheck.error }, { status: 403 });
+    if (!user || (user.role !== 'partner' && user.role !== 'manager')) {
+      return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -30,113 +19,59 @@ export async function GET(request) {
     const entityType = searchParams.get('entity_type');
     const entityId = searchParams.get('entity_id');
     const userId = searchParams.get('user_id');
-    const affectedUserId = searchParams.get('affected_user_id');
     const searchTerm = searchParams.get('search');
     const limit = parseInt(searchParams.get('limit') || '100', 10);
 
+    const nowTs = Math.floor(Date.now() / 1000);
+    const startTs = nowTs - (days * 86400);
+
     let data;
-
     switch (view) {
-      case 'summary':
-        data = await auditDashboard.generateSummaryReport(days);
+      case 'summary': {
+        const stats = getPermissionAuditStats();
+        const actionBreakdown = getPermissionAuditBreakdown('action');
+        const reasonBreakdown = getPermissionAuditBreakdown('reason_code');
+        const changes = getPermissionAuditByDateRange(startTs, nowTs, limit);
+        data = {
+          period_days: days,
+          total_changes: changes.length,
+          stats: { ...stats, unique_users: stats.unique_users, entity_types: stats.entity_types },
+          by_action: actionBreakdown.reduce((a, i) => { a[i.action] = i.count; return a; }, {}),
+          by_reason: reasonBreakdown.reduce((a, i) => { a[i.reason_code] = i.count; return a; }, {}),
+        };
         break;
-
+      }
       case 'recent':
-        data = await auditDashboard.getRecentActivity(days, limit);
+        data = { period: `Last ${days} days`, changes: getPermissionAuditByDateRange(startTs, nowTs, limit) };
         break;
-
       case 'user':
-        if (!userId) {
-          return NextResponse.json({ error: 'user_id required for user view' }, { status: 400 });
-        }
-        data = await auditDashboard.getUserActivity(userId, limit);
+        if (!userId) return NextResponse.json({ error: 'user_id required' }, { status: 400 });
+        data = { user_id: userId, changes: getPermissionAuditTrail({ userId, limit }) };
         break;
-
       case 'entity':
-        if (!entityType || !entityId) {
-          return NextResponse.json(
-            { error: 'entity_type and entity_id required for entity view' },
-            { status: 400 }
-          );
-        }
-        data = await auditDashboard.getEntityHistory(entityType, entityId, limit);
+        if (!entityType || !entityId) return NextResponse.json({ error: 'entity_type and entity_id required' }, { status: 400 });
+        data = {
+          entity_type: entityType, entity_id: entityId,
+          timeline: getPermissionAuditTrail({ entityType, entityId, limit }).map(c => ({
+            ...c, timestamp_iso: new Date(c.timestamp * 1000).toISOString(),
+            diff: c.old_permissions && c.new_permissions ? getPermissionDiff(c.old_permissions, c.new_permissions) : null,
+          })),
+        };
         break;
-
-      case 'affected':
-        if (!affectedUserId) {
-          return NextResponse.json(
-            { error: 'affected_user_id required for affected view' },
-            { status: 400 }
-          );
-        }
-        data = await auditDashboard.getAffectedUserChanges(affectedUserId, limit);
-        break;
-
-      case 'actions':
-        data = await auditDashboard.getActionSummary();
-        break;
-
-      case 'collaborators':
-        if (!entityId) {
-          return NextResponse.json(
-            { error: 'entity_id (review_id) required for collaborators view' },
-            { status: 400 }
-          );
-        }
-        data = await auditDashboard.getCollaboratorChanges(entityId, limit);
-        break;
-
-      case 'roles':
-        data = await auditDashboard.getRoleChangeHistory(limit);
-        break;
-
-      case 'lifecycle':
-        if (!entityType) {
-          return NextResponse.json(
-            { error: 'entity_type required for lifecycle view' },
-            { status: 400 }
-          );
-        }
-        data = await auditDashboard.getLifecycleTransitionAudits(entityType, limit);
-        break;
-
       case 'search':
-        if (!searchTerm) {
-          return NextResponse.json({ error: 'search parameter required' }, { status: 400 });
-        }
-        data = await auditDashboard.searchAudits(searchTerm, limit);
+        if (!searchTerm) return NextResponse.json({ error: 'search parameter required' }, { status: 400 });
+        data = { search_term: searchTerm, results: searchPermissionAudit(searchTerm, limit) };
         break;
-
-      case 'compliance':
-        const startDate = parseInt(searchParams.get('start_date') || '0', 10);
-        const endDate = parseInt(searchParams.get('end_date') || Math.floor(Date.now() / 1000).toString(), 10);
-
-        if (!startDate) {
-          return NextResponse.json({ error: 'start_date required for compliance view' }, { status: 400 });
-        }
-
-        data = await auditDashboard.getComplianceReport(startDate, endDate);
+      case 'roles':
+        data = { changes: getPermissionAuditTrail({ limit }).filter(c => c.action === 'role_change') };
         break;
-
-      case 'anomalous':
-        const threshold = parseInt(searchParams.get('threshold') || '10', 10);
-        data = await auditDashboard.getAnomalousActivity(threshold);
-        break;
-
       default:
         return NextResponse.json({ error: `Unknown view: ${view}` }, { status: 400 });
     }
 
-    return NextResponse.json({
-      success: true,
-      view,
-      data,
-    });
+    return NextResponse.json({ success: true, view, data });
   } catch (error) {
     console.error('[AuditDashboardAPI] GET error:', error);
-    return NextResponse.json(
-      { error: 'Failed to retrieve audit dashboard data', details: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to retrieve audit dashboard data', details: error.message }, { status: 500 });
   }
 }

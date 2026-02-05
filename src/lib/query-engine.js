@@ -1,12 +1,52 @@
 import { getDatabase, genId, now } from '@/lib/database-core';
 import { getSpec } from '@/config/spec-helpers';
 import { RECORD_STATUS } from '@/config/constants';
-import { SQL_OPERATORS, SQL_KEYWORDS, QUERY_BUILDING, SORT_DIRECTIONS } from '@/config/query-config';
 import { iterateCreateFields, iterateUpdateFields } from '@/lib/field-iterator';
 import { coerceFieldValue } from '@/lib/field-registry';
-import { execGet, execQuery, execRun, withTransaction } from '@/lib/query-wrapper';
+import { createErrorLogger, DatabaseError } from '@/lib/error-handler';
+import { LOG_PREFIXES } from '@/config';
 
 const db = getDatabase();
+const logger = createErrorLogger(LOG_PREFIXES.database);
+
+const execQuery = (sql, params, context = {}) => {
+  try {
+    return db.prepare(sql).all(...params);
+  } catch (e) {
+    logger.error(`${context.operation || 'Query'} ${context.entity || ''}`, { sql, error: e.message });
+    throw DatabaseError(`query ${context.entity || 'database'}`, e);
+  }
+};
+
+const execGet = (sql, params, context = {}) => {
+  try {
+    return db.prepare(sql).get(...params);
+  } catch (e) {
+    logger.error(`${context.operation || 'Get'} ${context.entity || ''}`, { sql, error: e.message });
+    throw DatabaseError(`get ${context.entity || 'record'}`, e);
+  }
+};
+
+const execRun = (sql, params, context = {}) => {
+  try {
+    return db.prepare(sql).run(...params);
+  } catch (e) {
+    logger.error(`${context.operation || 'Run'} ${context.entity || ''}`, { sql, error: e.message });
+    throw DatabaseError(`execute ${context.entity || 'operation'}`, e);
+  }
+};
+
+export const withTransaction = async (callback) => {
+  try {
+    db.prepare('BEGIN').run();
+    const result = await callback();
+    db.prepare('COMMIT').run();
+    return result;
+  } catch (e) {
+    db.prepare('ROLLBACK').run();
+    throw e;
+  }
+};
 
 async function getPaginationConfig() {
   try {
@@ -14,35 +54,34 @@ async function getPaginationConfig() {
     const engine = await getConfigEngine();
     return engine.getConfig().system.pagination;
   } catch (error) {
-    console.warn('[query-engine] Failed to load pagination config, using defaults:', error.message);
     return { default_page_size: 50, max_page_size: 500 };
   }
 }
 
+const tableName = (spec) => spec.name === 'user' ? 'users' : spec.name;
+
 function buildSpecQuery(spec, where = {}, options = {}) {
-  // Lucia expects 'users' table for the 'user' entity
-  const tableName = spec.name === 'user' ? 'users' : spec.name;
-  const table = `"${tableName}"`, selects = [`${table}.*`], joins = [];
-  if (spec.computed) Object.entries(spec.computed).forEach(([k, c]) => selects.push(`${c.sql} ${SQL_KEYWORDS.as} "${k}"`));
+  const tbl = tableName(spec);
+  const table = `"${tbl}"`, selects = [`${table}.*`], joins = [];
+  if (spec.computed) Object.entries(spec.computed).forEach(([k, c]) => selects.push(`${c.sql} as "${k}"`));
   Object.entries(spec.fields).forEach(([k, f]) => {
     if (f.type === 'ref' && f.display) {
-      // Lucia expects 'users' table for the 'user' entity
-      const refTableName = f.ref === 'user' ? 'users' : f.ref;
-      const a = `"${refTableName}_${k}"`;
-      joins.push(`${SQL_KEYWORDS.leftJoin} "${refTableName}" ${a} ON ${table}."${k}" ${SQL_OPERATORS.eq} ${a}.id`);
-      selects.push(`${a}."${f.display.split('.')[1] || 'name'}" ${SQL_KEYWORDS.as} "${k}_display"`);
+      const refTbl = f.ref === 'user' ? 'users' : f.ref;
+      const a = `"${refTbl}_${k}"`;
+      joins.push(`LEFT JOIN "${refTbl}" ${a} ON ${table}."${k}" = ${a}.id`);
+      selects.push(`${a}."${f.display.split('.')[1] || 'name'}" as "${k}_display"`);
     }
   });
   const wc = [], p = [];
-  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${table}."${k}" ${SQL_OPERATORS.eq} ${QUERY_BUILDING.parameterPlaceholder}`); p.push(v); } });
-  if (spec.fields.status && !where.status && !options.includeDeleted) wc.push(`${table}."status" ${SQL_OPERATORS.ne} '${RECORD_STATUS.DELETED}'`);
-  if (spec.fields.archived && !where.archived && !options.includeArchived) wc.push(`${table}."archived" ${SQL_OPERATORS.eq} 0`);
-  let sql = `${SQL_KEYWORDS.select} ${selects.join(`${QUERY_BUILDING.delimiter} `)} ${SQL_KEYWORDS.from} ${table}`;
+  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${table}."${k}" = ?`); p.push(v); } });
+  if (spec.fields.status && !where.status && !options.includeDeleted) wc.push(`${table}."status" != '${RECORD_STATUS.DELETED}'`);
+  if (spec.fields.archived && !where.archived && !options.includeArchived) wc.push(`${table}."archived" = 0`);
+  let sql = `SELECT ${selects.join(', ')} FROM ${table}`;
   if (joins.length) sql += ' ' + joins.join(' ');
-  if (wc.length) sql += ` ${SQL_KEYWORDS.where} ` + wc.join(` ${SQL_KEYWORDS.and} `);
+  if (wc.length) sql += ` WHERE ` + wc.join(` AND `);
   const sort = options.sort || spec.list?.defaultSort;
-  if (sort) sql += ` ${SQL_KEYWORDS.orderBy} ${table}."${sort.field}" ${(sort.dir || SORT_DIRECTIONS.asc).toUpperCase()}`;
-  if (options.limit) { sql += ` ${SQL_KEYWORDS.limit} ${options.limit}`; if (options.offset) sql += ` ${SQL_KEYWORDS.offset} ${options.offset}`; }
+  if (sort) sql += ` ORDER BY ${table}."${sort.field}" ${(sort.dir || 'ASC').toUpperCase()}`;
+  if (options.limit) { sql += ` LIMIT ${options.limit}`; if (options.offset) sql += ` OFFSET ${options.offset}`; }
   return { sql, params: p };
 }
 
@@ -54,7 +93,7 @@ export const list = (entity, where = {}, opts = {}) => {
 
 export const listWithPagination = async (entity, where = {}, page = 1, pageSize = null) => {
   const spec = getSpec(entity);
-  const tableName = spec.name === 'user' ? 'users' : spec.name;
+  const tbl = tableName(spec);
   const paginationCfg = await getPaginationConfig();
   const defaultPageSize = spec.list?.pageSize || paginationCfg.default_page_size;
   const maxPageSize = paginationCfg.max_page_size;
@@ -63,11 +102,11 @@ export const listWithPagination = async (entity, where = {}, page = 1, pageSize 
   const finalPageSize = parsedPageSize && !isNaN(parsedPageSize) ? Math.min(parsedPageSize, maxPageSize) : defaultPageSize;
   const finalPage = !isNaN(parsedPage) ? Math.max(1, parsedPage) : 1;
   const wc = [], p = [];
-  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`"${tableName}"."${k}"${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`); p.push(v); } });
-  if (spec.fields.status && !where.status) wc.push(`"${tableName}"."status"${SQL_OPERATORS.ne}'${RECORD_STATUS.DELETED}'`);
-  if (spec.fields.archived && !where.archived) wc.push(`"${tableName}"."archived"${SQL_OPERATORS.eq}0`);
-  const whereClause = wc.length ? ` ${SQL_KEYWORDS.where} ` + wc.join(` ${SQL_KEYWORDS.and} `) : '';
-  const total = execGet(`${SQL_KEYWORDS.select} ${SQL_KEYWORDS.countAs} c ${SQL_KEYWORDS.from} "${tableName}"${whereClause}`, p, { entity, operation: 'Count' }).c;
+  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`"${tbl}"."${k}"=?`); p.push(v); } });
+  if (spec.fields.status && !where.status) wc.push(`"${tbl}"."status"!='${RECORD_STATUS.DELETED}'`);
+  if (spec.fields.archived && !where.archived) wc.push(`"${tbl}"."archived"=0`);
+  const whereClause = wc.length ? ` WHERE ` + wc.join(` AND `) : '';
+  const total = execGet(`SELECT COUNT(*) as c FROM "${tbl}"${whereClause}`, p, { entity, operation: 'Count' }).c;
   const items = list(entity, where, { limit: finalPageSize, offset: (finalPage - 1) * finalPageSize });
   return { items, pagination: { page: finalPage, pageSize: finalPageSize, total, totalPages: Math.ceil(total / finalPageSize), hasMore: finalPage < Math.ceil(total / finalPageSize) } };
 };
@@ -86,18 +125,18 @@ export const getBy = (entity, field, value) => {
 
 export const search = (entity, query, where = {}, opts = {}) => {
   const spec = getSpec(entity);
-  const tableName = spec.name === 'user' ? 'users' : spec.name;
+  const tbl = tableName(spec);
   const searchFields = spec.list?.searchFields || spec.fields ? Object.entries(spec.fields).filter(([,f]) => f.search).map(([k]) => k) : [];
   if (!searchFields.length || !query) return list(entity, where, opts);
   const { sql: baseSql, params: baseParams } = buildSpecQuery(spec, where, opts);
-  const table = `"${tableName}"`, searchClauses = searchFields.map(f => `${table}."${f}" ${SQL_OPERATORS.like} ${QUERY_BUILDING.parameterPlaceholder}`).join(` ${SQL_KEYWORDS.or} `);
-  const sql = baseSql.includes(SQL_KEYWORDS.where) ? baseSql.replace(` ${SQL_KEYWORDS.where} `, ` ${SQL_KEYWORDS.where} (${searchClauses}) ${SQL_KEYWORDS.and} `) : `${baseSql} ${SQL_KEYWORDS.where} (${searchClauses})`;
-  return execQuery(sql, [...searchFields.map(() => `${QUERY_BUILDING.wildcard}${query}${QUERY_BUILDING.wildcard}`), ...baseParams], { entity, operation: 'Search' });
+  const table = `"${tbl}"`, searchClauses = searchFields.map(f => `${table}."${f}" LIKE ?`).join(` OR `);
+  const sql = baseSql.includes('WHERE') ? baseSql.replace(` WHERE `, ` WHERE (${searchClauses}) AND `) : `${baseSql} WHERE (${searchClauses})`;
+  return execQuery(sql, [...searchFields.map(() => `%${query}%`), ...baseParams], { entity, operation: 'Search' });
 };
 
 export const searchWithPagination = async (entity, query, where = {}, page = 1, pageSize = null) => {
   const spec = getSpec(entity);
-  const tableName = spec.name === 'user' ? 'users' : spec.name;
+  const tbl = tableName(spec);
   const searchFields = spec.list?.searchFields || spec.fields ? Object.entries(spec.fields).filter(([,f]) => f.search).map(([k]) => k) : [];
   if (!searchFields.length || !query) return await listWithPagination(entity, where, page, pageSize);
   const paginationCfg = await getPaginationConfig();
@@ -107,46 +146,39 @@ export const searchWithPagination = async (entity, query, where = {}, page = 1, 
   const parsedPage = parseInt(page, 10);
   const finalPageSize = parsedPageSize && !isNaN(parsedPageSize) ? Math.min(parsedPageSize, maxPageSize) : defaultPageSize;
   const finalPage = !isNaN(parsedPage) ? Math.max(1, parsedPage) : 1;
-  const table = tableName, searchClauses = searchFields.map(f => `${table}.${f} ${SQL_OPERATORS.like} ${QUERY_BUILDING.parameterPlaceholder}`).join(` ${SQL_KEYWORDS.or} `);
+  const table = tbl, searchClauses = searchFields.map(f => `${table}.${f} LIKE ?`).join(` OR `);
   const wc = [], p = [];
-  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${table}.${k}${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`); p.push(v); } });
-  if (spec.fields.status && !where.status) wc.push(`${table}.status${SQL_OPERATORS.ne}'${RECORD_STATUS.DELETED}'`);
-  if (spec.fields.archived && !where.archived) wc.push(`${table}.archived${SQL_OPERATORS.eq}0`);
-  const whereClause = wc.length ? ` ${SQL_KEYWORDS.and} (${wc.join(` ${SQL_KEYWORDS.and} `)})` : '';
-  const countSql = `${SQL_KEYWORDS.select} ${SQL_KEYWORDS.countAs} c ${SQL_KEYWORDS.from} ${table} ${SQL_KEYWORDS.where} (${searchClauses})${whereClause}`;
-  const total = execGet(countSql, [...searchFields.map(() => `${QUERY_BUILDING.wildcard}${query}${QUERY_BUILDING.wildcard}`), ...p], { entity, operation: 'Count' }).c;
+  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${table}.${k}=?`); p.push(v); } });
+  if (spec.fields.status && !where.status) wc.push(`${table}.status!='${RECORD_STATUS.DELETED}'`);
+  if (spec.fields.archived && !where.archived) wc.push(`${table}.archived=0`);
+  const whereClause = wc.length ? ` AND (${wc.join(` AND `)})` : '';
+  const countSql = `SELECT COUNT(*) as c FROM ${table} WHERE (${searchClauses})${whereClause}`;
+  const total = execGet(countSql, [...searchFields.map(() => `%${query}%`), ...p], { entity, operation: 'Count' }).c;
   const items = search(entity, query, where, { limit: finalPageSize, offset: (finalPage - 1) * finalPageSize });
   return { items, pagination: { page: finalPage, pageSize: finalPageSize, total, totalPages: Math.ceil(total / finalPageSize), hasMore: finalPage < Math.ceil(total / finalPageSize) } };
 };
 
 export const count = (entity, where = {}) => {
   const spec = getSpec(entity);
-  const tableName = spec.name === 'user' ? 'users' : spec.name;
-  const wc = Object.entries(where).filter(([,v]) => v !== undefined).map(([k]) => `${k}${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`);
-  if (spec.fields.status) wc.push(`status${SQL_OPERATORS.ne}'${RECORD_STATUS.DELETED}'`);
-  if (spec.fields.archived && !where.archived) wc.push(`archived${SQL_OPERATORS.eq}0`);
-  const sql = `${SQL_KEYWORDS.select} ${SQL_KEYWORDS.countAs} c ${SQL_KEYWORDS.from} ${tableName}${wc.length ? ` ${SQL_KEYWORDS.where} ` + wc.join(` ${SQL_KEYWORDS.and} `) : ''}`;
+  const tbl = tableName(spec);
+  const wc = Object.entries(where).filter(([,v]) => v !== undefined).map(([k]) => `${k}=?`);
+  if (spec.fields.status) wc.push(`status!='${RECORD_STATUS.DELETED}'`);
+  if (spec.fields.archived && !where.archived) wc.push(`archived=0`);
+  const sql = `SELECT COUNT(*) as c FROM ${tbl}${wc.length ? ` WHERE ` + wc.join(` AND `) : ''}`;
   try { return execGet(sql, Object.values(where).filter(v => v !== undefined), { entity, operation: 'Count' }).c || 0; } catch { return 0; }
 };
 
 export const create = (entity, data, user) => {
   const spec = getSpec(entity);
-  const tableName = spec.name === 'user' ? 'users' : spec.name;
+  const tbl = tableName(spec);
   const fields = { id: data.id || genId() };
 
-  // Add auto fields that should always be included
-  if (spec.fields.created_at) {
-    fields.created_at = now();
-  }
-  if (spec.fields.updated_at) {
-    fields.updated_at = now();
-  }
-  if (spec.fields.created_by && user) {
-    fields.created_by = user.id;
-  }
+  if (spec.fields.created_at) fields.created_at = now();
+  if (spec.fields.updated_at) fields.updated_at = now();
+  if (spec.fields.created_by && user) fields.created_by = user.id;
 
   iterateCreateFields(spec, (key, field) => {
-    if (fields[key] !== undefined) return; // Skip if already set
+    if (fields[key] !== undefined) return;
     if (field.auto === 'now' || field.auto === 'update') fields[key] = now();
     else if (field.auto === 'user' && user) fields[key] = user.id;
     else if (data[key] !== undefined && data[key] !== '') {
@@ -157,22 +189,19 @@ export const create = (entity, data, user) => {
   });
 
   const keys = Object.keys(fields);
-  execRun(`${SQL_KEYWORDS.insert} ${tableName} (${keys.join(QUERY_BUILDING.delimiter)}) ${SQL_KEYWORDS.values} (${keys.map(() => QUERY_BUILDING.parameterPlaceholder).join(QUERY_BUILDING.delimiter)})`, Object.values(fields), { entity, operation: 'Create' });
+  execRun(`INSERT INTO ${tbl} (${keys.join(',')}) VALUES (${keys.map(() => '?').join(',')})`, Object.values(fields), { entity, operation: 'Create' });
   return { id: fields.id, ...fields };
 };
 
 export const update = (entity, id, data, user) => {
   const spec = getSpec(entity);
-  const tableName = spec.name === 'user' ? 'users' : spec.name;
+  const tbl = tableName(spec);
   const fields = {};
 
-  // Always update updated_at timestamp
-  if (spec.fields.updated_at) {
-    fields.updated_at = now();
-  }
+  if (spec.fields.updated_at) fields.updated_at = now();
 
   iterateUpdateFields(spec, (key, field) => {
-    if (fields[key] !== undefined) return; // Skip if already set
+    if (fields[key] !== undefined) return;
     if (field.auto === 'update') fields[key] = now();
     else if (data[key] !== undefined) {
       const v = coerceFieldValue(data[key], field.type);
@@ -181,7 +210,7 @@ export const update = (entity, id, data, user) => {
   });
 
   if (!Object.keys(fields).length) return;
-  const sql = `${SQL_KEYWORDS.update} ${tableName} ${SQL_KEYWORDS.set} ${Object.keys(fields).map(k => `${k}${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`).join(QUERY_BUILDING.delimiter)} ${SQL_KEYWORDS.where} id${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`;
+  const sql = `UPDATE ${tbl} SET ${Object.keys(fields).map(k => `${k}=?`).join(',')} WHERE id=?`;
   const values = [...Object.values(fields), id];
   console.log(`[query-engine] UPDATE ${entity} fields:`, Object.keys(fields), 'values:', values.slice(0, -1));
   execRun(sql, values, { entity, operation: 'Update' });
@@ -189,16 +218,14 @@ export const update = (entity, id, data, user) => {
 
 export const remove = (entity, id) => {
   const spec = getSpec(entity);
-  const tableName = spec.name === 'user' ? 'users' : spec.name;
+  const tbl = tableName(spec);
   if (spec.fields.status) {
     const hasUpdatedAt = spec.fields.updated_at;
-    execRun(hasUpdatedAt ? `${SQL_KEYWORDS.update} ${tableName} ${SQL_KEYWORDS.set} status${SQL_OPERATORS.eq}'${RECORD_STATUS.DELETED}'${QUERY_BUILDING.delimiter} updated_at${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder} ${SQL_KEYWORDS.where} id${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}` : `${SQL_KEYWORDS.update} ${tableName} ${SQL_KEYWORDS.set} status${SQL_OPERATORS.eq}'${RECORD_STATUS.DELETED}' ${SQL_KEYWORDS.where} id${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`, hasUpdatedAt ? [now(), id] : [id], { entity, operation: 'SoftDelete' });
+    execRun(hasUpdatedAt ? `UPDATE ${tbl} SET status='${RECORD_STATUS.DELETED}', updated_at=? WHERE id=?` : `UPDATE ${tbl} SET status='${RECORD_STATUS.DELETED}' WHERE id=?`, hasUpdatedAt ? [now(), id] : [id], { entity, operation: 'SoftDelete' });
   } else {
-    execRun(`${SQL_KEYWORDS.delete} ${tableName} ${SQL_KEYWORDS.where} id${SQL_OPERATORS.eq}${QUERY_BUILDING.parameterPlaceholder}`, [id], { entity, operation: 'HardDelete' });
+    execRun(`DELETE FROM ${tbl} WHERE id=?`, [id], { entity, operation: 'HardDelete' });
   }
 };
-
-export { withTransaction };
 
 export const getChildren = (parentEntity, parentId, childDef) => {
   const foreignKey = childDef.foreignKey || `${parentEntity}_id`;
@@ -215,3 +242,5 @@ export const batchGetChildren = (parentEntity, parentId, childSpecs) => {
   });
   return Promise.all(queries).then(results => Object.fromEntries(results));
 };
+
+export { execQuery, execGet, execRun };

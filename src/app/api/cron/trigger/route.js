@@ -1,5 +1,4 @@
-import { runDueJobs } from '@/lib/job-framework';
-import { SCHEDULED_JOBS } from '@/config/jobs';
+import { runDueJobs } from '@/engine/job-engine';
 import { create } from '@/engine';
 
 export const runtime = 'nodejs';
@@ -8,7 +7,6 @@ export async function POST(request) {
   const startTime = Date.now();
 
   try {
-    // Verify cron secret token
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.replace('Bearer ', '');
 
@@ -19,11 +17,9 @@ export async function POST(request) {
       );
     }
 
-    // Run all due jobs
-    const results = await runDueJobs(SCHEDULED_JOBS);
+    const results = await runDueJobs();
     const duration = Date.now() - startTime;
 
-    // Log execution
     await create('job_execution_log', {
       timestamp: Math.floor(Date.now() / 1000),
       total_jobs: results.total || 0,
@@ -32,9 +28,7 @@ export async function POST(request) {
       duration_ms: duration,
       status: results.failed > 0 ? 'partial_failure' : 'success',
       error_details: results.errors || null
-    }).catch(err => console.error('[Cron] Failed to log execution:', err.message));
-
-    console.log(`[Cron] Executed ${results.executed || 0}/${results.total || 0} jobs in ${duration}ms`);
+    }).catch(err => console.error('[Cron] Log error:', err.message));
 
     return new Response(
       JSON.stringify({
@@ -49,27 +43,16 @@ export async function POST(request) {
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('[Cron] Trigger failed:', error);
-
     return new Response(
-      JSON.stringify({
-        status: 'error',
-        message: error.message,
-        timestamp: new Date().toISOString()
-      }),
+      JSON.stringify({ status: 'error', message: error.message, timestamp: new Date().toISOString() }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }
 
-export async function GET(request) {
-  // Health check endpoint
+export async function GET() {
   return new Response(
-    JSON.stringify({
-      status: 'ok',
-      message: 'Cron trigger endpoint is active. Use POST with Bearer token to execute jobs.',
-      timestamp: new Date().toISOString()
-    }),
+    JSON.stringify({ status: 'ok', message: 'Cron trigger endpoint active. POST with Bearer token to execute.', timestamp: new Date().toISOString() }),
     { status: 200, headers: { 'Content-Type': 'application/json' } }
   );
 }

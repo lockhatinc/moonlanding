@@ -82,7 +82,7 @@ export const sendRfiReminder = createEntityAction('rfi', 'sendRfiReminder', 'edi
     const clientUsers = list('client_user', { client_id: engagement.client_id, status: 'active' });
     if (!clientUsers.length) throw new Error('No active client users found');
 
-    const { queueEmail } = await import('@/engine/email-templates');
+    const { queueEmail } = await import('@/engine/notification-engine');
     for (const cu of clientUsers) {
       await queueEmail('rfi_reminder', { rfi, engagement, user: cu });
     }

@@ -256,17 +256,18 @@ export class ConfigGeneratorEngine {
     if (entityDef.permission_template) {
       const permissionMatrix = this.getPermissionTemplate(entityDef.permission_template);
 
-      // Transpose: role->actions becomes action->roles
-      const transposed = {};
+      const access = {};
+      const roleActions = {};
       for (const [role, actions] of Object.entries(permissionMatrix)) {
-        if (Array.isArray(actions)) {
-          actions.forEach(action => {
-            if (!transposed[action]) transposed[action] = [];
-            transposed[action].push(role);
-          });
-        }
+        if (!Array.isArray(actions)) continue;
+        roleActions[role] = [...actions];
+        actions.forEach(action => {
+          if (!access[action]) access[action] = [];
+          access[action].push(role);
+        });
       }
-      spec.permissions = transposed;
+      spec.access = access;
+      spec.permissions = roleActions;
     }
 
     if (entityDef.workflow) {

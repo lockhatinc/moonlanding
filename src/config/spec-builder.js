@@ -238,6 +238,17 @@ export class SpecBuilder {
 
   build() {
     validateSpec(this.spec);
+    if (this.spec.access && !this.spec.permissions) {
+      const roleActions = {};
+      for (const [action, roles] of Object.entries(this.spec.access)) {
+        if (!Array.isArray(roles)) continue;
+        for (const role of roles) {
+          if (!roleActions[role]) roleActions[role] = [];
+          roleActions[role].push(action);
+        }
+      }
+      this.spec.permissions = roleActions;
+    }
     return this.spec;
   }
 }

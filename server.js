@@ -90,7 +90,6 @@ const server = http.createServer(async (req, res) => {
 
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
 
-    // Serve webjsx library files
     if (pathname.startsWith('/lib/webjsx/')) {
       const file = pathname.slice(12);
       const filePath = path.join(__dirname, 'node_modules/webjsx/dist', file);
@@ -103,6 +102,18 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(404);
       res.end('Not found');
       return;
+    }
+
+    if (pathname === '/ui/styles.css') {
+      const cssPath = path.join(__dirname, 'src/ui/styles.css');
+      if (fs.existsSync(cssPath)) {
+        const css = fs.readFileSync(cssPath, 'utf-8');
+        res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        res.setHeader('Content-Length', Buffer.byteLength(css, 'utf-8'));
+        res.writeHead(200);
+        res.end(css);
+        return;
+      }
     }
 
     // Handle page requests (non-API routes) with new Ripple UI renderer
@@ -136,60 +147,65 @@ const server = http.createServer(async (req, res) => {
       // Fall through to 404 if page rendering fails
     }
 
-    // Handle API requests
     if (pathname.startsWith('/api/')) {
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
-      // Special handling for specific routes
       const pathParts = pathname.slice(5).split('/').filter(Boolean);
       const firstPart = pathParts[0];
+      const domains = ['friday', 'mwr'];
+      const isDomain = domains.includes(firstPart);
       let routeFile = null;
+      let params = {};
 
-      // Check for specific route files first (auth, cron, etc)
-      if (firstPart && firstPart !== '[entity]') {
-        const specificRoute = path.join(__dirname, `src/app/api/${firstPart}${pathParts.slice(1).map(p => `/${p}`).join('')}/route.js`);
-        if (fs.existsSync(specificRoute)) {
-          console.log(`[Server] Using specific route: ${firstPart}`);
-          routeFile = specificRoute;
-        } else {
-          console.log(`[Server] No specific route found at: ${specificRoute}`);
+      if (isDomain) {
+        const domain = firstPart;
+        const domainParts = pathParts.slice(1);
 
-          // Check for nested dynamic routes like /friday/engagement/[id]/rfi
-          if (pathParts.length >= 3 && firstPart === 'friday') {
-            const baseEntity = pathParts[1];
-            const childEntity = pathParts[3];
-            const nestedRoute = path.join(__dirname, `src/app/api/friday/${baseEntity}/[id]/${childEntity}/route.js`);
-            if (childEntity && fs.existsSync(nestedRoute)) {
-              console.log(`[Server] Using nested Friday route: friday/${baseEntity}/[id]/${childEntity}`);
-              routeFile = nestedRoute;
-            }
+        const specificCheck = path.join(__dirname, `src/app/api/${domain}/${domainParts.join('/')}/route.js`);
+        if (fs.existsSync(specificCheck)) {
+          routeFile = specificCheck;
+          params = resolveSpecificParams(specificCheck, pathParts);
+        }
+
+        if (!routeFile && domainParts.length >= 3) {
+          const parentEntity = domainParts[0];
+          const parentId = domainParts[1];
+          const childParts = domainParts.slice(2);
+          const childEntity = childParts[0];
+          const childId = childParts[1] || null;
+
+          const nestedSpecific = buildNestedRoutePath(__dirname, domain, parentEntity, childParts);
+          if (nestedSpecific && fs.existsSync(nestedSpecific)) {
+            routeFile = nestedSpecific;
+            params = resolveSpecificParams(nestedSpecific, pathParts);
           }
 
-          // Check for nested dynamic routes like /mwr/review/[id]/highlights
-          if (!routeFile && pathParts.length >= 3 && firstPart === 'mwr') {
-            const baseEntity = pathParts[1];
-            const childEntity = pathParts[3];
-            const nestedRoute = path.join(__dirname, `src/app/api/mwr/${baseEntity}/[id]/${childEntity}/route.js`);
-            if (childEntity && fs.existsSync(nestedRoute)) {
-              console.log(`[Server] Using nested MWR route: mwr/${baseEntity}/[id]/${childEntity}`);
-              routeFile = nestedRoute;
-            }
+          if (!routeFile) {
+            routeFile = path.join(__dirname, 'src/app/api/[entity]/[[...path]]/route.js');
+            url.searchParams.set('domain', domain);
+            params = { entity: childEntity, path: childId ? [childId] : [], parentEntity, parentId };
           }
+        }
 
-          // Check for domain-specific dynamic routes (e.g., /api/friday/[entity]/route.js)
-          if (!routeFile && pathParts.length >= 2) {
-            const domainDynamicRoute = path.join(__dirname, `src/app/api/${firstPart}/[entity]/route.js`);
-            if (fs.existsSync(domainDynamicRoute)) {
-              console.log(`[Server] Using domain-specific dynamic route: ${firstPart}/[entity]`);
-              routeFile = domainDynamicRoute;
-            }
-          }
+        if (!routeFile && domainParts.length >= 1) {
+          const entity = domainParts[0];
+          const entityPath = domainParts.slice(1);
+          routeFile = path.join(__dirname, 'src/app/api/[entity]/[[...path]]/route.js');
+          url.searchParams.set('domain', domain);
+          params = { entity, path: entityPath };
         }
       }
 
-      // Fall back to catch-all route
+      if (!routeFile && firstPart) {
+        const exactRoute = path.join(__dirname, `src/app/api/${pathParts.join('/')}/route.js`);
+        if (fs.existsSync(exactRoute)) {
+          routeFile = exactRoute;
+          params = resolveSpecificParams(exactRoute, pathParts);
+        }
+      }
+
       if (!routeFile) {
-        console.log(`[Server] Using catch-all route for: ${pathname}`);
-        routeFile = path.join(__dirname, `src/app/api/[entity]/[[...path]]/route.js`);
+        routeFile = path.join(__dirname, 'src/app/api/[entity]/[[...path]]/route.js');
+        params = { entity: firstPart, path: pathParts.slice(1) };
       }
 
       if (!fs.existsSync(routeFile)) {
@@ -209,35 +225,7 @@ const server = http.createServer(async (req, res) => {
 
       const body = await readBody(req);
       const request = new NextRequest(req, body, url);
-
-      let entity;
-      let pathArray;
-      let params = { entity: firstPart, path: [] };
-
-      if (routeFile.includes('friday/') && routeFile.includes('[id]')) {
-        // Nested Friday route like /friday/engagement/[id]/rfi
-        params = { id: pathParts[2] };
-      } else if (routeFile.includes('mwr/') && routeFile.includes('[id]')) {
-        // Nested MWR route like /mwr/review/[id]/highlights
-        params = { id: pathParts[2] };
-      } else if (routeFile.includes('[entity]')) {
-        if (routeFile.includes('src/app/api/[entity]')) {
-          entity = firstPart;
-          pathArray = pathParts.slice(1);
-        } else {
-          entity = pathParts[1];
-          pathArray = pathParts.slice(2);
-        }
-        params = { entity, path: pathArray };
-      } else {
-        entity = firstPart;
-        pathArray = pathParts.slice(1);
-        params = { entity, path: pathArray };
-      }
-
-      const context = {
-        params: params
-      };
+      const context = { params };
 
       try {
         const response = await handler(request, context);
@@ -245,8 +233,7 @@ const server = http.createServer(async (req, res) => {
         let headerObj = {};
         if (response.headers) {
           for (const [key, value] of response.headers) {
-            const normalizedKey = normalizeHeaderName(key);
-            headerObj[normalizedKey] = value;
+            headerObj[normalizeHeaderName(key)] = value;
           }
         }
 
@@ -334,6 +321,49 @@ async function readBody(req) {
       }
     });
   });
+}
+
+function resolveSpecificParams(routeFile, pathParts) {
+  const result = {};
+  const routeRelative = routeFile.replace(/.*src\/app\/api\//, '').replace(/\/route\.js$/, '');
+  const routeSegments = routeRelative.split('/');
+  const urlSegments = pathParts.slice(0);
+
+  for (let i = 0; i < routeSegments.length && i < urlSegments.length; i++) {
+    const seg = routeSegments[i];
+    if (seg.startsWith('[') && seg.endsWith(']')) {
+      const paramName = seg.replace(/^\[\.\.\./, '').replace(/[\[\]]/g, '');
+      result[paramName] = urlSegments[i];
+    }
+  }
+  return result;
+}
+
+function buildNestedRoutePath(baseDir, domain, parentEntity, childParts) {
+  if (childParts.length === 0) return null;
+  const segments = [domain, parentEntity, '[id]'];
+  for (let i = 0; i < childParts.length; i++) {
+    if (i % 2 === 0) {
+      segments.push(childParts[i]);
+    } else {
+      segments.push(`[${childParts[i - 1]}Id]`);
+    }
+  }
+  const candidate = path.join(baseDir, 'src/app/api', ...segments, 'route.js');
+  if (fs.existsSync(candidate)) return candidate;
+
+  const altSegments = [domain, parentEntity, '[id]'];
+  for (let i = 0; i < childParts.length; i++) {
+    if (i % 2 === 0) {
+      altSegments.push(childParts[i]);
+    } else {
+      altSegments.push(`[${childParts[0]}Id]`);
+    }
+  }
+  const altCandidate = path.join(baseDir, 'src/app/api', ...altSegments, 'route.js');
+  if (fs.existsSync(altCandidate)) return altCandidate;
+
+  return candidate;
 }
 
 globalThis.NextRequest = NextRequest;

@@ -17,18 +17,42 @@ import { now } from '@/lib/database-core';
 import { logAction } from '@/lib/audit-logger';
 import { coerceFieldValue } from '@/lib/field-registry';
 
+const ACTION_FIELD_MAPS = {
+  resolve_highlight: { status: 'resolved', color: 'green' },
+  reopen_highlight: { status: 'unresolved', color: 'grey', resolved_at: null, resolved_by: null, resolution_notes: null },
+  change_status: (data, user) => ({ status: data.status || data.toStatus, status_changed_at: now(), status_changed_by: user.id }),
+  respond: (data, user) => ({ status: 'responded', response: data.response, responded_at: now(), responded_by: user.id }),
+};
+
+function resolveActionUpdate(action, data, user, record) {
+  const mapped = ACTION_FIELD_MAPS[action];
+  if (typeof mapped === 'function') return mapped(data, user);
+  if (mapped) {
+    const result = { ...mapped };
+    if (action === 'resolve_highlight') {
+      result.resolved_at = now();
+      result.resolved_by = user.id;
+      result.resolution_notes = data.notes || data.resolution_notes || '';
+    }
+    return result;
+  }
+  return data;
+}
+
+function validateActionPrecondition(action, record) {
+  if (action === 'resolve_highlight' && record.status === 'resolved') {
+    throw new AppError('Highlight already resolved', 'BAD_REQUEST', HTTP.BAD_REQUEST);
+  }
+  if (action === 'reopen_highlight' && record.status !== 'resolved') {
+    throw new AppError('Highlight not resolved', 'BAD_REQUEST', HTTP.BAD_REQUEST);
+  }
+}
+
 export const createCrudHandlers = (entityName) => {
-  console.log('[crud-factory] createCrudHandlers called with:', { entityName, type: typeof entityName });
   if (!entityName || typeof entityName !== 'string') {
-    console.error('[crud-factory] FATAL: entityName is invalid!', {
-      entityName,
-      type: typeof entityName,
-    });
     throw new Error(`[crud-factory] Invalid entityName: ${entityName} (type: ${typeof entityName})`);
   }
-  console.log('[crud-factory] About to call getSpec with:', entityName);
   let spec = getSpec(entityName);
-  console.log('[crud-factory] getSpec returned:', spec ? 'OK' : 'NULL');
 
   const handlers = {
     customAction: async (user, action, id, data = {}) => {
@@ -45,222 +69,40 @@ export const createCrudHandlers = (entityName) => {
 
       permissionService.requireActionPermission(user, spec, action, record, context);
 
-      if (action === 'respond' || action === 'upload_files') {
-        return await handlers.handleRfiAction(user, id, action, data, record);
-      }
-
-      if (action === 'resolve_highlight') {
-        return await handlers.handleHighlightResolve(user, id, data, record);
-      }
-
-      if (action === 'reopen_highlight') {
-        return await handlers.handleHighlightReopen(user, id, data, record);
-      }
-
-      if (action === 'manage_flags') {
-        return await handlers.handleFlagManagement(user, id, data, record, context);
-      }
-
-      if (action === 'change_status') {
-        return await handlers.handleStatusChange(user, id, data, record, context);
-      }
-
-      if (action.startsWith('manage_collaborators')) {
-        return await handlers.handleCollaboratorAction(user, id, action, data, record);
-      }
-
-      if (action.startsWith('manage_highlights')) {
-        return await handlers.handleHighlightAction(user, id, action, data, record);
-      }
-
-      throw new AppError(`Unknown action: ${action}`, 'BAD_REQUEST', HTTP.BAD_REQUEST);
-    },
-
-    handleRfiAction: async (user, id, action, data, record) => {
-      const ctx = await executeHook(`${action}:${entityName}:before`, {
-        entity: entityName,
-        id,
-        data,
-        user,
-        record
-      });
-
-      let result;
-      if (action === 'respond') {
-        const updateData = {
-          status: 'responded',
-          response: data.response,
-          responded_at: now(),
-          responded_by: user.id
-        };
-        update(entityName, id, updateData, user);
-        result = get(entityName, id);
-      } else if (action === 'upload_files') {
+      if (action === 'upload_files') {
         const files = Array.isArray(data.files) ? data.files : [data.files];
-        result = { id, uploaded_files: files };
+        await executeHook(`upload_files:${entityName}:after`, { entity: entityName, id, data: { id, uploaded_files: files }, user });
+        broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'upload_files', { id, uploaded_files: files });
+        return ok({ id, uploaded_files: files });
       }
 
-      await executeHook(`${action}:${entityName}:after`, {
-        entity: entityName,
-        id,
-        data: result,
-        user
-      });
-
-      broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), action, permissionService.filterFields(user, spec, result));
-      return ok(permissionService.filterFields(user, spec, result));
-    },
-
-    handleHighlightResolve: async (user, id, data, record) => {
-      if (record.status === 'resolved') {
-        throw new AppError('Highlight already resolved', 'BAD_REQUEST', HTTP.BAD_REQUEST);
-      }
-
-      const updateData = {
-        status: 'resolved',
-        resolved_at: now(),
-        resolved_by: user.id,
-        resolution_notes: data.notes || data.resolution_notes || '',
-        color: 'green'
-      };
-
-      await executeHook(`resolve:${entityName}:before`, {
-        entity: entityName,
-        id,
-        data: updateData,
-        user,
-        record
-      });
-
-      update(entityName, id, updateData, user);
-      const result = get(entityName, id);
-
-      await executeHook(`resolve:${entityName}:after`, {
-        entity: entityName,
-        id,
-        data: result,
-        user
-      });
-
-      broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'resolve', permissionService.filterFields(user, spec, result));
-      return ok(permissionService.filterFields(user, spec, result));
-    },
-
-    handleHighlightReopen: async (user, id, data, record) => {
-      if (record.status !== 'resolved') {
-        throw new AppError('Highlight not resolved', 'BAD_REQUEST', HTTP.BAD_REQUEST);
-      }
-
-      const updateData = {
-        status: 'unresolved',
-        resolved_at: null,
-        resolved_by: null,
-        resolution_notes: null,
-        color: 'grey'
-      };
-
-      await executeHook(`reopen:${entityName}:before`, {
-        entity: entityName,
-        id,
-        data: updateData,
-        user,
-        record
-      });
-
-      update(entityName, id, updateData, user);
-      const result = get(entityName, id);
-
-      await executeHook(`reopen:${entityName}:after`, {
-        entity: entityName,
-        id,
-        data: result,
-        user
-      });
-
-      broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'reopen', permissionService.filterFields(user, spec, result));
-      return ok(permissionService.filterFields(user, spec, result));
-    },
-
-    handleFlagManagement: async (user, id, data, record, context) => {
-      const operation = context.operation || 'create';
-
-      if (operation === 'apply' && user.role === 'manager') {
-        const updateData = {
-          ...data,
-          applied_by: user.id,
-          applied_at: now()
-        };
-
-        await executeHook(`apply_flag:${entityName}:before`, {
-          entity: entityName,
-          id,
-          data: updateData,
-          user,
-          record
-        });
-
+      if (action === 'manage_flags' && data.operation === 'apply' && user.role === 'manager') {
+        const updateData = { ...data, applied_by: user.id, applied_at: now() };
+        await executeHook(`apply_flag:${entityName}:before`, { entity: entityName, id, data: updateData, user, record });
         update(entityName, id, updateData, user);
         const result = get(entityName, id);
-
-        await executeHook(`apply_flag:${entityName}:after`, {
-          entity: entityName,
-          id,
-          data: result,
-          user
-        });
-
+        await executeHook(`apply_flag:${entityName}:after`, { entity: entityName, id, data: result, user });
         broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'apply_flag', permissionService.filterFields(user, spec, result));
         return ok(permissionService.filterFields(user, spec, result));
       }
 
-      return await handlers.update(user, id, data);
-    },
+      if (action.startsWith('manage_collaborators') || action.startsWith('manage_highlights')) {
+        if (!permissionService.checkOwnership(user, spec, record, action)) {
+          throw new AppError('Access denied: not owner', 'FORBIDDEN', HTTP.FORBIDDEN);
+        }
+        return await handlers.update(user, id, data);
+      }
 
-    handleStatusChange: async (user, id, data, record, context) => {
-      const updateData = {
-        status: data.status || data.toStatus,
-        status_changed_at: now(),
-        status_changed_by: user.id
-      };
+      validateActionPrecondition(action, record);
+      const updateData = resolveActionUpdate(action, data, user, record);
+      const hookPrefix = action === 'resolve_highlight' ? 'resolve' : action === 'reopen_highlight' ? 'reopen' : action;
 
-      await executeHook(`status_change:${entityName}:before`, {
-        entity: entityName,
-        id,
-        data: updateData,
-        user,
-        record,
-        fromStatus: context.fromStatus,
-        toStatus: updateData.status
-      });
-
+      await executeHook(`${hookPrefix}:${entityName}:before`, { entity: entityName, id, data: updateData, user, record });
       update(entityName, id, updateData, user);
       const result = get(entityName, id);
-
-      await executeHook(`status_change:${entityName}:after`, {
-        entity: entityName,
-        id,
-        data: result,
-        user
-      });
-
-      broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), 'status_change', permissionService.filterFields(user, spec, result));
+      await executeHook(`${hookPrefix}:${entityName}:after`, { entity: entityName, id, data: result, user });
+      broadcastUpdate(API_ENDPOINTS.entityId(entityName, id), action, permissionService.filterFields(user, spec, result));
       return ok(permissionService.filterFields(user, spec, result));
-    },
-
-    handleCollaboratorAction: async (user, id, action, data, record) => {
-      if (!permissionService.checkOwnership(user, spec, record, action)) {
-        throw new AppError('Access denied: not owner', 'FORBIDDEN', HTTP.FORBIDDEN);
-      }
-
-      return await handlers.update(user, id, data);
-    },
-
-    handleHighlightAction: async (user, id, action, data, record) => {
-      if (!permissionService.checkOwnership(user, spec, record, action)) {
-        throw new AppError('Access denied: not owner', 'FORBIDDEN', HTTP.FORBIDDEN);
-      }
-
-      return await handlers.update(user, id, data);
     },
 
     list: async (user, request) => {
@@ -271,19 +113,16 @@ export const createCrudHandlers = (entityName) => {
       const DEFAULT_PAGE_SIZE = paginationCfg.default_page_size;
       const MAX_PAGE_SIZE = paginationCfg.max_page_size;
 
-      // Validate and set final page number
       const finalPage = page || 1;
       if (!Number.isInteger(finalPage) || finalPage < 1) {
         throw new AppError('page must be >= 1', 'BAD_REQUEST', HTTP.BAD_REQUEST);
       }
 
-      // Validate and set final page size
       const requestedPageSize = pageSize || DEFAULT_PAGE_SIZE;
       if (!Number.isInteger(requestedPageSize) || requestedPageSize < 1) {
         throw new AppError('pageSize must be >= 1', 'BAD_REQUEST', HTTP.BAD_REQUEST);
       }
 
-      // Cap pageSize to MAX_PAGE_SIZE (silently)
       const finalPageSize = Math.min(requestedPageSize, MAX_PAGE_SIZE);
 
       if (q) {
@@ -398,11 +237,7 @@ export const createCrudHandlers = (entityName) => {
       const immutableStrategy = entityDef.immutable_strategy;
 
       if (isImmutable && immutableStrategy === 'move_to_archive') {
-        const archiveData = {
-          archived: true,
-          archived_at: now(),
-          archived_by: user.id
-        };
+        const archiveData = { archived: true, archived_at: now(), archived_by: user.id };
         update(entityName, ctx.id || id, archiveData, user);
         logAction(entityName, id, 'archive', user?.id, record, archiveData);
       } else if (spec.fields.status) {
@@ -442,16 +277,11 @@ export const createCrudHandlers = (entityName) => {
     if (method === 'GET') {
       if (id && childKey) return await handlers.getChildren(user, id, childKey);
       if (id || action === 'view') return await handlers.get(user, id || context.params?.id);
-      // For nested resources, list with parent filter
       if (context.params?.parentId && context.params?.parentEntity) {
         const parentFkField = `${context.params.parentEntity}_id`;
-        // Add parent filter to request
         const url = new URL(request.url);
         url.searchParams.set(parentFkField, context.params.parentId);
-        const filteredRequest = new Request(url, {
-          method: request.method,
-          headers: request.headers
-        });
+        const filteredRequest = new Request(url, { method: request.method, headers: request.headers });
         return await handlers.list(user, filteredRequest);
       }
       return await handlers.list(user, request);
@@ -463,14 +293,8 @@ export const createCrudHandlers = (entityName) => {
         return await handlers.customAction(user, action, id, data);
       }
       const data = await request.json();
-      // Inject parent ID for nested resources
       if (context.params?.parentId && context.params?.parentEntity) {
-        const parentFkField = `${context.params.parentEntity}_id`;
-        console.log(`[CRUD] Injecting parent: ${parentFkField} = ${context.params.parentId}`);
-        data[parentFkField] = context.params.parentId;
-        console.log(`[CRUD] Data after injection:`, data);
-      } else {
-        console.log(`[CRUD] No parent injection: parentId=${context.params?.parentId}, parentEntity=${context.params?.parentEntity}`);
+        data[`${context.params.parentEntity}_id`] = context.params.parentId;
       }
       return await handlers.create(user, data);
     }

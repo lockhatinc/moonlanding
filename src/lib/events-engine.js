@@ -1,9 +1,8 @@
 import { hookEngine } from './hook-engine.js';
 import { list, get, update, create, remove } from '../engine.js';
-import { queueEmail } from '../engine/email-templates.js';
-import { getEngagementStages } from './status-helpers.js';
+import { queueEmail } from '@/engine/notification-engine';
 import { safeJsonParse } from './safe-json.js';
-import { registerEngagementStageHooks } from './lifecycle-engine.js';
+import { registerWorkflowHooks } from './workflow-engine.js';
 import { registerChecklistHooks } from './hooks/checklist-hooks.js';
 
 const logActivity = (t, id, act, msg, u, d) =>
@@ -45,7 +44,7 @@ const activateWorkflowsForStage = async (engagementId, stage, user) => {
 };
 
 export const registerEntityHandlers = () => {
-  registerEngagementStageHooks(hookEngine);
+  registerWorkflowHooks(hookEngine);
   registerChecklistHooks(hookEngine);
 
   hookEngine.on('create:rfi_response:after', async (ctx) => {
@@ -59,8 +58,7 @@ export const registerEntityHandlers = () => {
       const cnt = list('engagement', { client_id: engagement.client_id }).length;
       update('client', engagement.client_id, { engagement_count: cnt });
     }
-    const stages = getEngagementStages();
-    if (engagement.stage === stages.INFO_GATHERING) {
+    if (engagement.stage === 'info_gathering') {
       await queueEmail('engagement_info_gathering', { engagement, recipients: 'client_users' });
     }
     logActivity('engagement', engagement.id, 'create', `Engagement "${engagement.name}" created`, user);
@@ -100,10 +98,9 @@ export const registerEntityHandlers = () => {
   hookEngine.on('client:afterUpdate', async (client, changes, prev, user) => {
     if (changes.status === 'inactive' && prev.status !== 'inactive') {
       const engagements = list('engagement', { client_id: client.id });
-      const stages = getEngagementStages();
       for (const e of engagements) {
         if (e.repeat_interval !== 'once') update('engagement', e.id, { repeat_interval: 'once' });
-        if (e.stage === stages.INFO_GATHERING && e.progress === 0) remove('engagement', e.id);
+        if (e.stage === 'info_gathering' && e.progress === 0) remove('engagement', e.id);
       }
       logActivity('client', client.id, 'status_change', `Client inactive. Updated ${engagements.length} engagements.`, user);
     }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button, Select, Stack, Text, Alert, Badge, Group, Textarea, Skeleton } from '@mantine/core';
-import { STAGE_LABELS } from '@/lib/lifecycle-engine';
+import { STAGE_LABELS } from '@/lib/workflow-engine';
 
 const STAGE_COLORS = {
   info_gathering: 'blue',

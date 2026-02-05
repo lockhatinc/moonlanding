@@ -11,7 +11,7 @@ import {
   canAssignRole
 } from '@/services/collaborator-role.service';
 import { permissionService } from '@/services/permission.service';
-import { auditCollaboratorAdded, auditCollaboratorRemoved, auditPermissionModify } from '@/lib/permission-audit-hooks';
+import { auditCollaboratorAdded, auditCollaboratorRemoved, auditPermissionModify } from '@/lib/audit-logger';
 
 async function getUserFromRequest(request) {
   return { id: 1, role: 'partner' };

@@ -1,7 +1,7 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { get } from '@/engine';
 import { withPageAuth } from '@/lib/auth-middleware';
-import { getTransitionStatus } from '@/lib/lifecycle-engine';
+import { getTransitionStatus } from '@/lib/workflow-engine';
 
 export async function GET(request, { params }) {
   try {

@@ -7,12 +7,8 @@ function wrapHandler(method) {
     const params = await context.params;
     const pathArray = params.path || [];
     const entityName = params.entity;
-
-    console.log(`[Route] ${method} ${entityName}`, {
-      pathArray,
-      id: pathArray[0],
-      childKey: pathArray[1],
-    });
+    const parentEntity = params.parentEntity || null;
+    const parentId = params.parentId || null;
 
     const enhancedContext = {
       ...context,
@@ -20,6 +16,8 @@ function wrapHandler(method) {
         entity: entityName,
         id: pathArray[0] || null,
         childKey: pathArray[1] || null,
+        parentEntity,
+        parentId,
       },
     };
 

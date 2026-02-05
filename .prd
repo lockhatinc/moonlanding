@@ -16,65 +16,6 @@ WAVE 1 - DEAD CODE AND REDUNDANCY ELIMINATION (no dependencies, all parallel)
 
 
 ================================================================================
-WAVE 2 - PERMISSION SYSTEM CONSOLIDATION (depends on wave 1 dead code removal)
-================================================================================
-
-[B5] ELIMINATE services/index.js barrel and thin service wrappers
-  FILES:
-    src/services/index.js (8 lines) - barrel re-export
-    src/services/engagement.service.js - already deleted in A1
-    src/services/engagement-status.service.js (170 lines) - thin wrapper around status transitions
-    src/services/collaborator-role.service.js (245 lines) - domain logic, keep but reduce
-    src/services/collaborator-notifier.js - notification helper
-    src/services/highlight-suggestion.service.js (139 lines) - AI highlight suggestions
-    src/services/mention-notification.service.js - mention notifications
-    src/services/pdf-generator.service.js (143 lines) - PDF generation
-  STRATEGY: Services that are thin CRUD wrappers or status-transition proxies get deleted.
-    Services with real domain logic (email, file, PDF) stay but are simplified.
-    engagement-status.service.js is a wrapper around engagement-status-transitions.js
-    which itself reads from master-config.yml. Remove the wrapper.
-  BEFORE: 16 service files, 2,236 lines
-  AFTER: 6 service files, ~800 lines (email, file, notification, permission, pdf, collaborator-role)
-  REDUCTION: -1,436 lines, -10 files
-  blocks: [C1]
-  blocked_by: none
-  wave: 2
-
-[B6] CONSOLIDATE engagement lifecycle engines (3 files doing same thing)
-  FILES:
-    src/lib/engagement-lifecycle-engine.js (247 lines) - lifecycle engine
-    src/lib/lifecycle-engine.js (290 lines) - ANOTHER lifecycle engine
-    src/lib/engagement-status-transitions.js (220 lines) - status transition logic
-    src/lib/hooks/engagement-stage-validator.js (297 lines) - stage validation
-    src/lib/hooks/engagement-status-transition-hook.js (72 lines) - transition hook
-  STRATEGY: All lifecycle/stage/status logic is defined in master-config.yml workflows.
-    engagement_lifecycle defines stages, forward/backward transitions, locks, validations.
-    One engine reads the config, enforces transitions, validates. No hardcoding.
-  BEFORE: 5 files, ~1,126 lines
-  AFTER: 1 file, ~150 lines (config-driven lifecycle engine)
-  REDUCTION: -976 lines, -4 files
-  blocks: [C2]
-  blocked_by: none
-  wave: 2
-
-[B7] CONSOLIDATE RFI subsystem (4 overlapping files)
-  FILES:
-    src/lib/rfi-dual-state-engine.js (155 lines) - dual state (auditor/client views)
-    src/lib/rfi-response-lifecycle.js (185 lines) - response lifecycle
-    src/lib/rfi-templates.js (169 lines) - RFI templates
-    src/lib/rfi-update-hooks.js - update hooks
-    src/lib/rfi-permission-validator.js (122 lines) - merged into B1
-    src/lib/hooks/rfi-response-hooks.js (19 lines)
-  STRATEGY: RFI workflows defined in master-config.yml (rfi_type_standard, rfi_type_post_rfi,
-    rfi_response_lifecycle). Config-driven state machine replaces custom engines.
-  BEFORE: 6 files, ~650 lines
-  AFTER: 1 file, ~100 lines (generic workflow state machine reading config)
-  REDUCTION: -550 lines, -5 files
-  blocks: [C2]
-  blocked_by: none
-  wave: 2
-
-================================================================================
 WAVE 3 - METAPROGRAMMING AND CONVENTION SYSTEMS (depends on wave 2 consolidation)
 ================================================================================
 
@@ -92,7 +33,7 @@ WAVE 3 - METAPROGRAMMING AND CONVENTION SYSTEMS (depends on wave 2 consolidation
     - permissionService becomes ~100 lines: access check, field filter, row filter
   REDUCTION: eliminates need for separate permission configuration files entirely
   blocks: [D1]
-  blocked_by: [B5, A5, A14, A15]
+  blocked_by: none
   wave: 3
 
 [C2] UNIVERSAL CONFIG-DRIVEN WORKFLOW ENGINE
@@ -111,7 +52,7 @@ WAVE 3 - METAPROGRAMMING AND CONVENTION SYSTEMS (depends on wave 2 consolidation
   AFTER: 1 file, ~150 lines (universal workflow engine from config)
   REDUCTION: -1,850 lines
   blocks: [D1]
-  blocked_by: [B6, B7]
+  blocked_by: none
   wave: 3
 
 [C3] DYNAMIC COMPONENT REGISTRY FROM CONFIG
