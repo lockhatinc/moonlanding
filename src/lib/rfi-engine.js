@@ -1,10 +1,11 @@
-import { getConfigEngine } from '@/lib/config-generator-engine';
+import { getConfigEngineSync } from '@/lib/config-generator-engine';
 
 let cachedRfiConfig = null;
 
 function getRfiConfig() {
   if (cachedRfiConfig) return cachedRfiConfig;
-  const config = getConfigEngine().getConfig();
+  const engine = getConfigEngineSync();
+  const config = engine.getConfig();
   cachedRfiConfig = {
     standard: config?.workflows?.rfi_type_standard || {},
     postRfi: config?.workflows?.rfi_type_post_rfi || {},

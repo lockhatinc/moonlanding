@@ -240,8 +240,17 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
-      const module = await loadModule(routeFile);
-      const handler = module[req.method] || module.default;
+      let module = await loadModule(routeFile);
+      let handler = module[req.method] || module.default;
+
+      if (!handler && isDomain) {
+        routeFile = path.join(__dirname, 'src/app/api/[entity]/[[...path]]/route.js');
+        url.searchParams.set('domain', firstPart);
+        const domainParts = pathParts.slice(1);
+        params = { entity: domainParts[0], path: domainParts.slice(1) };
+        module = await loadModule(routeFile);
+        handler = module[req.method] || module.default;
+      }
 
       if (!handler) {
         res.writeHead(405);
@@ -365,31 +374,40 @@ function resolveSpecificParams(routeFile, pathParts) {
   return result;
 }
 
+function singularize(name) {
+  if (name.endsWith('ies')) return name.slice(0, -3) + 'y';
+  if (name.endsWith('ses') || name.endsWith('xes') || name.endsWith('zes')) return name.slice(0, -2);
+  if (name.endsWith('s') && !name.endsWith('ss')) return name.slice(0, -1);
+  return name;
+}
+
 function buildNestedRoutePath(baseDir, domain, parentEntity, childParts) {
   if (childParts.length === 0) return null;
-  const segments = [domain, parentEntity, '[id]'];
-  for (let i = 0; i < childParts.length; i++) {
-    if (i % 2 === 0) {
-      segments.push(childParts[i]);
-    } else {
-      segments.push(`[${childParts[i - 1]}Id]`);
-    }
-  }
-  const candidate = path.join(baseDir, 'src/app/api', ...segments, 'route.js');
-  if (fs.existsSync(candidate)) return candidate;
 
-  const altSegments = [domain, parentEntity, '[id]'];
-  for (let i = 0; i < childParts.length; i++) {
-    if (i % 2 === 0) {
-      altSegments.push(childParts[i]);
-    } else {
-      altSegments.push(`[${childParts[0]}Id]`);
+  function buildSegments(parentParam, childParamFn) {
+    const segs = [domain, parentEntity, parentParam];
+    for (let i = 0; i < childParts.length; i++) {
+      if (i % 2 === 0) segs.push(childParts[i]);
+      else segs.push(childParamFn(i));
     }
+    return path.join(baseDir, 'src/app/api', ...segs, 'route.js');
   }
-  const altCandidate = path.join(baseDir, 'src/app/api', ...altSegments, 'route.js');
-  if (fs.existsSync(altCandidate)) return altCandidate;
 
-  return candidate;
+  const variants = [
+    () => buildSegments('[id]', (i) => `[${childParts[i - 1]}Id]`),
+    () => buildSegments('[id]', (i) => `[${singularize(childParts[i - 1])}Id]`),
+    () => buildSegments(`[${parentEntity}Id]`, (i) => `[${childParts[i - 1]}Id]`),
+    () => buildSegments(`[${parentEntity}Id]`, (i) => `[${singularize(childParts[i - 1])}Id]`),
+    () => buildSegments('[id]', () => `[${childParts[0]}Id]`),
+    () => buildSegments('[id]', () => `[${singularize(childParts[0])}Id]`),
+  ];
+
+  for (const variant of variants) {
+    const candidate = variant();
+    if (fs.existsSync(candidate)) return candidate;
+  }
+
+  return variants[0]();
 }
 
 globalThis.NextRequest = NextRequest;

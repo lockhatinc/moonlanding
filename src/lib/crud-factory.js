@@ -114,9 +114,9 @@ export const createCrudHandlers = (entityName) => {
       await requirePermission(user, spec, 'list');
       const { q, page, pageSize, filters } = await parseQuery(request);
       const config = await (await import('@/lib/config-generator-engine')).getConfigEngine();
-      const paginationCfg = config.getConfig().system.pagination;
-      const DEFAULT_PAGE_SIZE = paginationCfg.default_page_size;
-      const MAX_PAGE_SIZE = paginationCfg.max_page_size;
+      const paginationCfg = config.getConfig()?.system?.pagination || { default_page_size: 50, max_page_size: 500 };
+      const DEFAULT_PAGE_SIZE = paginationCfg.default_page_size || 50;
+      const MAX_PAGE_SIZE = paginationCfg.max_page_size || 500;
 
       const finalPage = page || 1;
       if (!Number.isInteger(finalPage) || finalPage < 1) {
