@@ -234,6 +234,22 @@ export const migrate = () => {
     console.error('[Database] RFI index creation failed:', e.message);
   }
 
+  try {
+    db.exec(`CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      token TEXT NOT NULL UNIQUE,
+      expires_at INTEGER NOT NULL,
+      used INTEGER DEFAULT 0,
+      created_at INTEGER NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id)
+    )`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token ON password_reset_tokens(token)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user ON password_reset_tokens(user_id)`);
+  } catch (e) {
+    console.error('[Database] Password reset tokens table creation failed:', e.message);
+  }
+
   console.log('[Database] Migration complete');
 };
 

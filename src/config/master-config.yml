@@ -1372,6 +1372,25 @@ entities:
         required: true
         list: true
         search: true
+      code:
+        type: text
+        label: Client Code
+        search: true
+      industry:
+        type: text
+        label: Industry
+        search: true
+      contact_name:
+        type: text
+        label: Contact Name
+        search: true
+      contact_email:
+        type: text
+        label: Contact Email
+        search: true
+      contact_phone:
+        type: text
+        label: Contact Phone
       email:
         type: text
         label: Email
@@ -1384,6 +1403,47 @@ entities:
       address:
         type: textarea
         label: Address
+      website:
+        type: text
+        label: Website
+      status:
+        type: enum
+        options:
+          - value: active
+            label: Active
+            color: green
+          - value: inactive
+            label: Inactive
+            color: gray
+          - value: prospect
+            label: Prospect
+            color: blue
+        default: active
+        list: true
+        label: Status
+      risk_level:
+        type: enum
+        options:
+          - value: low
+            label: Low
+            color: green
+          - value: medium
+            label: Medium
+            color: yellow
+          - value: high
+            label: High
+            color: orange
+          - value: critical
+            label: Critical
+            color: red
+        default: low
+        label: Risk Level
+      risk_notes:
+        type: textarea
+        label: Risk Notes
+      risk_assessed_at:
+        type: timestamp
+        label: Risk Assessed At
       created_at:
         type: timestamp
         label: Created At

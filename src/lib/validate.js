@@ -240,6 +240,20 @@ export const hasErrors = (errors) => {
   return Object.keys(errors || {}).length > 0;
 };
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DISPOSABLE_DOMAINS = ['mailinator.com', 'guerrillamail.com', 'tempmail.com', 'throwaway.email', 'yopmail.com'];
+
+export function isValidEmail(email) {
+  if (!email || typeof email !== 'string') return { valid: false, reason: 'Email is required' };
+  const trimmed = email.trim().toLowerCase();
+  if (!EMAIL_REGEX.test(trimmed)) return { valid: false, reason: 'Invalid email format' };
+  const domain = trimmed.split('@')[1];
+  if (!domain || domain.length < 3) return { valid: false, reason: 'Invalid email domain' };
+  if (!domain.includes('.')) return { valid: false, reason: 'Invalid email domain' };
+  if (DISPOSABLE_DOMAINS.includes(domain)) return { valid: false, reason: 'Disposable email addresses are not allowed' };
+  return { valid: true, email: trimmed, domain };
+}
+
 /**
  * Sanitizes all string/text fields in data object
  * @param {Object} data - Data object to sanitize

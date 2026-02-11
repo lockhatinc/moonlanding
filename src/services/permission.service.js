@@ -145,6 +145,20 @@ export function getRoleDescription(role) {
   return roles[role]?.description || '';
 }
 
+export function userBelongsToTeam(userId, teamId) {
+  if (!userId || !teamId) return false;
+  try {
+    const { list: listRecords } = require('@/engine');
+    const members = listRecords('team_member', { team_id: teamId });
+    if (members.some(m => m.user_id === userId)) return true;
+    const users = listRecords('users', { id: userId });
+    const user = users?.[0];
+    return user?.team_id === teamId;
+  } catch {
+    return false;
+  }
+}
+
 export function getPermissionMatrix() {
   try {
     const engine = getConfigEngineSync();

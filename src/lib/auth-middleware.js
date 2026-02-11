@@ -1,9 +1,19 @@
-import { getUser } from '@/engine.server';
+import { getUser, lucia } from '@/engine.server';
 import { getSpec } from '@/config/spec-helpers';
 import { can } from '@/services/permission.service';
 import { UnauthorizedError, PermissionError, NotFoundError } from '@/lib/error-handler';
 
 const actionMap = { list: 'list', get: 'view', view: 'view', create: 'create', update: 'edit', edit: 'edit', delete: 'delete' };
+
+export function getSessionToken(req) {
+  const cookieHeader = req?.headers?.cookie || '';
+  if (!cookieHeader) return null;
+  const cookieName = lucia?.sessionCookieName || 'auth_session';
+  const match = cookieHeader.split(';').find(c => c.trim().startsWith(cookieName + '='));
+  if (!match) return null;
+  const value = match.split('=')[1];
+  return value ? decodeURIComponent(value.trim()) : null;
+}
 
 export const requireAuth = async () => {
   const user = await getUser();

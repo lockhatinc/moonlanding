@@ -2,6 +2,28 @@ import { getDatabase, genId, now } from '@/lib/database-core';
 
 const db = getDatabase();
 
+export const ACTIVITY_TYPES = {
+  RFI_QUESTION_VIEW: 'rfi_question_view',
+  RFI_QUESTION_RESPOND: 'rfi_question_respond',
+  RFI_QUESTION_COMMENT: 'rfi_question_comment',
+  RFI_QUESTION_CREATE: 'rfi_question_create',
+  RFI_QUESTION_UPDATE: 'rfi_question_update',
+  RFI_QUESTION_DELETE: 'rfi_question_delete',
+  RFI_QUESTION_ASSIGN: 'rfi_question_assign',
+  RFI_QUESTION_DEADLINE: 'rfi_question_deadline',
+  HIGHLIGHT_CREATE: 'highlight_create',
+  HIGHLIGHT_RESOLVE: 'highlight_resolve',
+  HIGHLIGHT_REOPEN: 'highlight_reopen',
+  HIGHLIGHT_DELETE: 'highlight_delete',
+  REVIEW_CREATE: 'review_create',
+  REVIEW_UPDATE: 'review_update',
+  REVIEW_ARCHIVE: 'review_archive',
+  COLLABORATOR_ADD: 'collaborator_add',
+  COLLABORATOR_REMOVE: 'collaborator_remove',
+  PERMISSION_CHANGE: 'permission_change',
+  ROLE_CHANGE: 'role_change',
+};
+
 const parseJson = (val) => val ? JSON.parse(val) : null;
 
 const parseRow = (row) => row ? {
@@ -165,6 +187,10 @@ export const exportPermissionAuditCSV = async (filters = {}) => {
     a.action, a.reason_code, a.reason || '', a.affected_user_id || '', a.ip_address || '',
   ]);
   return [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
+};
+
+export const logQuestionActivity = (questionId, action, userId, details = null) => {
+  return logAction('rfi_question', questionId, action, userId, null, details);
 };
 
 export const getPermissionDiff = (oldPerms, newPerms) => {

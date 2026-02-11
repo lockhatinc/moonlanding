@@ -5,8 +5,8 @@ import { HTTP } from '@/config/constants';
 const COLLABORATOR_ROLE_PERMISSIONS = {
   viewer: ['view', 'view_highlights', 'view_pdfs'],
   commenter: ['view', 'view_highlights', 'view_pdfs', 'add_notes', 'add_comments'],
-  reviewer: ['view', 'view_highlights', 'view_pdfs', 'add_notes', 'add_comments', 'edit_highlights', 'resolve_highlights', 'create_highlights', 'delete_own_highlights'],
-  manager: ['view', 'view_highlights', 'view_pdfs', 'add_notes', 'add_comments', 'edit_highlights', 'resolve_highlights', 'create_highlights', 'delete_highlights', 'manage_collaborators', 'assign_roles', 'approve_changes']
+  reviewer: ['view', 'view_highlights', 'view_pdfs', 'add_notes', 'add_comments', 'edit_highlights', 'resolve_highlights', 'reopen_highlights', 'create_highlights', 'delete_own_highlights', 'manage_highlights'],
+  manager: ['view', 'view_highlights', 'view_pdfs', 'add_notes', 'add_comments', 'edit_highlights', 'resolve_highlights', 'reopen_highlights', 'create_highlights', 'delete_highlights', 'manage_highlights', 'manage_collaborators', 'manage_flags', 'manage_templates', 'manage_checklists', 'archive', 'assign_roles', 'approve_changes']
 };
 
 export function getCollaboratorRole(collaboratorId) {

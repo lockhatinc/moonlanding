@@ -85,3 +85,64 @@ export function addWorkingDays(startSeconds, numDays) {
   }
   return dateToSeconds(date);
 }
+
+export function formatDateTime(value) {
+  if (!value) return null;
+  const date = typeof value === 'number' ? secondsToDate(value) : new Date(value);
+  if (isNaN(date.getTime())) return null;
+  return date.toLocaleDateString(undefined, DATE_FORMATS.datetime);
+}
+
+export function formatCurrency(amount, currency = 'ZAR', locale = 'en-ZA') {
+  if (amount === null || amount === undefined) return null;
+  const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(num)) return null;
+  return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(num);
+}
+
+export function formatNumber(value, decimals = 0, locale = 'en-ZA') {
+  if (value === null || value === undefined) return null;
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return null;
+  return new Intl.NumberFormat(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(num);
+}
+
+export function formatFileSize(bytes) {
+  if (bytes === null || bytes === undefined || bytes < 0) return null;
+  if (bytes === 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  const size = bytes / Math.pow(1024, i);
+  return `${size.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+}
+
+export function formatDuration(seconds) {
+  if (!seconds || seconds < 0) return null;
+  const h = Math.floor(seconds / RELATIVE_TIME_THRESHOLDS.hour);
+  const m = Math.floor((seconds % RELATIVE_TIME_THRESHOLDS.hour) / RELATIVE_TIME_THRESHOLDS.minute);
+  const s = Math.floor(seconds % RELATIVE_TIME_THRESHOLDS.minute);
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
+export function timeAgo(value) {
+  if (!value) return null;
+  const date = typeof value === 'number' ? secondsToDate(value) : new Date(value);
+  if (isNaN(date.getTime())) return null;
+  const now = Date.now();
+  const diffSec = Math.floor((now - date.getTime()) / SECONDS_TO_MS);
+  if (diffSec < 0) return 'just now';
+  if (diffSec < RELATIVE_TIME_THRESHOLDS.minute) return 'just now';
+  if (diffSec < RELATIVE_TIME_THRESHOLDS.hour) return `${Math.floor(diffSec / RELATIVE_TIME_THRESHOLDS.minute)}m ago`;
+  if (diffSec < RELATIVE_TIME_THRESHOLDS.day) return `${Math.floor(diffSec / RELATIVE_TIME_THRESHOLDS.hour)}h ago`;
+  if (diffSec < RELATIVE_TIME_THRESHOLDS.week) return `${Math.floor(diffSec / RELATIVE_TIME_THRESHOLDS.day)}d ago`;
+  return formatDate(value, 'short');
+}
+
+export function truncateText(text, maxLength = 100, suffix = '...') {
+  if (!text) return '';
+  const str = String(text);
+  if (str.length <= maxLength) return str;
+  return str.substring(0, maxLength) + suffix;
+}
