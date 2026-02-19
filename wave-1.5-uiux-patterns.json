@@ -1,0 +1,1162 @@
+{
+  "meta": {
+    "generated_at": "2026-02-19",
+    "source_systems": {
+      "friday_staging": {
+        "accessible": false,
+        "path": "/home/user/lexco/friday-staging",
+        "note": "Source system not accessible in current environment. Patterns documented from Moonlanding target system."
+      },
+      "myworkreview_staging": {
+        "accessible": false,
+        "path": "/home/user/lexco/myworkreview-staging",
+        "note": "Source system not accessible in current environment. Patterns documented from Moonlanding target system."
+      },
+      "moonlanding": {
+        "accessible": true,
+        "path": "/config/workspace/moonlanding",
+        "note": "Current target system - fully documented"
+      }
+    },
+    "documentation_scope": "Moonlanding UI/UX patterns that will be the target for migrated data from Friday and MyWorkReview",
+    "wave": "WAVE-1.5",
+    "blocks": ["WAVE-2.5", "WAVE-3.4"]
+  },
+
+  "design_system": {
+    "framework": "RippleUI v1.12.1",
+    "css_framework": "Tailwind-like utility classes",
+    "javascript_library": "WebJSX (lightweight React-like)",
+    "styling_approach": "Utility-first with custom CSS",
+    "responsive_strategy": "Mobile-first with breakpoints"
+  },
+
+  "color_scheme": {
+    "primary": {
+      "default": "#3b82f6",
+      "hover": "#2563eb",
+      "usage": "Primary actions, active states, links"
+    },
+    "backgrounds": {
+      "page": "#f8fafc",
+      "card": "#ffffff",
+      "secondary": "#f9fafb",
+      "hover": "#f3f4f6"
+    },
+    "text": {
+      "primary": "#111827",
+      "secondary": "#374151",
+      "tertiary": "#6b7280",
+      "muted": "#9ca3af"
+    },
+    "status_colors": {
+      "pending": { "bg": "#fef3c7", "text": "#92400e" },
+      "active": { "bg": "#dbeafe", "text": "#1e40af" },
+      "completed": { "bg": "#d1fae5", "text": "#065f46" },
+      "archived": { "bg": "#f3f4f6", "text": "#4b5563" },
+      "open": { "bg": "#fef3c7", "text": "#92400e" },
+      "closed": { "bg": "#d1fae5", "text": "#065f46" },
+      "draft": { "bg": "#f3f4f6", "text": "#6b7280" },
+      "in_progress": { "bg": "#dbeafe", "text": "#1e40af" },
+      "review": { "bg": "#ede9fe", "text": "#5b21b6" },
+      "approved": { "bg": "#d1fae5", "text": "#065f46" },
+      "rejected": { "bg": "#fee2e2", "text": "#991b1b" },
+      "overdue": { "bg": "#fee2e2", "text": "#991b1b" },
+      "cancelled": { "bg": "#f3f4f6", "text": "#6b7280" },
+      "on_hold": { "bg": "#fef3c7", "text": "#92400e" },
+      "resolved": { "bg": "#d1fae5", "text": "#065f46" },
+      "unresolved": { "bg": "#fee2e2", "text": "#991b1b" },
+      "flagged": { "bg": "#fce7f3", "text": "#9d174d" },
+      "responded": { "bg": "#dbeafe", "text": "#1e40af" },
+      "expired": { "bg": "#f3f4f6", "text": "#6b7280" }
+    },
+    "stage_colors": {
+      "info_gathering": { "bg": "#dbeafe", "text": "#1e40af", "label": "Info Gathering" },
+      "commencement": { "bg": "#dbeafe", "text": "#1e40af", "label": "Commencement" },
+      "team_execution": { "bg": "#fef3c7", "text": "#92400e", "label": "Team Execution" },
+      "partner_review": { "bg": "#fef3c7", "text": "#92400e", "label": "Partner Review" },
+      "finalization": { "bg": "#d1fae5", "text": "#065f46", "label": "Finalization" },
+      "closeout": { "bg": "#d1fae5", "text": "#065f46", "label": "Close Out" }
+    },
+    "risk_levels": {
+      "low": { "bg": "#d1fae5", "text": "#065f46" },
+      "medium": { "bg": "#fef3c7", "text": "#92400e" },
+      "high": { "bg": "#fed7aa", "text": "#9a3412" },
+      "critical": { "bg": "#fee2e2", "text": "#991b1b" }
+    }
+  },
+
+  "typography": {
+    "font_family": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    "sizes": {
+      "xs": "0.75rem",
+      "sm": "0.875rem",
+      "base": "1rem",
+      "lg": "1.125rem",
+      "xl": "1.25rem",
+      "2xl": "1.5rem"
+    },
+    "weights": {
+      "normal": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    },
+    "headings": {
+      "h1": { "size": "1.5rem", "weight": 600, "usage": "Page titles" },
+      "h2": { "size": "1.125rem", "weight": 600, "usage": "Card titles, section headers" },
+      "h3": { "size": "1rem", "weight": 600, "usage": "Subsection headers" }
+    }
+  },
+
+  "layout_patterns": {
+    "page_structure": {
+      "description": "Standard page layout with navbar, breadcrumbs, content area",
+      "hierarchy": ["navbar", "breadcrumb", "page_header", "content_area"],
+      "spacing": {
+        "page_padding": "1.5rem (24px)",
+        "section_gap": "1rem to 1.5rem"
+      }
+    },
+    "grid_systems": {
+      "responsive_columns": {
+        "mobile": "1 column (grid-cols-1)",
+        "tablet": "2-3 columns (md:grid-cols-3)",
+        "desktop": "4 columns (md:grid-cols-4)"
+      },
+      "gap_sizes": ["0.5rem (gap-2)", "1rem (gap-4)", "1.5rem (gap-6)"]
+    },
+    "card_layout": {
+      "background": "white",
+      "shadow": "0 1px 3px rgba(0,0,0,0.1)",
+      "border_radius": "0.5rem",
+      "padding": "1.5rem (p-6)"
+    },
+    "dashboard_layout": {
+      "stat_cards": "Grid of 4 cards (mobile: 1 column, tablet/desktop: 4 columns)",
+      "sections": ["Welcome message", "Stat cards", "Alert cards (overdue items)", "Quick actions", "Navigation shortcuts"]
+    }
+  },
+
+  "navigation_patterns": {
+    "navbar": {
+      "position": "top, sticky",
+      "background": "white",
+      "shadow": "shadow-sm",
+      "structure": {
+        "left": ["Mobile menu toggle", "Logo/Platform name", "Main navigation links (desktop only)"],
+        "right": ["User avatar dropdown"]
+      },
+      "mobile_behavior": "Hamburger menu opens drawer from left",
+      "desktop_navigation": ["Dashboard", "Engagements", "Clients", "RFIs", "Reviews", "Admin (if authorized)"],
+      "user_dropdown": {
+        "trigger": "Avatar circle with user initials",
+        "items": ["User email + role", "Logout link"]
+      }
+    },
+    "breadcrumbs": {
+      "position": "Below navbar, above page title",
+      "separator": "/",
+      "style": "Text links with hover underline",
+      "color": "Primary blue for links, gray for current page",
+      "font_size": "0.875rem (text-sm)"
+    },
+    "mobile_navigation": {
+      "drawer": {
+        "width": "280px (max 80vw)",
+        "position": "Left side",
+        "animation": "Slide in from left",
+        "background": "white",
+        "shadow": "2px 0 8px rgba(0,0,0,0.15)"
+      },
+      "overlay": {
+        "background": "rgba(0,0,0,0.4)",
+        "dismissible": true
+      },
+      "structure": ["Header with close button", "Navigation items", "Footer with user info + logout"]
+    },
+    "sidebar_navigation": {
+      "collapsible": true,
+      "width": "240px (collapsed: 48px)",
+      "sections": ["Collapsible sections with headers", "Active link highlighting", "Resize handle for width adjustment"],
+      "active_state": {
+        "background": "#eff6ff",
+        "color": "var(--primary)",
+        "font_weight": 500
+      }
+    }
+  },
+
+  "button_patterns": {
+    "variants": {
+      "primary": {
+        "background": "#3b82f6",
+        "color": "white",
+        "hover": "#2563eb",
+        "usage": "Primary actions, form submissions"
+      },
+      "outline": {
+        "background": "transparent",
+        "border": "1px solid currentColor",
+        "usage": "Secondary actions"
+      },
+      "ghost": {
+        "background": "transparent",
+        "hover": "rgba(0,0,0,0.05)",
+        "usage": "Tertiary actions, navigation"
+      },
+      "error": {
+        "background": "#ef4444",
+        "color": "white",
+        "usage": "Delete, destructive actions"
+      }
+    },
+    "sizes": {
+      "xs": { "padding": "0.25rem 0.5rem", "font_size": "0.75rem" },
+      "sm": { "padding": "0.375rem 0.75rem", "font_size": "0.875rem" },
+      "default": { "padding": "0.5rem 1rem", "font_size": "1rem" }
+    },
+    "states": {
+      "loading": {
+        "opacity": 0.7,
+        "cursor": "not-allowed",
+        "indicator": "Ellipsis (...) or spinner"
+      },
+      "disabled": {
+        "opacity": 0.5,
+        "cursor": "not-allowed",
+        "pointer_events": "none"
+      }
+    }
+  },
+
+  "form_patterns": {
+    "structure": {
+      "label": {
+        "font_weight": 500,
+        "margin_bottom": "0.25rem",
+        "display": "block"
+      },
+      "required_marker": {
+        "color": "#ef4444",
+        "symbol": "*",
+        "position": "After label"
+      },
+      "input_field": {
+        "border": "1px solid #e5e7eb",
+        "border_radius": "0.375rem",
+        "padding": "0.5rem 0.75rem",
+        "focus": {
+          "outline": "none",
+          "border_color": "var(--primary)",
+          "box_shadow": "0 0 0 2px rgba(59,130,246,0.15)"
+        }
+      }
+    },
+    "field_types": {
+      "text": "Standard input with border",
+      "number": "Input with number type attribute, converted to Number on submit",
+      "email": "Input with email type attribute",
+      "date": "Date input or date picker",
+      "textarea": "Multi-line text area",
+      "checkbox": "Checkbox with label wrapper",
+      "select": "Dropdown with border styling",
+      "ref": "Dropdown populated from referenced entity"
+    },
+    "validation": {
+      "required_fields": "HTML5 required attribute",
+      "client_side": "Browser native validation",
+      "server_side": "Error messages shown via toast notifications",
+      "error_display": "Toast notifications (red background, error icon)"
+    },
+    "submission": {
+      "method": "Fetch API with JSON",
+      "loading_state": "Button shows 'Saving...' with loading class",
+      "success": "Toast notification + redirect after 500ms",
+      "error": "Toast notification with error message"
+    },
+    "number_field_handling": {
+      "note": "CRITICAL: Form data always sends strings. Number fields must be converted before API submission",
+      "implementation": "querySelectorAll('input[type=number]').forEach(inp => { data[inp.name] = Number(data[inp.name]) })"
+    }
+  },
+
+  "table_patterns": {
+    "desktop_table": {
+      "display": "Block on tablet/desktop (min-width: 768px)",
+      "structure": {
+        "thead": {
+          "background": "#f9fafb",
+          "font_size": "0.75rem",
+          "font_weight": 600,
+          "color": "#6b7280",
+          "text_transform": "uppercase",
+          "letter_spacing": "0.025em"
+        },
+        "tbody": {
+          "row_hover": "#f3f4f6",
+          "border_bottom": "1px solid #f3f4f6"
+        }
+      },
+      "cell_padding": "0.75rem 1rem",
+      "actions_column": {
+        "buttons": ["View", "Edit", "Delete"],
+        "spacing": "gap-1 (0.25rem)",
+        "disabled_state": "Tooltip with 'No permission' message"
+      }
+    },
+    "mobile_cards": {
+      "display": "Block on mobile (max-width: 767px)",
+      "structure": "Card-based layout replacing table rows",
+      "padding": "0.75rem"
+    },
+    "features": {
+      "sortable": {
+        "cursor": "pointer",
+        "hover_color": "var(--primary)",
+        "indicator": "Arrow icon (▲/▼)"
+      },
+      "searchable": {
+        "input": "Top-right of table header",
+        "placeholder": "Search...",
+        "width": "200px",
+        "live_filtering": "Filter rows as user types"
+      },
+      "groupable": {
+        "header_row": {
+          "background": "#f3f4f6",
+          "cursor": "pointer",
+          "expandable": true
+        },
+        "group_arrow": "Rotates -90deg when collapsed",
+        "badge": "Shows count of items in group"
+      },
+      "expandable_rows": {
+        "expand_button": "Small + icon in first column",
+        "detail_panel": {
+          "background": "#fafbfc",
+          "border_left": "3px solid var(--primary)",
+          "padding": "0.75rem"
+        }
+      }
+    },
+    "empty_state": {
+      "colspan": "100",
+      "text_align": "center",
+      "padding": "2rem",
+      "color": "#6b7280",
+      "message": "No items found" or "No results found for '{query}'",
+      "create_link": "If user has create permission"
+    }
+  },
+
+  "dialog_patterns": {
+    "modal_dialog": {
+      "overlay": {
+        "background": "rgba(0,0,0,0.5)",
+        "position": "fixed, full viewport",
+        "z_index": 100,
+        "alignment": "center"
+      },
+      "panel": {
+        "background": "white",
+        "border_radius": "0.75rem",
+        "padding": "1.5rem",
+        "max_width": "480px - 520px",
+        "width": "90%",
+        "max_height": "85vh - 90vh",
+        "overflow_y": "auto",
+        "box_shadow": "0 20px 60px rgba(0,0,0,0.2)"
+      },
+      "structure": {
+        "header": {
+          "title": {
+            "font_size": "1.125rem - 1.25rem",
+            "font_weight": 600,
+            "color": "#111827"
+          },
+          "close_button": {
+            "position": "top-right",
+            "icon": "× (times)",
+            "size": "1.5rem",
+            "color": "#9ca3af",
+            "hover_color": "#374151"
+          }
+        },
+        "body": {
+          "margin_bottom": "1.25rem",
+          "content": "Form fields, text content, or custom components"
+        },
+        "footer": {
+          "display": "flex",
+          "gap": "0.5rem",
+          "justify_content": "flex-end",
+          "margin_top": "1.5rem",
+          "padding_top": "1rem",
+          "border_top": "1px solid #e5e7eb"
+        }
+      }
+    },
+    "confirm_dialog": {
+      "overlay": "Same as modal",
+      "panel": {
+        "max_width": "400px",
+        "structure": ["Title (Confirm Delete)", "Message (warning text)", "Actions (Cancel + Delete buttons)"]
+      },
+      "actions": {
+        "cancel": { "variant": "ghost", "action": "Close dialog" },
+        "confirm": { "variant": "error", "action": "Execute delete", "loading_state": "Shows 'Deleting...'" }
+      }
+    },
+    "specialized_dialogs": {
+      "color_picker": {
+        "grid": "4 columns of color swatches",
+        "swatch_size": "1:1 aspect ratio",
+        "selected_state": "Border highlight with box-shadow",
+        "preview": "24px × 24px color swatch in trigger button"
+      },
+      "date_choice": {
+        "presets": ["Today", "Tomorrow", "Next Week", "Custom"],
+        "layout": "Flex wrap with gap",
+        "style": "Pill-shaped buttons with hover state"
+      },
+      "stage_transition": {
+        "visual": ["Current stage block", "Arrow", "Next stage block"],
+        "current": { "background": "#f0f7ff", "border": "#bfdbfe" },
+        "next": { "background": "#f0fdf4", "border": "#bbf7d0" },
+        "dot_indicator": "12px circle showing stage color"
+      },
+      "team_assignment": {
+        "search_input": "Top of dialog for filtering",
+        "list": {
+          "max_height": "280px",
+          "overflow": "auto",
+          "checkbox_rows": "Avatar + Name + Email with checkbox"
+        },
+        "selected_badges": "Display selected team members as removable badges"
+      }
+    }
+  },
+
+  "toast_notification_patterns": {
+    "container": {
+      "position": "fixed top-right",
+      "top": "1rem",
+      "right": "1rem",
+      "z_index": 200,
+      "layout": "flex column with gap"
+    },
+    "toast": {
+      "padding": "0.75rem 1rem",
+      "border_radius": "0.5rem",
+      "box_shadow": "0 4px 6px -1px rgba(0,0,0,0.1)",
+      "animation": "slide in from right (0.3s ease-out)",
+      "max_width": "320px",
+      "duration": "3 seconds",
+      "fade_out": "0.3s opacity transition"
+    },
+    "variants": {
+      "success": {
+        "background": "#d1fae5",
+        "color": "#065f46",
+        "border_left": "4px solid #10b981"
+      },
+      "error": {
+        "background": "#fee2e2",
+        "color": "#991b1b",
+        "border_left": "4px solid #ef4444"
+      },
+      "info": {
+        "background": "#dbeafe",
+        "color": "#1e40af",
+        "border_left": "4px solid #3b82f6"
+      }
+    }
+  },
+
+  "badge_patterns": {
+    "status_badge": {
+      "display": "inline-block",
+      "padding": "0.25rem 0.75rem",
+      "border_radius": "9999px (pill-shaped)",
+      "font_size": "0.75rem",
+      "font_weight": 500,
+      "white_space": "nowrap",
+      "colors": "Dynamic based on status value (see status_colors)"
+    },
+    "stage_badge": {
+      "similar_to": "status_badge",
+      "colors": "Dynamic based on stage value (see stage_colors)"
+    },
+    "count_badge": {
+      "background": "#f3f4f6",
+      "color": "#374151",
+      "font_size": "0.75rem",
+      "min_width": "1.25rem",
+      "height": "1.25rem",
+      "padding": "0 0.375rem",
+      "usage": "Tab counts, notification counts"
+    },
+    "risk_badge": {
+      "variants": ["risk-low", "risk-medium", "risk-high", "risk-critical"],
+      "colors": "See risk_levels in color_scheme"
+    }
+  },
+
+  "progress_indicators": {
+    "linear_progress": {
+      "structure": {
+        "label": "Optional text label",
+        "bar_container": {
+          "width": "100%",
+          "border_radius": "9999px",
+          "background": "#e5e7eb",
+          "overflow": "hidden"
+        },
+        "bar": {
+          "border_radius": "9999px",
+          "transition": "width 0.3s ease",
+          "color": "Dynamic based on percentage (red < 30%, orange < 70%, green >= 70%)"
+        },
+        "percentage": "Right-aligned text showing completion %"
+      },
+      "variants": {
+        "thin": "4px height",
+        "medium": "8px height",
+        "thick": "16px height"
+      }
+    },
+    "circular_progress": {
+      "structure": {
+        "svg_circle": "Rotated -90deg for top start",
+        "center_text": {
+          "percentage": { "font_size": "1.25rem", "font_weight": 700, "color": "#111827" },
+          "label": { "font_size": "0.75rem", "color": "#6b7280" }
+        }
+      }
+    },
+    "loading_states": {
+      "button_loading": {
+        "class": "btn-loading",
+        "opacity": 0.7,
+        "text": "Loading..." or "Saving..." or "Deleting...",
+        "indicator": "Ellipsis (...)"
+      },
+      "spinner": {
+        "type": "CSS border spinner",
+        "size": "32px",
+        "border": "3px solid #e5e7eb",
+        "border_top_color": "var(--primary)",
+        "animation": "rotate 360deg in 0.8s linear infinite"
+      }
+    }
+  },
+
+  "pipeline_visualization": {
+    "engagement_pipeline": {
+      "description": "Horizontal stage progression showing past, current, and future stages",
+      "layout": "Flex row with connected pills",
+      "pill_shape": "First: rounded-left, Middle: straight, Last: rounded-right",
+      "states": {
+        "past": {
+          "opacity": 0.85,
+          "overlay": "rgba(34,197,94,0.08)",
+          "meaning": "Completed stages"
+        },
+        "current": {
+          "font_weight": 700,
+          "z_index": 1,
+          "box_shadow": "0 0 0 2px rgba(59,130,246,0.5)",
+          "animation": "pulse (2s ease-in-out infinite)"
+        },
+        "future": {
+          "background": "#f9fafb",
+          "color": "#9ca3af",
+          "border_color": "#e5e7eb",
+          "meaning": "Upcoming stages"
+        }
+      },
+      "interactions": {
+        "clickable": "Optional - hover shows shadow effect",
+        "cursor": "pointer for clickable, default otherwise"
+      }
+    }
+  },
+
+  "empty_states": {
+    "structure": {
+      "container": {
+        "display": "flex column",
+        "align_items": "center",
+        "justify_content": "center",
+        "padding": "3rem 1.5rem",
+        "text_align": "center"
+      },
+      "icon": {
+        "font_size": "3rem",
+        "margin_bottom": "1rem",
+        "line_height": 1,
+        "examples": ["📁 (folder)", "🔍 (search)", "📝 (document)", "👥 (users)"]
+      },
+      "title": {
+        "font_size": "1.125rem",
+        "font_weight": 600,
+        "color": "#111827",
+        "margin_bottom": "0.5rem"
+      },
+      "message": {
+        "color": "#6b7280",
+        "font_size": "0.875rem",
+        "margin_bottom": "1.5rem",
+        "max_width": "24rem"
+      },
+      "action": "Optional button (e.g., 'Create your first item')"
+    },
+    "contexts": {
+      "empty_list": "No items found. Create your first {entity}",
+      "no_search_results": "No results found for \"{query}\"",
+      "no_permissions": "You don't have permission to view this content",
+      "no_data": "No data available"
+    }
+  },
+
+  "avatar_patterns": {
+    "user_avatar": {
+      "shape": "circle (border-radius: 9999px)",
+      "background": "var(--primary)",
+      "color": "white",
+      "font_weight": 600,
+      "content": "First letter of user's name",
+      "sizes": {
+        "xs": "1.5rem (24px)",
+        "sm": "2rem (32px)",
+        "default": "2.5rem (40px)",
+        "lg": "3rem (48px)"
+      },
+      "status_indicator": {
+        "position": "bottom-right",
+        "size": "varies by avatar size",
+        "border": "2px solid white",
+        "online": "#22c55e",
+        "offline": "#9ca3af"
+      }
+    },
+    "avatar_group": {
+      "layout": "Inline flex",
+      "overlap": "-8px margin on subsequent avatars",
+      "border": "2px solid white on each avatar",
+      "overflow_indicator": {
+        "type": "+N more badge",
+        "background": "#e5e7eb",
+        "color": "#374151",
+        "font_size": "0.625rem"
+      }
+    }
+  },
+
+  "accordion_patterns": {
+    "structure": {
+      "container": {
+        "display": "flex column",
+        "gap": 0,
+        "border": "1px solid #e5e7eb",
+        "border_radius": "0.5rem",
+        "overflow": "hidden"
+      },
+      "item": {
+        "border_bottom": "1px solid #e5e7eb (except last)"
+      },
+      "summary": {
+        "padding": "0.75rem 1rem",
+        "font_weight": 500,
+        "cursor": "pointer",
+        "user_select": "none",
+        "hover_background": "#f9fafb",
+        "indicator": "Chevron (▼) that rotates 180deg when open"
+      },
+      "content": {
+        "padding": "0.75rem 1rem",
+        "border_top": "1px solid #f3f4f6"
+      }
+    },
+    "usage": "Collapsible sections, FAQ, grouped content"
+  },
+
+  "activity_timeline": {
+    "structure": {
+      "container": {
+        "position": "relative",
+        "padding_left": "2rem"
+      },
+      "vertical_line": {
+        "position": "absolute",
+        "left": "0.75rem",
+        "top": 0,
+        "bottom": 0,
+        "width": "2px",
+        "background": "#e5e7eb"
+      },
+      "item": {
+        "position": "relative",
+        "padding_bottom": "1.25rem (except last)"
+      },
+      "icon": {
+        "position": "absolute",
+        "left": "-2rem",
+        "width": "1.5rem",
+        "height": "1.5rem",
+        "border_radius": "9999px",
+        "border": "2px solid white",
+        "z_index": 1,
+        "color_coded": {
+          "created": { "bg": "#dbeafe", "color": "#1e40af" },
+          "updated": { "bg": "#fef3c7", "color": "#92400e" },
+          "status_changed": { "bg": "#ede9fe", "color": "#5b21b6" },
+          "commented": { "bg": "#d1fae5", "color": "#065f46" },
+          "assigned": { "bg": "#fce7f3", "color": "#9d174d" },
+          "uploaded": { "bg": "#e0e7ff", "color": "#3730a3" }
+        }
+      },
+      "content": {
+        "background": "white",
+        "border": "1px solid #f3f4f6",
+        "border_radius": "0.5rem",
+        "padding": "0.625rem 0.75rem"
+      },
+      "header": {
+        "display": "flex with gap",
+        "align_items": "center"
+      },
+      "description": {
+        "font_size": "0.875rem",
+        "color": "#374151"
+      },
+      "time": {
+        "font_size": "0.7rem",
+        "color": "#9ca3af"
+      }
+    }
+  },
+
+  "attachment_patterns": {
+    "attachment_card": {
+      "structure": {
+        "display": "flex with gap",
+        "align_items": "center",
+        "padding": "0.75rem 1rem",
+        "border": "1px solid #e5e7eb",
+        "border_radius": "0.5rem",
+        "background": "white"
+      },
+      "icon": {
+        "font_size": "1.5rem",
+        "flex_shrink": 0,
+        "examples": ["📎 (file)", "📄 (document)", "🖼️ (image)", "📊 (spreadsheet)"]
+      },
+      "info": {
+        "flex": 1,
+        "min_width": 0
+      },
+      "name": {
+        "font_size": "0.875rem",
+        "font_weight": 500,
+        "color": "#111827",
+        "overflow": "hidden",
+        "text_overflow": "ellipsis",
+        "white_space": "nowrap"
+      },
+      "size": {
+        "font_size": "0.75rem",
+        "color": "#6b7280"
+      },
+      "preview": {
+        "max_width": "100%",
+        "max_height": "200px",
+        "border_radius": "0.375rem",
+        "margin_top": "0.5rem"
+      }
+    }
+  },
+
+  "filter_bar": {
+    "structure": {
+      "display": "flex with gap",
+      "align_items": "flex-end",
+      "flex_wrap": "wrap",
+      "margin_bottom": "1rem",
+      "padding": "0.75rem",
+      "background": "#f9fafb",
+      "border_radius": "0.5rem",
+      "border": "1px solid #e5e7eb"
+    },
+    "field": {
+      "display": "flex column with gap",
+      "label": {
+        "font_size": "0.75rem",
+        "font_weight": 500,
+        "color": "#6b7280"
+      },
+      "input": "Standard input or select styling"
+    }
+  },
+
+  "responsive_breakpoints": {
+    "mobile": {
+      "max_width": "767px",
+      "patterns": [
+        "Card-based layouts instead of tables",
+        "Hamburger navigation menu",
+        "Stacked form fields",
+        "Full-width modals",
+        "Single column grids"
+      ]
+    },
+    "tablet": {
+      "min_width": "768px",
+      "patterns": [
+        "2-3 column grids",
+        "Table layouts visible",
+        "Desktop navigation visible",
+        "Sidebar support"
+      ]
+    },
+    "desktop": {
+      "min_width": "1024px",
+      "patterns": [
+        "4 column grids",
+        "Full sidebar navigation",
+        "Multi-column layouts",
+        "Side-by-side panels"
+      ]
+    }
+  },
+
+  "accessibility_features": {
+    "keyboard_navigation": {
+      "tab_order": "Logical flow through interactive elements",
+      "focus_indicators": "Visible focus rings on inputs and buttons",
+      "escape_key": "Closes dialogs and dropdowns"
+    },
+    "aria_support": {
+      "landmarks": "nav, main, aside regions",
+      "labels": "aria-label on icon-only buttons",
+      "live_regions": "Toast notifications use role='alert'",
+      "expanded_state": "aria-expanded on collapsible sections"
+    },
+    "screen_reader": {
+      "skip_links": "Not currently implemented",
+      "alt_text": "Images should have descriptive alt text",
+      "form_labels": "All inputs have associated labels",
+      "error_announcements": "Validation errors announced via toast"
+    },
+    "color_contrast": {
+      "text_on_white": "Meets WCAG AA standards",
+      "buttons": "High contrast between text and background",
+      "links": "Distinguishable by color and underline on hover"
+    }
+  },
+
+  "animation_transitions": {
+    "toast_slide_in": {
+      "duration": "0.3s",
+      "easing": "ease-out",
+      "transform": "translateX(100%) to translateX(0)"
+    },
+    "modal_fade": {
+      "duration": "0.2s",
+      "easing": "ease",
+      "properties": ["opacity", "transform"]
+    },
+    "dropdown_expand": {
+      "duration": "0.2s",
+      "easing": "ease",
+      "property": "max-height"
+    },
+    "hover_lift": {
+      "duration": "0.15s",
+      "easing": "ease",
+      "transform": "translateY(-1px)",
+      "box_shadow": "Enhanced shadow"
+    },
+    "pulse_effect": {
+      "duration": "2s",
+      "easing": "ease-in-out",
+      "iteration": "infinite",
+      "usage": "Current stage indicator in pipeline"
+    }
+  },
+
+  "icon_system": {
+    "approach": "Inline SVG or Unicode emoji",
+    "examples": {
+      "navigation": "SVG icons for menu, close, chevrons",
+      "actions": "SVG or text for edit, delete, view",
+      "status": "Emoji for empty states, info bubbles",
+      "files": "Emoji for document types"
+    },
+    "sizing": "Font-size based (inherit from parent or explicit size class)"
+  },
+
+  "specialized_components": {
+    "stage_pipeline": {
+      "description": "Visual representation of engagement lifecycle stages",
+      "file": "src/ui/styles.css lines 306-318",
+      "features": ["Past/current/future state visualization", "Pulse animation on current", "Optional clickable pills", "Horizontal scrollable on overflow"]
+    },
+    "review_tab_bar": {
+      "description": "Tabbed navigation for review filtering",
+      "file": "src/ui/styles.css lines 375-382",
+      "features": ["Active tab highlighting", "Count badges", "Underline active state", "Horizontal scroll on mobile"]
+    },
+    "team_selector": {
+      "description": "Multi-select team member picker",
+      "file": "src/ui/styles.css lines 347-355",
+      "features": ["Badge display for selected users", "Remove badge on click", "Dropdown with search", "Avatar + name + email rows"]
+    },
+    "data_grid": {
+      "description": "Advanced table with sorting, filtering, grouping",
+      "file": "src/ui/styles.css lines 430-452",
+      "features": ["Column sorting", "Column filtering", "Row grouping", "Expandable detail rows"]
+    },
+    "sidebar_panel": {
+      "description": "Fixed right sidebar for review details",
+      "file": "src/ui/styles.css lines 178-185",
+      "features": ["Collapsible (slides out)", "320px width (100% on mobile)", "Scrollable body", "Fixed header"]
+    },
+    "color_picker": {
+      "description": "Grid-based color selection dialog",
+      "file": "src/ui/styles.css lines 287-293",
+      "features": ["4-column grid", "Selected state highlight", "Preview swatch in trigger"]
+    },
+    "checklist": {
+      "description": "Task list with completion tracking",
+      "features": ["Checkbox items", "Progress bar", "Completion count", "Item reordering"]
+    }
+  },
+
+  "user_workflows": {
+    "authentication": {
+      "login": {
+        "route": "/login",
+        "fields": ["Email", "Password"],
+        "actions": ["Sign in", "Forgot password link"],
+        "success": "Redirect to dashboard",
+        "error": "Toast notification with error message"
+      },
+      "password_reset": {
+        "routes": ["/password-reset", "/password-reset/confirm"],
+        "flow": ["Enter email", "Receive reset link", "Set new password"],
+        "validation": "Password must match confirmation"
+      },
+      "session_management": {
+        "idle_timeout": "30 minutes",
+        "warning": "5 minutes before timeout with countdown",
+        "activity_tracking": ["mousemove", "keypress", "click", "scroll", "touchstart"],
+        "stay_logged_in": "Refresh session via /api/auth/me"
+      }
+    },
+    "engagement_creation": {
+      "route": "/engagement/new",
+      "fields": ["Client (dropdown)", "Name", "Year", "Stage", "Status", "Team (dropdown)"],
+      "validation": "Required fields marked with red asterisk",
+      "submission": "POST /api/engagement",
+      "success": "Redirect to engagement detail page",
+      "permissions": "canCreate(user, 'engagement')"
+    },
+    "rfi_workflow": {
+      "creation": {
+        "route": "/rfi/new",
+        "fields": ["Engagement (dropdown)", "Title", "Description", "Due date", "Assigned to (dropdown)", "Status"],
+        "submission": "POST /api/rfi"
+      },
+      "response": {
+        "route": "/rfi/{id}",
+        "sections": ["RFI details", "Questions list", "Response form", "Attachments"],
+        "actions": ["Add response", "Upload file", "Mark as complete"]
+      }
+    },
+    "review_workflow": {
+      "list_views": {
+        "routes": ["/reviews", "/reviews/active", "/reviews/priority", "/reviews/history", "/reviews/archive"],
+        "filters": ["Status", "Client", "Engagement", "Assigned to"],
+        "display": "Tabbed interface or filtered list"
+      },
+      "detail_view": {
+        "route": "/review/{id}",
+        "sections": ["Review header", "Sections list", "Highlights", "Comments", "Activity timeline"],
+        "sidebar": "Collapsible sidebar with metadata"
+      },
+      "annotation": {
+        "highlight_creation": "Click and drag on PDF",
+        "coordinate_storage": "CRITICAL: Store exact x, y coordinates (±0 pixels)",
+        "comment_attachment": "Add comment to highlight",
+        "status_tracking": "Resolved/unresolved toggle"
+      }
+    },
+    "dashboard_navigation": {
+      "route": "/",
+      "sections": [
+        "Welcome message with user name",
+        "Stat cards (4 columns)",
+        "Overdue items alert (if any)",
+        "My assigned RFIs (if clerk)",
+        "Quick actions grid",
+        "Navigation shortcuts grid"
+      ],
+      "role_specific": {
+        "clerk": "Shows only assigned RFIs",
+        "manager": "Shows team overview",
+        "partner": "Shows full system overview"
+      }
+    },
+    "client_dashboard": {
+      "route": "/client/{id}/dashboard",
+      "sections": [
+        "Client header with info",
+        "Stat cards (engagements, RFIs, users, reviews)",
+        "Engagement list",
+        "User management (if permissions)",
+        "Risk assessment"
+      ],
+      "permissions": "Client users can only see their own client dashboard"
+    },
+    "settings_management": {
+      "route": "/admin/settings",
+      "access": "Partner role only",
+      "sections": [
+        "Settings home (card grid)",
+        "System settings",
+        "User management",
+        "Team management",
+        "RFI sections",
+        "Review templates",
+        "Checklists",
+        "Notifications",
+        "Integrations",
+        "File review settings"
+      ]
+    }
+  },
+
+  "error_handling": {
+    "access_denied": {
+      "display": "Full page with lock icon",
+      "message": "You do not have permission to {action} in {entity}",
+      "action": "Button to return to dashboard"
+    },
+    "404_not_found": {
+      "response": "JSON error for API routes",
+      "display": "Null page triggers 404 from server"
+    },
+    "validation_errors": {
+      "display": "Toast notifications",
+      "color": "Red error toast",
+      "duration": "3 seconds",
+      "dismissible": "Auto-dismiss after timeout"
+    },
+    "network_errors": {
+      "display": "Toast notification with error message",
+      "retry": "User must manually retry action"
+    }
+  },
+
+  "print_friendly_views": {
+    "note": "Not currently implemented in Moonlanding",
+    "recommendation": "Add @media print styles for reports and reviews"
+  },
+
+  "performance_optimizations": {
+    "lazy_loading": "Not currently implemented",
+    "code_splitting": "Not currently implemented (zero-build runtime)",
+    "caching": {
+      "module_cache": "Server-side module caching with hot reload",
+      "no_cache_headers": "Cache-Control: no-store on all responses"
+    },
+    "search_debouncing": "Live search filters as user types (no explicit debounce)"
+  },
+
+  "migration_critical_patterns": {
+    "pdf_coordinates": {
+      "CRITICAL": "Must preserve exact x, y coordinates from source systems",
+      "tolerance": "±0 pixels",
+      "note": "Zoom/rotation breaks positioning - no recalculation allowed",
+      "storage": "Direct copy: highlight.x = source.x (no math)"
+    },
+    "user_deduplication": {
+      "method": "Email-based matching (case-insensitive)",
+      "overlap": "10-15% of users exist in both Friday and MWR",
+      "mapping": "Create user_id_mapping table for FK tracking",
+      "affected_tables": ["engagements", "reviews", "messages", "collaborators", "activity_log", "permissions", "rfi_response"]
+    },
+    "timestamp_normalization": {
+      "format": "ISO 8601 UTC (YYYY-MM-DDTHH:MM:SS.sssZ)",
+      "requirement": "Must end with 'Z' suffix",
+      "conversion": "Firestore Timestamp → UTC string"
+    },
+    "file_path_updates": {
+      "friday": "/home/user/lexco/friday-staging/... → /home/user/lexco/moonlanding/...",
+      "mwr": "/home/user/lexco/myworkreview-staging/... → /home/user/lexco/moonlanding/...",
+      "verification": "Check file existence at new location"
+    },
+    "subcollection_normalization": {
+      "firestore_pattern": "Nested subcollections (e.g., engagement.rfi[].questions[])",
+      "sqlite_pattern": "Normalized tables with foreign keys",
+      "examples": [
+        "engagement.rfi[].questions[] → rfi_question table with rfi_id FK",
+        "engagement.reviews[].highlights[] → highlights table with review_id FK"
+      ]
+    },
+    "enum_options_dynamic": {
+      "pattern": "Enum fields with dynamic options from config",
+      "example": "engagement.stage options come from engagement_lifecycle.stages[].name",
+      "resolution": "Must resolve at render time from master-config.yml"
+    }
+  },
+
+  "component_inventory": {
+    "total_css_classes": "~493 classes",
+    "major_components": [
+      "navbar",
+      "breadcrumb",
+      "card",
+      "btn (variants: primary, outline, ghost, error)",
+      "input/select/textarea",
+      "table (desktop + mobile responsive)",
+      "modal/dialog",
+      "toast",
+      "badge",
+      "progress (linear + circular)",
+      "avatar",
+      "accordion",
+      "timeline",
+      "filter-bar",
+      "sidebar",
+      "dropdown",
+      "tooltip",
+      "empty-state",
+      "loading-spinner",
+      "stage-pipeline",
+      "review-tabs",
+      "team-selector",
+      "data-grid",
+      "attachment-card"
+    ]
+  },
+
+  "notes": {
+    "source_systems_unavailable": "Friday-staging and MyWorkReview-staging source systems were not accessible during this documentation phase. This document captures the Moonlanding (target) system UI/UX patterns comprehensively.",
+    "next_steps": [
+      "When source systems become accessible, extract their specific UI/UX patterns",
+      "Compare source patterns with Moonlanding patterns",
+      "Identify gaps and migration requirements",
+      "Document any custom UI components that need recreation"
+    ],
+    "critical_migrations": [
+      "PDF highlight coordinates (±0 pixels preservation)",
+      "User deduplication (email-based matching)",
+      "Timestamp normalization (UTC ISO 8601)",
+      "File path updates (verify existence)",
+      "Subcollection normalization (Firestore → SQLite)"
+    ]
+  }
+}

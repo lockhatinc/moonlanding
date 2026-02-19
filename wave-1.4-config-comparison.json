@@ -1,0 +1,1915 @@
+{
+  "timestamp": "2026-02-19T17:47:18.096Z",
+  "summary": {
+    "masterConfigEntities": 25,
+    "masterConfigTotalFields": 217,
+    "expectedFridayCollections": 10,
+    "expectedMwrCollections": 3,
+    "totalExpectedCollections": 10
+  },
+  "entityCoverage": {
+    "user": {
+      "firestoreCollection": "users",
+      "exists": true,
+      "fieldCount": 0,
+      "hasWorkflow": false,
+      "workflow": null,
+      "parent": null,
+      "icon": "User",
+      "label": "User"
+    },
+    "client": {
+      "firestoreCollection": "clients",
+      "exists": true,
+      "fieldCount": 18,
+      "hasWorkflow": false,
+      "workflow": null,
+      "parent": null,
+      "icon": "Building",
+      "label": "Client"
+    },
+    "engagement": {
+      "firestoreCollection": "engagements",
+      "exists": true,
+      "fieldCount": 11,
+      "hasWorkflow": true,
+      "workflow": "engagement_lifecycle",
+      "parent": "null",
+      "icon": "Briefcase",
+      "label": "Engagement"
+    },
+    "rfi": {
+      "firestoreCollection": "rfis",
+      "exists": true,
+      "fieldCount": 8,
+      "hasWorkflow": true,
+      "workflow": "rfi_type_standard",
+      "parent": "engagement",
+      "icon": "HelpCircle",
+      "label": "Request For Information"
+    },
+    "review": {
+      "firestoreCollection": "reviews",
+      "exists": true,
+      "fieldCount": 13,
+      "hasWorkflow": true,
+      "workflow": "review_lifecycle",
+      "parent": "engagement",
+      "icon": "FileText",
+      "label": "Review"
+    },
+    "message": {
+      "firestoreCollection": "messages",
+      "exists": true,
+      "fieldCount": 3,
+      "hasWorkflow": false,
+      "workflow": null,
+      "parent": "rfi",
+      "icon": "MessageSquare",
+      "label": "Message"
+    },
+    "collaborator": {
+      "firestoreCollection": "collaborators",
+      "exists": true,
+      "fieldCount": 9,
+      "hasWorkflow": false,
+      "workflow": null,
+      "parent": "review",
+      "icon": "Users",
+      "label": "Collaborator"
+    },
+    "file": {
+      "firestoreCollection": "files",
+      "exists": true,
+      "fieldCount": 9,
+      "hasWorkflow": false,
+      "workflow": null,
+      "parent": "rfi",
+      "icon": "Paperclip",
+      "label": "File"
+    },
+    "permission_audit": {
+      "firestoreCollection": "permissions",
+      "exists": true,
+      "fieldCount": 18,
+      "hasWorkflow": false,
+      "workflow": null,
+      "parent": "null",
+      "icon": "Shield",
+      "label": "Permission Audit"
+    }
+  },
+  "missingEntities": [],
+  "extraEntities": [
+    {
+      "entity": "highlight",
+      "fieldCount": 1,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "highlight_comment",
+      "fieldCount": 1,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "removedHighlight",
+      "fieldCount": 2,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "checklist",
+      "fieldCount": 10,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "checklist_item",
+      "fieldCount": 12,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "team",
+      "fieldCount": 0,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "client_user",
+      "fieldCount": 1,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "tender",
+      "fieldCount": 19,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "letter",
+      "fieldCount": 1,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "review_template",
+      "fieldCount": 10,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "template_section",
+      "fieldCount": 8,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "rfi_section",
+      "fieldCount": 1,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "flag",
+      "fieldCount": 8,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "rfi_response",
+      "fieldCount": 19,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "email",
+      "fieldCount": 28,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    },
+    {
+      "entity": "job_execution_log",
+      "fieldCount": 7,
+      "note": "Entity exists in master-config but not in Firestore migration plan (may be new/unused)"
+    }
+  ],
+  "fieldAnalysis": {
+    "user": {
+      "totalFields": 0,
+      "totalFieldOverrides": 7,
+      "fieldsByType": {},
+      "requiredFields": [],
+      "optionalFields": [],
+      "autoGeneratedFields": [],
+      "referenceFields": [],
+      "enumFields": [],
+      "timestampFields": [],
+      "jsonFields": []
+    },
+    "client": {
+      "totalFields": 18,
+      "totalFieldOverrides": 0,
+      "fieldsByType": {
+        "id": 1,
+        "text": 9,
+        "textarea": 2,
+        "enum": 2,
+        "timestamp": 3,
+        "ref": 1
+      },
+      "requiredFields": [
+        "id",
+        "name",
+        "created_at"
+      ],
+      "optionalFields": [
+        "code",
+        "industry",
+        "contact_name",
+        "contact_email",
+        "contact_phone",
+        "email",
+        "phone",
+        "address",
+        "website",
+        "status",
+        "risk_level",
+        "risk_notes",
+        "risk_assessed_at",
+        "updated_at",
+        "created_by"
+      ],
+      "autoGeneratedFields": [
+        {
+          "field": "created_at",
+          "autoType": "now"
+        },
+        {
+          "field": "updated_at",
+          "autoType": "update"
+        },
+        {
+          "field": "created_by",
+          "autoType": "user"
+        }
+      ],
+      "referenceFields": [
+        {
+          "field": "created_by",
+          "refersTo": "user"
+        }
+      ],
+      "enumFields": [
+        {
+          "field": "status",
+          "enum": null,
+          "options": ""
+        },
+        {
+          "field": "risk_level",
+          "enum": null,
+          "options": ""
+        }
+      ],
+      "timestampFields": [
+        "risk_assessed_at",
+        "created_at",
+        "updated_at"
+      ],
+      "jsonFields": []
+    },
+    "engagement": {
+      "totalFields": 11,
+      "totalFieldOverrides": 12,
+      "fieldsByType": {
+        "id": 1,
+        "text": 2,
+        "ref": 2,
+        "number": 2,
+        "timestamp": 3,
+        "enum": 1
+      },
+      "requiredFields": [
+        "id",
+        "name",
+        "client_id",
+        "year",
+        "stage",
+        "created_at"
+      ],
+      "optionalFields": [
+        "status",
+        "commencement_date",
+        "progress",
+        "updated_at",
+        "created_by"
+      ],
+      "autoGeneratedFields": [
+        {
+          "field": "created_at",
+          "autoType": "now"
+        },
+        {
+          "field": "updated_at",
+          "autoType": "update"
+        },
+        {
+          "field": "created_by",
+          "autoType": "user"
+        }
+      ],
+      "referenceFields": [
+        {
+          "field": "client_id",
+          "refersTo": "client"
+        },
+        {
+          "field": "created_by",
+          "refersTo": "user"
+        }
+      ],
+      "enumFields": [
+        {
+          "field": "stage",
+          "enum": null,
+          "options": null
+        }
+      ],
+      "timestampFields": [
+        "commencement_date",
+        "created_at",
+        "updated_at"
+      ],
+      "jsonFields": []
+    },
+    "rfi": {
+      "totalFields": 8,
+      "totalFieldOverrides": 3,
+      "fieldsByType": {
+        "id": 1,
+        "text": 1,
+        "ref": 2,
+        "enum": 2,
+        "date": 1,
+        "textarea": 1
+      },
+      "requiredFields": [
+        "id",
+        "title",
+        "engagement_id"
+      ],
+      "optionalFields": [
+        "status",
+        "assigned_to",
+        "due_date",
+        "description",
+        "priority"
+      ],
+      "autoGeneratedFields": [],
+      "referenceFields": [
+        {
+          "field": "engagement_id",
+          "refersTo": "engagement"
+        },
+        {
+          "field": "assigned_to",
+          "refersTo": "user"
+        }
+      ],
+      "enumFields": [
+        {
+          "field": "status",
+          "enum": null,
+          "options": ""
+        },
+        {
+          "field": "priority",
+          "enum": null,
+          "options": ""
+        }
+      ],
+      "timestampFields": [
+        "due_date"
+      ],
+      "jsonFields": []
+    },
+    "review": {
+      "totalFields": 13,
+      "totalFieldOverrides": 0,
+      "fieldsByType": {
+        "id": 1,
+        "text": 3,
+        "ref": 3,
+        "enum": 1,
+        "date": 1,
+        "decimal": 1,
+        "bool": 1,
+        "timestamp": 2
+      },
+      "requiredFields": [
+        "id",
+        "name",
+        "engagement_id",
+        "created_at"
+      ],
+      "optionalFields": [
+        "status",
+        "drive_file_id",
+        "financial_year",
+        "team_id",
+        "deadline",
+        "wip_value",
+        "is_private",
+        "updated_at",
+        "created_by"
+      ],
+      "autoGeneratedFields": [
+        {
+          "field": "created_at",
+          "autoType": "now"
+        },
+        {
+          "field": "updated_at",
+          "autoType": "update"
+        },
+        {
+          "field": "created_by",
+          "autoType": "user"
+        }
+      ],
+      "referenceFields": [
+        {
+          "field": "engagement_id",
+          "refersTo": "engagement"
+        },
+        {
+          "field": "team_id",
+          "refersTo": "team"
+        },
+        {
+          "field": "created_by",
+          "refersTo": "user"
+        }
+      ],
+      "enumFields": [
+        {
+          "field": "status",
+          "enum": null,
+          "options": "engagement_lifecycle.stages[].name"
+        }
+      ],
+      "timestampFields": [
+        "deadline",
+        "created_at",
+        "updated_at"
+      ],
+      "jsonFields": []
+    },
+    "message": {
+      "totalFields": 3,
+      "totalFieldOverrides": 0,
+      "fieldsByType": {
+        "ref": 1,
+        "json": 2
+      },
+      "requiredFields": [
+        "rfi_id"
+      ],
+      "optionalFields": [
+        "reactions",
+        "mentions"
+      ],
+      "autoGeneratedFields": [],
+      "referenceFields": [
+        {
+          "field": "rfi_id",
+          "refersTo": "rfi"
+        }
+      ],
+      "enumFields": [],
+      "timestampFields": [],
+      "jsonFields": [
+        "reactions",
+        "mentions"
+      ]
+    },
+    "collaborator": {
+      "totalFields": 9,
+      "totalFieldOverrides": 0,
+      "fieldsByType": {
+        "id": 1,
+        "ref": 2,
+        "text": 1,
+        "timestamp": 4,
+        "bool": 1
+      },
+      "requiredFields": [
+        "id",
+        "review_id",
+        "email",
+        "created_at",
+        "updated_at"
+      ],
+      "optionalFields": [
+        "expires_at",
+        "is_permanent",
+        "notified_at",
+        "created_by"
+      ],
+      "autoGeneratedFields": [
+        {
+          "field": "created_at",
+          "autoType": "now"
+        },
+        {
+          "field": "updated_at",
+          "autoType": "update"
+        },
+        {
+          "field": "created_by",
+          "autoType": "user"
+        }
+      ],
+      "referenceFields": [
+        {
+          "field": "review_id",
+          "refersTo": "review"
+        },
+        {
+          "field": "created_by",
+          "refersTo": "user"
+        }
+      ],
+      "enumFields": [],
+      "timestampFields": [
+        "expires_at",
+        "notified_at",
+        "created_at",
+        "updated_at"
+      ],
+      "jsonFields": []
+    },
+    "file": {
+      "totalFields": 9,
+      "totalFieldOverrides": 0,
+      "fieldsByType": {
+        "id": 1,
+        "ref": 2,
+        "text": 3,
+        "int": 1,
+        "timestamp": 2
+      },
+      "requiredFields": [
+        "id",
+        "rfi_id",
+        "created_at",
+        "updated_at"
+      ],
+      "optionalFields": [
+        "path",
+        "size",
+        "mime_type",
+        "storage_type",
+        "created_by"
+      ],
+      "autoGeneratedFields": [
+        {
+          "field": "created_at",
+          "autoType": "now"
+        },
+        {
+          "field": "updated_at",
+          "autoType": "update"
+        },
+        {
+          "field": "created_by",
+          "autoType": "user"
+        }
+      ],
+      "referenceFields": [
+        {
+          "field": "rfi_id",
+          "refersTo": "rfi"
+        },
+        {
+          "field": "created_by",
+          "refersTo": "user"
+        }
+      ],
+      "enumFields": [],
+      "timestampFields": [
+        "created_at",
+        "updated_at"
+      ],
+      "jsonFields": []
+    },
+    "permission_audit": {
+      "totalFields": 18,
+      "totalFieldOverrides": 0,
+      "fieldsByType": {
+        "id": 1,
+        "ref": 4,
+        "text": 4,
+        "enum": 2,
+        "json": 3,
+        "textarea": 1,
+        "timestamp": 3
+      },
+      "requiredFields": [
+        "id",
+        "user_id",
+        "entity_type",
+        "entity_id",
+        "action",
+        "reason_code",
+        "timestamp",
+        "created_at",
+        "updated_at"
+      ],
+      "optionalFields": [
+        "old_permissions",
+        "new_permissions",
+        "reason",
+        "ip_address",
+        "session_id",
+        "affected_user_id",
+        "metadata",
+        "created_by",
+        "updated_by"
+      ],
+      "autoGeneratedFields": [
+        {
+          "field": "created_at",
+          "autoType": "now"
+        },
+        {
+          "field": "updated_at",
+          "autoType": "update"
+        },
+        {
+          "field": "created_by",
+          "autoType": "user"
+        }
+      ],
+      "referenceFields": [
+        {
+          "field": "user_id",
+          "refersTo": "user"
+        },
+        {
+          "field": "affected_user_id",
+          "refersTo": "user"
+        },
+        {
+          "field": "created_by",
+          "refersTo": "user"
+        },
+        {
+          "field": "updated_by",
+          "refersTo": "user"
+        }
+      ],
+      "enumFields": [
+        {
+          "field": "action",
+          "enum": null,
+          "options": ""
+        },
+        {
+          "field": "reason_code",
+          "enum": null,
+          "options": ""
+        }
+      ],
+      "timestampFields": [
+        "timestamp",
+        "created_at",
+        "updated_at"
+      ],
+      "jsonFields": [
+        "old_permissions",
+        "new_permissions",
+        "metadata"
+      ]
+    }
+  },
+  "relationshipAnalysis": {
+    "totalReferences": 47,
+    "parentChildRelationships": [
+      {
+        "child": "engagement",
+        "parent": "null"
+      },
+      {
+        "child": "rfi",
+        "parent": "engagement"
+      },
+      {
+        "child": "review",
+        "parent": "engagement"
+      },
+      {
+        "child": "highlight",
+        "parent": "review"
+      },
+      {
+        "child": "highlight_comment",
+        "parent": "highlight"
+      },
+      {
+        "child": "collaborator",
+        "parent": "review"
+      },
+      {
+        "child": "checklist",
+        "parent": "review"
+      },
+      {
+        "child": "checklist_item",
+        "parent": "checklist"
+      },
+      {
+        "child": "client_user",
+        "parent": "client"
+      },
+      {
+        "child": "tender",
+        "parent": "review"
+      },
+      {
+        "child": "letter",
+        "parent": "engagement"
+      },
+      {
+        "child": "review_template",
+        "parent": "null"
+      },
+      {
+        "child": "template_section",
+        "parent": "review_template"
+      },
+      {
+        "child": "rfi_section",
+        "parent": "engagement"
+      },
+      {
+        "child": "flag",
+        "parent": "review"
+      },
+      {
+        "child": "message",
+        "parent": "rfi"
+      },
+      {
+        "child": "file",
+        "parent": "rfi"
+      },
+      {
+        "child": "rfi_response",
+        "parent": "rfi"
+      },
+      {
+        "child": "permission_audit",
+        "parent": "null"
+      }
+    ],
+    "crossReferences": [
+      {
+        "sourceEntity": "engagement",
+        "sourceField": "client_id",
+        "targetEntity": "client",
+        "required": true
+      },
+      {
+        "sourceEntity": "engagement",
+        "sourceField": "created_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "rfi",
+        "sourceField": "engagement_id",
+        "targetEntity": "engagement",
+        "required": true
+      },
+      {
+        "sourceEntity": "rfi",
+        "sourceField": "assigned_to",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "review",
+        "sourceField": "engagement_id",
+        "targetEntity": "engagement",
+        "required": true
+      },
+      {
+        "sourceEntity": "review",
+        "sourceField": "team_id",
+        "targetEntity": "team",
+        "required": false
+      },
+      {
+        "sourceEntity": "review",
+        "sourceField": "created_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "highlight",
+        "sourceField": "review_id",
+        "targetEntity": "review",
+        "required": true
+      },
+      {
+        "sourceEntity": "highlight_comment",
+        "sourceField": "highlight_id",
+        "targetEntity": "highlight",
+        "required": true
+      },
+      {
+        "sourceEntity": "removedHighlight",
+        "sourceField": "review_id",
+        "targetEntity": "review",
+        "required": true
+      },
+      {
+        "sourceEntity": "collaborator",
+        "sourceField": "review_id",
+        "targetEntity": "review",
+        "required": true
+      },
+      {
+        "sourceEntity": "collaborator",
+        "sourceField": "created_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "checklist",
+        "sourceField": "review_id",
+        "targetEntity": "review",
+        "required": true
+      },
+      {
+        "sourceEntity": "checklist",
+        "sourceField": "created_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "checklist_item",
+        "sourceField": "checklist_id",
+        "targetEntity": "checklist",
+        "required": true
+      },
+      {
+        "sourceEntity": "checklist_item",
+        "sourceField": "assigned_to",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "checklist_item",
+        "sourceField": "created_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "checklist_item",
+        "sourceField": "updated_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "client",
+        "sourceField": "created_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "client_user",
+        "sourceField": "client_id",
+        "targetEntity": "client",
+        "required": true
+      },
+      {
+        "sourceEntity": "tender",
+        "sourceField": "review_id",
+        "targetEntity": "review",
+        "required": true
+      },
+      {
+        "sourceEntity": "tender",
+        "sourceField": "created_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "tender",
+        "sourceField": "updated_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "letter",
+        "sourceField": "engagement_id",
+        "targetEntity": "engagement",
+        "required": true
+      },
+      {
+        "sourceEntity": "review_template",
+        "sourceField": "created_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "template_section",
+        "sourceField": "template_id",
+        "targetEntity": "review_template",
+        "required": true
+      },
+      {
+        "sourceEntity": "template_section",
+        "sourceField": "created_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "rfi_section",
+        "sourceField": "engagement_id",
+        "targetEntity": "engagement",
+        "required": true
+      },
+      {
+        "sourceEntity": "flag",
+        "sourceField": "review_id",
+        "targetEntity": "review",
+        "required": true
+      },
+      {
+        "sourceEntity": "flag",
+        "sourceField": "applied_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "flag",
+        "sourceField": "created_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "message",
+        "sourceField": "rfi_id",
+        "targetEntity": "rfi",
+        "required": true
+      },
+      {
+        "sourceEntity": "file",
+        "sourceField": "rfi_id",
+        "targetEntity": "rfi",
+        "required": true
+      },
+      {
+        "sourceEntity": "file",
+        "sourceField": "created_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "rfi_response",
+        "sourceField": "rfi_id",
+        "targetEntity": "rfi",
+        "required": true
+      },
+      {
+        "sourceEntity": "rfi_response",
+        "sourceField": "responder_id",
+        "targetEntity": "user",
+        "required": true
+      },
+      {
+        "sourceEntity": "rfi_response",
+        "sourceField": "reviewed_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "rfi_response",
+        "sourceField": "parent_response_id",
+        "targetEntity": "rfi_response",
+        "required": false
+      },
+      {
+        "sourceEntity": "rfi_response",
+        "sourceField": "created_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "rfi_response",
+        "sourceField": "updated_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "email",
+        "sourceField": "engagement_id",
+        "targetEntity": "engagement",
+        "required": false
+      },
+      {
+        "sourceEntity": "email",
+        "sourceField": "rfi_id",
+        "targetEntity": "rfi",
+        "required": false
+      },
+      {
+        "sourceEntity": "email",
+        "sourceField": "created_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "permission_audit",
+        "sourceField": "user_id",
+        "targetEntity": "user",
+        "required": true
+      },
+      {
+        "sourceEntity": "permission_audit",
+        "sourceField": "affected_user_id",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "permission_audit",
+        "sourceField": "created_by",
+        "targetEntity": "user",
+        "required": false
+      },
+      {
+        "sourceEntity": "permission_audit",
+        "sourceField": "updated_by",
+        "targetEntity": "user",
+        "required": false
+      }
+    ]
+  },
+  "workflowAnalysis": {
+    "entitiesWithWorkflow": 5,
+    "workflows": [
+      {
+        "entity": "engagement",
+        "workflow": "engagement_lifecycle",
+        "hasTimeline": true
+      },
+      {
+        "entity": "rfi",
+        "workflow": "rfi_type_standard",
+        "hasTimeline": false
+      },
+      {
+        "entity": "review",
+        "workflow": "review_lifecycle",
+        "hasTimeline": false
+      },
+      {
+        "entity": "highlight",
+        "workflow": "highlight_resolution",
+        "hasTimeline": false
+      },
+      {
+        "entity": "rfi_response",
+        "workflow": "rfi_response_lifecycle",
+        "hasTimeline": false
+      }
+    ]
+  },
+  "validationAnalysis": {
+    "entitiesWithValidation": 1,
+    "fieldsWithValidation": 1,
+    "validationTypes": {
+      "lifecycle_stage_transition": [
+        {
+          "entity": "engagement",
+          "field": "stage",
+          "override": true
+        }
+      ]
+    }
+  },
+  "findings": [
+    {
+      "severity": "CRITICAL",
+      "category": "pdf_coordinates",
+      "message": "Highlight table has ZERO coordinate fields - cannot store PDF position data",
+      "details": {
+        "requiredFields": [
+          "x",
+          "y",
+          "width",
+          "height",
+          "page"
+        ],
+        "foundFields": [],
+        "actualColumns": 15,
+        "masterConfigClaim": "has_position_data: true",
+        "possibleJsonStorage": [
+          "id",
+          "status",
+          "archived_by",
+          "resolution_notes",
+          "resolved_by",
+          "color",
+          "created_by",
+          "review_id"
+        ]
+      },
+      "impact": "BLOCKS Phase 3.4+ migration - PDF highlight coordinates cannot be preserved (±0 pixels requirement)",
+      "action": "IMMEDIATE: Add coordinate columns (x REAL, y REAL, width REAL, height REAL, page INTEGER) to highlight table",
+      "priority": "P0 - MIGRATION BLOCKER",
+      "migrationPhaseBlocked": [
+        "Phase 3.4",
+        "Phase 3.5",
+        "Phase 3.6",
+        "Phase 3.7"
+      ]
+    },
+    {
+      "severity": "info",
+      "category": "mapping",
+      "message": "Firestore collection 'activity_log' does not map to a master-config entity (may be handled differently)"
+    },
+    {
+      "severity": "warning",
+      "category": "timestamps",
+      "message": "Entity 'rfi' is missing created_at timestamp field",
+      "impact": "Timestamp normalization requirement may not be fully met"
+    },
+    {
+      "severity": "warning",
+      "category": "timestamps",
+      "message": "Entity 'highlight' is missing created_at timestamp field",
+      "impact": "Timestamp normalization requirement may not be fully met"
+    },
+    {
+      "severity": "warning",
+      "category": "timestamps",
+      "message": "Entity 'removedHighlight' is missing created_at timestamp field",
+      "impact": "Timestamp normalization requirement may not be fully met"
+    },
+    {
+      "severity": "warning",
+      "category": "timestamps",
+      "message": "Entity 'client_user' is missing created_at timestamp field",
+      "impact": "Timestamp normalization requirement may not be fully met"
+    },
+    {
+      "severity": "warning",
+      "category": "timestamps",
+      "message": "Entity 'letter' is missing created_at timestamp field",
+      "impact": "Timestamp normalization requirement may not be fully met"
+    },
+    {
+      "severity": "warning",
+      "category": "timestamps",
+      "message": "Entity 'rfi_section' is missing created_at timestamp field",
+      "impact": "Timestamp normalization requirement may not be fully met"
+    },
+    {
+      "severity": "warning",
+      "category": "timestamps",
+      "message": "Entity 'message' is missing created_at timestamp field",
+      "impact": "Timestamp normalization requirement may not be fully met"
+    },
+    {
+      "severity": "warning",
+      "category": "timestamps",
+      "message": "Entity 'job_execution_log' is missing created_at timestamp field",
+      "impact": "Timestamp normalization requirement may not be fully met"
+    }
+  ],
+  "databaseSchemaAnalysis": {
+    "highlightTable": {
+      "exists": true,
+      "columns": [
+        "id",
+        "status",
+        "archived",
+        "archived_at",
+        "archived_by",
+        "resolution_notes",
+        "resolved_at",
+        "resolved_by",
+        "color",
+        "is_high_priority",
+        "is_active_focus",
+        "created_at",
+        "updated_at",
+        "created_by",
+        "review_id"
+      ],
+      "missingCoordinateFields": [
+        "x",
+        "y",
+        "width",
+        "height",
+        "page"
+      ],
+      "hasMasterConfigFlag": "has_position_data: true",
+      "impact": "CRITICAL - Cannot store PDF coordinates for migration"
+    },
+    "positionDataTables": {
+      "found": 0,
+      "tables": [],
+      "note": "No separate position data table exists"
+    }
+  },
+  "entitySchemaComparison": {
+    "engagement": {
+      "tableName": "engagement",
+      "configFields": 21,
+      "dbColumns": 21,
+      "missingInDatabase": [],
+      "missingInConfig": [],
+      "status": "complete",
+      "severity": "info"
+    },
+    "rfi": {
+      "tableName": "rfi",
+      "configFields": 11,
+      "dbColumns": 14,
+      "missingInDatabase": [],
+      "missingInConfig": [],
+      "status": "complete",
+      "severity": "info"
+    },
+    "review": {
+      "tableName": "review",
+      "configFields": 13,
+      "dbColumns": 13,
+      "missingInDatabase": [],
+      "missingInConfig": [],
+      "status": "complete",
+      "severity": "info"
+    },
+    "highlight": {
+      "tableName": "highlight",
+      "configFields": 11,
+      "dbColumns": 15,
+      "missingInDatabase": [],
+      "missingInConfig": [],
+      "status": "complete",
+      "severity": "info"
+    },
+    "collaborator": {
+      "tableName": "collaborator",
+      "configFields": 9,
+      "dbColumns": 9,
+      "missingInDatabase": [],
+      "missingInConfig": [],
+      "status": "complete",
+      "severity": "info"
+    },
+    "checklist": {
+      "tableName": "checklist",
+      "configFields": 10,
+      "dbColumns": 10,
+      "missingInDatabase": [],
+      "missingInConfig": [],
+      "status": "complete",
+      "severity": "info"
+    },
+    "checklist_item": {
+      "tableName": "checklist_item",
+      "configFields": 12,
+      "dbColumns": 12,
+      "missingInDatabase": [],
+      "missingInConfig": [],
+      "status": "complete",
+      "severity": "info"
+    },
+    "user": {
+      "tableName": "users",
+      "configFields": 7,
+      "dbColumns": 11,
+      "missingInDatabase": [],
+      "missingInConfig": [],
+      "status": "complete",
+      "severity": "info"
+    },
+    "client": {
+      "tableName": "client",
+      "configFields": 18,
+      "dbColumns": 18,
+      "missingInDatabase": [],
+      "missingInConfig": [],
+      "status": "complete",
+      "severity": "info"
+    },
+    "message": {
+      "tableName": "message",
+      "configFields": 3,
+      "dbColumns": 3,
+      "missingInDatabase": [],
+      "missingInConfig": [],
+      "status": "complete",
+      "severity": "info"
+    },
+    "file": {
+      "tableName": "file",
+      "configFields": 9,
+      "dbColumns": 9,
+      "missingInDatabase": [],
+      "missingInConfig": [],
+      "status": "complete",
+      "severity": "info"
+    },
+    "rfi_response": {
+      "tableName": "rfi_response",
+      "configFields": 19,
+      "dbColumns": 19,
+      "missingInDatabase": [],
+      "missingInConfig": [],
+      "status": "complete",
+      "severity": "info"
+    }
+  },
+  "criticalFieldAnalysis": {
+    "users": {
+      "hasEmailField": true,
+      "emailColumn": "email",
+      "emailRequired": true,
+      "deduplicationReady": true,
+      "status": "OK"
+    },
+    "highlights": {
+      "hasCoordinateFields": false,
+      "coordinateFieldCheck": {
+        "x": false,
+        "y": false,
+        "width": false,
+        "height": false,
+        "page": false,
+        "position_x": false,
+        "position_y": false,
+        "page_number": false,
+        "rect": false,
+        "bounds": false,
+        "position_data": false,
+        "coordinates": false
+      },
+      "actualColumns": [
+        "id",
+        "status",
+        "archived",
+        "archived_at",
+        "archived_by",
+        "resolution_notes",
+        "resolved_at",
+        "resolved_by",
+        "color",
+        "is_high_priority",
+        "is_active_focus",
+        "created_at",
+        "updated_at",
+        "created_by",
+        "review_id"
+      ],
+      "textFieldsForJson": [
+        "id",
+        "status",
+        "archived_by",
+        "resolution_notes",
+        "resolved_by",
+        "color",
+        "created_by",
+        "review_id"
+      ],
+      "status": "CRITICAL - No coordinate fields found",
+      "migrationBlocked": true,
+      "requiredFields": [
+        "x",
+        "y",
+        "width",
+        "height",
+        "page"
+      ],
+      "foundFields": []
+    }
+  },
+  "masterConfigSections": {
+    "totalSections": 21,
+    "sections": {
+      "roles": {
+        "lineCount": 41,
+        "itemCount": 5,
+        "items": [
+          "partner",
+          "manager",
+          "clerk",
+          "client_admin",
+          "client_user"
+        ]
+      },
+      "permission_templates": {
+        "lineCount": 123,
+        "itemCount": 6,
+        "items": [
+          "standard_auditor",
+          "partner_only",
+          "review_collaboration",
+          "client_response",
+          "admin_only",
+          "audit_viewer"
+        ]
+      },
+      "workflows": {
+        "lineCount": 265,
+        "itemCount": 6,
+        "items": [
+          "engagement_lifecycle",
+          "rfi_type_standard",
+          "rfi_type_post_rfi",
+          "review_lifecycle",
+          "highlight_resolution",
+          "rfi_response_lifecycle"
+        ]
+      },
+      "thresholds": {
+        "lineCount": 126,
+        "itemCount": 19,
+        "items": [
+          "rfi",
+          "collaborator",
+          "tender",
+          "engagement",
+          "workflow",
+          "notification",
+          "email",
+          "retry",
+          "system",
+          "cache",
+          "cache_advanced",
+          "audit",
+          "query",
+          "polling",
+          "timeline",
+          "ui",
+          "highlight",
+          "search",
+          "debug"
+        ]
+      },
+      "engagement_status_types": {
+        "lineCount": 132,
+        "itemCount": 6,
+        "items": [
+          "engagement_client_status",
+          "engagement_letter_client_status",
+          "engagement_letter_auditor_status",
+          "engagement_post_rfi_client_status",
+          "engagement_post_rfi_auditor_status",
+          "engagement_auditor_status"
+        ]
+      },
+      "entities": {
+        "lineCount": 1504,
+        "itemCount": 25,
+        "items": [
+          "engagement",
+          "rfi",
+          "review",
+          "highlight",
+          "highlight_comment",
+          "removedHighlight",
+          "collaborator",
+          "checklist",
+          "checklist_item",
+          "user",
+          "team",
+          "client",
+          "client_user",
+          "tender",
+          "letter",
+          "review_template",
+          "template_section",
+          "rfi_section",
+          "flag",
+          "message",
+          "file",
+          "rfi_response",
+          "email",
+          "job_execution_log",
+          "permission_audit"
+        ]
+      },
+      "domains": {
+        "lineCount": 39,
+        "itemCount": 2,
+        "items": [
+          "friday",
+          "mwr"
+        ]
+      },
+      "automation": {
+        "lineCount": 169,
+        "itemCount": 1,
+        "items": [
+          "schedules"
+        ]
+      },
+      "notifications": {
+        "lineCount": 303,
+        "itemCount": 22,
+        "items": [
+          "rfi_escalation",
+          "rfi_deadline_warning",
+          "engagement_deadline",
+          "collaborator_expiry_7day_warning",
+          "collaborator_expired",
+          "client_feedback_ready",
+          "tender_deadline_warning",
+          "tender_deadline_24h",
+          "tender_deadline_today",
+          "tender_created",
+          "tender_closed",
+          "tender_awarded",
+          "tender_critical",
+          "engagement_created",
+          "engagement_status_changed",
+          "rfi_response_submitted_client",
+          "rfi_response_submitted_auditor",
+          "rfi_response_rejected",
+          "rfi_response_accepted",
+          "rfi_response_clarification_needed",
+          "trigger_types",
+          "engagement_notification_settings"
+        ]
+      },
+      "document_generation": {
+        "lineCount": 33,
+        "itemCount": 2,
+        "items": [
+          "templates",
+          "google_drive"
+        ]
+      },
+      "highlights": {
+        "lineCount": 36,
+        "itemCount": 2,
+        "items": [
+          "palette",
+          "rendering"
+        ]
+      },
+      "dialogs": {
+        "lineCount": 434,
+        "itemCount": 20,
+        "items": [
+          "stage_transition",
+          "fee_split",
+          "team_assignment",
+          "client_user_management",
+          "client_user_replace",
+          "client_test_email",
+          "client_risk_assessment",
+          "rfi_question_edit",
+          "rfi_question_assign",
+          "rfi_bulk_assign",
+          "rfi_bulk_deadline",
+          "rfi_section_order",
+          "rfi_item_dialog",
+          "rfi_attach_dialog",
+          "letter_dialog",
+          "notification_trigger",
+          "review_create",
+          "collaborator_dialog",
+          "review_flag_dialog",
+          "review_tag_dialog"
+        ]
+      },
+      "authentication": {
+        "lineCount": 7,
+        "itemCount": 0,
+        "items": []
+      },
+      "session": {
+        "lineCount": 12,
+        "itemCount": 1,
+        "items": [
+          "idle_warning_dialog_config"
+        ]
+      },
+      "engagement": {
+        "lineCount": 12,
+        "itemCount": 1,
+        "items": [
+          "fee_split"
+        ]
+      },
+      "rfi": {
+        "lineCount": 30,
+        "itemCount": 1,
+        "items": [
+          "templates"
+        ]
+      },
+      "review": {
+        "lineCount": 23,
+        "itemCount": 1,
+        "items": [
+          "tabs"
+        ]
+      },
+      "tender": {
+        "lineCount": 20,
+        "itemCount": 3,
+        "items": [
+          "status_options",
+          "priority_levels",
+          "types"
+        ]
+      },
+      "checklist": {
+        "lineCount": 27,
+        "itemCount": 1,
+        "items": [
+          "templates"
+        ]
+      },
+      "settings": {
+        "lineCount": 39,
+        "itemCount": 1,
+        "items": [
+          "navigation"
+        ]
+      },
+      "components": {
+        "lineCount": 144,
+        "itemCount": 8,
+        "items": [
+          "avatar_group",
+          "linear_progress",
+          "circular_progress",
+          "color_picker",
+          "date_picker",
+          "engagement_progress",
+          "collapsible_sidebar",
+          "tooltip"
+        ]
+      }
+    }
+  },
+  "workflowDetails": {
+    "engagement_lifecycle": {
+      "stages": []
+    },
+    "rfi_type_standard": {
+      "stages": []
+    },
+    "rfi_type_post_rfi": {
+      "stages": []
+    },
+    "review_lifecycle": {
+      "stages": []
+    },
+    "highlight_resolution": {
+      "stages": []
+    },
+    "rfi_response_lifecycle": {
+      "stages": [
+        "new_stage",
+        "reason",
+        "partner_percent",
+        "manager_percent",
+        "notes",
+        "team_members",
+        "roles",
+        "client_user",
+        "engagement",
+        "old_user",
+        "new_user",
+        "scope",
+        "email",
+        "template",
+        "risk_level",
+        "assessment_notes",
+        "question_text",
+        "section",
+        "response_type",
+        "client_user",
+        "deadline",
+        "client_users",
+        "deadline",
+        "questions",
+        "deadline",
+        "sections",
+        "text",
+        "section",
+        "rfi_template",
+        "letter_status",
+        "template",
+        "trigger_type",
+        "recipients",
+        "title",
+        "pdf_file",
+        "template",
+        "user",
+        "expiry_date",
+        "flag_type",
+        "tags",
+        "items",
+        "max_visible",
+        "percent",
+        "label",
+        "percent",
+        "size",
+        "value",
+        "onChange",
+        "value",
+        "min",
+        "max",
+        "percent",
+        "stage",
+        "width",
+        "title",
+        "items",
+        "minWidth",
+        "maxWidth",
+        "text",
+        "content",
+        "position"
+      ]
+    }
+  },
+  "executiveSummary": {
+    "timestamp": "2026-02-19T17:50:43.901Z",
+    "overallStatus": "MIGRATION BLOCKED",
+    "criticalBlockers": 1,
+    "warnings": 8,
+    "totalFindings": 10,
+    "keyMetrics": {
+      "masterConfigEntities": 25,
+      "expectedFirestoreCollections": 10,
+      "entityCoveragePct": 90,
+      "totalFields": 217,
+      "totalWorkflows": 6,
+      "totalRoles": 5,
+      "totalPermissionTemplates": 6,
+      "totalNotificationTemplates": 22
+    },
+    "criticalIssues": [
+      {
+        "issue": "Highlight table missing ALL coordinate fields",
+        "severity": "P0 - MIGRATION BLOCKER",
+        "impact": "Cannot store PDF coordinates - Phase 3.4+ blocked",
+        "requiredFields": [
+          "x",
+          "y",
+          "width",
+          "height",
+          "page"
+        ],
+        "foundFields": [],
+        "blocksPhases": [
+          "3.4",
+          "3.5",
+          "3.6",
+          "3.7"
+        ],
+        "action": "ALTER TABLE highlight ADD COLUMN x REAL, y REAL, width REAL, height REAL, page INTEGER"
+      }
+    ],
+    "positiveFindings": [
+      "Users table has email field (required for deduplication)",
+      "All 12 critical entities exist in database",
+      "Schema field counts match between config and database",
+      "6 workflows defined and ready",
+      "5 roles defined (partner, manager, clerk, client_admin, client_user)",
+      "6 permission templates configured",
+      "22 notification templates ready",
+      "2 domains configured (friday, mwr)"
+    ],
+    "recommendations": [
+      {
+        "priority": "P0 - IMMEDIATE",
+        "action": "Add coordinate columns to highlight table",
+        "sql": "ALTER TABLE highlight ADD COLUMN x REAL;\nALTER TABLE highlight ADD COLUMN y REAL;\nALTER TABLE highlight ADD COLUMN width REAL;\nALTER TABLE highlight ADD COLUMN height REAL;\nALTER TABLE highlight ADD COLUMN page INTEGER;",
+        "impact": "Unblocks Phase 3.4-3.10 migration",
+        "estimatedEffort": "5 minutes"
+      },
+      {
+        "priority": "P1 - HIGH",
+        "action": "Update master-config.yml highlight entity to include coordinate fields",
+        "details": "Add x, y, width, height, page to highlight.fields section",
+        "impact": "Ensures config matches database schema",
+        "estimatedEffort": "10 minutes"
+      },
+      {
+        "priority": "P2 - MEDIUM",
+        "action": "Verify workflow stage definitions match source systems",
+        "details": "Current workflow parsing shows 0 stages for most workflows - investigate if this is a parsing issue or config issue",
+        "impact": "Ensures proper workflow state migration",
+        "estimatedEffort": "30 minutes"
+      },
+      {
+        "priority": "P3 - LOW",
+        "action": "Add unique constraint on users.email for deduplication performance",
+        "sql": "CREATE UNIQUE INDEX idx_users_email_unique ON users(email);",
+        "impact": "Improves deduplication query performance",
+        "estimatedEffort": "5 minutes"
+      }
+    ],
+    "migrationReadiness": {
+      "phase34": "BLOCKED - Missing highlight coordinates",
+      "phase35": "BLOCKED - Missing highlight coordinates",
+      "phase36": "BLOCKED - Missing highlight coordinates",
+      "phase37": "BLOCKED - Missing highlight coordinates",
+      "phase38": "BLOCKED - Dependent on 3.7",
+      "phase39": "BLOCKED - Dependent on 3.8",
+      "phase310": "BLOCKED - Dependent on 3.9"
+    }
+  },
+  "firestoreComparison": {
+    "expectedCollections": {
+      "friday": [
+        "users",
+        "clients",
+        "engagements",
+        "rfis",
+        "reviews",
+        "messages",
+        "collaborators",
+        "files",
+        "activity_log",
+        "permissions"
+      ],
+      "mwr": [
+        "users",
+        "collaborators",
+        "permissions"
+      ]
+    },
+    "expectedSubcollections": {
+      "engagement.rfi": [
+        "questions",
+        "responses"
+      ],
+      "engagement.reviews": [
+        "highlights"
+      ],
+      "engagement": [
+        "messages",
+        "checklists"
+      ],
+      "engagement.checklists": [
+        "items"
+      ]
+    },
+    "mappingStatus": {
+      "users": {
+        "entity": "user",
+        "table": "users",
+        "status": "OK"
+      },
+      "clients": {
+        "entity": "client",
+        "table": "client",
+        "status": "OK"
+      },
+      "engagements": {
+        "entity": "engagement",
+        "table": "engagement",
+        "status": "OK"
+      },
+      "rfis": {
+        "entity": "rfi",
+        "table": "rfi",
+        "status": "OK"
+      },
+      "reviews": {
+        "entity": "review",
+        "table": "review",
+        "status": "OK"
+      },
+      "messages": {
+        "entity": "message",
+        "table": "message",
+        "status": "OK"
+      },
+      "collaborators": {
+        "entity": "collaborator",
+        "table": "collaborator",
+        "status": "OK"
+      },
+      "files": {
+        "entity": "file",
+        "table": "file",
+        "status": "OK"
+      },
+      "permissions": {
+        "entity": "permission_audit",
+        "table": "permission_audit",
+        "status": "OK"
+      },
+      "highlights (subcollection)": {
+        "entity": "highlight",
+        "table": "highlight",
+        "status": "BLOCKED - No coordinate fields"
+      }
+    }
+  }
+}

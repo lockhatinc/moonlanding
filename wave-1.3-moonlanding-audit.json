@@ -1,0 +1,1625 @@
+{
+  "timestamp": "2026-02-19T17:45:42.419Z",
+  "summary": {
+    "totalRoutes": 57,
+    "totalComponents": 24,
+    "totalEngines": 9,
+    "totalServices": 5,
+    "routesTested": 32,
+    "routesPassed": 23,
+    "routesFailed": 9,
+    "componentsTested": 24,
+    "enginesTested": 9,
+    "servicesTested": 5,
+    "scores": {
+      "routes": 71.9,
+      "components": 100,
+      "engines": 100,
+      "services": 100,
+      "overall": 72
+    },
+    "issuesBySeverity": {
+      "critical": 3,
+      "high": 27,
+      "medium": 11,
+      "low": 0,
+      "total": 41
+    },
+    "issuesByCategory": {
+      "routes": 1,
+      "security": 2,
+      "reliability": 23,
+      "code_quality": 14,
+      "database": 1
+    }
+  },
+  "routes": {
+    "/api/health": {
+      "tested": true,
+      "method": "GET",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true,
+      "contentType": "application/json",
+      "responseSize": 78,
+      "sample": "{\"status\":\"ok\",\"timestamp\":\"2026-02-19T17:45:42.491Z\",\"uptime\":1117.039844585}"
+    },
+    "/api/csrf-token": {
+      "tested": true,
+      "method": "GET",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true,
+      "contentType": "application/json",
+      "responseSize": 108,
+      "sample": "{\"status\":\"success\",\"data\":{\"csrfToken\":\"f4fadca955604ed8384f5f112ed9f80c41a17338ea4d93e910d8169ab26"
+    },
+    "/api/auth/login": {
+      "tested": true,
+      "method": "GET",
+      "status": 405,
+      "expectedStatus": 200,
+      "passed": false,
+      "contentType": "application/json; charset=utf-8",
+      "responseSize": 30,
+      "sample": "{\"error\":\"Method not allowed\"}"
+    },
+    "/api/friday/features": {
+      "tested": true,
+      "method": "GET",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true,
+      "contentType": "application/json",
+      "responseSize": 188,
+      "sample": "{\"status\":\"success\",\"data\":{\"domain\":\"friday\",\"features\":[],\"entities\":[\"engagement\",\"rfi\",\"rfi_sect"
+    },
+    "/api/mwr/features": {
+      "tested": true,
+      "method": "GET",
+      "status": 200,
+      "expectedStatus": 200,
+      "passed": true,
+      "contentType": "application/json",
+      "responseSize": 357,
+      "sample": "{\"status\":\"success\",\"data\":{\"domain\":\"mwr\",\"features\":[],\"entities\":[\"review\",\"highlight\",\"highlight"
+    },
+    "/api/audit/dashboard": {
+      "tested": true,
+      "method": "GET",
+      "status": 403,
+      "passed": true,
+      "note": "Protected endpoint - should require auth"
+    },
+    "/api/email": {
+      "tested": true,
+      "method": "GET",
+      "status": 401,
+      "passed": true,
+      "note": "Protected endpoint - should require auth"
+    },
+    "/api/rfi": {
+      "tested": true,
+      "method": "GET",
+      "status": 401,
+      "passed": true,
+      "note": "Protected endpoint - should require auth"
+    },
+    "/api/mwr/review": {
+      "tested": true,
+      "method": "GET",
+      "status": 401,
+      "passed": true,
+      "note": "Protected endpoint - should require auth"
+    },
+    "/api/friday/engagement/transition": {
+      "tested": true,
+      "method": "GET",
+      "status": 400,
+      "passed": false,
+      "note": "Protected endpoint - should require auth"
+    },
+    "/api/domains": {
+      "tested": true,
+      "method": "GET",
+      "status": 200,
+      "passed": false,
+      "note": "Protected endpoint - should require auth"
+    },
+    "/api/auth/login POST": {
+      "tested": true,
+      "method": "POST",
+      "status": 401,
+      "passed": true,
+      "note": "Should reject invalid credentials"
+    },
+    "/api/auth/google": {
+      "tested": true,
+      "method": "GET",
+      "status": 307,
+      "passed": true,
+      "note": "Should redirect to Google OAuth"
+    },
+    "GET /api/audit": {
+      "tested": true,
+      "method": "GET",
+      "status": 401,
+      "requiresAuth": true,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:47.430Z"
+    },
+    "GET /api/audit/dashboard": {
+      "tested": true,
+      "method": "GET",
+      "status": 403,
+      "requiresAuth": true,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:47.435Z"
+    },
+    "GET /api/audit/permissions": {
+      "tested": true,
+      "method": "GET",
+      "status": 403,
+      "requiresAuth": true,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:47.443Z"
+    },
+    "GET /api/audit/permissions/stats": {
+      "tested": true,
+      "method": "GET",
+      "status": 401,
+      "requiresAuth": true,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:47.451Z"
+    },
+    "GET /api/auth/google": {
+      "tested": true,
+      "method": "GET",
+      "status": 200,
+      "requiresAuth": false,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:48.884Z"
+    },
+    "GET /api/auth/google/callback": {
+      "tested": true,
+      "method": "GET",
+      "status": 200,
+      "requiresAuth": false,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:48.898Z"
+    },
+    "POST /api/auth/login": {
+      "tested": true,
+      "method": "POST",
+      "status": 400,
+      "requiresAuth": false,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:48.900Z"
+    },
+    "POST /api/auth/logout": {
+      "tested": true,
+      "method": "POST",
+      "status": 200,
+      "requiresAuth": true,
+      "passed": false,
+      "timestamp": "2026-02-19T17:47:48.906Z"
+    },
+    "GET /api/auth/me": {
+      "tested": true,
+      "method": "GET",
+      "status": 401,
+      "requiresAuth": true,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:48.912Z"
+    },
+    "POST /api/auth/mwr-bridge": {
+      "tested": true,
+      "method": "POST",
+      "status": 400,
+      "requiresAuth": false,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:48.923Z"
+    },
+    "POST /api/auth/password-reset": {
+      "tested": true,
+      "method": "POST",
+      "status": 400,
+      "requiresAuth": false,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:48.930Z"
+    },
+    "POST /api/cron/trigger": {
+      "tested": true,
+      "method": "POST",
+      "status": 500,
+      "requiresAuth": true,
+      "passed": false,
+      "timestamp": "2026-02-19T17:47:48.968Z"
+    },
+    "GET /api/csrf-token": {
+      "tested": true,
+      "method": "GET",
+      "status": 200,
+      "requiresAuth": false,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:48.969Z"
+    },
+    "GET /api/domains": {
+      "tested": true,
+      "method": "GET",
+      "status": 200,
+      "requiresAuth": false,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:48.977Z"
+    },
+    "GET /api/email": {
+      "tested": true,
+      "method": "GET",
+      "status": 401,
+      "requiresAuth": true,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:48.979Z"
+    },
+    "POST /api/email/allocate": {
+      "tested": true,
+      "method": "POST",
+      "status": 400,
+      "requiresAuth": true,
+      "passed": false,
+      "timestamp": "2026-02-19T17:47:48.985Z"
+    },
+    "POST /api/email/allocate/batch": {
+      "tested": true,
+      "method": "POST",
+      "status": 200,
+      "requiresAuth": true,
+      "passed": false,
+      "timestamp": "2026-02-19T17:47:48.993Z"
+    },
+    "POST /api/email/receive": {
+      "tested": true,
+      "method": "POST",
+      "status": 400,
+      "requiresAuth": false,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:49.001Z"
+    },
+    "POST /api/email/send": {
+      "tested": true,
+      "method": "POST",
+      "status": 200,
+      "requiresAuth": true,
+      "passed": false,
+      "timestamp": "2026-02-19T17:47:49.014Z"
+    },
+    "GET /api/email/unallocated": {
+      "tested": true,
+      "method": "GET",
+      "status": 200,
+      "requiresAuth": true,
+      "passed": false,
+      "timestamp": "2026-02-19T17:47:49.020Z"
+    },
+    "POST /api/engagement/rate": {
+      "tested": true,
+      "method": "POST",
+      "status": 500,
+      "requiresAuth": true,
+      "passed": false,
+      "timestamp": "2026-02-19T17:47:49.029Z"
+    },
+    "POST /api/engagement/status": {
+      "tested": true,
+      "method": "POST",
+      "status": 400,
+      "requiresAuth": true,
+      "passed": false,
+      "timestamp": "2026-02-19T17:47:49.036Z"
+    },
+    "POST /api/friday/engagement/transition": {
+      "tested": true,
+      "method": "POST",
+      "status": 400,
+      "requiresAuth": true,
+      "passed": false,
+      "timestamp": "2026-02-19T17:47:49.038Z"
+    },
+    "GET /api/friday/features": {
+      "tested": true,
+      "method": "GET",
+      "status": 200,
+      "requiresAuth": false,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:49.041Z"
+    },
+    "POST /api/friday/rfi": {
+      "tested": true,
+      "method": "POST",
+      "status": 401,
+      "requiresAuth": true,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:49.053Z"
+    },
+    "GET /api/health": {
+      "tested": true,
+      "method": "GET",
+      "status": 200,
+      "requiresAuth": false,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:49.054Z"
+    },
+    "POST /api/message": {
+      "tested": true,
+      "method": "POST",
+      "status": 401,
+      "requiresAuth": true,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:49.062Z"
+    },
+    "GET /api/mwr/collaborator-role": {
+      "tested": true,
+      "method": "GET",
+      "status": 403,
+      "requiresAuth": true,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:49.072Z"
+    },
+    "GET /api/mwr/features": {
+      "tested": true,
+      "method": "GET",
+      "status": 200,
+      "requiresAuth": false,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:49.075Z"
+    },
+    "GET /api/mwr/review": {
+      "tested": true,
+      "method": "GET",
+      "status": 401,
+      "requiresAuth": true,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:49.077Z"
+    },
+    "GET /api/rfi": {
+      "tested": true,
+      "method": "GET",
+      "status": 401,
+      "requiresAuth": true,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:49.079Z"
+    },
+    "GET /api/rfi/_templates": {
+      "tested": true,
+      "method": "GET",
+      "status": 401,
+      "requiresAuth": true,
+      "passed": true,
+      "timestamp": "2026-02-19T17:47:49.085Z"
+    }
+  },
+  "components": {
+    "checklist-renderer": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/checklist-renderer.js",
+      "lines": 68,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 10312
+    },
+    "client-renderer": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/client-renderer.js",
+      "lines": 148,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 17645
+    },
+    "client": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/client.js",
+      "lines": 95,
+      "usesRippleUI": false,
+      "usesWebJSX": true,
+      "size": 2952
+    },
+    "collaboration-dialogs": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/collaboration-dialogs.js",
+      "lines": 32,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 5818
+    },
+    "component-engine": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/component-engine.js",
+      "lines": 104,
+      "usesRippleUI": false,
+      "usesWebJSX": false,
+      "size": 3226
+    },
+    "dialog-engine": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/dialog-engine.js",
+      "lines": 129,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 5537
+    },
+    "engagement-dialogs": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/engagement-dialogs.js",
+      "lines": 99,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 15241
+    },
+    "file-dialogs": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/file-dialogs.js",
+      "lines": 82,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 13263
+    },
+    "global-tags": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/global-tags.js",
+      "lines": 145,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 7187
+    },
+    "idle-logout": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/idle-logout.js",
+      "lines": 156,
+      "usesRippleUI": false,
+      "usesWebJSX": false,
+      "size": 4181
+    },
+    "letter-dialogs": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/letter-dialogs.js",
+      "lines": 38,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 5904
+    },
+    "misc-dialogs": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/misc-dialogs.js",
+      "lines": 98,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 10981
+    },
+    "page-handler": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/page-handler.js",
+      "lines": 613,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 22111
+    },
+    "password-reset-page": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/password-reset-page.js",
+      "lines": 156,
+      "usesRippleUI": false,
+      "usesWebJSX": false,
+      "size": 6366
+    },
+    "permissions-ui": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/permissions-ui.js",
+      "lines": 167,
+      "usesRippleUI": false,
+      "usesWebJSX": false,
+      "size": 6177
+    },
+    "push-mwr-dialog": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/push-mwr-dialog.js",
+      "lines": 38,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 5440
+    },
+    "renderer": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/renderer.js",
+      "lines": 874,
+      "usesRippleUI": true,
+      "usesWebJSX": true,
+      "size": 86966
+    },
+    "review-dialogs": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/review-dialogs.js",
+      "lines": 183,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 20435
+    },
+    "review-renderer": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/review-renderer.js",
+      "lines": 126,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 19208
+    },
+    "rfi-renderer": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/rfi-renderer.js",
+      "lines": 195,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 30638
+    },
+    "settings-renderer": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/settings-renderer.js",
+      "lines": 388,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 40112
+    },
+    "standalone-login": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/standalone-login.js",
+      "lines": 100,
+      "usesRippleUI": false,
+      "usesWebJSX": false,
+      "size": 4129
+    },
+    "tender-dialogs": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/tender-dialogs.js",
+      "lines": 33,
+      "usesRippleUI": true,
+      "usesWebJSX": false,
+      "size": 4912
+    },
+    "test-page": {
+      "tested": true,
+      "passed": true,
+      "path": "src/ui/test-page.js",
+      "lines": 15,
+      "usesRippleUI": false,
+      "usesWebJSX": false,
+      "size": 319
+    }
+  },
+  "engines": {
+    "backup": {
+      "tested": true,
+      "passed": true,
+      "path": "src/engine/backup.js",
+      "lines": 147,
+      "hasHotReload": false,
+      "hasErrorHandling": true,
+      "hasExports": true,
+      "size": 3935
+    },
+    "drive": {
+      "tested": true,
+      "passed": true,
+      "path": "src/engine/drive.js",
+      "lines": 2,
+      "hasHotReload": false,
+      "hasErrorHandling": false,
+      "hasExports": true,
+      "size": 213
+    },
+    "events": {
+      "tested": true,
+      "passed": true,
+      "path": "src/engine/events.js",
+      "lines": 3,
+      "hasHotReload": false,
+      "hasErrorHandling": false,
+      "hasExports": true,
+      "size": 126
+    },
+    "generate-checklist-pdf": {
+      "tested": true,
+      "passed": true,
+      "path": "src/engine/generate-checklist-pdf.js",
+      "lines": 52,
+      "hasHotReload": false,
+      "hasErrorHandling": true,
+      "hasExports": true,
+      "size": 2207
+    },
+    "gmail": {
+      "tested": true,
+      "passed": true,
+      "path": "src/engine/gmail.js",
+      "lines": 2,
+      "hasHotReload": false,
+      "hasErrorHandling": false,
+      "hasExports": true,
+      "size": 119
+    },
+    "google-auth": {
+      "tested": true,
+      "passed": true,
+      "path": "src/engine/google-auth.js",
+      "lines": 2,
+      "hasHotReload": false,
+      "hasErrorHandling": false,
+      "hasExports": true,
+      "size": 122
+    },
+    "job-engine": {
+      "tested": true,
+      "passed": true,
+      "path": "src/engine/job-engine.js",
+      "lines": 284,
+      "hasHotReload": false,
+      "hasErrorHandling": true,
+      "hasExports": true,
+      "size": 14021
+    },
+    "notification-engine": {
+      "tested": true,
+      "passed": true,
+      "path": "src/engine/notification-engine.js",
+      "lines": 171,
+      "hasHotReload": false,
+      "hasErrorHandling": true,
+      "hasExports": true,
+      "size": 11678
+    },
+    "recreation": {
+      "tested": true,
+      "passed": true,
+      "path": "src/engine/recreation.js",
+      "lines": 119,
+      "hasHotReload": false,
+      "hasErrorHandling": true,
+      "hasExports": true,
+      "size": 6543
+    }
+  },
+  "services": {
+    "collaborator-role.service": {
+      "tested": true,
+      "passed": true,
+      "path": "src/services/collaborator-role.service.js",
+      "lines": 106,
+      "hasErrorHandling": false,
+      "hasExports": true,
+      "size": 6290
+    },
+    "email-service": {
+      "tested": true,
+      "passed": true,
+      "path": "src/services/email-service.js",
+      "lines": 155,
+      "hasErrorHandling": true,
+      "hasExports": true,
+      "size": 5466
+    },
+    "file.service": {
+      "tested": true,
+      "passed": true,
+      "path": "src/services/file.service.js",
+      "lines": 124,
+      "hasErrorHandling": false,
+      "hasExports": true,
+      "size": 4526
+    },
+    "pdf-generator.service": {
+      "tested": true,
+      "passed": true,
+      "path": "src/services/pdf-generator.service.js",
+      "lines": 255,
+      "hasErrorHandling": true,
+      "hasExports": true,
+      "size": 8512
+    },
+    "permission.service": {
+      "tested": true,
+      "passed": true,
+      "path": "src/services/permission.service.js",
+      "lines": 179,
+      "hasErrorHandling": true,
+      "hasExports": true,
+      "size": 7047
+    }
+  },
+  "infrastructure": {
+    "csrf": {
+      "tested": true
+    },
+    "uiFrameworks": {
+      "rippleUI": {
+        "filesUsing": 17,
+        "totalFiles": 24,
+        "coverage": "17/24",
+        "percentage": "70.8%"
+      },
+      "webJSX": {
+        "filesUsing": 2,
+        "totalFiles": 24,
+        "coverage": "2/24",
+        "percentage": "8.3%"
+      }
+    },
+    "database": {
+      "tested": true,
+      "passed": true,
+      "tableCount": 113,
+      "foreignKeysEnabled": true,
+      "sizeBytes": 4096,
+      "sizeMB": "0.00",
+      "tables": [
+        "checklist",
+        "checklist_item",
+        "client",
+        "client_user",
+        "collaborator",
+        "email",
+        "engagement",
+        "file",
+        "flag",
+        "highlight",
+        "highlight_comment",
+        "job_execution_log",
+        "letter",
+        "message",
+        "permission_audit",
+        "removedHighlight",
+        "review",
+        "review_template",
+        "rfi",
+        "rfi_response"
+      ],
+      "userCount": 1
+    },
+    "fileStructure": {
+      "tested": true,
+      "passed": true,
+      "requiredDirectories": 9,
+      "missingDirectories": 0
+    },
+    "configuration": {
+      "tested": true,
+      "passed": true,
+      "requiredFiles": 5,
+      "missingFiles": 0
+    },
+    "hotReload": {
+      "tested": true,
+      "fileWatcher": true,
+      "moduleCacheHandling": false,
+      "passed": true
+    },
+    "importHook": {
+      "exists": true,
+      "lines": 40,
+      "hasTranspilation": false
+    },
+    "stateManagement": {
+      "tested": true,
+      "hasEventSystem": true,
+      "hasRecoveryMechanism": false,
+      "passed": true
+    }
+  },
+  "issues": [
+    {
+      "category": "routes",
+      "severity": "high",
+      "endpoint": "/api/auth/login",
+      "message": "Status mismatch: expected 200, got 405"
+    },
+    {
+      "category": "security",
+      "severity": "critical",
+      "endpoint": "/api/friday/engagement/transition",
+      "message": "Protected endpoint returned 400 instead of 401/403/302"
+    },
+    {
+      "category": "security",
+      "severity": "critical",
+      "endpoint": "/api/domains",
+      "message": "Protected endpoint returned 200 instead of 401/403/302"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/engine/drive.js",
+      "message": "Missing error handling - system may crash on errors"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/engine/events.js",
+      "message": "Missing error handling - system may crash on errors"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/engine/gmail.js",
+      "message": "Missing error handling - system may crash on errors"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/engine/google-auth.js",
+      "message": "Missing error handling - system may crash on errors"
+    },
+    {
+      "category": "code_quality",
+      "severity": "medium",
+      "file": "src/engine/job-engine.js",
+      "message": "File exceeds 200 lines (284 lines) - violates modularity constraint"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/services/collaborator-role.service.js",
+      "message": "Missing error handling - system may crash on errors"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/services/file.service.js",
+      "message": "Missing error handling - system may crash on errors"
+    },
+    {
+      "category": "code_quality",
+      "severity": "medium",
+      "file": "src/services/pdf-generator.service.js",
+      "message": "File exceeds 200 lines (255 lines) - violates modularity constraint"
+    },
+    {
+      "category": "code_quality",
+      "severity": "medium",
+      "file": "src/ui/page-handler.js",
+      "message": "Component exceeds 200 lines (613 lines)"
+    },
+    {
+      "category": "code_quality",
+      "severity": "medium",
+      "file": "src/ui/renderer.js",
+      "message": "Component exceeds 200 lines (874 lines)"
+    },
+    {
+      "category": "code_quality",
+      "severity": "medium",
+      "file": "src/ui/settings-renderer.js",
+      "message": "Component exceeds 200 lines (388 lines)"
+    },
+    {
+      "category": "database",
+      "severity": "critical",
+      "message": "Missing core tables: clients, engagements, reviews, permissions, audit_log"
+    },
+    {
+      "category": "code_quality",
+      "severity": "high",
+      "file": "src/lib/config-generator-engine.js",
+      "message": "File exceeds modularity limit: 1277 lines"
+    },
+    {
+      "category": "code_quality",
+      "severity": "high",
+      "file": "src/ui/renderer.js",
+      "message": "File exceeds modularity limit: 874 lines"
+    },
+    {
+      "category": "code_quality",
+      "severity": "high",
+      "file": "src/ui/page-handler.js",
+      "message": "File exceeds modularity limit: 613 lines"
+    },
+    {
+      "category": "code_quality",
+      "severity": "medium",
+      "file": "src/ui/settings-renderer.js",
+      "message": "File exceeds modularity limit: 388 lines"
+    },
+    {
+      "category": "code_quality",
+      "severity": "medium",
+      "file": "src/app/api/mwr/collaborator-role/route.js",
+      "message": "File exceeds modularity limit: 367 lines"
+    },
+    {
+      "category": "code_quality",
+      "severity": "medium",
+      "file": "src/app/api/email/send/route.js",
+      "message": "File exceeds modularity limit: 360 lines"
+    },
+    {
+      "category": "code_quality",
+      "severity": "medium",
+      "file": "src/lib/date-choice-dialog.js",
+      "message": "File exceeds modularity limit: 331 lines"
+    },
+    {
+      "category": "code_quality",
+      "severity": "medium",
+      "file": "src/lib/crud-factory.js",
+      "message": "File exceeds modularity limit: 321 lines"
+    },
+    {
+      "category": "code_quality",
+      "severity": "medium",
+      "file": "src/lib/domain-loader.js",
+      "message": "File exceeds modularity limit: 307 lines"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/adapters/google-auth.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/adapters/google-drive.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/app/api/[entity]/[[...path]]/route.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/app/api/auth/google/route.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/app/api/auth/logout/route.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/app/api/auth/me/route.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/config/seed-users.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/engine.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/lib/action-factory.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/lib/action-utils.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/lib/auth-route-helpers.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/lib/business-rules-engine.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/lib/http-methods-factory.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/lib/next-polyfills.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/lib/pdf-data-url-to-file.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/services/collaborator-role.service.js",
+      "message": "Async code without error handling"
+    },
+    {
+      "category": "reliability",
+      "severity": "high",
+      "file": "src/services/file.service.js",
+      "message": "Async code without error handling"
+    }
+  ],
+  "recommendations": [
+    {
+      "category": "ui",
+      "priority": "high",
+      "message": "WebJSX usage is low (8.3%). Consider migrating more components to WebJSX for consistency."
+    },
+    {
+      "category": "code_quality",
+      "priority": "high",
+      "message": "22 files exceed 200 lines. Consider breaking them into smaller modules.",
+      "affectedFiles": 22
+    },
+    {
+      "category": "reliability",
+      "priority": "critical",
+      "message": "17 files have async code without error handling. This violates the uncrashable system requirement.",
+      "affectedFiles": 17
+    },
+    {
+      "category": "reliability",
+      "priority": "critical",
+      "message": "No recovery mechanism detected - violates uncrashable system requirement. Implement checkpointing and recovery."
+    },
+    {
+      "category": "security",
+      "priority": "critical",
+      "message": "26 routes appear to lack authentication checks. Review and add auth middleware.",
+      "routes": [
+        "/api/[entity]/[[...path]]",
+        "/api/cron/trigger",
+        "/api/domains/[domain]",
+        "/api/domains",
+        "/api/email/allocate/batch",
+        "/api/email/allocate",
+        "/api/email",
+        "/api/email/send",
+        "/api/email/unallocated",
+        "/api/engagement/status",
+        "/api/files/[id]",
+        "/api/friday/engagement/[engagementId]/transition-status",
+        "/api/friday/engagement/transition",
+        "/api/friday/rfi/[id]/response",
+        "/api/friday/rfi",
+        "/api/mwr/review/[id]/checklists/[checklistId]/items/[itemId]/toggle",
+        "/api/mwr/review/[id]/checklists/[checklistId]/items",
+        "/api/mwr/review/[id]/checklists",
+        "/api/mwr/review/[id]/collaborators/[collaboratorId]",
+        "/api/mwr/review/[id]/collaborators",
+        "/api/mwr/review/[id]/export-pdf",
+        "/api/mwr/review/[id]/highlights/[highlightId]",
+        "/api/mwr/review/[id]/highlights",
+        "/api/mwr/review/[id]/tender/[tenderId]",
+        "/api/mwr/user/[userId]/priority-reviews/[reviewId]",
+        "/api/mwr/user/[userId]/priority-reviews"
+      ]
+    }
+  ],
+  "codeQuality": {
+    "totalFiles": 168,
+    "totalLines": 19374,
+    "averageLinesPerFile": 115,
+    "filesOver200": 22,
+    "filesOver300": 9,
+    "filesOver500": 3,
+    "violations": {
+      "lineCount": [
+        {
+          "file": "lib/config-generator-engine.js",
+          "lines": 1277,
+          "severity": "high"
+        },
+        {
+          "file": "ui/renderer.js",
+          "lines": 874,
+          "severity": "high"
+        },
+        {
+          "file": "ui/page-handler.js",
+          "lines": 613,
+          "severity": "high"
+        },
+        {
+          "file": "ui/settings-renderer.js",
+          "lines": 388,
+          "severity": "medium"
+        },
+        {
+          "file": "app/api/mwr/collaborator-role/route.js",
+          "lines": 367,
+          "severity": "medium"
+        },
+        {
+          "file": "app/api/email/send/route.js",
+          "lines": 360,
+          "severity": "medium"
+        },
+        {
+          "file": "lib/date-choice-dialog.js",
+          "lines": 331,
+          "severity": "medium"
+        },
+        {
+          "file": "lib/crud-factory.js",
+          "lines": 321,
+          "severity": "medium"
+        },
+        {
+          "file": "lib/domain-loader.js",
+          "lines": 307,
+          "severity": "medium"
+        },
+        {
+          "file": "lib/database-core.js",
+          "lines": 285,
+          "severity": "low"
+        },
+        {
+          "file": "engine/job-engine.js",
+          "lines": 284,
+          "severity": "low"
+        },
+        {
+          "file": "lib/validate.js",
+          "lines": 276,
+          "severity": "low"
+        },
+        {
+          "file": "config/spec-builder.js",
+          "lines": 259,
+          "severity": "low"
+        },
+        {
+          "file": "lib/email-parser.js",
+          "lines": 255,
+          "severity": "low"
+        },
+        {
+          "file": "services/pdf-generator.service.js",
+          "lines": 255,
+          "severity": "low"
+        },
+        {
+          "file": "lib/mwr-core-engines.js",
+          "lines": 250,
+          "severity": "low"
+        },
+        {
+          "file": "lib/query-engine.js",
+          "lines": 247,
+          "severity": "low"
+        },
+        {
+          "file": "app/api/engagement/rate/route.js",
+          "lines": 238,
+          "severity": "low"
+        },
+        {
+          "file": "lib/pdf-mobile-resizable.js",
+          "lines": 222,
+          "severity": "low"
+        },
+        {
+          "file": "lib/lifecycle-engine.js",
+          "lines": 216,
+          "severity": "low"
+        },
+        {
+          "file": "lib/workflow-engine.js",
+          "lines": 216,
+          "severity": "low"
+        },
+        {
+          "file": "lib/audit-logger.js",
+          "lines": 204,
+          "severity": "low"
+        }
+      ],
+      "missingErrorHandling": [
+        {
+          "file": "adapters/google-auth.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "adapters/google-drive.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "app/api/[entity]/[[...path]]/route.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "app/api/auth/google/route.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "app/api/auth/logout/route.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "app/api/auth/me/route.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "config/seed-users.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "engine.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "lib/action-factory.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "lib/action-utils.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "lib/auth-route-helpers.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "lib/business-rules-engine.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "lib/http-methods-factory.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "lib/next-polyfills.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "lib/pdf-data-url-to-file.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "services/collaborator-role.service.js",
+          "reason": "Async code without error handling"
+        },
+        {
+          "file": "services/file.service.js",
+          "reason": "Async code without error handling"
+        }
+      ],
+      "noExports": [],
+      "duplicateCode": []
+    }
+  },
+  "security": {
+    "csrf": {
+      "implemented": true,
+      "file": "src/lib/csrf-protection.js",
+      "hasTokenGeneration": true,
+      "hasTokenValidation": true,
+      "lines": 64
+    },
+    "authentication": {
+      "implemented": true,
+      "file": "src/lib/auth-middleware.js",
+      "hasSessionCheck": true,
+      "hasPermissionCheck": true,
+      "lines": 48
+    },
+    "permissions": {
+      "implemented": true,
+      "file": "src/services/permission.service.js",
+      "usesCASQL": false,
+      "lines": 179
+    },
+    "auditLogging": {
+      "implemented": true,
+      "file": "src/lib/audit-logger.js",
+      "logsToDatabase": true,
+      "capturesUser": true,
+      "capturesAction": true,
+      "lines": 204
+    },
+    "passwordHashing": {
+      "usesBcrypt": true,
+      "hashedPasswords": true
+    },
+    "routeProtection": {
+      "totalRoutes": 57,
+      "protectedRoutes": 31,
+      "unprotectedRoutes": 26,
+      "suspiciousRoutes": [
+        "/api/[entity]/[[...path]]",
+        "/api/cron/trigger",
+        "/api/domains/[domain]",
+        "/api/domains",
+        "/api/email/allocate/batch",
+        "/api/email/allocate",
+        "/api/email",
+        "/api/email/send",
+        "/api/email/unallocated",
+        "/api/engagement/status",
+        "/api/files/[id]",
+        "/api/friday/engagement/[engagementId]/transition-status",
+        "/api/friday/engagement/transition",
+        "/api/friday/rfi/[id]/response",
+        "/api/friday/rfi",
+        "/api/mwr/review/[id]/checklists/[checklistId]/items/[itemId]/toggle",
+        "/api/mwr/review/[id]/checklists/[checklistId]/items",
+        "/api/mwr/review/[id]/checklists",
+        "/api/mwr/review/[id]/collaborators/[collaboratorId]",
+        "/api/mwr/review/[id]/collaborators",
+        "/api/mwr/review/[id]/export-pdf",
+        "/api/mwr/review/[id]/highlights/[highlightId]",
+        "/api/mwr/review/[id]/highlights",
+        "/api/mwr/review/[id]/tender/[tenderId]",
+        "/api/mwr/user/[userId]/priority-reviews/[reviewId]",
+        "/api/mwr/user/[userId]/priority-reviews"
+      ]
+    }
+  },
+  "executiveSummary": {
+    "auditDate": "2026-02-19T17:45:42.419Z",
+    "overallHealth": "FAIR",
+    "overallScore": 72,
+    "keyFindings": [
+      "32 of 57 API routes tested (23 passed, 9 failed)",
+      "24 UI components analyzed (70.8% use RippleUI, 8.3% use WebJSX)",
+      "9 engines tested, 5 services tested",
+      "41 total issues found (3 critical, 27 high priority)",
+      "22 files exceed 200 lines (modularity concern)",
+      "26 routes lack apparent auth checks"
+    ],
+    "criticalIssues": [
+      "Protected endpoint returned 400 instead of 401/403/302",
+      "Protected endpoint returned 200 instead of 401/403/302",
+      "Missing core tables: clients, engagements, reviews, permissions, audit_log"
+    ],
+    "topRecommendations": [
+      {
+        "category": "ui",
+        "priority": "high",
+        "message": "WebJSX usage is low (8.3%). Consider migrating more components to WebJSX for consistency."
+      },
+      {
+        "category": "code_quality",
+        "priority": "high",
+        "message": "22 files exceed 200 lines. Consider breaking them into smaller modules.",
+        "affectedFiles": 22
+      },
+      {
+        "category": "reliability",
+        "priority": "critical",
+        "message": "17 files have async code without error handling. This violates the uncrashable system requirement.",
+        "affectedFiles": 17
+      },
+      {
+        "category": "reliability",
+        "priority": "critical",
+        "message": "No recovery mechanism detected - violates uncrashable system requirement. Implement checkpointing and recovery."
+      },
+      {
+        "category": "security",
+        "priority": "critical",
+        "message": "26 routes appear to lack authentication checks. Review and add auth middleware.",
+        "routes": [
+          "/api/[entity]/[[...path]]",
+          "/api/cron/trigger",
+          "/api/domains/[domain]",
+          "/api/domains",
+          "/api/email/allocate/batch",
+          "/api/email/allocate",
+          "/api/email",
+          "/api/email/send",
+          "/api/email/unallocated",
+          "/api/engagement/status",
+          "/api/files/[id]",
+          "/api/friday/engagement/[engagementId]/transition-status",
+          "/api/friday/engagement/transition",
+          "/api/friday/rfi/[id]/response",
+          "/api/friday/rfi",
+          "/api/mwr/review/[id]/checklists/[checklistId]/items/[itemId]/toggle",
+          "/api/mwr/review/[id]/checklists/[checklistId]/items",
+          "/api/mwr/review/[id]/checklists",
+          "/api/mwr/review/[id]/collaborators/[collaboratorId]",
+          "/api/mwr/review/[id]/collaborators",
+          "/api/mwr/review/[id]/export-pdf",
+          "/api/mwr/review/[id]/highlights/[highlightId]",
+          "/api/mwr/review/[id]/highlights",
+          "/api/mwr/review/[id]/tender/[tenderId]",
+          "/api/mwr/user/[userId]/priority-reviews/[reviewId]",
+          "/api/mwr/user/[userId]/priority-reviews"
+        ]
+      }
+    ]
+  },
+  "testCoverage": {
+    "routes": {
+      "total": 57,
+      "tested": 32,
+      "passed": 23,
+      "coverage": "56.1%"
+    },
+    "components": {
+      "total": 24,
+      "tested": 24,
+      "coverage": "100.0%"
+    },
+    "engines": {
+      "total": 9,
+      "tested": 9,
+      "coverage": "100.0%"
+    },
+    "services": {
+      "total": 5,
+      "tested": 5,
+      "coverage": "100.0%"
+    }
+  },
+  "actionItems": {
+    "immediate": [
+      {
+        "category": "security",
+        "severity": "critical",
+        "endpoint": "/api/friday/engagement/transition",
+        "message": "Protected endpoint returned 400 instead of 401/403/302"
+      },
+      {
+        "category": "security",
+        "severity": "critical",
+        "endpoint": "/api/domains",
+        "message": "Protected endpoint returned 200 instead of 401/403/302"
+      },
+      {
+        "category": "database",
+        "severity": "critical",
+        "message": "Missing core tables: clients, engagements, reviews, permissions, audit_log"
+      }
+    ],
+    "shortTerm": [
+      {
+        "category": "routes",
+        "severity": "high",
+        "endpoint": "/api/auth/login",
+        "message": "Status mismatch: expected 200, got 405"
+      },
+      {
+        "category": "reliability",
+        "severity": "high",
+        "file": "src/engine/drive.js",
+        "message": "Missing error handling - system may crash on errors"
+      },
+      {
+        "category": "reliability",
+        "severity": "high",
+        "file": "src/engine/events.js",
+        "message": "Missing error handling - system may crash on errors"
+      },
+      {
+        "category": "reliability",
+        "severity": "high",
+        "file": "src/engine/gmail.js",
+        "message": "Missing error handling - system may crash on errors"
+      },
+      {
+        "category": "reliability",
+        "severity": "high",
+        "file": "src/engine/google-auth.js",
+        "message": "Missing error handling - system may crash on errors"
+      },
+      {
+        "category": "reliability",
+        "severity": "high",
+        "file": "src/services/collaborator-role.service.js",
+        "message": "Missing error handling - system may crash on errors"
+      },
+      {
+        "category": "reliability",
+        "severity": "high",
+        "file": "src/services/file.service.js",
+        "message": "Missing error handling - system may crash on errors"
+      },
+      {
+        "category": "code_quality",
+        "severity": "high",
+        "file": "src/lib/config-generator-engine.js",
+        "message": "File exceeds modularity limit: 1277 lines"
+      },
+      {
+        "category": "code_quality",
+        "severity": "high",
+        "file": "src/ui/renderer.js",
+        "message": "File exceeds modularity limit: 874 lines"
+      },
+      {
+        "category": "code_quality",
+        "severity": "high",
+        "file": "src/ui/page-handler.js",
+        "message": "File exceeds modularity limit: 613 lines"
+      },
+      {
+        "category": "reliability",
+        "severity": "high",
+        "file": "src/adapters/google-auth.js",
+        "message": "Async code without error handling"
+      },
+      {
+        "category": "reliability",
+        "severity": "high",
+        "file": "src/adapters/google-drive.js",
+        "message": "Async code without error handling"
+      },
+      {
+        "category": "reliability",
+        "severity": "high",
+        "file": "src/app/api/[entity]/[[...path]]/route.js",
+        "message": "Async code without error handling"
+      },
+      {
+        "category": "reliability",
+        "severity": "high",
+        "file": "src/app/api/auth/google/route.js",
+        "message": "Async code without error handling"
+      },
+      {
+        "category": "reliability",
+        "severity": "high",
+        "file": "src/app/api/auth/logout/route.js",
+        "message": "Async code without error handling"
+      }
+    ],
+    "longTerm": [
+      {
+        "category": "ui",
+        "priority": "high",
+        "message": "WebJSX usage is low (8.3%). Consider migrating more components to WebJSX for consistency."
+      },
+      {
+        "category": "code_quality",
+        "priority": "high",
+        "message": "22 files exceed 200 lines. Consider breaking them into smaller modules.",
+        "affectedFiles": 22
+      }
+    ]
+  }
+}
