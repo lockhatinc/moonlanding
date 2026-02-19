@@ -2731,3 +2731,437 @@ highlights:
     border_width: 2
     z_index: 100
     animation_duration_ms: 200
+
+dialogs:
+  stage_transition:
+    title: Change Engagement Stage
+    width: 640px
+    fields:
+      - name: new_stage
+        label: New Stage
+        type: select
+        required: true
+        options:
+          - value: prospect
+            label: Prospect
+          - value: active
+            label: Active
+          - value: closed
+            label: Closed
+      - name: reason
+        label: Reason for Change
+        type: textarea
+        placeholder: Explain why you're changing the stage
+        required: true
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Change Stage
+
+  fee_split:
+    title: Manage Fee Split
+    width: 640px
+    fields:
+      - name: partner_percent
+        label: Partner %
+        type: number
+        required: true
+      - name: manager_percent
+        label: Manager %
+        type: number
+        required: true
+      - name: notes
+        label: Notes
+        type: textarea
+        placeholder: Fee split notes
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Save Split
+
+  team_assignment:
+    title: Assign Team Members
+    width: 700px
+    fields:
+      - name: team_members
+        label: Team Members
+        type: multi-select
+        required: true
+        options: []
+      - name: roles
+        label: Roles
+        type: select
+        required: true
+        options:
+          - value: lead
+            label: Lead
+          - value: support
+            label: Support
+          - value: reviewer
+            label: Reviewer
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Assign Team
+
+  client_user_management:
+    title: Manage Client Users
+    width: 640px
+    fields:
+      - name: client_user
+        label: Client User
+        type: select
+        required: true
+        options: []
+      - name: engagement
+        label: Engagement
+        type: select
+        required: true
+        options: []
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Save
+
+  client_user_replace:
+    title: Replace Client User
+    width: 640px
+    fields:
+      - name: old_user
+        label: Current User
+        type: select
+        required: true
+        options: []
+      - name: new_user
+        label: New User
+        type: select
+        required: true
+        options: []
+      - name: scope
+        label: Replace Scope
+        type: select
+        required: true
+        options:
+          - value: engagement
+            label: This Engagement
+          - value: all_client
+            label: All Client Engagements
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Replace User
+
+  client_test_email:
+    title: Send Test Email
+    width: 640px
+    fields:
+      - name: email
+        label: Email Address
+        type: email
+        required: true
+      - name: template
+        label: Email Template
+        type: select
+        required: true
+        options: []
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Send Test
+
+  client_risk_assessment:
+    title: Client Risk Assessment
+    width: 640px
+    fields:
+      - name: risk_level
+        label: Risk Level
+        type: select
+        required: true
+        options:
+          - value: low
+            label: Low
+          - value: medium
+            label: Medium
+          - value: high
+            label: High
+      - name: assessment_notes
+        label: Assessment Notes
+        type: textarea
+        required: true
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Save Assessment
+
+  rfi_question_edit:
+    title: Edit RFI Question
+    width: 700px
+    fields:
+      - name: question_text
+        label: Question
+        type: textarea
+        required: true
+      - name: section
+        label: Section
+        type: select
+        required: true
+        options: []
+      - name: response_type
+        label: Response Type
+        type: select
+        required: true
+        options:
+          - value: text
+            label: Text
+          - value: file
+            label: File
+          - value: choice
+            label: Choice
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Update Question
+
+  rfi_question_assign:
+    title: Assign Question to Client User
+    width: 640px
+    fields:
+      - name: client_user
+        label: Client User
+        type: select
+        required: true
+        options: []
+      - name: deadline
+        label: Deadline
+        type: date
+        required: true
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Assign
+
+  rfi_bulk_assign:
+    title: Bulk Assign Questions
+    width: 640px
+    fields:
+      - name: client_users
+        label: Client Users
+        type: multi-select
+        required: true
+        options: []
+      - name: deadline
+        label: Deadline
+        type: date
+        required: true
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Assign All
+
+  rfi_bulk_deadline:
+    title: Set Bulk Deadlines
+    width: 640px
+    fields:
+      - name: questions
+        label: Questions
+        type: multi-select
+        required: true
+        options: []
+      - name: deadline
+        label: New Deadline
+        type: date
+        required: true
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Set Deadline
+
+  rfi_section_order:
+    title: Reorder RFI Sections
+    width: 640px
+    fields:
+      - name: sections
+        label: Sections
+        type: multi-select
+        required: true
+        options: []
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Save Order
+
+  rfi_item_dialog:
+    title: Create RFI Item
+    width: 640px
+    fields:
+      - name: text
+        label: Item Text
+        type: textarea
+        required: true
+      - name: section
+        label: Section
+        type: select
+        required: true
+        options: []
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Create Item
+
+  rfi_attach_dialog:
+    title: Attach RFI to Engagement
+    width: 640px
+    fields:
+      - name: rfi_template
+        label: RFI Template
+        type: select
+        required: true
+        options: []
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Attach RFI
+
+  letter_dialog:
+    title: Manage Engagement Letter
+    width: 640px
+    fields:
+      - name: letter_status
+        label: Letter Status
+        type: select
+        required: true
+        options:
+          - value: draft
+            label: Draft
+          - value: sent
+            label: Sent
+          - value: signed
+            label: Signed
+      - name: template
+        label: Template
+        type: select
+        required: true
+        options: []
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Save
+
+  notification_trigger:
+    title: Create Notification Trigger
+    width: 640px
+    fields:
+      - name: trigger_type
+        label: Trigger Type
+        type: select
+        required: true
+        options:
+          - value: rfi_response
+            label: RFI Response
+          - value: deadline
+            label: Deadline
+          - value: stage_change
+            label: Stage Change
+      - name: recipients
+        label: Recipients
+        type: multi-select
+        required: true
+        options: []
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Create Trigger
+
+  review_create:
+    title: Create Review
+    width: 700px
+    fields:
+      - name: title
+        label: Review Title
+        type: text
+        required: true
+      - name: pdf_file
+        label: PDF Document
+        type: file
+        required: true
+      - name: template
+        label: Template
+        type: select
+        required: true
+        options: []
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Create Review
+
+  collaborator_dialog:
+    title: Add Collaborator
+    width: 640px
+    fields:
+      - name: user
+        label: User
+        type: select
+        required: true
+        options: []
+      - name: expiry_date
+        label: Access Expiry
+        type: date
+        required: false
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Add Collaborator
+
+  review_flag_dialog:
+    title: Manage Flags
+    width: 640px
+    fields:
+      - name: flag_type
+        label: Flag Type
+        type: select
+        required: true
+        options:
+          - value: urgent
+            label: Urgent
+          - value: review_needed
+            label: Review Needed
+          - value: blocked
+            label: Blocked
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Apply Flag
+
+  review_tag_dialog:
+    title: Add Tags
+    width: 640px
+    fields:
+      - name: tags
+        label: Tags
+        type: text
+        required: false
+        placeholder: Comma-separated tags
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Save Tags

@@ -24,14 +24,14 @@ CRITICAL PATH: Dialog Registry (0.2) blocks 21 items. Start here.
       Time: 1-1.5 hours
       Status: Ready to start
 
-- [ ] P0-0.2 [WAVE-6-prep] ⭐ START HERE: Dialog Registry engine
-      Current: 20+ individual dialog implementations spread across files
-      Create: Single dialog-engine.js that reads master-config.yml for dialog defs
-      Registry: Map dialog IDs to config entries (fee_split, stage_transition, etc)
-      Blocks: 21 items (W4-F-LIFE-02, W4-F-TEAM-01, W4-F-CLIENT-07+, W4-F-RFI-10+,
-              W4-F-LETTER-01, W4-F-NOTIF-02, W5-M-REV-02, W5-M-COLLAB-01, etc.)
-      Time: 2-3 hours
-      Status: HIGHEST PRIORITY - execute first
+- [x] P0-0.2 [WAVE-6-prep] ⭐ COMPLETED: Dialog Registry engine
+      Created: src/ui/dialog-engine.js with configurable dialog generator
+      Config: Added 24 dialog definitions to master-config.yml (stage_transition,
+              fee_split, team_assignment, client_user_management, rfi_question_edit,
+              review_create, collaborator_dialog, review_flag_dialog, etc.)
+      Integration: Imported dialog-engine into renderer.js, exported renderDialog
+      Unblocks: 21+ items across W4-5
+      Status: COMPLETED - ready for dialog-based features
 
 - [ ] P0-0.3 [WAVE-6-prep]: Search system (global text search)
       Current: No global search across entities

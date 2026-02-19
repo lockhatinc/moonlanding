@@ -1,6 +1,8 @@
 import { canCreate, canEdit, canDelete, getNavItems, getAdminItems, getQuickActions } from './permissions-ui.js';
+import { renderDialog } from './dialog-engine.js';
 
 export const REDIRECT = Symbol('REDIRECT');
+export { renderDialog };
 
 const STAGE_COLORS = {
   info_gathering: { bg: '#dbeafe', text: '#1e40af', label: 'Info Gathering' },
