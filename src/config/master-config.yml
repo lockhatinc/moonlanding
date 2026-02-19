@@ -3165,3 +3165,147 @@ dialogs:
         label: Cancel
       - type: submit
         label: Save Tags
+
+components:
+  avatar_group:
+    type: component
+    element: div
+    class: avatar-group
+    template: '<div class="avatar-group">{{items}}</div>'
+    properties:
+      - name: items
+        type: list
+        description: Array of avatars with name, image, color
+      - name: max_visible
+        type: number
+        description: Maximum visible avatars before showing +N
+        default: 3
+
+  linear_progress:
+    type: component
+    element: div
+    class: progress-linear
+    template: '<div class="progress-linear"><div class="progress-fill" style="width:{{percent}}%"></div></div>'
+    properties:
+      - name: percent
+        type: number
+        description: Progress percentage 0-100
+        required: true
+      - name: label
+        type: string
+        description: Optional progress label
+        required: false
+
+  circular_progress:
+    type: component
+    element: svg
+    class: progress-circular
+    template: '<svg class="progress-circular" viewBox="0 0 36 36"><circle class="progress-bg" cx="18" cy="18" r="15.9"/><circle class="progress-circle" cx="18" cy="18" r="15.9" style="stroke-dasharray:{{percent}}, 100"/></svg>'
+    properties:
+      - name: percent
+        type: number
+        description: Progress percentage 0-100
+        required: true
+      - name: size
+        type: string
+        description: SVG size (width/height in px)
+        default: '100'
+
+  color_picker:
+    type: component
+    element: input
+    class: color-picker
+    template: '<input type="color" class="color-picker" value="{{value}}" />'
+    properties:
+      - name: value
+        type: string
+        description: Hex color value
+        default: '#000000'
+      - name: onChange
+        type: function
+        description: Callback when color changes
+
+  date_picker:
+    type: component
+    element: input
+    class: date-picker
+    template: '<input type="date" class="date-picker" value="{{value}}" />'
+    properties:
+      - name: value
+        type: string
+        description: ISO 8601 date value
+        required: false
+      - name: min
+        type: string
+        description: Minimum selectable date
+        required: false
+      - name: max
+        type: string
+        description: Maximum selectable date
+        required: false
+
+  engagement_progress:
+    type: component
+    element: div
+    class: engagement-progress
+    template: '<div class="engagement-progress"><div class="progress-bar" style="width:{{percent}}%"></div><span class="progress-label">{{stage}}: {{percent}}%</span></div>'
+    properties:
+      - name: percent
+        type: number
+        description: Engagement progress 0-100
+        required: true
+      - name: stage
+        type: string
+        description: Current engagement stage name
+        required: true
+
+  collapsible_sidebar:
+    type: component
+    element: div
+    class: collapsible-sidebar
+    template: '<div class="sidebar-container"><aside class="sidebar" style="width:{{width}}px"><div class="sidebar-header">{{title}}</div><nav class="sidebar-nav">{{items}}</nav></aside><div class="sidebar-resizer" onmousedown="startResize()"></div></div>'
+    properties:
+      - name: width
+        type: number
+        description: Initial sidebar width in pixels
+        default: 280
+      - name: title
+        type: string
+        description: Sidebar header title
+        required: true
+      - name: items
+        type: list
+        description: Navigation items
+        required: true
+      - name: minWidth
+        type: number
+        description: Minimum sidebar width
+        default: 200
+      - name: maxWidth
+        type: number
+        description: Maximum sidebar width
+        default: 500
+
+  tooltip:
+    type: component
+    element: div
+    class: tooltip-wrapper
+    template: '<div class="tooltip-wrapper" title="{{text}}"><span class="tooltip-trigger">{{content}}</span><div class="tooltip-popup">{{text}}</div></div>'
+    properties:
+      - name: text
+        type: string
+        description: Tooltip text content
+        required: true
+      - name: content
+        type: string
+        description: Trigger content/label
+        required: true
+      - name: position
+        type: enum
+        description: Tooltip position
+        options:
+          - top
+          - bottom
+          - left
+          - right
+        default: top

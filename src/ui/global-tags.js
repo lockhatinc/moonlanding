@@ -1,11 +1,144 @@
-export function globalTagsSystem(entityType, entityId) {
-  return `<div class="card bg-white shadow mb-4"><div class="card-body"><div class="flex justify-between items-center"><h3 class="card-title text-sm">Tags</h3><button class="btn btn-xs btn-ghost" onclick="gtsToggleEdit()">Edit</button></div><div id="gts-tags" class="ts-badges mt-2"></div><div id="gts-edit" style="display:none" class="mt-2"><div class="flex gap-2"><input id="gts-new" class="input input-bordered input-sm flex-1" placeholder="New tag..."/><button class="btn btn-primary btn-sm" onclick="gtsAdd()">Add</button></div></div></div></div>
-  <script>
-  var gtsEntityType='${entityType}',gtsEntityId='${entityId}',gtsTags=[];
-  function gtsRender(){var el=document.getElementById('gts-tags');el.innerHTML='';if(!gtsTags.length){el.innerHTML='<span class="text-xs text-gray-500">No tags</span>';return}gtsTags.forEach(function(t,i){el.innerHTML+='<span class="ts-badge">'+t+' <span class="ts-badge-x" onclick="gtsRemove('+i+')">&times;</span></span>'})}
-  (function(){fetch('/api/'+gtsEntityType+'/'+gtsEntityId).then(function(r){return r.json()}).then(function(d){var item=d.data||d;try{gtsTags=JSON.parse(item.tags||'[]')}catch(e){gtsTags=[]}gtsRender()}).catch(function(){})})();
-  window.gtsToggleEdit=function(){var el=document.getElementById('gts-edit');el.style.display=el.style.display==='none'?'block':'none'};
-  window.gtsAdd=async function(){var v=document.getElementById('gts-new').value.trim();if(!v)return;gtsTags.push(v);try{await fetch('/api/'+gtsEntityType+'/'+gtsEntityId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({tags:JSON.stringify(gtsTags)})});document.getElementById('gts-new').value='';gtsRender();showToast('Tag added','success')}catch(e){gtsTags.pop();showToast('Error','error')}};
-  window.gtsRemove=async function(idx){var removed=gtsTags.splice(idx,1);try{await fetch('/api/'+gtsEntityType+'/'+gtsEntityId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({tags:JSON.stringify(gtsTags)})});gtsRender();showToast('Tag removed','success')}catch(e){gtsTags.splice(idx,0,removed[0]);showToast('Error','error')}};
-  </script>`;
+let tagsStore = {};
+
+async function apiCall(endpoint, options = {}) {
+  try {
+    const res = await fetch(`/api/tag${endpoint}`, { headers: { 'Content-Type': 'application/json' }, ...options });
+    if (!res.ok) throw new Error('API error');
+    return await res.json();
+  } catch (e) {
+    throw e;
+  }
+}
+
+async function createTag(name, color = '#808080') {
+  const data = await apiCall('', { method: 'POST', body: JSON.stringify({ name: name.trim(), color }) });
+  tagsStore[data.id] = { id: data.id, name: data.name, color: data.color, usage: 0 };
+  showToast('Tag created', 'success');
+  return data;
+}
+
+async function updateTag(id, name, color) {
+  const data = await apiCall(`/${id}`, { method: 'PUT', body: JSON.stringify({ name: name.trim(), color }) });
+  tagsStore[id] = { ...tagsStore[id], name: data.name, color: data.color };
+  showToast('Tag updated', 'success');
+  return data;
+}
+
+async function deleteTag(id) {
+  await apiCall(`/${id}`, { method: 'DELETE' });
+  delete tagsStore[id];
+  showToast('Tag deleted', 'success');
+}
+
+async function listTags() {
+  try {
+    const data = await apiCall('');
+    const tags = Array.isArray(data) ? data : data.data || [];
+    tagsStore = tags.reduce((acc, tag) => { acc[tag.id] = tag; return acc; }, {});
+    return tags;
+  } catch (e) {
+    console.error('Error loading tags:', e);
+    return [];
+  }
+}
+
+function esc(text) {
+  const m = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+  return text.replace(/[&<>"']/g, c => m[c]);
+}
+
+function renderTagsList() {
+  const tags = Object.values(tagsStore).sort((a, b) => (b.usage || 0) - (a.usage || 0));
+  return `<div class="tags-list">${tags.map(t => `
+    <div class="tag-item" data-tag-id="${t.id}">
+      <div class="tag-dot" style="background-color: ${t.color}"></div>
+      <div class="tag-info"><span class="tag-name">${esc(t.name)}</span><span class="tag-usage">${t.usage || 0} items</span></div>
+      <div class="tag-actions">
+        <button class="btn btn-xs btn-ghost" onclick="gtsEditTag('${t.id}')">Edit</button>
+        <button class="btn btn-xs btn-ghost text-error" onclick="gtsDeleteTag('${t.id}')">Delete</button>
+      </div>
+    </div>
+  `).join('') || '<p class="text-xs text-gray-500">No tags created</p>'}</div>`;
+}
+
+function showDialog(mode = 'create', tagId = null) {
+  const tag = mode === 'edit' ? tagsStore[tagId] : null;
+  const html = `
+    <div class="dialog-overlay" id="tag-dialog-overlay" onclick="gtsCloseDialog()">
+      <div class="dialog-content" onclick="event.stopPropagation()">
+        <div class="dialog-header"><h2>${mode === 'create' ? 'Create New Tag' : 'Edit Tag'}</h2><button class="btn btn-sm btn-ghost" onclick="gtsCloseDialog()">×</button></div>
+        <div class="dialog-body">
+          <div class="form-group"><label class="label">Tag Name</label><input type="text" class="input input-bordered w-full" id="tag-name-input" placeholder="e.g., Priority" value="${tag ? esc(tag.name) : ''}" maxlength="50" /></div>
+          <div class="form-group"><label class="label">Color</label><div class="flex gap-2"><input type="color" id="tag-color-input" value="${tag ? tag.color : '#808080'}" /><span id="color-preview" class="w-8 h-8 rounded border" style="background-color: ${tag ? tag.color : '#808080'}"></span></div></div>
+        </div>
+        <div class="dialog-footer"><button class="btn btn-ghost" onclick="gtsCloseDialog()">Cancel</button><button class="btn btn-primary" onclick="gtsSaveTag('${mode}', '${tagId || ''}')">${mode === 'create' ? 'Create' : 'Update'}</button></div>
+      </div>
+    </div>`;
+  const container = document.getElementById('tag-dialog-container') || (c => (document.body.appendChild(c), c))(Object.assign(document.createElement('div'), { id: 'tag-dialog-container' }));
+  container.innerHTML = html;
+  document.getElementById('tag-color-input').addEventListener('input', (e) => {
+    document.getElementById('color-preview').style.backgroundColor = e.target.value;
+  });
+}
+
+function showToast(msg, type = 'info') {
+  let c = document.getElementById('toast-container');
+  if (!c) {
+    c = document.createElement('div');
+    c.id = 'toast-container';
+    c.className = 'fixed bottom-4 right-4 z-50 flex flex-col gap-2';
+    document.body.appendChild(c);
+  }
+  const t = document.createElement('div');
+  t.className = `alert alert-${type === 'error' ? 'error' : type === 'success' ? 'success' : 'info'} shadow-lg max-w-sm`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+window.gtsOpenDialog = (mode = 'create', tagId = null) => showDialog(mode, tagId);
+window.gtsEditTag = (tagId) => gtsOpenDialog('edit', tagId);
+window.gtsDeleteTag = async (tagId) => {
+  if (confirm(`Delete "${esc(tagsStore[tagId].name)}"?`)) {
+    await deleteTag(tagId);
+    refreshTagsList();
+  }
+};
+window.gtsSaveTag = async (mode, tagId) => {
+  const name = document.getElementById('tag-name-input').value.trim();
+  const color = document.getElementById('tag-color-input').value;
+  if (!name) { showToast('Tag name required', 'error'); return; }
+  try {
+    mode === 'create' ? await createTag(name, color) : await updateTag(tagId, name, color);
+    gtsCloseDialog();
+    refreshTagsList();
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+};
+window.gtsCloseDialog = () => {
+  const c = document.getElementById('tag-dialog-container');
+  if (c) c.innerHTML = '';
+};
+
+async function refreshTagsList() {
+  await listTags();
+  const c = document.getElementById('tags-list-container');
+  if (c) c.innerHTML = renderTagsList();
+}
+
+export async function initGlobalTags() {
+  await listTags();
+  return { createTag, updateTag, deleteTag, listTags, renderTagsList, refreshTagsList };
+}
+
+export function renderTagsUI() {
+  return `
+    <div class="card bg-white shadow"><div class="card-body">
+      <div class="flex justify-between items-center mb-4"><h2 class="card-title text-lg">Global Tags</h2><button class="btn btn-primary btn-sm" onclick="gtsOpenDialog('create')">New Tag</button></div>
+      <div id="tags-list-container">${renderTagsList()}</div>
+    </div></div>
+    <div id="tag-dialog-container"></div>
+    <style>.tags-list{display:flex;flex-direction:column;gap:0.75rem}.tag-item{display:flex;align-items:center;gap:1rem;padding:0.75rem;border:1px solid #e5e7eb;border-radius:0.5rem}.tag-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0}.tag-info{flex:1}.tag-name{font-weight:500;display:block}.tag-usage{font-size:0.75rem;color:#6b7280;display:block}.tag-actions{display:flex;gap:0.5rem}.dialog-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z:1000}.dialog-content{background:white;border-radius:0.5rem;box-shadow:0 10px 25px rgba(0,0,0,0.2);max-width:500px;width:90%}.dialog-header{padding:1.5rem;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center}.dialog-body{padding:1.5rem}.dialog-footer{padding:1rem 1.5rem;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:0.75rem}.form-group{margin-bottom:1rem}.label{display:block;margin-bottom:0.5rem;font-weight:500}</style>
+  `;
 }
