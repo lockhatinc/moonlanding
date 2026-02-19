@@ -1,5 +1,5 @@
-import { getGmailClient } from './google-auth.js';
-import { GoogleAdapter } from './google-adapter-base.js';
+import { getGmailClient } from '@/adapters/google-auth.js';
+import { GoogleAdapter } from '@/adapters/google-adapter-base.js';
 
 const DEFAULT_SENDER = process.env.GMAIL_SENDER_EMAIL;
 const gmailAdapter = new GoogleAdapter('Gmail', () => getGmailClient(DEFAULT_SENDER));

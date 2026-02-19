@@ -165,6 +165,6 @@ export function resolveRecipientsForTemplate(resolver, context) {
   return Array.isArray(resolver) ? resolver : [];
 }
 
-export { generateChecklistPdf } from './generate-checklist-pdf';
+export { generateChecklistPdf } from '@/engine/generate-checklist-pdf';
 export const emailConfig = EMAIL_DEFAULTS;
 export const emailTemplates = TEMPLATES;

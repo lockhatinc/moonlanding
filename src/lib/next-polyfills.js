@@ -1,3 +1,7 @@
+import { AsyncLocalStorage } from 'async_hooks';
+
+const requestContext = new AsyncLocalStorage();
+
 export class NextResponse {
   constructor(body, init = {}) {
     this.body = body;
@@ -21,16 +25,29 @@ export class NextResponse {
   }
 }
 
-// Global request/response state set by server.js and route handlers
-let currentRequest = null;
-let currentResponse = null;
+let fallbackRequest = null;
+let fallbackResponse = null;
 
 export function setCurrentRequest(req) {
-  currentRequest = req;
+  fallbackRequest = req;
 }
 
 export function setCurrentResponse(res) {
-  currentResponse = res;
+  fallbackResponse = res;
+}
+
+export function runWithContext(req, res, fn) {
+  return requestContext.run({ req, res }, fn);
+}
+
+function getRequest() {
+  const store = requestContext.getStore();
+  return store?.req || fallbackRequest;
+}
+
+function getResponse() {
+  const store = requestContext.getStore();
+  return store?.res || fallbackResponse;
 }
 
 export async function cookies() {
@@ -38,8 +55,9 @@ export async function cookies() {
     throw new Error('cookies() should only be called on the server side');
   }
 
-  // Parse cookies from request
-  const cookieHeader = currentRequest?.headers?.cookie || '';
+  const req = getRequest();
+  const res = getResponse();
+  const cookieHeader = req?.headers?.cookie || '';
   const cookieMap = {};
 
   if (cookieHeader) {
@@ -55,8 +73,7 @@ export async function cookies() {
       return value ? { name, value } : undefined;
     },
     set: (name, value, options = {}) => {
-      if (!currentResponse) return;
-
+      if (!res) return;
       let setCookieValue = `${name}=${encodeURIComponent(value)}`;
       if (options.path) setCookieValue += `; Path=${options.path}`;
       if (options.maxAge) setCookieValue += `; Max-Age=${options.maxAge}`;
@@ -64,18 +81,16 @@ export async function cookies() {
       if (options.secure) setCookieValue += '; Secure';
       if (options.httpOnly) setCookieValue += '; HttpOnly';
       if (options.sameSite) setCookieValue += `; SameSite=${options.sameSite}`;
-
-      const existing = currentResponse.getHeader('Set-Cookie') || [];
+      const existing = res.getHeader('Set-Cookie') || [];
       const setCookies = Array.isArray(existing) ? existing : [existing];
-      currentResponse.setHeader('Set-Cookie', [...setCookies, setCookieValue]);
+      res.setHeader('Set-Cookie', [...setCookies, setCookieValue]);
     },
     delete: (name) => {
-      if (!currentResponse) return;
-
+      if (!res) return;
       const setCookieValue = `${name}=; Path=/; Max-Age=0`;
-      const existing = currentResponse.getHeader('Set-Cookie') || [];
+      const existing = res.getHeader('Set-Cookie') || [];
       const setCookies = Array.isArray(existing) ? existing : [existing];
-      currentResponse.setHeader('Set-Cookie', [...setCookies, setCookieValue]);
+      res.setHeader('Set-Cookie', [...setCookies, setCookieValue]);
     },
     getAll: () => {
       return Object.entries(cookieMap).map(([name, value]) => ({ name, value }));
@@ -95,19 +110,14 @@ export function headers() {
   };
 }
 
-export function revalidatePath(path, type = 'page') {
-  // No-op in zero-build mode
-}
+export function revalidatePath() {}
 
-export function revalidateTag(tag) {
-  // No-op in zero-build mode
-}
+export function revalidateTag() {}
 
 export function redirect(path, status = 302) {
   if (typeof window !== 'undefined') {
     window.location.href = path;
   } else {
-    // Throw error with properties that page-renderer can recognize
     const error = new Error(`Redirect to ${path}`);
     error.type = 'redirect';
     error.location = path;

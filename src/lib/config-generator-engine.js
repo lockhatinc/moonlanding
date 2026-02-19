@@ -1210,7 +1210,6 @@ export class ConfigGeneratorEngine {
   }
 }
 
-// Use global scope to persist across module instances in Next.js
 const getGlobalScope = () => {
   if (typeof global === 'undefined') {
     throw new Error('[ConfigGeneratorEngine] Cannot access global scope outside Node.js');
@@ -1218,20 +1217,29 @@ const getGlobalScope = () => {
   return global;
 };
 
+let initPromise = null;
+
 export async function getConfigEngine() {
   const g = getGlobalScope();
-  if (!g.__configEngine__) {
-    try {
-      const { initializeSystemConfig } = await import('@/config/system-config-loader');
-      await initializeSystemConfig();
-    } catch (error) {
-      console.error('[ConfigGeneratorEngine] Failed to lazy-initialize global engine:', error.message);
-      throw error;
-    }
-    if (!g.__configEngine__) {
-      throw new Error('[ConfigGeneratorEngine] Global engine still not initialized after lazy init');
-    }
+  if (g.__configEngine__) return g.__configEngine__;
+
+  if (!initPromise) {
+    initPromise = (async () => {
+      try {
+        const { initializeSystemConfig } = await import('@/config/system-config-loader');
+        await initializeSystemConfig();
+      } catch (error) {
+        initPromise = null;
+        throw error;
+      }
+      if (!g.__configEngine__) {
+        initPromise = null;
+        throw new Error('[ConfigGeneratorEngine] Global engine still not initialized after lazy init');
+      }
+    })();
   }
+
+  await initPromise;
   return g.__configEngine__;
 }
 
@@ -1241,11 +1249,13 @@ export function setConfigEngine(engine) {
   }
   const g = getGlobalScope();
   g.__configEngine__ = engine;
+  initPromise = null;
 }
 
 export function resetConfigEngine() {
   const g = getGlobalScope();
   g.__configEngine__ = null;
+  initPromise = null;
 }
 
 export function getConfigEngineSync() {

@@ -1,5 +1,5 @@
-import { generateHtml, statusLabel, linearProgress } from './renderer.js';
-import { canCreate, canEdit, getNavItems, getAdminItems } from './permissions-ui.js';
+import { generateHtml, statusLabel, linearProgress } from '@/ui/renderer.js';
+import { canCreate, canEdit, getNavItems, getAdminItems } from '@/ui/permissions-ui.js';
 
 function nav(user) {
   const navLinks = getNavItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');

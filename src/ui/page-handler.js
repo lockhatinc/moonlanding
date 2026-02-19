@@ -16,7 +16,7 @@ import {
   renderPasswordResetConfirm,
   generateHtml,
   REDIRECT
-} from './renderer.js';
+} from '@/ui/renderer.js';
 import {
   renderSettingsHome,
   renderSettingsSystem,
@@ -31,20 +31,32 @@ import {
   renderSettingsReviewSettings,
   renderSettingsFileReview,
   renderSettingsTemplateManage,
-} from './settings-renderer.js';
+} from '@/ui/settings-renderer.js';
 import {
   renderClientDashboard, clientUserManagementDialog, clientUserReplaceDialog,
   clientTestEmailDialog, clientRiskAssessmentDialog, clientInfoCard
-} from './client-renderer.js';
-import { renderSectionReport, renderReviewListTabbed, renderMwrHome } from './review-renderer.js';
+} from '@/ui/client-renderer.js';
+import { renderSectionReport, renderReviewListTabbed, renderMwrHome } from '@/ui/review-renderer.js';
 import {
   renderChecklistDetails, renderChecklistsHome, renderChecklistsManagement,
   checklistTemplatesUI
-} from './checklist-renderer.js';
+} from '@/ui/checklist-renderer.js';
 import {
   canList, canView, canCreate, canEdit,
   isPartner, isManager, isClerk, isClientUser, isAuditor, canClientAccessEntity
-} from './permissions-ui.js';
+} from '@/ui/permissions-ui.js';
+import { renderEngagementGrid } from '@/ui/engagement-grid-renderer.js';
+import { renderPdfViewer, renderPdfEditorPlaceholder } from '@/ui/pdf-viewer-renderer.js';
+import { renderReviewAnalytics } from '@/ui/review-analytics-renderer.js';
+import { renderHighlightThreading } from '@/ui/highlight-threading-renderer.js';
+import { renderClientProgress } from '@/ui/client-progress-renderer.js';
+import { renderLetterWorkflow } from '@/ui/letter-workflow-renderer.js';
+import { renderJobManagement } from '@/ui/job-management-renderer.js';
+import { renderAdvancedSearch } from '@/ui/advanced-search-renderer.js';
+import { renderSectionResolution } from '@/ui/section-resolution-renderer.js';
+import { renderReviewComparison, renderComparisonPicker } from '@/ui/review-comparison-renderer.js';
+import { renderTenderDashboard } from '@/ui/tender-dashboard-renderer.js';
+import { renderBatchOperations } from '@/ui/batch-review-renderer.js';
 
 function page_wrap(user, title, bc, content) {
   return renderDashboard.__page_wrap
@@ -365,6 +377,170 @@ export async function handlePage(pathname, req, res) {
       });
     } catch {}
     return renderChecklistsHome(user, checklists);
+  }
+
+  if (normalized === '/engagements') {
+    if (!canList(user, 'engagement')) return renderAccessDenied(user, 'engagement', 'list');
+    let engagements = list('engagement', {});
+    const spec = getSpec('engagement');
+    if (spec) engagements = resolveRefFields(engagements, spec);
+    let teams = []; try { teams = list('team', {}); } catch {}
+    const years = [...new Set(engagements.map(e => e.year).filter(Boolean))].sort();
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const filter = url.searchParams.get('filter') || 'all';
+    return renderEngagementGrid(user, engagements, { filter, teams, years });
+  }
+
+  if (normalized === '/search') {
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const q = url.searchParams.get('q') || '';
+    const entityFilter = url.searchParams.get('entity') || '';
+    const statusFilter = url.searchParams.get('status') || '';
+    let teams = []; try { teams = list('team', {}); } catch {}
+    const stages = ['info_gathering', 'commencement', 'team_execution', 'partner_review', 'finalization', 'closeout'];
+    const results = {};
+    const searchEntities = entityFilter ? [entityFilter] : ['engagement', 'client', 'rfi', 'review'];
+    for (const eName of searchEntities) {
+      try {
+        let items = list(eName, {});
+        if (q) items = items.filter(item => JSON.stringify(item).toLowerCase().includes(q.toLowerCase()));
+        if (statusFilter) items = items.filter(item => item.status === statusFilter);
+        const spec = getSpec(eName);
+        if (spec) items = resolveRefFields(items, spec);
+        results[eName] = items.slice(0, 50);
+      } catch {}
+    }
+    return renderAdvancedSearch(user, results, { teams, stages });
+  }
+
+  if (normalized === '/reviews/analytics') {
+    if (!canList(user, 'review')) return renderAccessDenied(user, 'review', 'list');
+    let reviews = []; try { reviews = list('review', {}); } catch {}
+    let highlights = []; try { highlights = list('highlight', {}); } catch {}
+    let activity = []; try { activity = list('activity_log', {}).slice(0, 50); } catch {}
+    return renderReviewAnalytics(user, { reviews, highlights, recentActivity: activity });
+  }
+
+  if (normalized === '/reviews/compare') {
+    if (!canList(user, 'review')) return renderAccessDenied(user, 'review', 'list');
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const leftId = url.searchParams.get('left');
+    const rightId = url.searchParams.get('right');
+    if (leftId && rightId) {
+      const leftReview = get('review', leftId);
+      const rightReview = get('review', rightId);
+      if (!leftReview || !rightReview) return null;
+      let leftH = []; try { leftH = list('highlight', {}).filter(h => h.review_id === leftId); } catch {}
+      let rightH = []; try { rightH = list('highlight', {}).filter(h => h.review_id === rightId); } catch {}
+      return renderReviewComparison(user, leftReview, rightReview, leftH, rightH);
+    }
+    let reviews = []; try { reviews = list('review', {}); } catch {}
+    return renderComparisonPicker(user, reviews);
+  }
+
+  if (normalized === '/reviews/tenders') {
+    if (!canList(user, 'review')) return renderAccessDenied(user, 'review', 'list');
+    let tenders = []; try { tenders = list('tender', {}); } catch {}
+    let reviews = []; try { reviews = list('review', {}); } catch {}
+    tenders = tenders.map(t => {
+      const r = reviews.find(rev => rev.id === t.review_id);
+      return { ...t, review_name: r?.name || r?.title || '' };
+    });
+    return renderTenderDashboard(user, tenders, reviews);
+  }
+
+  if (normalized === '/reviews/batch') {
+    if (!canEdit(user, 'review')) return renderAccessDenied(user, 'review', 'edit');
+    let reviews = []; try { reviews = list('review', {}); } catch {}
+    const spec = getSpec('review');
+    if (spec) reviews = resolveRefFields(reviews, spec);
+    return renderBatchOperations(user, reviews);
+  }
+
+  if (segments[0] === 'review' && segments.length === 3 && segments[2] === 'pdf') {
+    const reviewId = segments[1];
+    if (!canView(user, 'review')) return renderAccessDenied(user, 'review', 'view');
+    const review = get('review', reviewId);
+    if (!review) return null;
+    let highlights = []; try { highlights = list('highlight', {}).filter(h => h.review_id === reviewId); } catch {}
+    let sections = []; try { sections = list('review_section', {}).filter(s => s.review_id === reviewId); } catch {}
+    return renderPdfViewer(user, review, highlights, sections);
+  }
+
+  if (segments[0] === 'review' && segments.length === 3 && segments[2] === 'editor') {
+    const reviewId = segments[1];
+    if (!canEdit(user, 'review')) return renderAccessDenied(user, 'review', 'edit');
+    const review = get('review', reviewId);
+    if (!review) return null;
+    return renderPdfEditorPlaceholder(user, review);
+  }
+
+  if (segments[0] === 'review' && segments.length === 3 && segments[2] === 'highlights') {
+    const reviewId = segments[1];
+    if (!canView(user, 'review')) return renderAccessDenied(user, 'review', 'view');
+    const review = get('review', reviewId);
+    if (!review) return null;
+    let highlights = []; try { highlights = list('highlight', {}).filter(h => h.review_id === reviewId); } catch {}
+    const responseMap = {};
+    for (const h of highlights) {
+      try { responseMap[h.id] = list('highlight_response', {}).filter(r => r.highlight_id === h.id); } catch { responseMap[h.id] = []; }
+    }
+    return renderHighlightThreading(user, review, highlights, responseMap);
+  }
+
+  if (segments[0] === 'review' && segments.length === 3 && segments[2] === 'resolution') {
+    const reviewId = segments[1];
+    if (!canView(user, 'review')) return renderAccessDenied(user, 'review', 'view');
+    const review = get('review', reviewId);
+    if (!review) return null;
+    let sections = []; try { sections = list('review_section', {}).filter(s => s.review_id === reviewId); } catch {}
+    const highlightsBySection = {};
+    for (const s of sections) {
+      try { highlightsBySection[s.id] = list('highlight', {}).filter(h => h.review_id === reviewId && h.section_id === s.id); } catch { highlightsBySection[s.id] = []; }
+    }
+    return renderSectionResolution(user, review, sections, highlightsBySection);
+  }
+
+  if (segments[0] === 'client' && segments.length === 3 && segments[2] === 'progress') {
+    const clientId = segments[1];
+    if (!canView(user, 'client')) return renderAccessDenied(user, 'client', 'view');
+    const client = get('client', clientId);
+    if (!client) return null;
+    let engagements = []; try { engagements = list('engagement', {}).filter(e => e.client_id === clientId); } catch {}
+    const spec = getSpec('engagement');
+    if (spec) engagements = resolveRefFields(engagements, spec);
+    const rfis = []; let rfiStats = { total: 0, responded: 0, overdue: 0 };
+    try {
+      const allRfis = list('rfi', {}).filter(r => engagements.some(e => e.id === r.engagement_id));
+      const now = Math.floor(Date.now() / 1000);
+      rfiStats = {
+        total: allRfis.length,
+        responded: allRfis.filter(r => r.status === 'responded' || r.status === 'completed').length,
+        overdue: allRfis.filter(r => r.due_date && r.due_date < now && r.status !== 'closed').length,
+      };
+    } catch {}
+    return renderClientProgress(user, client, engagements, rfiStats);
+  }
+
+  if (segments[0] === 'engagement' && segments.length === 3 && segments[2] === 'letter') {
+    const engagementId = segments[1];
+    if (!canView(user, 'engagement')) return renderAccessDenied(user, 'engagement', 'view');
+    const engagement = get('engagement', engagementId);
+    if (!engagement) return null;
+    return renderLetterWorkflow(user, engagement);
+  }
+
+  if (normalized === '/admin/jobs') {
+    if (!isPartner(user)) return renderAccessDenied(user, 'admin', 'view');
+    let jobs = [];
+    try {
+      const { getConfigEngineSync } = await import('@/lib/config-generator-engine.js');
+      const engine = getConfigEngineSync();
+      const config = engine.getConfig();
+      jobs = (config.jobs || []).map(j => ({ ...j, status: j.enabled === false ? 'disabled' : 'scheduled' }));
+    } catch {}
+    let logs = []; try { logs = list('job_log', {}).slice(0, 20); } catch {}
+    return renderJobManagement(user, jobs, logs);
   }
 
   if (segments.length === 1) {

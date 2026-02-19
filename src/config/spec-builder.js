@@ -1,4 +1,4 @@
-import { ROLES, SQL_TYPES } from './constants.js';
+import { ROLES, SQL_TYPES } from '@/config/constants.js';
 
 function validateSpec(spec) {
   if (!spec.fields.id) throw new Error(`Spec ${spec.name} must have id field`);

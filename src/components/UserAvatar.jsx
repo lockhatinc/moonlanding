@@ -1,9 +1,5 @@
 import { h } from '@/ui/webjsx.js'
-
-function getInitials(name) {
-  if (!name) return '?'
-  return name.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
-}
+import { getInitials } from '@/lib/utils.js'
 
 export function UserAvatar({
   name = '',

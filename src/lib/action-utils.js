@@ -1,4 +1,4 @@
-import { serverCreateEntity, serverUpdateEntity, serverDeleteEntity } from './action-factory';
+import { serverCreateEntity, serverUpdateEntity, serverDeleteEntity } from '@/lib/action-factory';
 
 export function createCRUDActions(entityName) {
   return {

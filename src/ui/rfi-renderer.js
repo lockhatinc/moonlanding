@@ -1,4 +1,4 @@
-import { statusLabel } from './renderer.js';
+import { statusLabel } from '@/ui/renderer.js';
 
 export function rfiSectionCrudPanel(engagementId, sections = []) {
   const rows = sections.map((s, i) => `<div class="rfi-section-row" draggable="true" data-id="${s.id}" data-idx="${i}" ondragstart="rfiDragStart(event)" ondragover="rfiDragOver(event)" ondrop="rfiDrop(event)"><span class="rfi-section-handle">&#9776;</span><span class="rfi-section-name">${s.name || 'Untitled'}</span><span class="badge-status">${s.question_count || 0} Q</span><div class="flex gap-1"><button class="btn btn-xs btn-ghost" onclick="rfiEditSection('${s.id}','${(s.name || '').replace(/'/g, "\\'")}')">Edit</button><button class="btn btn-xs btn-ghost btn-error" onclick="rfiDeleteSection('${s.id}')">Del</button></div></div>`).join('');
@@ -191,4 +191,4 @@ export {
   engagementFileSearchDialog, postRfiJournalDialog, postRfiFileUpload,
   importReviewQueriesDialog, engagementNotificationSettings,
   notificationTriggerDialog, teamChatChannelToggle
-} from './engagement-dialogs.js';
+} from '@/ui/engagement-dialogs.js';

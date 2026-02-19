@@ -1,5 +1,5 @@
-import { getDocsClient, getDriveClient } from './google-auth.js';
-import { GoogleAdapter, createAdapterMethod } from './google-adapter-base.js';
+import { getDocsClient, getDriveClient } from '@/adapters/google-auth.js';
+import { GoogleAdapter, createAdapterMethod } from '@/adapters/google-adapter-base.js';
 import { config } from '@/config';
 import { formatDate } from '@/lib/date-utils';
 

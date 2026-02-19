@@ -1,8 +1,8 @@
-import { hookEngine } from './hook-engine.js';
-import { list, get, update, create, remove } from '../engine.js';
+import { hookEngine } from '@/lib/hook-engine.js';
+import { list, get, update, create, remove } from '@/engine.js';
 import { queueEmail } from '@/engine/notification-engine';
-import { safeJsonParse } from './safe-json.js';
-import { registerWorkflowHooks } from './workflow-engine.js';
+import { safeJsonParse } from '@/lib/safe-json.js';
+import { registerWorkflowHooks } from '@/lib/workflow-engine.js';
 
 
 const logActivity = (t, id, act, msg, u, d) =>

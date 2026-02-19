@@ -22,12 +22,12 @@ export {
   GOOGLE_APIS,
   ERROR_MESSAGES,
   SUCCESS_MESSAGES,
-} from './constants';
+} from '@/config/constants';
 
 export { fieldQuery, is, getFormFields, getListFields, getDisplayFields, getEditableFields, getRequiredFields, getSearchFields, getFilterableFields, getRefFields, getField, getFieldType, forEachField, iterateCreateFields, iterateUpdateFields } from '@/lib/field-iterator';
 
-export { config, VALIDATORS, hasGoogleAuth, hasDriveConfig, hasEmailConfig } from './env';
-export { SESSION, TOKEN, AUTH_CONFIG } from './auth-config';
+export { config, VALIDATORS, hasGoogleAuth, hasDriveConfig, hasEmailConfig } from '@/config/env';
+export { SESSION, TOKEN, AUTH_CONFIG } from '@/config/auth-config';
 export const API_ENDPOINTS = {
   entity: (name) => `/api/${name}`,
   entityId: (name, id) => `/api/${name}/${id}`,
@@ -94,4 +94,4 @@ export const API_ENDPOINTS = {
   },
 };
 
-export { default } from './env';
+export { default } from '@/config/env';

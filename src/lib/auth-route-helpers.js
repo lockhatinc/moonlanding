@@ -1,6 +1,7 @@
 import { NextResponse, cookies } from '@/lib/next-polyfills';
 import { SESSION } from '@/config/auth-config';
 import { HTTP } from '@/config/constants';
+import { globalManager } from '@/lib/hot-reload/mutex';
 
 export function validateOAuthProvider(provider) {
   if (!provider) {
@@ -13,25 +14,31 @@ export function validateOAuthProvider(provider) {
 }
 
 export async function setOAuthCookie(name, value, options = {}) {
-  const cookieStore = await cookies();
-  cookieStore.set(name, value, {
-    path: '/',
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: SESSION.cookieMaxAge,
-    sameSite: 'lax',
-    ...options,
+  return globalManager.lock('oauth-cookie', async () => {
+    const cookieStore = await cookies();
+    cookieStore.set(name, value, {
+      path: '/',
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: SESSION.cookieMaxAge,
+      sameSite: 'lax',
+      ...options,
+    });
   });
 }
 
 export async function getOAuthCookie(name) {
-  const cookieStore = await cookies();
-  return cookieStore.get(name)?.value;
+  return globalManager.lock('oauth-cookie', async () => {
+    const cookieStore = await cookies();
+    return cookieStore.get(name)?.value;
+  });
 }
 
 export async function deleteOAuthCookie(name) {
-  const cookieStore = await cookies();
-  cookieStore.delete(name);
+  return globalManager.lock('oauth-cookie', async () => {
+    const cookieStore = await cookies();
+    cookieStore.delete(name);
+  });
 }
 
 export function buildOAuthErrorResponse(message, request) {

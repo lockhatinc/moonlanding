@@ -2,6 +2,7 @@ import { google, createSession } from '@/engine.server';
 import { getBy, create } from '@/engine';
 import { GOOGLE_APIS } from '@/config/constants';
 import { getConfigEngine } from '@/lib/config-generator-engine';
+import { globalManager } from '@/lib/hot-reload/mutex';
 import {
   validateOAuthProvider,
   getOAuthCookie,
@@ -43,14 +44,15 @@ export async function GET(request) {
 
     const googleUser = await response.json();
 
-    let user = getBy('user', 'email', googleUser.email);
+    const user = await globalManager.lock('oauth-user-create', async () => {
+      let existing = getBy('user', 'email', googleUser.email);
+      if (existing) return existing;
 
-    if (!user) {
       const engine = await getConfigEngine();
       const roles = engine.getRoles();
       const defaultRole = Object.keys(roles)[0] || 'clerk';
 
-      user = create('user', {
+      return create('user', {
         email: googleUser.email,
         name: googleUser.name,
         avatar: googleUser.picture,
@@ -58,7 +60,7 @@ export async function GET(request) {
         role: defaultRole,
         status: 'active',
       });
-    }
+    });
 
     await createSession(user.id);
 

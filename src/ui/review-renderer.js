@@ -1,6 +1,6 @@
-import { canCreate, canEdit, canDelete, getNavItems, getAdminItems } from './permissions-ui.js';
-import { statusLabel, linearProgress, userAvatar, teamAvatarGroup, generateHtml } from './renderer.js';
-import { reviewCreateDialog, reviewTemplateChoiceDialog, reviewContextMenu, reviewFlagsDialog, reviewTagsDialog, reviewValueDialog, reviewDeadlineDialog, reviewNotificationDialog } from './review-dialogs.js';
+import { canCreate, canEdit, canDelete, getNavItems, getAdminItems } from '@/ui/permissions-ui.js';
+import { statusLabel, linearProgress, userAvatar, teamAvatarGroup, generateHtml } from '@/ui/renderer.js';
+import { reviewCreateDialog, reviewTemplateChoiceDialog, reviewContextMenu, reviewFlagsDialog, reviewTagsDialog, reviewValueDialog, reviewDeadlineDialog, reviewNotificationDialog } from '@/ui/review-dialogs.js';
 
 export { reviewCreateDialog, reviewTemplateChoiceDialog, reviewContextMenu, reviewFlagsDialog, reviewTagsDialog, reviewValueDialog, reviewDeadlineDialog, reviewNotificationDialog };
 

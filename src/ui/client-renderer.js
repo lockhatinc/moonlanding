@@ -1,5 +1,5 @@
-import { canCreate, canEdit, canDelete } from './permissions-ui.js';
-import { generateHtml, statusLabel, linearProgress, userAvatar, teamAvatarGroup } from './renderer.js';
+import { canCreate, canEdit, canDelete } from '@/ui/permissions-ui.js';
+import { generateHtml, statusLabel, linearProgress, userAvatar, teamAvatarGroup } from '@/ui/renderer.js';
 
 const TOAST_SCRIPT = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
 
@@ -11,7 +11,7 @@ function nav(user) {
 }
 
 let _permsCache = null;
-import { getNavItems, getAdminItems } from './permissions-ui.js';
+import { getNavItems, getAdminItems } from '@/ui/permissions-ui.js';
 _permsCache = { getNavItems, getAdminItems };
 function require_perms() { return _permsCache; }
 

@@ -144,23 +144,5 @@ export const ROLES = getRolesFromConfig();
 export const USER_TYPES = ROLES;
 export const REPEAT_INTERVALS = getRepeatIntervalsFromConfig();
 
-// Status enums - empty, read from config when needed
-export const RFI_STATUS = {};
-export const RFI_CLIENT_STATUS = {};
-export const RFI_AUDITOR_STATUS = {};
-export const ENGAGEMENT_STATUS = {};
-export const ENGAGEMENT_STAGE = {};
-export const REVIEW_STATUS = {};
-export const HIGHLIGHT_STATUS = {};
-export const USER_STATUS = {};
-export const LETTER_AUDITOR_STATUS = {};
-export const NOTIFICATION_STATUS = {};
-export const CHECKLIST_STATUS = {};
-export const CLIENT_STATUS = {};
 export const RECORD_STATUS = 'active';
 export const EMAIL_STATUS = 'pending';
-export const STAGE_TRANSITIONS = {};
-
-// Placeholder colors - use ConfigGeneratorEngine for actual theme
-export const COLORS = {};
-export const BADGE_COLORS_MANTINE = {};

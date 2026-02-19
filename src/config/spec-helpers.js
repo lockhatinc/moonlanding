@@ -1,4 +1,4 @@
-import { STAGE_TRANSITIONS } from './constants';
+import { STAGE_TRANSITIONS } from '@/config/constants';
 import { getConfigEngineSync } from '@/lib/config-generator-engine';
 
 export const specs = {};

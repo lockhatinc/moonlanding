@@ -5,6 +5,7 @@ const { CheckpointManager, globalCheckpoint } = require('/config/workspace/moonl
 const { TimeoutError, withTimeout, withAbortableTimeout, retry } = require('/config/workspace/moonlanding/src/lib/hot-reload/timeout-wrapper.js');
 const { safeError, safeStringify } = require('/config/workspace/moonlanding/src/lib/hot-reload/safe-error.js');
 const { CacheInvalidator, globalInvalidator } = require('/config/workspace/moonlanding/src/lib/hot-reload/cache-invalidator.js');
+const { DirectoryWatcher, globalWatcher } = require('/config/workspace/moonlanding/src/lib/hot-reload/directory-watcher.js');
 const { wrapRouteHandler, wrapRouteHandlers } = require('/config/workspace/moonlanding/src/lib/hot-reload/route-wrapper.js');
 const { DebugExposure, globalDebug, expose } = require('/config/workspace/moonlanding/src/lib/hot-reload/debug-exposure.js');
 
@@ -14,6 +15,7 @@ expose('hotReload', {
   supervisors: globalTree,
   checkpoints: globalCheckpoint,
   cache: globalInvalidator,
+  watcher: globalWatcher,
   debug: globalDebug
 }, 'Hot reload infrastructure');
 
@@ -43,6 +45,9 @@ module.exports = {
 
   CacheInvalidator,
   globalInvalidator,
+
+  DirectoryWatcher,
+  globalWatcher,
 
   wrapRouteHandler,
   wrapRouteHandlers,

@@ -1,7 +1,7 @@
 import { list } from '@/engine';
 import { getSpec } from '@/config/spec-helpers';
 
-export { secondsToDate, dateToSeconds, formatDate, parseDate, formatDateTime, formatCurrency, formatNumber, formatFileSize, formatDuration, timeAgo, truncateText } from './date-utils';
+export { secondsToDate, dateToSeconds, formatDate, parseDate, formatDateTime, formatCurrency, formatNumber, formatFileSize, formatDuration, timeAgo, truncateText } from '@/lib/date-utils';
 
 export async function loadFormOptions(spec) {
   const options = {};
@@ -53,9 +53,9 @@ export function getDisplayName(user) {
   return 'Unknown';
 }
 
-export function getInitials(user) {
-  if (!user) return '?';
-  const name = getDisplayName(user);
+export function getInitials(userOrName) {
+  if (!userOrName) return '?';
+  const name = typeof userOrName === 'string' ? userOrName : getDisplayName(userOrName);
   if (name === 'Unknown' || name === '?') return '?';
   const parts = name.split(/\s+/).filter(Boolean);
   if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();

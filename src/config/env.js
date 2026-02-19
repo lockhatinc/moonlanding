@@ -1,4 +1,4 @@
-import { TOKEN } from './auth-config';
+import { TOKEN } from '@/config/auth-config';
 import path from 'path';
 
 const getServiceAccountPath = () =>
@@ -80,20 +80,5 @@ export const VALIDATORS = config.validators;
 export const hasGoogleAuth = () => !!(config.auth.google.clientId && config.auth.google.clientSecret);
 export const hasDriveConfig = () => !!config.drive.rootFolderId;
 export const hasEmailConfig = () => !!(config.email.smtp.user && config.email.smtp.password);
-
-export const EMAIL_RESOLVERS = {
-  team_members: { type: 'team', role: 'all' },
-  team_partners: { type: 'team', role: 'partners' },
-  client_users: { type: 'client' },
-  client_user: { type: 'client' },
-  client_admin: { type: 'client', role: 'admin' },
-  collaborator: { type: 'collaborator' },
-  assigned_users: { type: 'single', field: 'rfi.assigned_to' },
-  partners: { type: 'static', emails: [] },
-  developers: { type: 'static', emails: [] },
-  user: { type: 'single', field: 'user' },
-  new_client_user: { type: 'single', field: 'user' },
-  partners_and_managers: { type: 'list', entity: 'user', filter: { type: 'auditor', status: 'active' } },
-};
 
 export default config;

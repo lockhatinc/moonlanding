@@ -3,6 +3,7 @@ import { list, listWithPagination } from '@/engine';
 import { withPageAuth } from '@/lib/auth-middleware';
 import { getCurrentState } from '@/lib/rfi-engine';
 import { paginated } from '@/lib/response-formatter';
+import { globalManager } from '@/lib/hot-reload/mutex';
 
 export async function GET(request) {
   try {
@@ -20,17 +21,18 @@ export async function GET(request) {
 
     const { items: rfis, pagination } = await listWithPagination('rfi', filters, page, pageSize);
 
-    // Enrich with display states
-    const enrichedRfis = rfis.map(rfi => {
-      const engagement = list('engagement', { id: rfi.engagement_id }, { limit: 1 })[0];
-      const state = getCurrentState(rfi, engagement?.stage || 'info_gathering');
+    const enrichedRfis = await globalManager.lock('rfi-enrich', async () => {
+      return rfis.map(rfi => {
+        const engagement = list('engagement', { id: rfi.engagement_id }, { limit: 1 })[0];
+        const state = getCurrentState(rfi, engagement?.stage || 'info_gathering');
 
-      return {
-        ...rfi,
-        displayState: state,
-        daysOutstanding: state.days_outstanding,
-        escalationTriggered: state.escalation_triggered
-      };
+        return {
+          ...rfi,
+          displayState: state,
+          daysOutstanding: state.days_outstanding,
+          escalationTriggered: state.escalation_triggered
+        };
+      });
     });
 
     return paginated(enrichedRfis, pagination);

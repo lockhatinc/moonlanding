@@ -1,4 +1,4 @@
-import { statusLabel } from './renderer.js';
+import { statusLabel } from '@/ui/renderer.js';
 
 export function zipFileCreationDialog(engagementId) {
   return `<div id="zip-create-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">

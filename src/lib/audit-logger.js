@@ -1,6 +1,8 @@
 import { getDatabase, genId, now } from '@/lib/database-core';
+import { Mutex } from '@/lib/hot-reload/mutex';
 
 const db = getDatabase();
+const auditMutex = new Mutex('audit-logger');
 
 export const ACTIVITY_TYPES = {
   RFI_QUESTION_VIEW: 'rfi_question_view',
@@ -75,11 +77,9 @@ export const getEntityAuditTrail = (entityType, entityId) => {
     .map(i => ({ id: i.id, action: i.action, userId: i.user_id, beforeState: parseJson(i.before_state), afterState: parseJson(i.after_state), createdAt: i.created_at }));
 };
 
-export const getActionStats = (fromDate, toDate) =>
-  db.prepare(`SELECT action, COUNT(*) as count FROM audit_logs WHERE created_at >= ? AND created_at <= ? GROUP BY action ORDER BY count DESC`).all(fromDate, toDate);
-
-export const getUserStats = (fromDate, toDate) =>
-  db.prepare(`SELECT user_id, COUNT(*) as count FROM audit_logs WHERE created_at >= ? AND created_at <= ? GROUP BY user_id ORDER BY count DESC`).all(fromDate, toDate);
+const statsSql = (col) => `SELECT ${col}, COUNT(*) as count FROM audit_logs WHERE created_at >= ? AND created_at <= ? GROUP BY ${col} ORDER BY count DESC`;
+export const getActionStats = (fromDate, toDate) => db.prepare(statsSql('action')).all(fromDate, toDate);
+export const getUserStats = (fromDate, toDate) => db.prepare(statsSql('user_id')).all(fromDate, toDate);
 
 export const logPermissionChange = ({
   userId, entityType, entityId, action, oldPermissions = null, newPermissions = null,
@@ -102,12 +102,14 @@ export const logPermissionChange = ({
 
 export const auditPermissionChange = async ({ user, entityType, entityId, action, oldPermissions = null,
   newPermissions = null, affectedUserId = null, reason = null, reasonCode = 'admin_action', metadata = null }) => {
-  try {
-    await logPermissionChange({ userId: user.id, entityType, entityId, action, oldPermissions, newPermissions,
-      reason: reason || `Permission ${action}`, reasonCode, affectedUserId, metadata });
-  } catch (error) {
-    console.error('[Audit] Failed to log permission change:', error);
-  }
+  return auditMutex.runExclusive(() => {
+    try {
+      logPermissionChange({ userId: user.id, entityType, entityId, action, oldPermissions, newPermissions,
+        reason: reason || `Permission ${action}`, reasonCode, affectedUserId, metadata });
+    } catch (error) {
+      console.error('[Audit] Failed to log permission change:', error);
+    }
+  });
 };
 
 export const auditRoleChange = async ({ user, targetUserId, oldRole, newRole, reason = null, metadata = null }) => {
@@ -144,10 +146,6 @@ export const auditPermissionModify = async ({ user, entityType, entityId, oldPer
     oldPermissions, newPermissions, affectedUserId, reason: reason || 'Permissions modified', reasonCode, metadata });
 };
 
-const queryPermissionAudit = (where, params, limit = 100) => {
-  return db.prepare(`SELECT * FROM permission_audit ${where} ORDER BY timestamp DESC LIMIT ?`).all(...params, limit).map(parseRow);
-};
-
 export const getPermissionAuditTrail = ({ entityType, entityId, userId, affectedUserId, limit = 100, offset = 0 }) => {
   let sql = 'SELECT * FROM permission_audit WHERE 1=1';
   const params = [];
@@ -160,15 +158,8 @@ export const getPermissionAuditTrail = ({ entityType, entityId, userId, affected
 };
 
 export const getPermissionAuditById = (auditId) => parseRow(db.prepare('SELECT * FROM permission_audit WHERE id = ?').get(auditId));
-
-export const getPermissionAuditStats = () => db.prepare(`
-  SELECT COUNT(*) as total_audits, COUNT(DISTINCT user_id) as unique_users,
-    COUNT(DISTINCT entity_type) as entity_types, MIN(timestamp) as earliest_change, MAX(timestamp) as latest_change
-  FROM permission_audit
-`).get();
-
-export const getPermissionAuditBreakdown = (field) =>
-  db.prepare(`SELECT ${field}, COUNT(*) as count FROM permission_audit GROUP BY ${field} ORDER BY count DESC`).all();
+export const getPermissionAuditStats = () => db.prepare(`SELECT COUNT(*) as total_audits, COUNT(DISTINCT user_id) as unique_users, COUNT(DISTINCT entity_type) as entity_types, MIN(timestamp) as earliest_change, MAX(timestamp) as latest_change FROM permission_audit`).get();
+export const getPermissionAuditBreakdown = (field) => db.prepare(`SELECT ${field}, COUNT(*) as count FROM permission_audit GROUP BY ${field} ORDER BY count DESC`).all();
 
 export const searchPermissionAudit = (searchTerm, limit = 100) => {
   const pattern = `%${searchTerm}%`;
@@ -181,12 +172,11 @@ export const getPermissionAuditByDateRange = (startDate, endDate, limit = 100) =
 
 export const exportPermissionAuditCSV = async (filters = {}) => {
   const trail = getPermissionAuditTrail({ ...filters, limit: 10000 });
-  const headers = ['Timestamp', 'Changed By', 'Entity Type', 'Entity ID', 'Action', 'Reason Code', 'Reason', 'Affected User', 'IP Address'];
-  const rows = trail.map(a => [
-    new Date(a.timestamp * 1000).toISOString(), a.user_id, a.entity_type, a.entity_id,
-    a.action, a.reason_code, a.reason || '', a.affected_user_id || '', a.ip_address || '',
-  ]);
-  return [headers.join(','), ...rows.map(r => r.map(c => `"${c}"`).join(','))].join('\n');
+  const h = 'Timestamp,Changed By,Entity Type,Entity ID,Action,Reason Code,Reason,Affected User,IP Address';
+  const rows = trail.map(a => [new Date(a.timestamp * 1000).toISOString(), a.user_id, a.entity_type,
+    a.entity_id, a.action, a.reason_code, a.reason || '', a.affected_user_id || '', a.ip_address || '']
+    .map(c => `"${c}"`).join(','));
+  return [h, ...rows].join('\n');
 };
 
 export const logQuestionActivity = (questionId, action, userId, details = null) => {
