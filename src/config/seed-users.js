@@ -6,13 +6,13 @@ export async function seedUsers() {
   const existing = db.prepare('SELECT COUNT(*) as count FROM users').get();
   if (existing.count > 0) return;
 
-  const hash = await bcrypt.hash('admin123', 12);
+  const hash = await bcrypt.hash('Test123456', 12);
   const id = genId();
   const timestamp = now();
 
   db.prepare(`INSERT INTO users (id, name, email, password_hash, role, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`).run(
-    id, 'Admin', 'admin@moonlanding.local', hash, 'partner', 'active', timestamp, timestamp
+    id, 'Admin', 'admin@coas.co.za', hash, 'partner', 'active', timestamp, timestamp
   );
 
-  console.log('[SeedUsers] Default admin user created (admin@moonlanding.local / admin123)');
+  console.log('[SeedUsers] Default admin user created (admin@coas.co.za)');
 }
