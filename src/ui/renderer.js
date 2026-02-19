@@ -245,9 +245,10 @@ export function renderDashboard(user, stats = {}) {
   return page(user, 'Dashboard', [{ href: '/', label: 'Dashboard' }], content);
 }
 
-export function renderEntityList(entityName, items, spec, user) {
+export function renderEntityList(entityName, items, spec, user, options = {}) {
   const label = spec?.labelPlural || spec?.label || entityName;
   const fields = spec?.fields || {};
+  const { groupBy = null } = options;
   let listFields = Object.entries(fields).filter(([k, f]) => f.list).slice(0, 5);
   if (!listFields.length) listFields = Object.entries(fields).filter(([k]) => !['created_by', 'updated_by'].includes(k)).slice(0, 6);
   if (!listFields.length && items.length > 0) listFields = Object.keys(items[0]).filter(k => !['created_by', 'updated_by'].includes(k)).slice(0, 5).map(k => [k, { label: k }]);
@@ -255,18 +256,38 @@ export function renderEntityList(entityName, items, spec, user) {
   const userCanEdit = canEdit(user, entityName);
   const userCanDelete = canDelete(user, entityName);
   const userCanCreate = canCreate(user, entityName);
-  const rows = items.map(item => {
+  const buildRow = item => {
     const cells = listFields.map(([k]) => `<td>${fmtVal(item[k], k, item)}</td>`).join('');
     const editBtn = userCanEdit ? `<a href="/${entityName}/${item.id}/edit" class="btn btn-xs btn-outline">Edit</a>` : `<span class="btn btn-xs btn-outline btn-disabled tooltip" data-tip="No permission">Edit</span>`;
     const delBtn = userCanDelete ? `<button onclick="event.stopPropagation();confirmDelete('${item.id}')" class="btn btn-xs btn-error btn-outline">Delete</button>` : `<span class="btn btn-xs btn-error btn-outline btn-disabled tooltip" data-tip="No permission">Delete</span>`;
     return `<tr class="hover cursor-pointer" data-searchable onclick="window.location='/${entityName}/${item.id}'">${cells}<td class="flex gap-1"><a href="/${entityName}/${item.id}" class="btn btn-xs btn-ghost">View</a>${editBtn}${delBtn}</td></tr>`;
-  }).join('');
-  const emptyMsg = userCanCreate ? `No items found. <a href="/${entityName}/new" class="text-primary hover:underline">Create your first ${label.toLowerCase()}</a>` : 'No items found.';
+  };
+  let tableContent;
+  if (groupBy && items.length > 0) {
+    const groups = {};
+    items.forEach(item => {
+      const key = String(item[groupBy] || '(No ' + groupBy + ')');
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(item);
+    });
+    const sortedKeys = Object.keys(groups).sort();
+    const groupRows = sortedKeys.map(gkey => {
+      const groupItems = groups[gkey];
+      const groupId = `group-${gkey.replace(/\s+/g, '-').toLowerCase()}`;
+      const togglerId = `toggle-${gkey.replace(/\s+/g, '-').toLowerCase()}`;
+      const itemRows = groupItems.map(buildRow).join('');
+      return `<tbody class="group-section" data-group="${gkey}"><tr class="group-header hover cursor-pointer" onclick="document.getElementById('${togglerId}').checked=!document.getElementById('${togglerId}').checked"><td colspan="100" style="padding:12px"><div class="flex items-center gap-2"><input type="checkbox" id="${togglerId}" class="group-toggle" style="cursor:pointer" checked/><span class="font-semibold text-base">${gkey}</span><span class="badge badge-sm">${groupItems.length}</span></div></td></tr><tr class="group-content" id="${groupId}" style="display:contents"><td colspan="100"><table class="table table-sm w-full" style="background:transparent"><tbody>${itemRows}</tbody></table></td></tr></tbody>`;
+    }).join('');
+    tableContent = `<div class="card bg-white shadow" style="overflow-x:auto"><table class="table w-full"><thead><tr>${headers}</tr></thead>${groupRows}</table></div>`;
+  } else {
+    const rows = items.map(buildRow).join('');
+    tableContent = dataTable(headers, rows, items.length === 0 ? (userCanCreate ? `No items found. <a href="/${entityName}/new" class="text-primary hover:underline">Create your first ${label.toLowerCase()}</a>` : 'No items found.') : '');
+  }
   const createBtn = userCanCreate ? `<a href="/${entityName}/new" class="btn btn-primary btn-sm">Create New</a>` : '';
   const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">${label}</h1><div class="flex gap-2"><input type="text" id="search-input" placeholder="Search..." class="input input-bordered input-sm" style="width:200px"/>${createBtn}</div></div>
-    ${dataTable(headers, rows, emptyMsg)}${userCanDelete ? confirmDialog(entityName) : ''}`;
+    ${tableContent}${userCanDelete ? confirmDialog(entityName) : ''}`;
   const deleteScript = `let pendingDeleteId=null;window.confirmDelete=(id)=>{pendingDeleteId=id;document.getElementById('confirm-dialog').style.display='flex'};window.cancelDelete=()=>{pendingDeleteId=null;document.getElementById('confirm-dialog').style.display='none'};window.executeDelete=async()=>{if(!pendingDeleteId)return;const btn=document.getElementById('confirm-delete-btn');btn.classList.add('btn-loading');btn.textContent='Deleting...';try{const res=await fetch('/api/${entityName}/'+pendingDeleteId,{method:'DELETE'});if(res.ok){showToast('Deleted successfully','success');setTimeout(()=>window.location.reload(),500)}else{const d=await res.json().catch(()=>({}));showToast(d.message||d.error||'Delete failed','error');cancelDelete();btn.classList.remove('btn-loading');btn.textContent='Delete'}}catch(err){showToast('Error: '+err.message,'error');cancelDelete();btn.classList.remove('btn-loading');btn.textContent='Delete'}}`;
-  const searchScript = `const si=document.getElementById('search-input');const tb=document.getElementById('table-body');const rows=Array.from(tb.querySelectorAll('tr[data-searchable]'));si.addEventListener('input',(e)=>{const t=e.target.value.toLowerCase();rows.forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(t)?'':'none'})})`;
+  const searchScript = `const si=document.getElementById('search-input');const tb=document.querySelectorAll('[data-searchable]');si.addEventListener('input',(e)=>{const t=e.target.value.toLowerCase();tb.forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(t)?'':'none'})});const toggles=document.querySelectorAll('.group-toggle');toggles.forEach(tog=>{tog.addEventListener('change',(e)=>{e.stopPropagation();const row=tog.closest('tr');const tbody=row.parentElement;const content=tbody.querySelector('.group-content');content.style.display=tog.checked?'contents':'none'})})`;
   return page(user, label, [{ href: '/', label: 'Dashboard' }, { href: `/${entityName}`, label }], content, [TOAST_SCRIPT, deleteScript, searchScript]);
 }
 
