@@ -1,20 +1,8 @@
-MOONLANDING CLEANUP + FULL PARITY PRD
-======================================
-Goal: Remove dead code, achieve 1:1 feature parity with friday-staging + myworkreview-staging,
-maximally generalize, leverage webjsx for buildlessness, smallest possible codebase.
-AI features NOT needed.
-
-FOUNDATION COMPLETE
-===================
-✓ WAVE 1: Dead code removal (299 files deleted) - commit 2878c72
-✓ WAVE 2: Live code audit (156 files verified) - commit 4fafe07
-✓ WAVE 3: Architecture verification (optimal setup confirmed) - commit 717ccb1
-
-Current status: Clean codebase with zero-build architecture, hot reload, ready for features.
-Server runs on port 3004, database has 112 tables, all dependencies verified.
-
-NEXT: WAVE 4-5 (Feature Implementation)
-======================================
+MOONLANDING FEATURE PARITY PRD
+==============================
+Goal: Achieve 1:1 feature parity with friday-staging + myworkreview-staging.
+Foundation: Clean buildless codebase, 156 essential files, zero-build tsx architecture.
+Status: Ready for feature implementation (Waves 4-7)
 
 ================================================================================
 WAVE 4: FRIDAY FEATURE PARITY - SERVER SIDE (blocked by Wave 3)
@@ -689,14 +677,17 @@ WAVE 7: FINAL CLEANUP + VERIFICATION (blocked by Wave 6)
       - Template management
 
 ================================================================================
-SUMMARY
+PROGRESS
 ================================================================================
-✓ WAVE 1: 18 deletion tasks - COMPLETED (299 files deleted)
-✓ WAVE 2: 4 audit tasks - COMPLETED (all live code verified)
-✓ WAVE 3: 5 architecture tasks - COMPLETED (optimal architecture already in place)
-→ WAVE 4: 58 Friday parity tasks - READY (next)
-→ WAVE 5: 48 MWR parity tasks - PARALLEL with Wave 4
-→ WAVE 6: 9 generalization tasks - PENDING (after Waves 4+5)
-→ WAVE 7: 9 cleanup + 3 verification tasks - PENDING (after Wave 6)
-COMPLETED: 27 items
-REMAINING: 127 items
+FOUNDATION COMPLETE (Waves 1-3):
+  ✓ Dead code removal: 299 files deleted
+  ✓ Live code audit: 156 files verified, server starts on port 3004
+  ✓ Architecture: Zero-build tsx, server HTML + webjsx client, hot reload enabled
+
+CURRENT WORK (Waves 4-7):
+  → WAVE 4: 58 Friday feature parity tasks
+  → WAVE 5: 48 MWR feature parity tasks (parallel with Wave 4)
+  → WAVE 6: 9 generalization + code reduction tasks
+  → WAVE 7: 12 cleanup + verification tasks
+
+TOTAL REMAINING: 127 items across 4 waves
