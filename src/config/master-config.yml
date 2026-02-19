@@ -82,7 +82,7 @@ permission_templates:
     client_admin: []
     client_user: []
   review_collaboration:
-    description: Review/highlight collaboration permissions
+    description: Review/highlight collaboration and management permissions
     partner:
     - list
     - view
@@ -92,7 +92,11 @@ permission_templates:
     - manage_collaborators
     - manage_highlights
     - resolve_highlight
+    - mark_all_resolved
     - reopen_highlight
+    - change_status
+    - private
+    - attach_checklist
     - manage_flags
     - archive
     manager:
@@ -104,10 +108,13 @@ permission_templates:
     - manage_highlights_own
     - resolve_highlight
     - reopen_highlight
+    - change_status
+    - attach_checklist
     clerk:
     - list
     - view
     - view_assigned
+    - resolve_highlight
     client_admin: []
     client_user: []
   client_response:
@@ -160,40 +167,6 @@ permission_templates:
     clerk:
     - list
     - view_own
-    client_admin: []
-    client_user: []
-  review_management:
-    description: Review management with full CASL permissions
-    partner:
-    - list
-    - view
-    - create
-    - edit
-    - delete
-    - manage_collaborators
-    - manage_highlights
-    - resolve_highlight
-    - mark_all_resolved
-    - change_status
-    - private
-    - attach_checklist
-    - manage_flags
-    - archive
-    manager:
-    - list
-    - view
-    - create
-    - edit
-    - manage_collaborators_own
-    - manage_highlights_own
-    - resolve_highlight
-    - change_status
-    - attach_checklist
-    clerk:
-    - list
-    - view
-    - view_assigned
-    - resolve_highlight
     client_admin: []
     client_user: []
 workflows:
@@ -556,24 +529,14 @@ thresholds:
     list_ttl_seconds: 60
     session_ttl_seconds: 3600
     max_entries: 1000
-    permission_ttl_ms: 300000           # 5 minutes
-    field_metadata_ttl_ms: 3600000      # 1 hour
-    session_ttl_ms: 600000              # 10 minutes
-    user_profile_ttl_ms: 300000         # 5 minutes
-    entity_ttl_ms: 1800000              # 30 minutes
-    token_ttl_ms: 86400000              # 24 hours
+    permission_ttl_ms: 300000
+    field_metadata_ttl_ms: 3600000
+    session_ttl_ms: 600000
+    user_profile_ttl_ms: 300000
+    entity_ttl_ms: 1800000
+    token_ttl_ms: 86400000
     max_size: 100
-    max_age_ms: 86400000                # 24 hours
-
-  cache_advanced:
-    permission_ttl_ms: 300000           # 5 minutes
-    field_metadata_ttl_ms: 3600000      # 1 hour
-    session_ttl_ms: 600000              # 10 minutes
-    user_profile_ttl_ms: 300000         # 5 minutes
-    entity_ttl_ms: 1800000              # 30 minutes
-    token_ttl_ms: 86400000              # 24 hours
-    max_size: 100
-    max_age_ms: 86400000                # 24 hours
+    max_age_ms: 86400000
 
   audit:
     recent_activity_days: 7
@@ -1677,6 +1640,10 @@ entities:
     permission_template: partner_only
     has_authentication: true
     has_google_sync: true
+    unified_from:
+    - friday
+    - mwr
+    deduplication: email_case_insensitive
     user_types:
     - auditor
     - client
@@ -1701,12 +1668,30 @@ entities:
         label: Password Hash
         hidden: true
       role:
-        type: text
+        type: enum
+        options:
+        - partner
+        - manager
+        - clerk
+        - client_admin
+        - client_user
         required: true
         default: clerk
         label: Role
+      type:
+        type: enum
+        options:
+        - auditor
+        - client
+        required: true
+        default: auditor
+        label: User Type
       status:
-        type: text
+        type: enum
+        options:
+        - active
+        - inactive
+        - deleted
         default: active
         label: Status
       photo_url:
@@ -1723,8 +1708,50 @@ entities:
     icon: Users
     order: 4
     permission_template: partner_only
+    unified_from:
+    - friday
+    - mwr
     children:
     - user
+    fields:
+      id:
+        type: id
+        required: true
+      name:
+        type: text
+        required: true
+        search: true
+        label: Team Name
+      context:
+        type: enum
+        options:
+        - engagement_team
+        - review_team
+        - general
+        default: general
+        label: Team Context
+        description: Whether team is for engagements, reviews, or general use
+      users:
+        type: json
+        default: '[]'
+        label: Members
+        description: Array of user IDs in this team
+      partners:
+        type: json
+        default: '[]'
+        label: Partners
+        description: Array of partner user IDs
+      created_at:
+        type: timestamp
+        required: true
+        auto: now
+        auto_generate: true
+        readOnly: true
+      updated_at:
+        type: timestamp
+        auto: update
+        auto_generate: true
+        readOnly: true
   client:
     label: Client
     label_plural: Clients
@@ -1994,11 +2021,14 @@ entities:
     has_google_drive_integration: true
     has_template_variables: true
   review_template:
-    label: Review Template
-    label_plural: Review Templates
+    label: Template
+    label_plural: Templates
     icon: FileText
     order: 9.5
     permission_template: standard_auditor
+    unified_from:
+    - friday
+    - mwr
     parent: null
     children:
     - template_section
@@ -2014,6 +2044,18 @@ entities:
       description:
         type: textarea
         label: Description
+      template_type:
+        type: enum
+        options:
+        - rfi_template
+        - review_template
+        - tender_template
+        - checklist_template
+        required: true
+        default: review_template
+        label: Template Category
+        search: true
+        description: Discriminator for template origin (Friday RFI vs MWR review/tender/checklist)
       type:
         type: enum
         options:
@@ -2022,7 +2064,7 @@ entities:
         - financial
         - compliance
         default: standard
-        label: Template Type
+        label: Template Subtype
         search: true
       content:
         type: textarea
@@ -2592,6 +2634,16 @@ entities:
         ref: user
 
 domains:
+  shared:
+    label: Shared Entities
+    description: Entities unified from both Friday and MWR (deduplicated)
+    enabled: true
+    entities:
+    - user
+    - team
+    - email
+    - job_execution_log
+    - permission_audit
   friday:
     label: Friday Engagements
     description: Friday engagement and RFI workflow
@@ -2602,8 +2654,6 @@ domains:
     - rfi_section
     - letter
     - client
-    - user
-    - team
     - client_user
   mwr:
     label: MyWorkReview
@@ -2613,6 +2663,7 @@ domains:
     - review
     - highlight
     - highlight_comment
+    - highlight_response
     - removedHighlight
     - collaborator
     - checklist
@@ -2624,11 +2675,6 @@ domains:
     - review_template
     - template_section
     - flag
-    - user
-    - team
-    - email
-    - job_execution_log
-    - permission_audit
 
 automation:
   schedules:
@@ -2689,12 +2735,15 @@ automation:
     config:
       escalation_thresholds: $workflows.rfi_type_standard.notifications.escalation_thresholds
     tracking_field: escalation_notifications_sent
-  - name: consolidated_notifications
+  - name: daily_consolidated_digest
     trigger: 0 6 * * *
-    description: Daily digest to managers/clerks
+    description: Daily consolidated digest to managers/clerks (RFI status, review updates, tender alerts)
     action: send_consolidated_notifications
     entity: notification
     enabled: true
+    recipients:
+    - role: manager
+    - role: clerk
   - name: tender_notifications
     trigger: 0 9 * * *
     description: Tender deadline notifications (7 days and 24 hours)
@@ -2748,15 +2797,17 @@ automation:
     recipients:
     - role: partner
     - status: active
-  - name: weekly_client_emails
+  - name: weekly_client_summaries
     trigger: 0 9 * * 1
-    description: Weekly client engagement summaries
+    description: Weekly client engagement and review summaries (individual + admin master)
     action: send_weekly_client_summaries
     entity: client
     enabled: true
     config:
       include_individual: true
       include_admin_master: true
+      include_engagement_progress: true
+      include_review_status: true
   - name: engagement_recreation_yearly
     trigger: 0 0 1 1 *
     description: Yearly engagement recreation (Jan 1 @ midnight)
@@ -2799,18 +2850,6 @@ automation:
         - \[RFI[:\s#-]*([a-zA-Z0-9_-]+)\]
         - request[:\s]*for[:\s]*information[:\s#-]*([a-zA-Z0-9_-]+)
         - information[:\s]*request[:\s#-]*([a-zA-Z0-9_-]+)
-  - name: daily_manager_clerk_notifications
-    trigger: 0 6 * * *
-    description: Daily consolidated RFI notifications to managers/clerks
-    action: send_manager_clerk_rfi_notifications
-    entity: rfi
-    enabled: true
-  - name: weekly_client_engagement_emails
-    trigger: 0 9 * * 1
-    description: Weekly engagement progress emails to all active clients
-    action: send_weekly_client_engagement_emails
-    entity: engagement
-    enabled: true
   - name: tender_missed_deadline_check
     trigger: 0 10 * * *
     description: Auto-flag reviews past tender deadline
@@ -3215,24 +3254,6 @@ notifications:
     - review_status_changed
     - collaborator_removed
 
-  engagement_notification_settings:
-    stage_change:
-      enabled: true
-      notify_roles:
-        - partner
-        - manager
-      channels:
-        - email
-        - in_app
-    deadline_approaching:
-      enabled: true
-      days_before: 7
-      notify_roles:
-        - partner
-        - manager
-      channels:
-        - email
-        - in_app
 
 document_generation:
   templates:
@@ -3962,25 +3983,6 @@ review:
       icon: Archive
       order: 4
 
-tender:
-  default_deadline_days: 30
-  warning_days_before: 7
-  status_options:
-    - open
-    - closed
-    - awarded
-    - cancelled
-  priority_levels:
-    - low
-    - medium
-    - high
-    - critical
-  types:
-    - government
-    - private_sector
-    - nonprofit
-    - education
-    - other
 
 checklist:
   templates:
