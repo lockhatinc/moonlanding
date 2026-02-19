@@ -2,692 +2,523 @@ MOONLANDING FEATURE PARITY PRD
 ==============================
 Goal: Achieve 1:1 feature parity with friday-staging + myworkreview-staging.
 Foundation: Clean buildless codebase, 156 essential files, zero-build tsx architecture.
-Status: Ready for feature implementation (Waves 4-7)
+Status: Executing Waves 4-7 with hierarchical Phase-based approach
+
+STRATEGY: Start with Phase 0 (Foundation) which establishes critical infrastructure
+(Dialog Registry, List Grouping, Search, Component Library, Global Tags) that unblocks
+21+ items. Then execute Quick Wins (18 items, 3-4 hours), followed by Waves 4-5 in
+parallel groups, then Wave 6 generalization, then Wave 7 cleanup.
+
+Estimated timeline: 20-26 hours wall time with parallelism (2.5-3.5 days)
 
 ================================================================================
-WAVE 4: FRIDAY FEATURE PARITY - SERVER SIDE (blocked by Wave 3)
+PHASE 0: FOUNDATION (Blocking most of W4-5, highest ROI)
 ================================================================================
 
-Each item maps to a Friday user flow. MISSING items from UX-PARITY-GAPS.md.
-Excludes AI features (F-UI-07, M-AI-*).
-
---- Authentication & Authorization ---
-
-- [ ] W4-F-AUTH-03 [BLOCKED-BY: W3-*] [WAVE-4]: Password reset page + API
-      Friday: src/ForgotPassword.js -> Cloud Function reset-password-email
-      Moonlanding: needs /password-reset page + /api/auth/password-reset endpoint
-      Already partially exists in page-handler.js but verify full flow
-
-- [ ] W4-F-AUTH-06 [BLOCKED-BY: W3-*] [WAVE-4]: Auto-logout idle detection
-      Friday: implicit via Firebase session
-      Moonlanding: add idle timer, warning dialog, session refresh
-
---- Engagement Features ---
-
-- [ ] W4-F-FEE-01 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement fee split
-      Friday: EngagementsEdit.js has fee split UI with sliders
-      Moonlanding: add fee_split field to engagement entity, UI tab, validation
-      Schema: add fee_split JSON field to engagement in master-config.yml
-
-- [ ] W4-F-ENG-05 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement list grouping + detail panels
-      Friday: DataGrid with grouping by stage/year/client
-      Moonlanding: add grouping capability to renderEntityList
-
-- [ ] W4-F-ENG-08 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement search field
-      Friday: dedicated SearchField component
-      Moonlanding: add real-time search filtering to entity list pages
-
-- [ ] W4-F-ENG-09 [BLOCKED-BY: W3-*] [WAVE-4]: Client engagement view
-      Friday: EngagementsClientView.js - different layout for clients
-      Moonlanding: add client-specific view to page-handler.js
-
-- [ ] W4-F-LIFE-02 [BLOCKED-BY: W3-*] [WAVE-4]: Stage transition dialog
-      Friday: EngagementSwitchStageDialog.js - visual stage pipeline
-      Moonlanding: add stage visualization + confirmation + reason input dialog
-
-- [ ] W4-F-LIFE-04 [BLOCKED-BY: W3-*] [WAVE-4]: Stage selection UI
-      Friday: EngagementStageSelection.js - visual progress pipeline
-      Moonlanding: add visual stage pipeline component in HTML
-
---- Team Features ---
-
-- [ ] W4-F-TEAM-01 [BLOCKED-BY: W3-*] [WAVE-4]: Team assignment dialog
-      Friday: EngagementTeamUsersDialog.js - multi-select with avatars
-      Moonlanding: add team user picker dialog
-
-- [ ] W4-F-TEAM-02 [BLOCKED-BY: W3-*] [WAVE-4]: Team selector
-      Friday: rich multi-user selector with avatars and search
-      Moonlanding: add to engagement create/edit forms
-
-- [ ] W4-F-TEAM-03 [BLOCKED-BY: W3-*] [WAVE-4]: Team avatar group display
-      Friday: auditingTeamAvatars.js - stacked avatar circles
-      Moonlanding: add avatar group HTML/CSS component
-
---- Client Features ---
-
-- [ ] W4-F-CLIENT-06 [BLOCKED-BY: W3-*] [WAVE-4]: Client dashboard
-      Friday: separate client home page with stats
-      Moonlanding: partially exists, complete it
-
-- [ ] W4-F-CLIENT-07 [BLOCKED-BY: W3-*] [WAVE-4]: Client user management dialog
-      Friday: ClientManageUserDialog.js
-      Moonlanding: add dialog for managing client users
-
-- [ ] W4-F-CLIENT-08 [BLOCKED-BY: W3-*] [WAVE-4]: Client user replace dialog
-      Friday: ClientUserReplaceDialog.js - replace user across engagements
-      Moonlanding: add replace user dialog + API endpoint
-
-- [ ] W4-F-CLIENT-09 [BLOCKED-BY: W3-*] [WAVE-4]: Client test email dialog
-      Friday: ClientTestEmailDialog.js
-      Moonlanding: add test email dialog + API endpoint
-
-- [ ] W4-F-CLIENT-10 [BLOCKED-BY: W3-*] [WAVE-4]: Client risk assessment dialog
-      Friday: ClientRiskAssessmentDialog.js
-      Moonlanding: add risk assessment dialog (fields exist in config)
-
---- RFI Features ---
-
-- [ ] W4-F-RFI-07 [BLOCKED-BY: W3-*] [WAVE-4]: RFI section CRUD + color coding
-      Friday: sections with color picker, ordering
-      Moonlanding: add section management UI
-
-- [ ] W4-F-RFI-08 [BLOCKED-BY: W3-*] [WAVE-4]: RFI section drag-and-drop reorder
-      Friday: EngagementSectionOrderDialog.js
-      Moonlanding: add drag-drop reordering (or up/down buttons for simplicity)
-
-- [ ] W4-F-RFI-10 [BLOCKED-BY: W3-*] [WAVE-4]: RFI question edit dialog
-      Friday: EditRFIQuestionDialog.js
-      Moonlanding: add edit question dialog
-
-- [ ] W4-F-RFI-16 [BLOCKED-BY: W3-*] [WAVE-4]: RFI question client user assignment
-      Friday: AttachRFIQuestionClientUserDialog.js
-      Moonlanding: add client user assignment per question
-
-- [ ] W4-F-RFI-17 [BLOCKED-BY: W3-*] [WAVE-4]: RFI bulk client user assignment
-      Friday: AttachRFIClientUserDialog.js
-      Moonlanding: add bulk assignment dialog
-
-- [ ] W4-F-RFI-18 [BLOCKED-BY: W3-*] [WAVE-4]: RFI bulk deadline setting
-      Friday: AttachBulkDeadlinesRFIDialog.js
-      Moonlanding: add bulk deadline dialog
-
-- [ ] W4-F-RFI-20 [BLOCKED-BY: W3-*] [WAVE-4]: RFI response attachment preview
-      Friday: ResponseAttachmentPreview.js
-      Moonlanding: add inline attachment preview
-
-- [ ] W4-F-RFI-21 [BLOCKED-BY: W3-*] [WAVE-4]: RFI response attachment lazy load
-      Friday: ResponseAttachmentLoad.js
-      Moonlanding: add lazy load for large attachments
-
-- [ ] W4-F-RFI-22 [BLOCKED-BY: W3-*] [WAVE-4]: RFI report generation
-      Friday: GetRFIReport.js + RFIReport.js
-      Moonlanding: add RFI report generation (HTML/PDF)
-
-- [ ] W4-F-RFI-23 [BLOCKED-BY: W3-*] [WAVE-4]: RFI email reminders per question
-      Friday: RFIItemReminderDialog.js
-      Moonlanding: add per-question reminder dialog + API
-
-- [ ] W4-F-RFI-28 [BLOCKED-BY: W3-*] [WAVE-4]: RFI template select field
-      Friday: RFITemplateSelectField.js
-      Moonlanding: add template dropdown to RFI create/edit
-
-- [ ] W4-F-RFI-30 [BLOCKED-BY: W3-*] [WAVE-4]: RFI DataGrid grouping
-      Friday: group by section/assigned/status/flagged
-      Moonlanding: add grouping to RFI list
-
-- [ ] W4-F-RFI-31 [BLOCKED-BY: W3-*] [WAVE-4]: Hide completed questions toggle
-      Moonlanding: add toggle button to RFI detail view
-
-- [ ] W4-F-RFI-32 [BLOCKED-BY: W3-*] [WAVE-4]: Unread message count badges per RFI question
-      Moonlanding: add badge counts in RFI question list
-
-- [ ] W4-F-RFI-33 [BLOCKED-BY: W3-*] [WAVE-4]: RFI item dialog
-      Friday: RFIEngagementItemDialog.js
-      Moonlanding: add RFI item creation/edit dialog
-
-- [ ] W4-F-RFI-34 [BLOCKED-BY: W3-*] [WAVE-4]: RFI attach dialog
-      Friday: AttachRFIDialog.js
-      Moonlanding: add RFI attach to engagement dialog
-
-- [ ] W4-F-RFI-35 [BLOCKED-BY: W3-*] [WAVE-4]: RFI attach question dialog
-      Friday: AttachRFIQuestionDialog.js
-      Moonlanding: add question attach dialog
-
-- [ ] W4-F-RFI-36 [BLOCKED-BY: W3-*] [WAVE-4]: RFI response choice box
-      Friday: ResponseChoiceBox.js
-      Moonlanding: add response type selector
-
-- [ ] W4-F-RFI-37 [BLOCKED-BY: W3-*] [WAVE-4]: Color picker for RFI sections
-      Friday: ColorPickerDialog.js
-      Moonlanding: add HTML color picker dialog
-
---- Letter Features ---
-
-- [ ] W4-F-LETTER-01 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement letter dialog
-      Friday: generate/upload/status/template selection
-      Moonlanding: add letter management dialog
-
-- [ ] W4-F-LETTER-02 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement letter template upload
-      Friday: uploadEngagementLetterTemplate.js
-      Moonlanding: add upload API + UI
-
---- Notification Features ---
-
-- [ ] W4-F-NOTIF-01 [BLOCKED-BY: W3-*] [WAVE-4]: Notification settings UI
-      Friday: SettingsEngagementNotifications.js
-      Moonlanding: add notification enable/disable UI in settings
-
-- [ ] W4-F-NOTIF-02 [BLOCKED-BY: W3-*] [WAVE-4]: Notification trigger dialog
-      Friday: SettingsEngagementNotificationTriggerDialog.js
-      Moonlanding: add trigger configuration dialog
-
---- File Features ---
-
-- [ ] W4-F-FILE-03 [BLOCKED-BY: W3-*] [WAVE-4]: Zip file creation for multi-download
-      Friday: create-engagement-files-zip endpoint
-      Moonlanding: add zip creation API + download button
-
-- [ ] W4-F-FILE-04 [BLOCKED-BY: W3-*] [WAVE-4]: Cross-engagement file picker
-      Friday: ChooseFilesFromOtherEngagementsDialog.js
-      Moonlanding: add cross-engagement file picker dialog
-
-- [ ] W4-F-FILE-06 [BLOCKED-BY: W3-*] [WAVE-4]: User CV upload
-      Friday: uploadUserCV.js
-      Moonlanding: add CV upload to user settings
-
-- [ ] W4-F-FILE-07 [BLOCKED-BY: W3-*] [WAVE-4]: Quick view attachment inline preview
-      Friday: QuickViewAttachment.jsx
-      Moonlanding: add inline file preview component
-
-- [ ] W4-F-FILE-08 [BLOCKED-BY: W3-*] [WAVE-4]: RFI response attachment preview
-      Friday: RFIResponseAttachmentPreview.js
-      Moonlanding: add response attachment preview
-
---- Import/Export Features ---
-
-- [ ] W4-F-IMPORT-01 [BLOCKED-BY: W3-*] [WAVE-4]: Import review queries from MWR
-      Friday: ImportReviewQueriesDialog.js
-      Moonlanding: unified system, this becomes internal linking
-
-- [ ] W4-F-PUSH-01 [BLOCKED-BY: W3-*] [WAVE-4]: Push to MWR dialog
-      Friday: PushMWRDialog.js
-      Moonlanding: unified system, this becomes internal linking
-
---- Search Features ---
-
-- [ ] W4-F-SEARCH-01 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement file search dialog
-      Friday: RFIEngagementFileSearchDialog.js
-      Moonlanding: add file search dialog
-
---- Post-RFI Features ---
-
-- [ ] W4-F-POSTRFI-02 [BLOCKED-BY: W3-*] [WAVE-4]: Post-RFI journal dialog
-      Friday: RFIEngagementPostRFIJournalDialog.js
-      Moonlanding: add post-RFI journal dialog
-
-- [ ] W4-F-POSTRFI-03 [BLOCKED-BY: W3-*] [WAVE-4]: Post-RFI file upload
-      Friday: uploadPostRFIFiles.js
-      Moonlanding: add post-RFI file upload API + UI
-
---- Email Features ---
-
-- [ ] W4-F-EMAIL-03 [BLOCKED-BY: W3-*] [WAVE-4]: Email receive dialog UI
-      Friday: EmailReceiveDialog.js
-      Moonlanding: add email receive/preview dialog
-
---- Settings Features ---
-
-- [ ] W4-F-SET-01 [BLOCKED-BY: W3-*] [WAVE-4]: Settings home landing page
-      Friday: SettingsHome.js with section navigation
-      Moonlanding: partially exists, complete with all sections
-
-- [ ] W4-F-SET-07 [BLOCKED-BY: W3-*] [WAVE-4]: Settings RFI sections page
-      Friday: with color picker and ordering
-      Moonlanding: partially exists, add color picker + ordering
-
-- [ ] W4-F-SET-11 [BLOCKED-BY: W3-*] [WAVE-4]: Settings engagement notifications
-      Moonlanding: add notification configuration UI
-
-- [ ] W4-F-SET-12 [BLOCKED-BY: W3-*] [WAVE-4]: Settings integrations
-      Friday: SettingsIntegrations.js
-      Moonlanding: partially exists, complete with credential management
-
-- [ ] W4-F-SET-13 [BLOCKED-BY: W3-*] [WAVE-4]: Settings recreation logs
-      Friday: SettingsRecreationLogs.js
-      Moonlanding: partially exists, complete UI
-
---- UI Components ---
-
-- [ ] W4-F-UI-05 [BLOCKED-BY: W3-*] [WAVE-4]: Drag-and-drop reordering
-      For RFI sections, checklist items
-      Implement with HTML5 drag-drop API (no library needed)
-
-- [ ] W4-F-UI-06 [BLOCKED-BY: W3-*] [WAVE-4]: Date choice dialogs
-      Friday: EngagementDateChoiceDialog.js
-      Moonlanding: add date picker dialog using HTML date input
-
-- [ ] W4-F-UI-09 [BLOCKED-BY: W3-*] [WAVE-4]: Linear progress label component
-      Friday: LinearProgressLabel.js
-      Moonlanding: add HTML/CSS progress bar component
-
-- [ ] W4-F-UI-10 [BLOCKED-BY: W3-*] [WAVE-4]: Circular progress label
-      Friday: CircularProgressLabel.js
-      Moonlanding: add SVG circular progress component
-
-- [ ] W4-F-UI-11 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement progress label
-      Friday: EngagementProgressLabel.js
-      Moonlanding: add engagement-specific progress display
-
-- [ ] W4-F-UI-17 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement card item view
-      Friday: EngagementCardItem.js
-      Moonlanding: add card view for engagement list items
-
---- PDF Features ---
-
-- [ ] W4-F-PDF-01 [BLOCKED-BY: W3-*] [WAVE-4]: PDF Editor dialog wrapper
-      Friday: PDFEditorDialog.tsx
-      Moonlanding: add full editor dialog with open/close from engagement
-
-- [ ] W4-F-PDF-09 [BLOCKED-BY: W3-*] [WAVE-4]: PDF Tip/TipContainer
-      Friday: Tip.tsx, TipContainer.tsx
-      Moonlanding: add highlight creation tooltip
-
-- [ ] W4-F-PDF-19 [BLOCKED-BY: W3-*] [WAVE-4]: ConvertDataUrlFile
-      Friday: ConvertDataUrlFile.tsx
-      Moonlanding: add data URL to file conversion
-
-- [ ] W4-F-PDF-21 [BLOCKED-BY: W3-*] [WAVE-4]: MobileResizableRectangle
-      Friday: MobileResizableRectangle.tsx
-      Moonlanding: add touch device resize for highlights
-
---- Miscellaneous ---
-
-- [ ] W4-F-MISC-01 [BLOCKED-BY: W3-*] [WAVE-4]: Global tags system
-      Friday: GlobalTags.js
-      Moonlanding: src/ui/global-tags.js exists (11 lines) - complete it
-
-- [ ] W4-F-MISC-10 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement checklist push to MWR
-      Friday: EngagementChecklistPushMyReviewDialog.js
-      Moonlanding: unified system - internal linking instead
-
-- [ ] W4-F-BUILD-01 [BLOCKED-BY: W3-*] [WAVE-4]: Build/deployment logs page
-      Friday: BuildLogsPage.js
-      Moonlanding: page-handler already has route, verify complete
+CRITICAL PATH: Dialog Registry (0.2) blocks 21 items. Start here.
+
+- [ ] P0-0.1 [WAVE-6-prep]: List grouping infrastructure
+      Current: renderEntityList in renderer.js exists
+      Add: groupBy parameter to list rendering
+      Blocks: W4-F-ENG-05, W4-F-RFI-30, W5-M-GROUP-01
+      Time: 1-1.5 hours
+      Status: Ready to start
+
+- [ ] P0-0.2 [WAVE-6-prep] ⭐ START HERE: Dialog Registry engine
+      Current: 20+ individual dialog implementations spread across files
+      Create: Single dialog-engine.js that reads master-config.yml for dialog defs
+      Registry: Map dialog IDs to config entries (fee_split, stage_transition, etc)
+      Blocks: 21 items (W4-F-LIFE-02, W4-F-TEAM-01, W4-F-CLIENT-07+, W4-F-RFI-10+,
+              W4-F-LETTER-01, W4-F-NOTIF-02, W5-M-REV-02, W5-M-COLLAB-01, etc.)
+      Time: 2-3 hours
+      Status: HIGHEST PRIORITY - execute first
+
+- [ ] P0-0.3 [WAVE-6-prep]: Search system (global text search)
+      Current: No global search across entities
+      Add: Search filtering to entity lists, RFI questions, reviews
+      Blocks: W4-F-ENG-08, W4-F-SEARCH-01, W5-M-SEARCH-01
+      Time: 1-1.5 hours
+      Status: Ready to start (can parallelize with 0.2)
+
+- [ ] P0-0.4 [WAVE-6-prep]: Component library (visual elements)
+      Current: No reusable component definitions (avatar groups, progress bars, etc)
+      Create: Component definitions in master-config.yml (AvatarGroup, LinearProgress,
+              CircularProgress, ColorPicker, DatePicker, etc.)
+      Blocks: W4-F-TEAM-03, W4-F-UI-09/10/11, W5-M-UI-01/02
+      Time: 1.5-2 hours
+      Status: Ready to start (can parallelize with 0.2)
+
+- [ ] P0-0.5 [WAVE-6-prep]: Global tags system completion
+      Current: src/ui/global-tags.js exists (11 lines, incomplete)
+      Complete: Tag CRUD operations, tag UI renderer
+      Blocks: W4-F-MISC-01, W5-M-MISC-01
+      Time: 45 min
+      Status: Ready to start
 
 ================================================================================
-WAVE 5: MWR FEATURE PARITY (parallel with Wave 4 for independent items)
+PHASE 1A: QUICK WINS (Config-only additions, ~45 min total)
 ================================================================================
 
---- Review Features ---
-
-- [ ] W5-M-REV-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review list tabs
-      MWR: HomeTabs.tsx with Active/Priority/History/Archive
-      Moonlanding: partially exists in page-handler.js, complete UI
-
-- [ ] W5-M-REV-02 [BLOCKED-BY: W3-*] [WAVE-5]: Review create dialog
-      MWR: FileReviewCreateDialog.tsx with PDF upload + template selection
-      Moonlanding: add full create dialog
-
-- [ ] W5-M-REV-05 [BLOCKED-BY: W3-*] [WAVE-5]: Review template choice dialog
-      MWR: FileReviewTemplateChoice.tsx
-      Moonlanding: add template selection in review creation
-
-- [ ] W5-M-REV-06 [BLOCKED-BY: W3-*] [WAVE-5]: Review context menu
-      MWR: FileReviewMenu.tsx
-      Moonlanding: add right-click context menu
-
-- [ ] W5-M-HOME-01 [BLOCKED-BY: W3-*] [WAVE-5]: Home tabs tabbed view
-      MWR: HomeTabs.tsx
-      Moonlanding: add tabbed home page
-
-- [ ] W5-M-HOME-02 [BLOCKED-BY: W3-*] [WAVE-5]: MWR-specific home layout
-      MWR: Home.tsx - review-focused dashboard
-      Moonlanding: add review dashboard view
-
---- Collaboration Features ---
-
-- [ ] W5-M-COLLAB-01 [BLOCKED-BY: W3-*] [WAVE-5]: Collaborator management dialog
-      MWR: FileReviewCollaboratorDialog.tsx
-      Moonlanding: add collaborator dialog
-
-- [ ] W5-M-COLLAB-03 [BLOCKED-BY: W3-*] [WAVE-5]: Collaborator expiry UI
-      MWR: expiry date setting
-      Moonlanding: add expiry UI to collaborator dialog
-
---- Checklist Features ---
-
-- [ ] W5-M-CHECK-01 [BLOCKED-BY: W3-*] [WAVE-5]: Checklist templates management
-      MWR: ReviewTemplateManage.tsx + ReviewChecklistManage.tsx
-      Moonlanding: add template management UI
-
-- [ ] W5-M-CHECK-06 [BLOCKED-BY: W3-*] [WAVE-5]: Push checklist cross-reference
-      MWR: cross-app checklist push
-      Moonlanding: unified system equivalent
-
---- Flag/Tag Features ---
-
-- [ ] W5-M-FLAG-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review flags management dialog
-      MWR: FileReviewFlagDialog.tsx
-      Moonlanding: add flag dialog
-
-- [ ] W5-M-TAG-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review tags dialog
-      MWR: FileReviewTagsDialog.tsx
-      Moonlanding: add tags dialog
-
-- [ ] W5-M-VALUE-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review WIP value dialog
-      MWR: FileReviewValueDialog.tsx
-      Moonlanding: add WIP value dialog
-
-- [ ] W5-M-DATE-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review deadline date dialog
-      MWR: FileReviewDateDialog.tsx
-      Moonlanding: add deadline dialog
-
---- Grouping/Filtering ---
-
-- [ ] W5-M-GROUP-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review list grouping
-      MWR: group by template/flag/stage/creator/manager/team
-      Moonlanding: add grouping to review list
-
-- [ ] W5-M-HIDE-01 [BLOCKED-BY: W3-*] [WAVE-5]: Hide empty reviews toggle
-      Moonlanding: add toggle button
-
-- [ ] W5-M-SEARCH-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review search
-      MWR: SearchReviewField.tsx
-      Moonlanding: add search to review list
-
---- Status Features ---
-
-- [ ] W5-M-STATUS-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review open/close toggle
-      MWR: toggle in review detail
-      Moonlanding: add toggle UI
-
-- [ ] W5-M-STATUS-02 [BLOCKED-BY: W3-*] [WAVE-5]: Review private toggle
-      MWR: toggle in review detail
-      Moonlanding: add toggle UI
-
-- [ ] W5-M-STATUS-03 [BLOCKED-BY: W3-*] [WAVE-5]: Bulk resolve highlights
-      MWR: mark all resolved action
-      Moonlanding: add bulk action
-
---- Notification Features ---
-
-- [ ] W5-M-NOTIF-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review notification dialog
-      MWR: FileReviewNotificationDialog.tsx
-      Moonlanding: add manual notification send dialog
-
---- Section/Report Features ---
-
-- [ ] W5-M-SECT-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review sections view
-      MWR: Sections.tsx
-      Moonlanding: add sections view UI
-
-- [ ] W5-M-SECT-02 [BLOCKED-BY: W3-*] [WAVE-5]: Section reports
-      MWR: SectionReport.tsx + GetSectionReport.tsx
-      Moonlanding: add section report generation
-
---- Mobile Features ---
-
-- [ ] W5-M-MOB-01 [BLOCKED-BY: W3-*] [WAVE-5]: Mobile review cards
-      MWR: MobileReviewCard.tsx
-      Moonlanding: add responsive card layout
-
-- [ ] W5-M-MOB-02 [BLOCKED-BY: W3-*] [WAVE-5]: Mobile engagement cards
-      MWR: MobileEngagementCard.tsx
-      Moonlanding: add responsive card layout
-
---- PDF Features ---
-
-- [ ] W5-M-PDF-07 [BLOCKED-BY: W3-*] [WAVE-5]: Response attachment preview
-      MWR: ResponseAttachmentPreview.tsx
-      Moonlanding: add preview component
-
-- [ ] W5-M-PDF-08 [BLOCKED-BY: W3-*] [WAVE-5]: Response attachment load
-      MWR: ResponseAttachmentLoad.tsx
-      Moonlanding: add lazy load component
-
-- [ ] W5-M-PDF-16 [BLOCKED-BY: W3-*] [WAVE-5]: Area highlight image load
-      MWR: AreaHighlightImageLoad.tsx
-      Moonlanding: add image load for area highlights
-
-- [ ] W5-M-PDF-17 [BLOCKED-BY: W3-*] [WAVE-5]: Retry highlight dialog
-      MWR: RetryHighlightDialog.tsx
-      Moonlanding: add retry dialog
-
-- [ ] W5-M-PDF-18 [BLOCKED-BY: W3-*] [WAVE-5]: Mobile resizable rectangle
-      MWR: MobileResizableRectangle.tsx
-      Moonlanding: add touch resize for highlights
-
---- File Features ---
-
-- [ ] W5-M-FILE-02 [BLOCKED-BY: W3-*] [WAVE-5]: Upload Friday files cross-app
-      MWR: uploadFridayFilesToApi.tsx
-      Moonlanding: unified system - internal file reference
-
-- [ ] W5-M-FILE-05 [BLOCKED-BY: W3-*] [WAVE-5]: File attachment bar
-      MWR: FileReviewAttachmentBar.tsx
-      Moonlanding: add attachment bar to review detail
-
-- [ ] W5-M-FILE-06 [BLOCKED-BY: W3-*] [WAVE-5]: File links bar
-      MWR: FileReviewLinksBar.tsx
-      Moonlanding: add links bar to review detail
-
-- [ ] W5-M-FILE-07 [BLOCKED-BY: W3-*] [WAVE-5]: Quick view attachment
-      MWR: QuickViewAttachment.tsx
-      Moonlanding: add inline preview
-
-- [ ] W5-M-FILE-08 [BLOCKED-BY: W3-*] [WAVE-5]: Review attachment choice dialog
-      MWR: ReviewAttachmentChoiceDialog.tsx
-      Moonlanding: add attachment choice dialog
-
---- Tender Features ---
-
-- [ ] W5-M-TENDER-01 [BLOCKED-BY: W3-*] [WAVE-5]: Tender details dialog
-      MWR: TenderDetailsDialog.tsx
-      Moonlanding: add tender dialog
-
-- [ ] W5-M-TENDER-02 [BLOCKED-BY: W3-*] [WAVE-5]: Tender details holder
-      MWR: FileReviewTenderDetailsHolder.tsx
-      Moonlanding: add tender details in review
-
---- Settings Features ---
-
-- [ ] W5-M-SET-01 [BLOCKED-BY: W3-*] [WAVE-5]: MWR settings home
-      MWR: SettingsHome.tsx
-      Moonlanding: settings renderer partially exists, complete
-
-- [ ] W5-M-SET-02 [BLOCKED-BY: W3-*] [WAVE-5]: MWR user management
-      MWR: UsersManagement.tsx
-      Moonlanding: settings renderer partially exists, complete
-
-- [ ] W5-M-SET-03 [BLOCKED-BY: W3-*] [WAVE-5]: MWR team management
-      MWR: TeamsManagement.tsx
-      Moonlanding: settings renderer partially exists, complete
-
-- [ ] W5-M-SET-05 [BLOCKED-BY: W3-*] [WAVE-5]: MWR template management
-      MWR: TemplateManagement.tsx
-      Moonlanding: add template management UI
-
-- [ ] W5-M-SET-08 [BLOCKED-BY: W3-*] [WAVE-5]: Review settings page
-      MWR: SettingsFileReviewSettings.tsx
-      Moonlanding: add review-specific settings
-
---- UI Components ---
-
-- [ ] W5-M-UI-01 [BLOCKED-BY: W3-*] [WAVE-5]: Collapsible sidebar
-      MWR: Sidebar.tsx - desktop resizable
-      Moonlanding: add collapsible sidebar CSS/JS
-
-- [ ] W5-M-UI-02 [BLOCKED-BY: W3-*] [WAVE-5]: Tooltip info bubbles
-      MWR: FileReviewInfoBubble.tsx + FileReviewToolTip.tsx
-      Moonlanding: add tooltip components
-
-- [ ] W5-M-UI-12 [BLOCKED-BY: W3-*] [WAVE-5]: Response choice box
-      MWR: ResponseChoiceBox.tsx
-      Moonlanding: add response type selector
-
-- [ ] W5-M-UI-13 [BLOCKED-BY: W3-*] [WAVE-5]: Response attachment component
-      MWR: ResponseAttachment.tsx
-      Moonlanding: add attachment component
-
-- [ ] W5-M-UI-17 [BLOCKED-BY: W3-*] [WAVE-5]: Sidebar review details panel
-      MWR: SidebarReviewDetails.tsx
-      Moonlanding: add review details sidebar
-
---- Misc ---
-
-- [ ] W5-M-MISC-01 [BLOCKED-BY: W3-*] [WAVE-5]: Global tags system
-      MWR: globalTags.tsx
-      Moonlanding: complete src/ui/global-tags.js
-
-- [ ] W5-M-MISC-04 [BLOCKED-BY: W3-*] [WAVE-5]: File review calculations
-      MWR: FileReviewCalcs.tsx
-      Moonlanding: add calculation utilities
-
-- [ ] W5-M-MISC-06 [BLOCKED-BY: W3-*] [WAVE-5]: Friday team dialog
-      MWR: FridayTeamDialog.tsx
-      Moonlanding: unified system - internal team assignment
-
-- [ ] W5-M-MISC-07 [BLOCKED-BY: W3-*] [WAVE-5]: Friday due date dialog
-      MWR: FridayDueDateDialog.tsx
-      Moonlanding: unified system - internal date setting
-
-- [ ] W5-M-MISC-11 [BLOCKED-BY: W3-*] [WAVE-5]: Convert data URL to file utility
-      MWR: ConvertDataUrlFile.tsx
-      Moonlanding: add utility function
-
-- [ ] W5-M-ARCHIVE-01 [BLOCKED-BY: W3-*] [WAVE-5]: Archive review double confirmation
-      MWR: double confirmation dialog
-      Moonlanding: add archive with confirmation
+These 9 items require only master-config.yml additions - no code changes:
+
+- [ ] Q1-CONFIG-AUTH: Password reset flow config
+      Add to master-config.yml: password_reset_endpoint, email_template_id
+      (W4-F-AUTH-03 full implementation after config)
+      Time: 10 min
+
+- [ ] Q2-CONFIG-FEE: Engagement fee split field schema
+      Add to master-config.yml: engagement.fee_split as JSON field with sub-fields
+      (W4-F-FEE-01 full implementation after config)
+      Time: 5 min
+
+- [ ] Q3-CONFIG-IDLE: Session idle config
+      Add to master-config.yml: session.idle_timeout_ms, idle_warning_dialog_config
+      (W4-F-AUTH-06 full implementation after config)
+      Time: 5 min
+
+- [ ] Q4-CONFIG-RFI-TEMPLATE: RFI template dropdown config
+      Add to master-config.yml: rfi.templates list
+      (W4-F-RFI-28 full implementation after config)
+      Time: 5 min
+
+- [ ] Q5-CONFIG-NOTIFICATION: Notification settings schema
+      Add to master-config.yml: notification trigger types, engagement notification settings
+      (W4-F-NOTIF-01/02 full implementation after config)
+      Time: 5 min
+
+- [ ] Q6-CONFIG-REVIEW-TABS: Review list tabs config
+      Add to master-config.yml: review.tabs (Active, Priority, History, Archive)
+      (W5-M-REV-01, W5-M-HOME-01 full implementation after config)
+      Time: 5 min
+
+- [ ] Q7-CONFIG-TENDER: Tender fields schema
+      Add to master-config.yml: tender entity fields and defaults
+      (W5-M-TENDER-01/02 full implementation after config)
+      Time: 5 min
+
+- [ ] Q8-CONFIG-CHECKLIST: Checklist template structure
+      Add to master-config.yml: checklist.templates structure
+      (W5-M-CHECK-01 full implementation after config)
+      Time: 5 min
+
+- [ ] Q9-CONFIG-SETTINGS: Settings page sections config
+      Add to master-config.yml: settings navigation and section order
+      (W4-F-SET-01, W5-M-SET-01+ full implementation after config)
+      Time: 5 min
 
 ================================================================================
-WAVE 6: GENERALIZATION + CODE REDUCTION (blocked by Waves 4+5)
+PHASE 1B: UNBLOCKED WAVE 4 (Can execute immediately, 2-3 hours)
 ================================================================================
 
-- [ ] W6-GEN-01 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Generalize dialog system
-      All dialogs follow same pattern: open/close, form fields, submit API call
-      Create single configurable dialog generator that reads master-config.yml
-      Every dialog becomes a config entry, not a separate file
-      Target: replace 20+ dialog files with 1 dialog engine + config entries
+These 15 items don't depend on Phase 0 - start in parallel:
 
-- [ ] W6-GEN-02 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Generalize list rendering
-      All entity lists follow same pattern: table, columns from spec, actions
-      Create single configurable list renderer
-      Target: replace per-entity list renderers with 1 list engine
+- [ ] U1-W4-F-AUTH-03: Password reset page + API (after Q1 config)
+      Unblocked: No dependencies on Phase 0 systems
+      Time: 30 min
 
-- [ ] W6-GEN-03 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Generalize form rendering
-      All forms follow same pattern: fields from spec, validation, submit
-      Already partially generalized in page-handler.js
-      Complete generalization so no entity-specific form code exists
+- [ ] U2-W4-F-FEE-01: Engagement fee split (after Q2 config)
+      Unblocked: Pure schema + UI tab addition
+      Time: 45 min
 
-- [ ] W6-GEN-04 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Generalize detail view rendering
-      All detail views follow same pattern: header, fields, child tabs
-      Already partially generalized
-      Complete so no entity-specific detail code exists
+- [ ] U3-W4-F-AUTH-06: Auto-logout idle detection (after Q3 config)
+      Unblocked: Pure client-side implementation
+      Time: 45 min
 
-- [ ] W6-GEN-05 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Consolidate renderer files
-      Split renderer.js (848 lines) into focused modules <200 lines each
-      Merge overlapping renderers (client-renderer, review-renderer, rfi-renderer,
-      checklist-renderer into generalized renderers)
+- [ ] U4-W4-F-PDF-01: PDF Editor dialog wrapper
+      Unblocked: Wraps existing PDF viewer
+      Time: 45 min
 
-- [ ] W6-GEN-06 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Consolidate dialog files
-      Merge: engagement-dialogs.js, review-dialogs.js, file-dialogs.js,
-      letter-dialogs.js, misc-dialogs.js, collaboration-dialogs.js,
-      tender-dialogs.js, push-mwr-dialog.js
-      Into: single dialog-engine.js that generates any dialog from config
+- [ ] U5-W4-F-PDF-09: PDF Tip/TipContainer (highlight creation tooltip)
+      Unblocked: Pure UI component
+      Time: 30 min
 
-- [ ] W6-GEN-07 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Reduce API routes
-      The [entity]/[[...path]]/route.js already handles most CRUD generically
-      Verify domain-specific routes (friday/*, mwr/*) are truly needed
-      If they just add domain filtering, absorb into generic route
-      Target: minimal number of route files
+- [ ] U6-W4-F-PDF-19: ConvertDataUrlFile utility
+      Unblocked: Pure utility function
+      Time: 20 min
 
-- [ ] W6-GEN-08 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Reduce config files
-      Consolidate: spec-builder.js, spec-helpers.js into one module
-      Consolidate: constants.js, env.js, system-limits-config.js into config/index.js
-      Consolidate: theme-config.js, timing-config.js, ui-config.js into config/index.js
-      Target: master-config.yml + config/index.js + config-generator-engine.js only
+- [ ] U7-W4-F-PDF-21: MobileResizableRectangle
+      Unblocked: Touch device resize for highlights
+      Time: 40 min
 
-- [ ] W6-GEN-09 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Reduce lib files
-      Many small utility files could merge:
-      - All pdf-*.js files that are needed -> single pdf-utils.js
-      - status-helpers.js, date-utils.js, utils.js -> single utils.js
-      - All engine files: workflow-engine, lifecycle-engine, rfi-engine,
-        events-engine, business-rules-engine -> evaluate consolidation
-      Target: each remaining lib file must be necessary and <200 lines
+- [ ] U8-W4-F-LIFE-04: Stage selection UI (visual progress pipeline)
+      Unblocked: Pure UI component, no data dependencies
+      Time: 40 min
 
-================================================================================
-WAVE 7: FINAL CLEANUP + VERIFICATION (blocked by Wave 6)
-================================================================================
+- [ ] U9-W4-F-UI-09: Linear progress label component
+      Unblocked: Pure CSS/HTML component
+      Time: 20 min
 
-- [ ] W7-CLEAN-01 [BLOCKED-BY: W6-*] [WAVE-7]: Remove all comments from code
-      Per coding standards: no comments in production code
+- [ ] U10-W4-F-UI-10: Circular progress label (SVG)
+      Unblocked: Pure SVG component
+      Time: 25 min
 
-- [ ] W7-CLEAN-02 [BLOCKED-BY: W6-*] [WAVE-7]: Remove all hardcoded values
-      Move to master-config.yml or environment variables
+- [ ] U11-W4-F-UI-06: Date choice dialogs
+      Unblocked: HTML5 date input wrapper
+      Time: 30 min
 
-- [ ] W7-CLEAN-03 [BLOCKED-BY: W6-*] [WAVE-7]: Ensure all files <200 lines
-      Split any file exceeding 200 lines
+- [ ] U12-W4-F-UI-05: Drag-and-drop reordering (HTML5 drag API)
+      Unblocked: Pure HTML5 API usage
+      Time: 45 min
 
-- [ ] W7-CLEAN-04 [BLOCKED-BY: W6-*] [WAVE-7]: Remove duplicate code
-      Scan for repeated patterns across files
+- [ ] U13-W4-F-FILE-06: User CV upload
+      Unblocked: File upload endpoint + UI
+      Time: 30 min
 
-- [ ] W7-CLEAN-05 [BLOCKED-BY: W6-*] [WAVE-7]: Update CLAUDE.md
-      Remove migration docs, update architecture description
-      Document new webjsx + server HTML architecture
-      Keep critical caveats section
+- [ ] U14-W4-F-MISC-01: Global tags system (complete src/ui/global-tags.js)
+      Unblocked: After P0-0.5, pure utility
+      Time: 45 min
 
-- [ ] W7-CLEAN-06 [BLOCKED-BY: W6-*] [WAVE-7]: Update package.json
-      Remove unused dependencies
-      Remove workspaces entry
-      Clean scripts
-
-- [ ] W7-CLEAN-07 [BLOCKED-BY: W6-*] [WAVE-7]: Final file count audit
-      List every file in src/ with purpose
-      Verify no dead files remain
-      Target: <100 files total in src/
-
-- [ ] W7-VERIFY-01 [BLOCKED-BY: W7-CLEAN-*] [WAVE-7]: Start server and verify
-      Run: npm run dev
-      Verify: login page renders
-      Verify: dashboard renders after auth
-      Verify: entity CRUD works
-      Verify: all pages render without errors
-      Verify: hot reload works
-
-- [ ] W7-VERIFY-02 [BLOCKED-BY: W7-VERIFY-01] [WAVE-7]: Verify Friday user flows
-      Test every Friday flow against friday-staging behavior:
-      - Login/logout
-      - Engagement CRUD + lifecycle transitions
-      - Client management
-      - RFI workflow (create, assign, respond, close)
-      - Team management
-      - File upload/download
-      - Settings pages
-      - Email features
-      - Notification features
-
-- [ ] W7-VERIFY-03 [BLOCKED-BY: W7-VERIFY-01] [WAVE-7]: Verify MWR user flows
-      Test every MWR flow against myworkreview-staging behavior:
-      - Review CRUD + PDF viewer
-      - Highlight creation/resolution
-      - Collaborator management
-      - Checklist management
-      - Tender tracking
-      - Settings pages
-      - Template management
+- [ ] U15-W4-F-BUILD-01: Build/deployment logs page
+      Unblocked: Route + page rendering
+      Time: 30 min
 
 ================================================================================
-PROGRESS
+PHASE 1C: BLOCKED WAVE 4 (Requires Phase 0 + Dialog Registry, 8-10 hours)
 ================================================================================
-FOUNDATION COMPLETE (Waves 1-3):
+
+These 43 Wave 4 items are grouped into 4 parallel execution groups.
+All depend on P0-0.2 (Dialog Registry) being complete.
+
+--- GROUP 1A: Engagement Management (2 hours) ---
+Depends on: P0-0.1 (list grouping), P0-0.2 (dialog registry)
+
+- [ ] G1A-1: W4-F-ENG-05: Engagement list grouping + detail panels
+      Implement: groupBy parameter for stage/year/client in renderEntityList
+      Time: 1 hour
+      Blocks: None (foundational)
+
+- [ ] G1A-2: W4-F-ENG-08: Engagement search field
+      Implement: Real-time search filtering in entity list
+      Time: 45 min
+
+- [ ] G1A-3: W4-F-ENG-09: Client engagement view
+      Implement: Client-specific layout in page-handler.js
+      Time: 15 min (config-driven)
+
+--- GROUP 1B: Engagement Lifecycle (2 hours) ---
+Depends on: P0-0.2 (dialog registry), P0-0.4 (component library for stage UI)
+
+- [ ] G1B-1: W4-F-LIFE-02: Stage transition dialog
+      Implement: Dialog registry entry + stage pipeline UI + reason input
+      Time: 1 hour
+
+- [ ] G1B-2: W4-F-CLIENT-06: Client dashboard
+      Implement: Dashboard stats renderer
+      Time: 45 min
+
+- [ ] G1B-3: W4-F-NOTIF-01/02: Notification settings
+      Implement: Dialog registry entries for notification config
+      Time: 15 min (config + registry)
+
+--- GROUP 1C: Team & Client Management (2 hours) ---
+Depends on: P0-0.2 (dialog registry), P0-0.4 (component library for avatars)
+
+- [ ] G1C-1: W4-F-TEAM-01: Team assignment dialog
+      Implement: Dialog registry entry + user multi-select + avatars
+      Time: 1 hour
+
+- [ ] G1C-2: W4-F-TEAM-02: Team selector
+      Implement: Extend dialog from TEAM-01 to form fields
+      Time: 15 min
+
+- [ ] G1C-3: W4-F-TEAM-03: Team avatar group display
+      Implement: Component library entry + rendering
+      Time: 15 min
+
+- [ ] G1C-4: W4-F-CLIENT-07/08/09/10: Client management dialogs
+      Implement: 4 dialog registry entries (manage users, replace user, test email, risk assessment)
+      Time: 30 min (template-driven from registry)
+
+--- GROUP 1D: RFI, Letters, Files, Misc (4 hours) ---
+Depends on: P0-0.2 (dialog registry), P0-0.1 (list grouping)
+
+RFI Features (2.5 hours):
+- [ ] G1D-1: W4-F-RFI-07/08: RFI section CRUD + drag-drop reorder
+      Implement: Section management UI + drag-drop
+      Time: 1 hour
+
+- [ ] G1D-2: W4-F-RFI-10: RFI question edit dialog
+      Implement: Dialog registry entry
+      Time: 15 min
+
+- [ ] G1D-3: W4-F-RFI-16/17/18: RFI assignment dialogs (3x)
+      Implement: 3 dialog registry entries
+      Time: 15 min
+
+- [ ] G1D-4: W4-F-RFI-20/21: RFI response attachment preview + lazy load
+      Implement: Component + lazy load utility
+      Time: 30 min
+
+- [ ] G1D-5: W4-F-RFI-22/23: RFI report + reminder dialogs
+      Implement: Report renderer + dialog registry
+      Time: 30 min
+
+- [ ] G1D-6: W4-F-RFI-30: RFI DataGrid grouping
+      Implement: Use P0-0.1 grouping
+      Time: 15 min
+
+- [ ] G1D-7: W4-F-RFI-31/32: Toggle hide + badge count
+      Implement: Simple UI toggles
+      Time: 20 min
+
+- [ ] G1D-8: W4-F-RFI-33/34/35: RFI item/attach dialogs
+      Implement: 3 dialog registry entries
+      Time: 20 min
+
+- [ ] G1D-9: W4-F-RFI-36/37: Response choice box + color picker
+      Implement: Component library entries
+      Time: 20 min
+
+Letters & Notification (30 min):
+- [ ] G1D-10: W4-F-LETTER-01/02: Engagement letter dialog + upload
+      Implement: 2 dialog registry entries
+      Time: 30 min
+
+Files & Search (45 min):
+- [ ] G1D-11: W4-F-FILE-03/04/07/08: File features (zip, picker, preview)
+      Implement: File utilities + dialog entries
+      Time: 45 min
+
+- [ ] G1D-12: W4-F-SEARCH-01: Engagement file search
+      Implement: Search dialog + filtering
+      Time: 15 min
+
+Import/Export & Post-RFI (30 min):
+- [ ] G1D-13: W4-F-IMPORT-01/PUSH-01: Internal linking equivalents
+      Implement: Simple config to enable internal references
+      Time: 15 min
+
+- [ ] G1D-14: W4-F-POSTRFI-02/03: Post-RFI journal + file upload
+      Implement: Dialog + file upload
+      Time: 15 min
+
+Settings (30 min):
+- [ ] G1D-15: W4-F-SET-01/07/12/13: Settings pages
+      Implement: Settings renderer for each section
+      Time: 30 min
+
+UI Components (15 min):
+- [ ] G1D-16: W4-F-UI-17: Engagement card item view
+      Implement: Card layout for list view
+      Time: 15 min
+
+Email (15 min):
+- [ ] G1D-17: W4-F-EMAIL-03: Email receive dialog
+      Implement: Dialog entry
+      Time: 15 min
+
+================================================================================
+PHASE 2: WAVE 5 (MWR Feature Parity, 6-8 hours, parallel with Wave 4)
+================================================================================
+
+Depends on: P0-0.2 (Dialog Registry), P0-0.1 (List Grouping), P0-0.4 (Components)
+Grouped into 6 parallel execution blocks:
+
+--- GROUP 2A: Review Management (1.5 hours) ---
+
+- [ ] G2A-1: W5-M-REV-01/02/05/06: Review list tabs + create dialog + templates
+      Implement: Tab UI + dialog registry entries
+      Time: 1.5 hours
+
+--- GROUP 2B: Home & Dashboard (1 hour) ---
+
+- [ ] G2B-1: W5-M-HOME-01/02: Home tabs + MWR-specific layout
+      Implement: Tab UI + review-focused dashboard
+      Time: 1 hour
+
+--- GROUP 2C: Collaboration & Checklists (1.5 hours) ---
+
+- [ ] G2C-1: W5-M-COLLAB-01/03: Collaborator dialog + expiry UI
+      Implement: Dialog registry entries
+      Time: 45 min
+
+- [ ] G2C-2: W5-M-CHECK-01/06: Checklist templates + push
+      Implement: Template UI + internal linking
+      Time: 45 min
+
+--- GROUP 2D: Status & Flags (1.5 hours) ---
+
+- [ ] G2D-1: W5-M-FLAG-01/TAG-01/VALUE-01/DATE-01: Flag, tag, value, date dialogs
+      Implement: 4 dialog registry entries
+      Time: 45 min
+
+- [ ] G2D-2: W5-M-STATUS-01/02/03: Open/close, private, bulk resolve
+      Implement: Toggle UI + bulk action
+      Time: 45 min
+
+--- GROUP 2E: Lists & Search (1 hour) ---
+
+- [ ] G2E-1: W5-M-GROUP-01/HIDE-01/SEARCH-01: Review list grouping, hide, search
+      Implement: Use P0-0.1 + P0-0.3
+      Time: 1 hour
+
+--- GROUP 2F: Sections, Mobile, Files, Tender, Settings (1.5 hours) ---
+
+- [ ] G2F-1: W5-M-SECT-01/02: Review sections + reports
+      Implement: Sections UI + report renderer
+      Time: 45 min
+
+- [ ] G2F-2: W5-M-MOB-01/02: Mobile review/engagement cards
+      Implement: Responsive card layouts
+      Time: 15 min
+
+- [ ] G2F-3: W5-M-PDF-07/08/16/17/18: PDF attachment features
+      Implement: Component library entries
+      Time: 30 min
+
+- [ ] G2F-4: W5-M-FILE-02/05/06/07/08: File attachment features
+      Implement: Bars + dialogs
+      Time: 15 min
+
+- [ ] G2F-5: W5-M-TENDER-01/02: Tender dialogs + holder
+      Implement: 2 dialog entries
+      Time: 15 min
+
+- [ ] G2F-6: W5-M-SET-01/02/03/05/08: Settings pages
+      Implement: Settings renderers
+      Time: 30 min
+
+- [ ] G2F-7: W5-M-NOTIF-01: Review notification dialog
+      Implement: Dialog entry
+      Time: 15 min
+
+- [ ] G2F-8: W5-M-UI-01/02/12/13/17: UI components (sidebar, tooltips, response, attachment, panel)
+      Implement: Component library entries
+      Time: 30 min
+
+- [ ] G2F-9: W5-M-MISC-01/04/06/07/11/ARCHIVE-01: Tags, calcs, dialogs, archive
+      Implement: Utility functions + dialog entries
+      Time: 30 min
+
+================================================================================
+PHASE 3: WAVE 6 (Generalization & Code Reduction, 4-6 hours)
+================================================================================
+
+Depends on: W4 and W5 completion (all features implemented)
+
+- [ ] W6-GEN-01: Generalize dialog system
+      Status: Partially done by P0-0.2 (Dialog Registry)
+      Remaining: Consolidate all dialog files into single dialog-engine.js + config
+      Time: 1.5 hours
+
+- [ ] W6-GEN-02: Generalize list rendering
+      Status: Partially done by P0-0.1 (List Grouping)
+      Remaining: Consolidate renderEntityList variants into single generic renderer
+      Time: 1 hour
+
+- [ ] W6-GEN-03: Generalize form rendering
+      Status: Already partially in page-handler.js
+      Remaining: Complete so no entity-specific form code exists
+      Time: 1 hour
+
+- [ ] W6-GEN-04: Generalize detail view rendering
+      Status: Already partially in page-handler.js
+      Remaining: Complete so no entity-specific detail code exists
+      Time: 1 hour
+
+- [ ] W6-GEN-05: Consolidate renderer files
+      Split renderer.js (849 lines) into <200 line modules
+      Time: 1.5 hours
+
+- [ ] W6-GEN-06: Consolidate dialog files (completed by GEN-01)
+      Status: Already consolidated in P0-0.2 + GEN-01
+      Time: 0 (done)
+
+- [ ] W6-GEN-07: Reduce API routes
+      Verify domain-specific routes (friday/*, mwr/*) not needed
+      Time: 30 min
+
+- [ ] W6-GEN-08: Reduce config files
+      Consolidate spec-builder.js, constants.js, env.js, theme-config.js, etc.
+      Time: 1.5 hours
+
+- [ ] W6-GEN-09: Reduce lib files
+      Consolidate pdf-*.js, date-utils.js, utils.js
+      Time: 1 hour
+
+================================================================================
+PHASE 4: WAVE 7 (Final Cleanup & Verification, 3-4 hours)
+================================================================================
+
+Depends on: W6 completion
+
+- [ ] W7-CLEAN-01: Remove all comments from code
+      Time: 30 min (automated scan + manual review)
+
+- [ ] W7-CLEAN-02: Remove all hardcoded values
+      Time: 1 hour
+
+- [ ] W7-CLEAN-03: Ensure all files <200 lines
+      Time: 1.5 hours (split oversized files)
+
+- [ ] W7-CLEAN-04: Remove duplicate code
+      Time: 1 hour
+
+- [ ] W7-CLEAN-05: Update CLAUDE.md
+      Time: 45 min
+
+- [ ] W7-CLEAN-06: Update package.json
+      Time: 30 min
+
+- [ ] W7-CLEAN-07: Final file count audit
+      Time: 30 min
+
+- [ ] W7-VERIFY-01: Start server and verify
+      Time: 1 hour
+
+- [ ] W7-VERIFY-02: Verify Friday user flows
+      Time: 2-3 hours
+
+- [ ] W7-VERIFY-03: Verify MWR user flows
+      Time: 2-3 hours
+
+================================================================================
+EXECUTION STRATEGY
+================================================================================
+
+1. **Phase 0 (Foundation)** - Execute items 0.2, 0.1, 0.3, 0.4, 0.5 in parallel
+   - P0-0.2 (Dialog Registry) is CRITICAL PATH - start immediately
+   - P0-0.1/0.3/0.4/0.5 can run in parallel with 0.2
+   - Wall time: 3-4 hours (2-3 with parallelism)
+
+2. **Phase 1A+1B (Quick Wins + Unblocked)** - Immediate parallel execution
+   - Q1-Q9 config additions: 45 min
+   - U1-U15 unblocked items: 2-3 hours
+   - Can execute in parallel with Phase 0
+   - Wall time: 3-4 hours total
+
+3. **Phase 1C (Blocked Wave 4)** - Execute after P0-0.2 complete
+   - G1A/1B/1C/1D execute in parallel
+   - Wall time: 4 hours (2 with parallelism)
+
+4. **Phase 2 (Wave 5)** - Execute in parallel with Phase 1C
+   - G2A-2F execute in parallel
+   - Wall time: 6-8 hours (2-3 with parallelism)
+
+5. **Phase 3 (Generalization)** - After Waves 4+5 complete
+   - Sequential: 4-6 hours
+
+6. **Phase 4 (Cleanup + Verification)** - After Wave 6 complete
+   - Sequential: 3-4 hours
+
+================================================================================
+PROGRESS TRACKING
+================================================================================
+
+COMPLETED (Waves 1-3):
   ✓ Dead code removal: 299 files deleted
   ✓ Live code audit: 156 files verified, server starts on port 3004
   ✓ Architecture: Zero-build tsx, server HTML + webjsx client, hot reload enabled
 
-CURRENT WORK (Waves 4-7):
-  → WAVE 4: 58 Friday feature parity tasks
-  → WAVE 5: 48 MWR feature parity tasks (parallel with Wave 4)
-  → WAVE 6: 9 generalization + code reduction tasks
-  → WAVE 7: 12 cleanup + verification tasks
+CURRENT (Waves 4-7):
+  → PHASE 0: Foundation (Dialog Registry, List Grouping, Search, Components, Tags)
+  → PHASE 1A: Quick Wins (9 items, config-only)
+  → PHASE 1B: Unblocked Wave 4 (15 items, independent)
+  → PHASE 1C: Blocked Wave 4 (43 items, 4 parallel groups)
+  → PHASE 2: Wave 5 (48 items, 6 parallel groups)
+  → PHASE 3: Wave 6 (9 generalization items)
+  → PHASE 4: Wave 7 (12 cleanup + verification items)
 
 TOTAL REMAINING: 127 items across 4 waves
+
+Next action: Start P0-0.2 (Dialog Registry engine)
