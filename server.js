@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import { register } from 'module';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PORT = 3004;
+const PORT = 3000;
 
 register('./import-hook.js', import.meta.url);
 

@@ -5,7 +5,7 @@
 Zero-build runtime using `tsx` for TypeScript/JSX transpilation at runtime.
 
 ```bash
-npm install && npm run dev  # Port 3004
+npm install && npm run dev  # Port 3000
 ```
 
 ## Critical Caveats
