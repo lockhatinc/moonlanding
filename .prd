@@ -17,43 +17,37 @@ PHASE 0: FOUNDATION (Blocking most of W4-5, highest ROI)
 
 CRITICAL PATH: Dialog Registry (0.2) blocks 21 items. Start here.
 
-- [ ] P0-0.1 [WAVE-6-prep]: List grouping infrastructure
-      Current: renderEntityList in renderer.js exists
-      Add: groupBy parameter to list rendering
+- [x] P0-0.1 [WAVE-6-prep] ✅ COMPLETED: List grouping infrastructure
+      Added: groupBy parameter to renderEntityList (optional options.groupBy)
+      Features: Collapsible group sections, count badges, group sorting
       Blocks: W4-F-ENG-05, W4-F-RFI-30, W5-M-GROUP-01
-      Time: 1-1.5 hours
-      Status: Ready to start
+      Status: COMPLETED - ready for grouping features
 
-- [x] P0-0.2 [WAVE-6-prep] ⭐ COMPLETED: Dialog Registry engine
-      Created: src/ui/dialog-engine.js with configurable dialog generator
-      Config: Added 24 dialog definitions to master-config.yml (stage_transition,
-              fee_split, team_assignment, client_user_management, rfi_question_edit,
-              review_create, collaborator_dialog, review_flag_dialog, etc.)
-      Integration: Imported dialog-engine into renderer.js, exported renderDialog
+- [x] P0-0.2 [WAVE-6-prep] ✅ COMPLETED: Dialog Registry engine
+      Created: src/ui/dialog-engine.js (172 lines)
+      Config: Added 24 dialog definitions to master-config.yml
+      Features: renderDialog, generateDialogHtml, generateFieldHtml (10+ field types)
       Unblocks: 21+ items across W4-5
       Status: COMPLETED - ready for dialog-based features
 
-- [ ] P0-0.3 [WAVE-6-prep]: Search system (global text search)
-      Current: No global search across entities
-      Add: Search filtering to entity lists, RFI questions, reviews
+- [x] P0-0.3 [WAVE-6-prep] ✅ COMPLETED: Search system (global text search)
+      Added: Real-time search filtering to renderEntityList
+      Features: Multi-word AND logic, case-insensitive, grouped list support
       Blocks: W4-F-ENG-08, W4-F-SEARCH-01, W5-M-SEARCH-01
-      Time: 1-1.5 hours
-      Status: Ready to start (can parallelize with 0.2)
+      Status: COMPLETED - ready for search features
 
-- [ ] P0-0.4 [WAVE-6-prep]: Component library (visual elements)
-      Current: No reusable component definitions (avatar groups, progress bars, etc)
-      Create: Component definitions in master-config.yml (AvatarGroup, LinearProgress,
-              CircularProgress, ColorPicker, DatePicker, etc.)
+- [x] P0-0.4 [WAVE-6-prep] ✅ COMPLETED: Component library (visual elements)
+      Created: src/ui/component-engine.js (95 lines)
+      Config: Added 8 component definitions (avatar_group, linear_progress, etc.)
+      Features: renderComponent, getComponentConfig, validateComponentProps
       Blocks: W4-F-TEAM-03, W4-F-UI-09/10/11, W5-M-UI-01/02
-      Time: 1.5-2 hours
-      Status: Ready to start (can parallelize with 0.2)
+      Status: COMPLETED - ready for UI component features
 
-- [ ] P0-0.5 [WAVE-6-prep]: Global tags system completion
-      Current: src/ui/global-tags.js exists (11 lines, incomplete)
-      Complete: Tag CRUD operations, tag UI renderer
+- [x] P0-0.5 [WAVE-6-prep] ✅ COMPLETED: Global tags system
+      Updated: src/ui/global-tags.js (145 lines, from 11)
+      Features: createTag, updateTag, deleteTag, listTags, renderTagsList
       Blocks: W4-F-MISC-01, W5-M-MISC-01
-      Time: 45 min
-      Status: Ready to start
+      Status: COMPLETED - ready for tag management features
 
 ================================================================================
 PHASE 1A: QUICK WINS (Config-only additions, ~45 min total)
