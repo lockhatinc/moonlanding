@@ -1,0 +1,1460 @@
+# FEATURE PARITY & DATA MIGRATION PRD
+# Complete transformation of Moonlanding to achieve 100% feature parity with Friday-staging + MyWorkReview-staging
+# Target: Configuration-driven, RippleUI-based, WebJSX-powered, hot-reloadable, state-synchronized system
+
+## DEPENDENCY GRAPH LEGEND
+# [WAVE N] = Parallel execution wave number
+# BLOCKS: [item-id, ...] = Items that cannot start until this completes
+# BLOCKED_BY: [item-id, ...] = Items that must complete before this starts
+# Items in same wave with no dependencies execute in parallel via multiple gm subagents
+
+## WAVE 1: DISCOVERY & ASSESSMENT (All parallel - no dependencies)
+
+[WAVE-1.1] Analyze Friday-staging Firebase collections and extract complete schema
+BLOCKS: [WAVE-2.1, WAVE-2.2, WAVE-2.3, WAVE-3.1, WAVE-3.2]
+BLOCKED_BY: []
+DETAILS:
+- Read all Firestore collection definitions from Friday-staging
+- Map all fields, data types, relationships, subcollections
+- Identify unique features not in Moonlanding
+- Document all workflows, user flows, state transitions
+- Extract UI components and page structures
+- List all API endpoints and their purposes
+- Capture validation rules, business logic constraints
+- Document file upload/download workflows
+- Map authentication and authorization patterns
+- Identify cron jobs, background tasks, scheduled operations
+- Extract email notification templates and triggers
+- Document PDF generation workflows
+- Map engagement lifecycle stages and transitions
+- Identify RFI question/response patterns
+- Extract review highlight workflows
+- Document collaborative features (messages, comments)
+- Map permission inheritance patterns
+- Extract client-facing vs auditor-facing features
+- Document mobile vs desktop responsive patterns
+- Identify real-time update requirements
+
+[WAVE-1.2] Analyze MyWorkReview-staging Firebase collections and extract complete schema
+BLOCKS: [WAVE-2.1, WAVE-2.2, WAVE-2.3, WAVE-3.1, WAVE-3.2]
+BLOCKED_BY: []
+DETAILS:
+- Read all Firestore collection definitions from MWR-staging
+- Map all fields, data types, relationships, subcollections
+- Identify unique features not in Moonlanding or Friday
+- Document review-specific workflows (priority reviews, tender management)
+- Extract checklist management patterns
+- Map collaborator role assignment workflows
+- Document highlight annotation workflows with PDF coordinates
+- Extract export-to-PDF functionality
+- Map user priority review assignment patterns
+- Identify review completion workflows
+- Document tender document management
+- Extract collaboration notification patterns
+- Map review status transitions
+- Identify highlight filtering and search patterns
+- Document review archival workflows
+- Extract performance metrics and KPIs
+- Map review template patterns
+- Identify batch review operations
+- Document review dashboard requirements
+- Extract review analytics and reporting
+
+[WAVE-1.3] Audit current Moonlanding implementation completeness
+BLOCKS: [WAVE-2.4, WAVE-3.3]
+BLOCKED_BY: []
+DETAILS:
+- Verify all 57 API routes are functional and tested
+- Check all 24 UI components render correctly
+- Test all 9 engines execute without errors
+- Verify all 5 services handle edge cases
+- Check RippleUI usage consistency (currently 17/~176 files)
+- Verify WebJSX usage coverage (currently 2/176 files - needs expansion)
+- Test hot reload across all modules
+- Verify module cache invalidation works correctly
+- Test state synchronization between client and server
+- Check error handling and recovery in all routes
+- Verify CSRF protection on all mutating endpoints
+- Test authentication flows (login, logout, Google OAuth, password reset)
+- Verify permission enforcement on all routes
+- Test file upload/download with various file types
+- Check PDF coordinate preservation in highlights
+- Verify email sending and receiving workflows
+- Test cron job execution and error recovery
+- Check database transaction handling and rollback
+- Verify foreign key constraint enforcement
+- Test concurrent request handling
+- Check memory leak prevention in long-running processes
+- Verify graceful degradation when external services fail
+- Test system behavior under high load
+- Check configuration hot-reload without server restart
+- Verify audit logging captures all critical operations
+- Test data export functionality
+- Check import validation and error reporting
+- Verify search functionality across all entities
+- Test pagination on large datasets
+- Check sorting and filtering on all list views
+
+[WAVE-1.4] Compare master-config.yml entities vs source system entities
+BLOCKS: [WAVE-2.4, WAVE-3.3]
+BLOCKED_BY: []
+DETAILS:
+- Load master-config.yml and parse all entity definitions
+- Cross-reference with Friday-staging collections
+- Cross-reference with MWR-staging collections
+- Identify missing entities in Moonlanding config
+- Identify missing fields in existing entities
+- Check field type mismatches (string vs number, etc)
+- Verify relationship mappings (foreign keys, references)
+- Compare validation rules between systems
+- Check enum value completeness
+- Verify workflow stage definitions match source systems
+- Compare permission templates
+- Check role hierarchy consistency
+- Verify automation job definitions
+- Compare threshold configurations
+- Check domain definitions
+- Verify notification template coverage
+- Compare audit logging configurations
+- Check default values for all fields
+- Verify required vs optional field consistency
+- Compare index definitions for performance
+
+[WAVE-1.5] Document source system UI/UX patterns and user workflows
+BLOCKS: [WAVE-2.5, WAVE-3.4]
+BLOCKED_BY: []
+DETAILS:
+- Screenshot all Friday-staging pages and flows
+- Screenshot all MWR-staging pages and flows
+- Document navigation patterns (menus, breadcrumbs, tabs)
+- Map user journey for engagement creation
+- Map user journey for RFI submission and response
+- Map user journey for review completion
+- Map user journey for highlight annotation
+- Document search and filter patterns
+- Extract form layouts and validation feedback
+- Document modal dialog patterns
+- Map toast notification patterns
+- Extract loading state indicators
+- Document empty state displays
+- Map error state displays
+- Extract success confirmation patterns
+- Document bulk action patterns
+- Map inline edit patterns
+- Extract drag-and-drop interactions
+- Document keyboard navigation support
+- Map responsive breakpoints for mobile/tablet/desktop
+- Extract color schemes and theming
+- Document typography patterns
+- Map icon usage patterns
+- Extract animation and transition patterns
+- Document accessibility features (ARIA, screen reader support)
+- Map print-friendly views
+- Extract dashboard layout patterns
+- Document widget and card layouts
+- Map timeline/activity feed patterns
+- Extract comment thread patterns
+
+## WAVE 2: GAP ANALYSIS & PLANNING (Depends on Wave 1)
+
+[WAVE-2.1] Identify missing Friday features in Moonlanding
+BLOCKS: [WAVE-3.1, WAVE-4.1, WAVE-4.2]
+BLOCKED_BY: [WAVE-1.1, WAVE-1.2, WAVE-1.3, WAVE-1.4]
+DETAILS:
+- Create feature matrix: Friday vs Moonlanding
+- List all missing API endpoints
+- List all missing UI pages and components
+- Identify missing workflows and state machines
+- Document missing business rules
+- List missing validation logic
+- Identify missing integrations (Google Drive, Gmail, etc)
+- Document missing notification patterns
+- List missing export functionality
+- Identify missing import functionality
+- Document missing search capabilities
+- List missing batch operations
+- Identify missing audit logging
+- Document missing permission checks
+- List missing role-based features
+- Identify missing client-facing vs auditor-facing features
+- Document missing mobile-specific features
+- List missing accessibility features
+- Identify missing performance optimizations
+- Document missing error recovery mechanisms
+
+[WAVE-2.2] Identify missing MyWorkReview features in Moonlanding
+BLOCKS: [WAVE-3.2, WAVE-4.3, WAVE-4.4]
+BLOCKED_BY: [WAVE-1.1, WAVE-1.2, WAVE-1.3, WAVE-1.4]
+DETAILS:
+- Create feature matrix: MWR vs Moonlanding
+- List all missing review-specific API endpoints
+- List all missing review UI pages and components
+- Identify missing tender management features
+- Document missing priority review workflows
+- List missing checklist templates and management
+- Identify missing collaborator management features
+- Document missing highlight filtering and search
+- List missing PDF export customization options
+- Identify missing review analytics and reports
+- Document missing review completion workflows
+- List missing review archival features
+- Identify missing review template management
+- Document missing batch review operations
+- List missing review dashboard widgets
+- Identify missing review notification patterns
+- Document missing review permission patterns
+- List missing review status indicators
+- Identify missing review timeline features
+- Document missing review comment threads
+
+[WAVE-2.3] Identify overlapping features and consolidation opportunities
+BLOCKS: [WAVE-3.3, WAVE-4.5]
+BLOCKED_BY: [WAVE-1.1, WAVE-1.2, WAVE-1.3, WAVE-1.4]
+DETAILS:
+- Map shared entities between Friday and MWR (users, permissions, files)
+- Identify duplicate workflows that can be unified
+- Document shared UI components that can be reused
+- List shared API patterns that can be consolidated
+- Identify common validation rules
+- Document shared business logic
+- List common error handling patterns
+- Identify shared notification templates
+- Document common state management patterns
+- List shared search/filter patterns
+- Identify common export patterns
+- Document shared authentication flows
+- List common permission patterns
+- Identify shared file upload/download patterns
+- Document common audit logging patterns
+- List shared configuration patterns
+- Identify common hot reload patterns
+- Document shared client-server sync patterns
+- List common performance optimization patterns
+- Identify shared accessibility patterns
+
+[WAVE-2.4] Map current Moonlanding architecture gaps
+BLOCKS: [WAVE-3.3, WAVE-4.6]
+BLOCKED_BY: [WAVE-1.3, WAVE-1.4]
+DETAILS:
+- Verify RippleUI coverage (need to expand from 17 to all 176 files)
+- Verify WebJSX coverage (need to expand from 2 to all UI files)
+- Check hot reload coverage (currently file watchers on 3 dirs - verify all dirs covered)
+- Verify state synchronization patterns (check for race conditions)
+- Test module cache invalidation (check for stale cache issues)
+- Verify error boundary coverage (ensure no crashes propagate to process exit)
+- Check supervisor hierarchy for all engines
+- Verify checkpoint/recovery for all stateful operations
+- Test concurrent request handling for database locks
+- Check memory leak prevention in watchers and event listeners
+- Verify all promises are contained and handled
+- Check for unhandled promise rejections
+- Verify all async operations have timeouts
+- Check for proper cleanup on hot reload
+- Verify all routes have error handlers
+- Check for proper Content-Length headers on all HTML responses
+- Verify all imports use @/ alias (no relative imports)
+- Check route handler order (client bundle before page renderer)
+- Verify error serialization safety (no Symbol values)
+- Test SQLite concurrency handling
+
+[WAVE-2.5] Design unified UI/UX framework with RippleUI
+BLOCKS: [WAVE-4.7, WAVE-4.8]
+BLOCKED_BY: [WAVE-1.5]
+DETAILS:
+- Create RippleUI component library for Moonlanding
+- Define standard button styles (btn-primary, btn-secondary, etc)
+- Define standard card layouts
+- Define standard form patterns
+- Define standard modal dialog patterns
+- Define standard toast notification patterns
+- Define standard table/grid patterns
+- Define standard navigation patterns
+- Define standard breadcrumb patterns
+- Define standard tab patterns
+- Define standard accordion patterns
+- Define standard badge/tag patterns
+- Define standard progress indicator patterns
+- Define standard loading spinner patterns
+- Define standard empty state patterns
+- Define standard error state patterns
+- Define standard success state patterns
+- Define standard color palette
+- Define standard typography scale
+- Define standard spacing scale
+- Define standard responsive breakpoints
+- Define standard animation/transition patterns
+- Define standard icon set
+- Define standard accessibility patterns
+- Define standard print styles
+
+## WAVE 3: SCHEMA & CONFIG UPDATES (Depends on Wave 2)
+
+[WAVE-3.1] Update master-config.yml with missing Friday entities and fields
+BLOCKS: [WAVE-4.1, WAVE-4.2, WAVE-5.1]
+BLOCKED_BY: [WAVE-1.1, WAVE-1.2, WAVE-2.1]
+DETAILS:
+- Add missing entity definitions to master-config.yml
+- Add missing field definitions to existing entities
+- Add missing field validations
+- Add missing relationships (foreign keys)
+- Add missing enum definitions
+- Add missing workflow stages
+- Add missing permission templates
+- Add missing automation jobs
+- Add missing notification templates
+- Add missing threshold configurations
+- Update role definitions if needed
+- Add missing domain configurations
+- Update audit logging rules
+- Add missing default values
+- Update required field flags
+- Add missing unique constraints
+- Update index definitions
+- Add missing lifecycle hooks
+- Update business rule definitions
+- Verify YAML syntax correctness
+- Test config reload without server restart
+- Verify all entities generate correct database schema
+- Test CRUD operations on new entities
+- Verify permission enforcement on new entities
+- Test workflow transitions on new entities
+
+[WAVE-3.2] Update master-config.yml with missing MWR entities and fields
+BLOCKS: [WAVE-4.3, WAVE-4.4, WAVE-5.1]
+BLOCKED_BY: [WAVE-1.1, WAVE-1.2, WAVE-2.2]
+DETAILS:
+- Add review-specific entity definitions
+- Add tender management entity definitions
+- Add checklist template definitions
+- Add priority review fields
+- Add collaborator role fields
+- Add highlight filtering fields
+- Add review analytics fields
+- Add review status fields
+- Add review completion tracking fields
+- Add review archival fields
+- Add review template fields
+- Add batch operation fields
+- Update permission templates for reviews
+- Add review-specific workflow stages
+- Add review notification templates
+- Add review automation jobs
+- Add review threshold configurations
+- Update audit logging for review operations
+- Add review-specific validation rules
+- Verify YAML syntax correctness
+- Test config reload without server restart
+- Verify all review entities generate correct schema
+- Test review CRUD operations
+- Verify review permission enforcement
+- Test review workflow transitions
+
+[WAVE-3.3] Consolidate overlapping entities and remove duplication
+BLOCKS: [WAVE-4.5, WAVE-5.1]
+BLOCKED_BY: [WAVE-1.3, WAVE-1.4, WAVE-2.3, WAVE-2.4]
+DETAILS:
+- Merge duplicate user entity definitions
+- Merge duplicate permission patterns
+- Merge duplicate file handling logic
+- Merge duplicate notification templates
+- Merge duplicate validation rules
+- Merge duplicate workflow patterns
+- Consolidate duplicate API endpoints
+- Consolidate duplicate UI components
+- Merge duplicate state management patterns
+- Consolidate duplicate error handling
+- Merge duplicate authentication logic
+- Consolidate duplicate authorization checks
+- Merge duplicate search patterns
+- Consolidate duplicate export patterns
+- Merge duplicate import patterns
+- Consolidate duplicate audit logging
+- Merge duplicate configuration loading
+- Consolidate duplicate hot reload logic
+- Merge duplicate client-server sync
+- Test all consolidated features work correctly
+
+[WAVE-3.4] Create WebJSX component templates for all UI patterns
+BLOCKS: [WAVE-4.7, WAVE-4.8, WAVE-5.2]
+BLOCKED_BY: [WAVE-1.5]
+DETAILS:
+- Create WebJSX button component with RippleUI classes
+- Create WebJSX card component
+- Create WebJSX form component with validation
+- Create WebJSX modal dialog component
+- Create WebJSX toast notification component
+- Create WebJSX table/grid component
+- Create WebJSX navigation component
+- Create WebJSX breadcrumb component
+- Create WebJSX tab component
+- Create WebJSX accordion component
+- Create WebJSX badge/tag component
+- Create WebJSX progress indicator component
+- Create WebJSX loading spinner component
+- Create WebJSX empty state component
+- Create WebJSX error state component
+- Create WebJSX success state component
+- Create WebJSX search/filter component
+- Create WebJSX pagination component
+- Create WebJSX sort controls component
+- Create WebJSX inline edit component
+- Create WebJSX drag-drop component
+- Create WebJSX file upload component
+- Create WebJSX date picker component
+- Create WebJSX time picker component
+- Create WebJSX rich text editor component
+- Test all components render correctly
+- Test all components are accessible
+- Test all components are responsive
+- Test all components hot-reload correctly
+- Document component API and usage examples
+
+## WAVE 4: FEATURE IMPLEMENTATION (Depends on Wave 3, highly parallel)
+
+[WAVE-4.1] Implement missing Friday API endpoints
+BLOCKS: [WAVE-5.3, WAVE-6.1]
+BLOCKED_BY: [WAVE-2.1, WAVE-3.1]
+DETAILS:
+- Create route files for all missing endpoints
+- Implement GET handlers with query/filter support
+- Implement POST handlers with validation
+- Implement PATCH handlers with partial updates
+- Implement DELETE handlers with soft delete
+- Add CSRF protection to all mutating endpoints
+- Add authentication checks to all endpoints
+- Add authorization checks based on roles
+- Add audit logging for all operations
+- Add error handling with proper status codes
+- Add input validation with helpful error messages
+- Add output formatting with consistent structure
+- Add pagination support for list endpoints
+- Add sorting support for list endpoints
+- Add filtering support for list endpoints
+- Add search support where needed
+- Add relationship loading (eager/lazy)
+- Add transaction support for multi-step operations
+- Add optimistic locking for concurrent updates
+- Add rate limiting for expensive operations
+- Test all endpoints with valid inputs
+- Test all endpoints with invalid inputs
+- Test all endpoints with edge cases
+- Test all endpoints with concurrent requests
+- Test all endpoints with authentication failures
+- Test all endpoints with authorization failures
+- Verify hot reload works for all routes
+- Verify error recovery works for all routes
+- Verify database transaction rollback works
+- Document all endpoint APIs
+
+[WAVE-4.2] Implement missing Friday UI pages and components
+BLOCKS: [WAVE-5.4, WAVE-6.1]
+BLOCKED_BY: [WAVE-2.1, WAVE-3.1]
+DETAILS:
+- Create WebJSX page components for all missing pages
+- Apply RippleUI classes throughout
+- Implement client-side routing
+- Implement form submission with validation feedback
+- Implement optimistic UI updates
+- Implement error state displays
+- Implement loading state displays
+- Implement empty state displays
+- Implement success confirmations
+- Implement modal dialogs
+- Implement toast notifications
+- Implement inline editing
+- Implement bulk actions
+- Implement search/filter UI
+- Implement pagination UI
+- Implement sorting UI
+- Implement responsive layouts
+- Implement keyboard navigation
+- Implement accessibility (ARIA)
+- Implement print styles
+- Test all pages render correctly
+- Test all forms validate correctly
+- Test all interactions work correctly
+- Test all pages are responsive
+- Test all pages are accessible
+- Test all pages hot-reload correctly
+- Verify state sync between client and server
+- Verify error boundaries catch and display errors
+- Verify memory leaks do not occur
+- Document all page components
+
+[WAVE-4.3] Implement missing MWR API endpoints
+BLOCKS: [WAVE-5.5, WAVE-6.2]
+BLOCKED_BY: [WAVE-2.2, WAVE-3.2]
+DETAILS:
+- Create route files for review-specific endpoints
+- Implement priority review assignment endpoints
+- Implement checklist management endpoints
+- Implement tender management endpoints
+- Implement highlight filtering endpoints
+- Implement review analytics endpoints
+- Implement review export endpoints
+- Implement review archival endpoints
+- Implement review template endpoints
+- Implement batch review operation endpoints
+- Implement collaborator management endpoints
+- Add CSRF protection
+- Add authentication checks
+- Add authorization checks
+- Add audit logging
+- Add error handling
+- Add input validation
+- Add output formatting
+- Add pagination/sorting/filtering
+- Add transaction support
+- Test all endpoints thoroughly
+- Verify hot reload works
+- Verify error recovery works
+- Document all APIs
+
+[WAVE-4.4] Implement missing MWR UI pages and components
+BLOCKS: [WAVE-5.6, WAVE-6.2]
+BLOCKED_BY: [WAVE-2.2, WAVE-3.2]
+DETAILS:
+- Create WebJSX review dashboard page
+- Create priority review assignment UI
+- Create checklist management UI
+- Create tender management UI
+- Create highlight filtering UI
+- Create review analytics UI
+- Create review export UI
+- Create review archival UI
+- Create review template UI
+- Create batch review operation UI
+- Create collaborator management UI
+- Apply RippleUI classes throughout
+- Implement all interaction patterns
+- Implement responsive layouts
+- Implement accessibility
+- Test all review pages
+- Verify hot reload
+- Verify state sync
+- Document all components
+
+[WAVE-4.5] Refactor consolidated features to unified implementation
+BLOCKS: [WAVE-5.7, WAVE-6.3]
+BLOCKED_BY: [WAVE-2.3, WAVE-3.3]
+DETAILS:
+- Refactor user management to single implementation
+- Refactor permission checks to single implementation
+- Refactor file handling to single implementation
+- Refactor notification sending to single implementation
+- Refactor validation rules to single implementation
+- Refactor workflow transitions to single implementation
+- Refactor API response formatting to single implementation
+- Refactor error handling to single implementation
+- Refactor authentication to single implementation
+- Refactor authorization to single implementation
+- Refactor search to single implementation
+- Refactor export to single implementation
+- Refactor import to single implementation
+- Refactor audit logging to single implementation
+- Refactor configuration loading to single implementation
+- Refactor hot reload to single implementation
+- Refactor state sync to single implementation
+- Remove all duplicate code
+- Verify no functionality regressed
+- Test all consolidated features work correctly
+- Document unified APIs
+
+[WAVE-4.6] Enhance architecture for full hot reload support
+BLOCKS: [WAVE-5.8, WAVE-6.4]
+BLOCKED_BY: [WAVE-2.4]
+DETAILS:
+- Expand file watchers to cover all source directories
+- Implement module cache invalidation for all modules
+- Implement route handler hot-swap without dropped requests
+- Implement state persistence across hot reloads
+- Implement component hot-reload on client side
+- Implement style hot-reload without page refresh
+- Implement config hot-reload without server restart
+- Add checkpoint/restore for all stateful operations
+- Add supervisor hierarchy for all engines
+- Add error boundaries for all components
+- Add graceful degradation for failed reloads
+- Add health checks for all critical components
+- Add automatic recovery from crashes
+- Add memory leak detection and prevention
+- Add unhandled promise rejection handlers
+- Add timeout handling for all async operations
+- Add cleanup handlers for all watchers
+- Test hot reload under various scenarios
+- Test recovery from errors during reload
+- Verify no state loss during reload
+- Verify no dropped requests during reload
+- Document hot reload architecture
+
+[WAVE-4.7] Convert all UI files to WebJSX
+BLOCKS: [WAVE-5.9, WAVE-6.5]
+BLOCKED_BY: [WAVE-2.5, WAVE-3.4]
+DETAILS:
+- Convert all existing UI files from non-JSX to WebJSX
+- Apply component templates created in WAVE-3.4
+- Ensure all JSX uses RippleUI classes
+- Remove any non-JSX HTML template strings
+- Ensure all components are modular and reusable
+- Add prop validation to all components
+- Add default props where appropriate
+- Add component documentation
+- Test all converted components render correctly
+- Test all converted components hot-reload correctly
+- Verify no functionality regressed
+- Verify performance is acceptable
+- Document component APIs
+
+[WAVE-4.8] Apply RippleUI to all existing components
+BLOCKS: [WAVE-5.10, WAVE-6.6]
+BLOCKED_BY: [WAVE-2.5, WAVE-3.4]
+DETAILS:
+- Audit all UI files for RippleUI class usage
+- Apply btn-* classes to all buttons
+- Apply card-* classes to all cards
+- Apply form-* classes to all forms
+- Apply input-* classes to all inputs
+- Apply badge-* classes to all badges
+- Apply table-* classes to all tables
+- Apply nav-* classes to all navigation
+- Apply tab-* classes to all tabs
+- Apply modal-* classes to all modals
+- Apply tooltip-* classes to all tooltips
+- Apply dropdown-* classes to all dropdowns
+- Apply alert-* classes to all alerts
+- Apply progress-* classes to all progress indicators
+- Remove custom CSS that duplicates RippleUI
+- Ensure consistent spacing using RippleUI utilities
+- Ensure consistent colors using RippleUI palette
+- Test all styled components
+- Verify responsive behavior
+- Verify accessibility
+- Document RippleUI usage patterns
+
+## WAVE 5: STATE SYNC & OPTIMIZATION (Depends on Wave 4)
+
+[WAVE-5.1] Implement predictable client-server state synchronization
+BLOCKS: [WAVE-6.7, WAVE-7.1]
+BLOCKED_BY: [WAVE-3.1, WAVE-3.2, WAVE-3.3]
+DETAILS:
+- Design state synchronization protocol
+- Implement server-side state broadcast
+- Implement client-side state subscription
+- Add optimistic updates with rollback
+- Add conflict resolution for concurrent updates
+- Add state reconciliation after network failures
+- Add state versioning to detect staleness
+- Add differential updates to reduce bandwidth
+- Add batching for multiple state updates
+- Add debouncing for rapid updates
+- Add throttling for expensive updates
+- Implement WebSocket connection for real-time sync
+- Implement fallback to polling if WebSocket fails
+- Implement reconnection logic with exponential backoff
+- Implement state persistence across page refreshes
+- Implement state migration for schema changes
+- Add monitoring for state sync errors
+- Add debugging tools for state inspection
+- Test state sync under various network conditions
+- Test state sync with concurrent users
+- Test state sync with large state objects
+- Test state sync with rapid updates
+- Verify no race conditions
+- Verify no state corruption
+- Document state sync architecture
+
+[WAVE-5.2] Optimize component rendering performance
+BLOCKS: [WAVE-6.8]
+BLOCKED_BY: [WAVE-3.4]
+DETAILS:
+- Implement component memoization where beneficial
+- Implement virtual scrolling for long lists
+- Implement lazy loading for off-screen components
+- Implement code splitting for large components
+- Implement image lazy loading
+- Implement progressive enhancement
+- Add performance budgets for components
+- Add performance monitoring
+- Identify and fix unnecessary re-renders
+- Identify and fix memory leaks
+- Optimize event handler bindings
+- Optimize DOM manipulation
+- Optimize CSS selectors
+- Test rendering performance with large datasets
+- Test rendering performance with rapid updates
+- Verify smooth 60fps animations
+- Document performance optimization patterns
+
+[WAVE-5.3] Add comprehensive error handling and recovery
+BLOCKS: [WAVE-6.9]
+BLOCKED_BY: [WAVE-4.1]
+DETAILS:
+- Add error boundaries around all component trees
+- Add try-catch around all async operations
+- Add error reporting to monitoring service
+- Add user-friendly error messages
+- Add error recovery suggestions
+- Add automatic retry with exponential backoff
+- Add circuit breaker for failing services
+- Add fallback behavior for degraded mode
+- Add health checks for all dependencies
+- Add graceful shutdown on fatal errors
+- Test error handling with network failures
+- Test error handling with server errors
+- Test error handling with invalid data
+- Test error handling with permission denials
+- Test error recovery mechanisms
+- Verify no crashes propagate to process exit
+- Document error handling patterns
+
+[WAVE-5.4] Implement comprehensive input validation
+BLOCKS: [WAVE-6.10]
+BLOCKED_BY: [WAVE-4.2]
+DETAILS:
+- Add client-side validation for all forms
+- Add server-side validation for all endpoints
+- Add consistent validation error messages
+- Add field-level validation feedback
+- Add form-level validation summary
+- Add real-time validation as user types
+- Add validation for all data types
+- Add validation for all constraints
+- Add validation for all business rules
+- Add validation for file uploads
+- Add sanitization for all user inputs
+- Add XSS prevention
+- Add SQL injection prevention
+- Add CSRF prevention
+- Test validation with valid inputs
+- Test validation with invalid inputs
+- Test validation with edge cases
+- Test validation with malicious inputs
+- Document validation rules
+
+[WAVE-5.5] Implement comprehensive testing infrastructure
+BLOCKS: [WAVE-6.11]
+BLOCKED_BY: [WAVE-4.3]
+DETAILS:
+- Create integration test harness for API endpoints
+- Create integration test harness for UI workflows
+- Implement browser automation tests with plugin:browser:execute
+- Implement API tests with plugin:gm:dev
+- Test all critical user workflows end-to-end
+- Test all API endpoints with real data
+- Test all error scenarios
+- Test all edge cases
+- Test all concurrent scenarios
+- Test all performance scenarios
+- Test all security scenarios
+- Test all accessibility scenarios
+- Test all responsive scenarios
+- Add test coverage reporting
+- Add test result monitoring
+- Document testing patterns
+- NO unit tests (Charter 3 forbids)
+- Only real execution with real services
+
+[WAVE-5.6] Optimize database queries and indexes
+BLOCKS: [WAVE-6.12]
+BLOCKED_BY: [WAVE-4.4]
+DETAILS:
+- Analyze slow queries with EXPLAIN QUERY PLAN
+- Add missing indexes for common queries
+- Add composite indexes for multi-column queries
+- Optimize N+1 query patterns
+- Add query result caching where beneficial
+- Add prepared statement caching
+- Optimize transaction scope
+- Reduce database round-trips
+- Add connection pooling
+- Add query timeout handling
+- Test query performance with large datasets
+- Test concurrent query handling
+- Test database lock handling
+- Verify p95 latency <500ms
+- Document query optimization patterns
+
+[WAVE-5.7] Implement comprehensive audit logging
+BLOCKS: [WAVE-6.13]
+BLOCKED_BY: [WAVE-4.5]
+DETAILS:
+- Add audit logging for all create operations
+- Add audit logging for all update operations
+- Add audit logging for all delete operations
+- Add audit logging for all permission changes
+- Add audit logging for all authentication events
+- Add audit logging for all authorization failures
+- Add structured logging with consistent format
+- Add log levels (debug, info, warn, error)
+- Add log rotation and archival
+- Add log search and filtering
+- Add log visualization
+- Add log monitoring and alerting
+- Add performance logging
+- Add error logging with stack traces
+- Test audit log completeness
+- Verify audit logs are tamper-proof
+- Document audit logging patterns
+
+[WAVE-5.8] Implement monitoring and alerting
+BLOCKS: [WAVE-6.14]
+BLOCKED_BY: [WAVE-4.6]
+DETAILS:
+- Add health check endpoint
+- Add metrics collection for all operations
+- Add performance metrics (p50, p95, p99)
+- Add error rate metrics
+- Add resource usage metrics (CPU, memory, disk)
+- Add database metrics (connections, locks, slow queries)
+- Add real-time metrics dashboard
+- Add alerting for critical errors
+- Add alerting for performance degradation
+- Add alerting for resource exhaustion
+- Add log aggregation
+- Add distributed tracing
+- Test monitoring under load
+- Test alerting triggers correctly
+- Document monitoring setup
+
+[WAVE-5.9] Optimize bundle size and loading performance
+BLOCKS: [WAVE-6.15]
+BLOCKED_BY: [WAVE-4.7]
+DETAILS:
+- Analyze current bundle size
+- Implement code splitting for routes
+- Implement lazy loading for heavy components
+- Remove unused dependencies
+- Optimize dependency imports (tree-shaking)
+- Minify client-side code
+- Compress assets (gzip, brotli)
+- Add cache headers for static assets
+- Add service worker for offline support
+- Add preloading for critical resources
+- Add prefetching for likely navigation targets
+- Optimize image formats and sizes
+- Test loading performance on slow networks
+- Verify Time to Interactive <3s
+- Document performance optimizations
+
+[WAVE-5.10] Implement accessibility features
+BLOCKS: [WAVE-6.16]
+BLOCKED_BY: [WAVE-4.8]
+DETAILS:
+- Add ARIA labels to all interactive elements
+- Add ARIA roles to all semantic regions
+- Add ARIA live regions for dynamic updates
+- Add keyboard navigation support
+- Add focus management for modals and dialogs
+- Add skip links for navigation
+- Add alt text for all images
+- Add captions for all videos
+- Ensure sufficient color contrast
+- Support screen readers
+- Support browser zoom up to 200%
+- Add visual focus indicators
+- Test with keyboard only
+- Test with screen reader
+- Test with browser zoom
+- Verify WCAG 2.1 AA compliance
+- Document accessibility patterns
+
+## WAVE 6: DATA MIGRATION EXECUTION (Depends on Wave 5)
+
+[WAVE-6.1] Execute Phase 3.5 - Pilot Migration (10%)
+BLOCKS: [WAVE-6.2, WAVE-7.2]
+BLOCKED_BY: [WAVE-4.1, WAVE-4.2]
+DETAILS:
+- Create production database backup
+- Extract 10% sample from Friday-staging (1,600-1,700 records)
+- Extract 10% sample from MyWorkReview-staging
+- Run complete migration pipeline with both samples
+- Execute user deduplication (10-15% overlap expected)
+- Transform all fields per schema-mapping.json
+- Normalize all subcollections to SQLite tables
+- Preserve PDF coordinates exactly (±0 pixels - CRITICAL)
+- Normalize all timestamps to UTC ISO 8601
+- Update all file paths to Moonlanding structure
+- Run all 8 validators:
+  * Row Count Validator
+  * Referential Integrity Validator
+  * Data Type Validator
+  * PDF Coordinate Validator (±0 pixels)
+  * Timestamp Validator (UTC format)
+  * File Path Validator
+  * JSON Field Validator
+  * FK Constraint Validator
+- Verify 100% validator pass rate (8/8)
+- Generate comprehensive pilot report
+- Test rollback capability
+- Document any issues found
+- Fix any issues found before proceeding
+- Get sign-off to proceed to Phase 3.6
+- SUCCESS CRITERIA: 8/8 validators pass, 0 data loss, rollback works
+
+[WAVE-6.2] Execute Phase 3.6 - Full Data Migration (100%)
+BLOCKS: [WAVE-6.3, WAVE-7.3]
+BLOCKED_BY: [WAVE-4.3, WAVE-4.4, WAVE-6.1]
+DETAILS:
+- Create final production database backup
+- Load all Friday-staging data (80K-200K records expected)
+- Load all MyWorkReview-staging data (15K-30K records expected)
+- Execute user deduplication (expect 10-15% reduction)
+- Transform all fields per schema-mapping.json
+- Normalize all subcollections
+- Preserve PDF coordinates exactly (±0 pixels - CRITICAL)
+- Normalize all timestamps to UTC ISO 8601
+- Update all file paths
+- Run all 8 validators on full dataset
+- Verify 100% validator pass rate (8/8)
+- Generate comprehensive migration report
+- Document any data anomalies found
+- Verify total record count: 230K-250K expected
+- Verify zero data loss
+- SUCCESS CRITERIA: 8/8 validators pass, 230K+ records, 0 data loss
+
+[WAVE-6.3] Execute Phase 3.7 - Data Integrity Verification
+BLOCKS: [WAVE-6.4, WAVE-7.4]
+BLOCKED_BY: [WAVE-4.5, WAVE-6.2]
+DETAILS:
+- [7.1] Verify user deduplication accuracy (10-15% overlap)
+- [7.2] Verify engagement-client relationships intact
+- [7.3] Verify RFI-engagement-question relationships intact
+- [7.4] Verify highlight coordinates preserved ±0 pixels (CRITICAL)
+- [7.5] Verify timestamps UTC normalized (Z suffix)
+- [7.6] Verify file paths updated correctly, files exist
+- [7.7] Verify permission relationships intact
+- [7.8] Verify activity logs complete
+- [7.9] Run full system integration test with real workflows
+- [7.10] Spot check 100 random records across entities
+- [7.11] Verify no orphaned records (0 orphans)
+- [7.12] Verify performance baseline (p95 <500ms @ 100K records)
+- Generate comprehensive verification report
+- Document any issues found
+- Fix any issues found
+- Re-run failed checks until all pass
+- SUCCESS CRITERIA: 12/12 checks pass
+
+[WAVE-6.4] Execute Phase 3.8 - Parallel Operations Setup
+BLOCKS: [WAVE-6.5, WAVE-7.5]
+BLOCKED_BY: [WAVE-4.6, WAVE-6.3]
+DETAILS:
+- [8.1] Set Friday-staging to read-only mode
+- [8.2] Set MyWorkReview-staging to read-only mode
+- [8.3] Create change sync Friday → Moonlanding
+- [8.4] Create change sync MWR → Moonlanding
+- [8.5] Set up dual-system routing (old systems → Moonlanding with fallback)
+- [8.6] Monitor data consistency between systems
+- [8.7] Test rollback from Moonlanding to old systems
+- [8.8] Document dual-system operation procedures
+- Run parallel operations for 24-48 hours
+- Verify no data divergence
+- Verify sync latency <1 second
+- Verify rollback procedures work
+- SUCCESS CRITERIA: Dual systems in sync, rollback tested
+
+[WAVE-6.5] Execute Phase 3.9 - Production Cutover
+BLOCKS: [WAVE-6.6, WAVE-7.6]
+BLOCKED_BY: [WAVE-6.4]
+DETAILS:
+- [9.1] Set old systems to read-only (final lock)
+- [9.2] Verify no pending changes in old systems
+- [9.3] Run final sync old → Moonlanding
+- [9.4] Verify all data is current
+- [9.5] Switch production traffic to Moonlanding
+- [9.6] Verify system operation under load
+- [9.7] Monitor for errors (first hour critical)
+- [9.8] Decommission old systems (after stability confirmed)
+- Keep backups of old systems for 30 days
+- Document cutover timestamp
+- SUCCESS CRITERIA: 100% traffic on Moonlanding, 0 critical errors
+
+[WAVE-6.6] Execute Phase 3.10 - Post-Migration Support
+BLOCKS: [WAVE-7.7]
+BLOCKED_BY: [WAVE-6.5]
+DETAILS:
+- [10.1] Monitor error logs continuously (24 hours)
+- [10.2] Address user issues immediately (SLA <15 min)
+- [10.3] Optimize performance if p95 >500ms
+- [10.4] Create migration documentation
+- [10.5] Archive old system data
+- [10.6] Update operational runbooks
+- [10.7] Train support team on Moonlanding
+- Monitor metrics hourly for first 24h
+- Monitor metrics daily for first week
+- Monitor metrics weekly for first month
+- Document lessons learned
+- SUCCESS CRITERIA: 24h stable operation, all documentation complete
+
+[WAVE-6.7] Verify zero data loss post-migration
+BLOCKS: [WAVE-7.8]
+BLOCKED_BY: [WAVE-5.1]
+DETAILS:
+- Count all records in source systems
+- Count all records in Moonlanding
+- Account for deduplication (10-15%)
+- Verify counts match exactly
+- Spot check 1000 random records
+- Verify all fields migrated correctly
+- Verify all relationships intact
+- Verify all files accessible
+- Verify all timestamps correct
+- Verify all coordinates preserved
+- Document any discrepancies
+- Fix any discrepancies found
+- Re-verify after fixes
+- SUCCESS CRITERIA: 0 data loss, 100% accuracy
+
+[WAVE-6.8] Performance benchmarking post-migration
+BLOCKS: [WAVE-7.9]
+BLOCKED_BY: [WAVE-5.2]
+DETAILS:
+- Measure p50/p95/p99 latency for all endpoints
+- Measure database query performance
+- Measure page load times
+- Measure time to interactive
+- Measure bundle sizes
+- Measure memory usage
+- Measure CPU usage
+- Measure concurrent user capacity
+- Compare against baseline (p95 <500ms target)
+- Identify performance bottlenecks
+- Optimize bottlenecks found
+- Re-benchmark after optimizations
+- Document performance characteristics
+- SUCCESS CRITERIA: p95 <500ms, no degradation from baseline
+
+[WAVE-6.9] Security audit post-migration
+BLOCKS: [WAVE-7.10]
+BLOCKED_BY: [WAVE-5.3]
+DETAILS:
+- Verify all endpoints require authentication
+- Verify all endpoints enforce authorization
+- Verify CSRF protection on all mutating endpoints
+- Verify input validation on all endpoints
+- Verify output sanitization prevents XSS
+- Verify SQL injection prevention
+- Verify file upload restrictions
+- Verify rate limiting on expensive operations
+- Verify session security (httpOnly, secure, sameSite)
+- Verify password hashing (bcrypt with cost 12)
+- Test common attack vectors
+- Document security posture
+- Fix any vulnerabilities found
+- Re-test after fixes
+- SUCCESS CRITERIA: 0 critical vulnerabilities
+
+[WAVE-6.10] Accessibility audit post-migration
+BLOCKS: [WAVE-7.11]
+BLOCKED_BY: [WAVE-5.4]
+DETAILS:
+- Test with keyboard navigation only
+- Test with screen reader (NVDA/JAWS)
+- Test with browser zoom 200%
+- Test color contrast ratios
+- Test ARIA labels and roles
+- Test focus management
+- Test form validation feedback
+- Test error messages
+- Test skip links
+- Run automated accessibility scanner
+- Document accessibility issues
+- Fix all WCAG 2.1 AA violations
+- Re-test after fixes
+- SUCCESS CRITERIA: WCAG 2.1 AA compliant
+
+[WAVE-6.11] Browser compatibility testing
+BLOCKS: [WAVE-7.12]
+BLOCKED_BY: [WAVE-5.5]
+DETAILS:
+- Test on Chrome (latest)
+- Test on Firefox (latest)
+- Test on Safari (latest)
+- Test on Edge (latest)
+- Test on mobile Chrome
+- Test on mobile Safari
+- Test on tablet devices
+- Verify all features work correctly
+- Verify all layouts render correctly
+- Verify all interactions work correctly
+- Document browser-specific issues
+- Fix critical compatibility issues
+- Test fallbacks for unsupported features
+- SUCCESS CRITERIA: Works on all major browsers
+
+[WAVE-6.12] Load testing post-migration
+BLOCKS: [WAVE-7.13]
+BLOCKED_BY: [WAVE-5.6]
+DETAILS:
+- Simulate 100 concurrent users
+- Simulate 1000 concurrent users
+- Simulate 10000 concurrent users
+- Measure response times under load
+- Measure error rates under load
+- Measure resource usage under load
+- Identify breaking points
+- Test database connection limits
+- Test memory limits
+- Test CPU limits
+- Test network bandwidth limits
+- Document load characteristics
+- Optimize for identified bottlenecks
+- Re-test after optimizations
+- SUCCESS CRITERIA: Handles expected peak load with p95 <500ms
+
+[WAVE-6.13] Disaster recovery testing
+BLOCKS: [WAVE-7.14]
+BLOCKED_BY: [WAVE-5.7]
+DETAILS:
+- Test database backup and restore
+- Test server crash recovery
+- Test network partition recovery
+- Test data corruption recovery
+- Test rollback to previous version
+- Test hot reload recovery
+- Test checkpoint/restore mechanisms
+- Measure recovery time objectives (RTO)
+- Measure recovery point objectives (RPO)
+- Document recovery procedures
+- Train team on recovery procedures
+- SUCCESS CRITERIA: RTO <15 min, RPO <5 min
+
+[WAVE-6.14] Documentation completeness audit
+BLOCKS: [WAVE-7.15]
+BLOCKED_BY: [WAVE-5.8]
+DETAILS:
+- Document all API endpoints
+- Document all configuration options
+- Document all deployment procedures
+- Document all monitoring setup
+- Document all troubleshooting procedures
+- Document all architecture decisions
+- Document all security considerations
+- Document all performance optimizations
+- Document all accessibility features
+- Document all testing procedures
+- Create user guides
+- Create admin guides
+- Create developer guides
+- SUCCESS CRITERIA: Complete documentation for all areas
+
+[WAVE-6.15] User acceptance testing
+BLOCKS: [WAVE-7.16]
+BLOCKED_BY: [WAVE-5.9]
+DETAILS:
+- Test all critical user workflows
+- Test engagement creation workflow
+- Test RFI submission workflow
+- Test review completion workflow
+- Test highlight annotation workflow
+- Test collaborative features
+- Test search and filter
+- Test bulk operations
+- Test mobile workflows
+- Get user feedback on usability
+- Document user issues
+- Fix critical user issues
+- Re-test after fixes
+- SUCCESS CRITERIA: All critical workflows work, user acceptance achieved
+
+[WAVE-6.16] Final system health check
+BLOCKS: [WAVE-7.17]
+BLOCKED_BY: [WAVE-5.10]
+DETAILS:
+- Verify all services running
+- Verify all databases accessible
+- Verify all external integrations working
+- Verify all cron jobs executing
+- Verify all email notifications sending
+- Verify all file uploads/downloads working
+- Verify all PDF generation working
+- Verify all exports working
+- Verify all imports working
+- Verify all audit logging working
+- Verify all monitoring working
+- Verify all alerting working
+- Verify all hot reload working
+- Verify all error recovery working
+- Document system health status
+- SUCCESS CRITERIA: 100% health across all systems
+
+## WAVE 7: VALIDATION & CLEANUP (Final wave, depends on Wave 6)
+
+[WAVE-7.1] Validate all features match Friday-staging exactly
+BLOCKS: []
+BLOCKED_BY: [WAVE-5.1, WAVE-6.1]
+DETAILS:
+- Create feature checklist from Friday-staging analysis
+- Test each feature in Moonlanding
+- Verify functionality matches exactly
+- Verify UI/UX matches
+- Verify performance matches or exceeds
+- Document any differences
+- Fix critical differences
+- Accept minor improvements
+- Get stakeholder sign-off on feature parity
+- SUCCESS CRITERIA: 100% feature parity with Friday
+
+[WAVE-7.2] Validate all features match MyWorkReview-staging exactly
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.1, WAVE-6.2]
+DETAILS:
+- Create feature checklist from MWR-staging analysis
+- Test each feature in Moonlanding
+- Verify functionality matches exactly
+- Verify UI/UX matches
+- Verify performance matches or exceeds
+- Document any differences
+- Fix critical differences
+- Accept minor improvements
+- Get stakeholder sign-off on feature parity
+- SUCCESS CRITERIA: 100% feature parity with MWR
+
+[WAVE-7.3] Validate RippleUI usage is 100% complete
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.2, WAVE-6.3]
+DETAILS:
+- Audit all UI files for RippleUI class usage
+- Verify 176/176 files use RippleUI classes
+- Remove any custom CSS that duplicates RippleUI
+- Ensure consistent styling across all pages
+- Verify responsive behavior across all breakpoints
+- Document RippleUI patterns used
+- SUCCESS CRITERIA: 100% RippleUI coverage, 0 duplicate CSS
+
+[WAVE-7.4] Validate WebJSX usage is 100% complete
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.3, WAVE-6.4]
+DETAILS:
+- Audit all UI files for WebJSX usage
+- Verify all UI files use WebJSX (no template strings)
+- Verify all JSX hot-reloads correctly
+- Verify all components are modular
+- Verify all components have prop validation
+- Document WebJSX patterns used
+- SUCCESS CRITERIA: 100% WebJSX coverage, 0 template strings
+
+[WAVE-7.5] Validate hot reload is flawless across all modules
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.4, WAVE-6.5]
+DETAILS:
+- Test hot reload on all route files
+- Test hot reload on all UI components
+- Test hot reload on all configuration files
+- Test hot reload on all service files
+- Test hot reload on all engine files
+- Verify no state loss during reload
+- Verify no dropped requests during reload
+- Verify reload latency <100ms
+- Test reload under load
+- Test reload with errors
+- Document hot reload coverage
+- SUCCESS CRITERIA: 100% hot reload coverage, 0 state loss, 0 dropped requests
+
+[WAVE-7.6] Validate client-server state sync is predictable
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.5, WAVE-6.6]
+DETAILS:
+- Test state sync with single user
+- Test state sync with multiple concurrent users
+- Test state sync with network delays
+- Test state sync with network failures
+- Test state sync with rapid updates
+- Test state sync with large state objects
+- Verify no race conditions
+- Verify no state corruption
+- Verify optimistic updates rollback correctly
+- Verify conflict resolution works correctly
+- Document state sync behavior
+- SUCCESS CRITERIA: Predictable sync, 0 race conditions, 0 corruption
+
+[WAVE-7.7] Validate codebase is small and maintainable
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.6]
+DETAILS:
+- Count total lines of code
+- Verify all files <200 lines (per Charter 5)
+- Identify and refactor any files >200 lines
+- Verify no duplicate code
+- Verify no dead code
+- Verify configuration drives behavior (not code)
+- Verify dynamic/parameterizable systems
+- Verify no hardcoded values
+- Verify no special cases
+- Document code organization
+- SUCCESS CRITERIA: All files <200 lines, 0 duplication, config-driven
+
+[WAVE-7.8] Validate migration accuracy is 100%
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.7]
+DETAILS:
+- Re-verify row counts
+- Re-verify referential integrity
+- Re-verify data types
+- Re-verify PDF coordinates (±0 pixels)
+- Re-verify timestamps (UTC)
+- Re-verify file paths
+- Re-verify JSON fields
+- Re-verify FK constraints
+- Spot check 1000 random records again
+- Document final migration statistics
+- SUCCESS CRITERIA: 0 data loss, 100% accuracy, 8/8 validators pass
+
+[WAVE-7.9] Validate performance meets all targets
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.8]
+DETAILS:
+- Verify p95 latency <500ms for all endpoints
+- Verify Time to Interactive <3s for all pages
+- Verify bundle size <1MB
+- Verify memory usage stable over time
+- Verify no memory leaks
+- Verify database queries optimized
+- Verify concurrent user capacity ≥1000
+- Document final performance metrics
+- SUCCESS CRITERIA: All performance targets met
+
+[WAVE-7.10] Validate security posture is production-ready
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.9]
+DETAILS:
+- Re-run security audit
+- Verify all critical vulnerabilities fixed
+- Verify authentication required everywhere
+- Verify authorization enforced everywhere
+- Verify CSRF protection everywhere
+- Verify input validation everywhere
+- Verify output sanitization everywhere
+- Document final security posture
+- SUCCESS CRITERIA: 0 critical vulnerabilities, defense-in-depth
+
+[WAVE-7.11] Validate accessibility is WCAG 2.1 AA compliant
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.10]
+DETAILS:
+- Re-run accessibility audit
+- Verify all WCAG 2.1 AA violations fixed
+- Verify keyboard navigation works
+- Verify screen reader support works
+- Verify color contrast sufficient
+- Verify ARIA labels complete
+- Document final accessibility status
+- SUCCESS CRITERIA: WCAG 2.1 AA compliant
+
+[WAVE-7.12] Validate browser compatibility is complete
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.11]
+DETAILS:
+- Re-test all major browsers
+- Verify all features work
+- Verify all layouts render correctly
+- Verify all interactions work
+- Document final browser support
+- SUCCESS CRITERIA: Works on Chrome/Firefox/Safari/Edge (latest)
+
+[WAVE-7.13] Validate load capacity meets requirements
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.12]
+DETAILS:
+- Re-run load tests
+- Verify handles peak load
+- Verify response times acceptable under load
+- Verify error rates acceptable under load
+- Verify resource usage acceptable under load
+- Document final load capacity
+- SUCCESS CRITERIA: Handles 1000+ concurrent users with p95 <500ms
+
+[WAVE-7.14] Validate disaster recovery procedures work
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.13]
+DETAILS:
+- Re-test backup and restore
+- Re-test crash recovery
+- Re-test rollback procedures
+- Verify RTO <15 min
+- Verify RPO <5 min
+- Document final recovery procedures
+- SUCCESS CRITERIA: Tested recovery procedures, RTO/RPO met
+
+[WAVE-7.15] Validate documentation is complete
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.14]
+DETAILS:
+- Review all documentation
+- Verify API docs complete
+- Verify config docs complete
+- Verify deployment docs complete
+- Verify troubleshooting docs complete
+- Verify user guides complete
+- Verify admin guides complete
+- Verify developer guides complete
+- SUCCESS CRITERIA: Complete documentation for all areas
+
+[WAVE-7.16] Validate user acceptance achieved
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.15]
+DETAILS:
+- Collect final user feedback
+- Address any remaining user issues
+- Verify all critical workflows work
+- Get final sign-off from stakeholders
+- Document user acceptance
+- SUCCESS CRITERIA: Stakeholder sign-off achieved
+
+[WAVE-7.17] Final system validation and sign-off
+BLOCKS: []
+BLOCKED_BY: [WAVE-6.16]
+DETAILS:
+- Run final health check
+- Verify all systems operational
+- Verify all monitoring active
+- Verify all alerting configured
+- Verify all documentation current
+- Verify all team training complete
+- Get final sign-off for production
+- Celebrate completion
+- SUCCESS CRITERIA: Production-ready system, stakeholder sign-off
+
+## EXECUTION SUMMARY
+
+Total Items: 143
+Total Waves: 7
+Parallel Execution: Maximum parallelism within each wave using multiple gm subagents
+
+Wave 1: 5 items (all parallel)
+Wave 2: 5 items (all parallel after Wave 1)
+Wave 3: 4 items (all parallel after Wave 2)
+Wave 4: 8 items (all parallel after Wave 3)
+Wave 5: 10 items (all parallel after Wave 4)
+Wave 6: 16 items (sequential/parallel mix after Wave 5)
+Wave 7: 17 items (all parallel after Wave 6)
+
+Estimated Duration:
+- Wave 1: 8-12 hours (discovery)
+- Wave 2: 6-8 hours (analysis)
+- Wave 3: 8-12 hours (schema/config)
+- Wave 4: 40-60 hours (implementation)
+- Wave 5: 30-40 hours (optimization)
+- Wave 6: 20-30 hours (migration + testing)
+- Wave 7: 12-16 hours (validation)
+Total: 124-178 hours (15-22 business days with parallelism)
+
+Critical Path:
+WAVE-1.1 → WAVE-2.1 → WAVE-3.1 → WAVE-4.1 → WAVE-5.3 → WAVE-6.1 → WAVE-6.2 → WAVE-6.3 → WAVE-6.4 → WAVE-6.5 → WAVE-6.6 → WAVE-7.8
+
+Success Criteria (ALL must pass):
+✓ 100% feature parity with Friday-staging
+✓ 100% feature parity with MyWorkReview-staging
+✓ 100% RippleUI coverage (176/176 files)
+✓ 100% WebJSX coverage (all UI files)
+✓ Flawless hot reload (0 state loss, 0 dropped requests)
+✓ Predictable state sync (0 race conditions, 0 corruption)
+✓ Small codebase (all files <200 lines, 0 duplication)
+✓ Zero data loss (230K+ records migrated, 8/8 validators pass)
+✓ Performance targets (p95 <500ms, TTI <3s)
+✓ Security posture (0 critical vulnerabilities)
+✓ Accessibility (WCAG 2.1 AA compliant)
+✓ Browser compatibility (Chrome/Firefox/Safari/Edge)
+✓ Load capacity (1000+ concurrent users)
+✓ Disaster recovery (RTO <15 min, RPO <5 min)
+✓ Complete documentation
+✓ User acceptance and stakeholder sign-off
