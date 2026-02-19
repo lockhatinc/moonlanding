@@ -1,0 +1,769 @@
+{
+  "metadata": {
+    "wave": "WAVE-2.4",
+    "title": "Architecture Gap Analysis",
+    "timestamp": "2026-02-19T17:56:22.140Z",
+    "depends_on": [
+      "WAVE-1.3",
+      "WAVE-1.4"
+    ],
+    "blocks": [
+      "WAVE-3.3",
+      "WAVE-4.6"
+    ]
+  },
+  "summary": {
+    "total_gaps_found": 12,
+    "critical_gaps": 2,
+    "high_priority_gaps": 4,
+    "medium_priority_gaps": 5,
+    "low_priority_gaps": 1,
+    "critical_priority_gaps": null
+  },
+  "gaps_by_category": {
+    "Hot_Reload": [
+      {
+        "category": "Hot_Reload",
+        "name": "Incomplete Directory Watching",
+        "severity": "medium",
+        "description": "87/87 directories not watched for hot reload (0% coverage).",
+        "evidence": {
+          "watched_count": 0,
+          "total_count": 87,
+          "unwatched_directories": [
+            "/config/workspace/moonlanding/src/adapters",
+            "/config/workspace/moonlanding/src/app",
+            "/config/workspace/moonlanding/src/app/api",
+            "/config/workspace/moonlanding/src/app/api/[entity]",
+            "/config/workspace/moonlanding/src/app/api/[entity]/[[...path]]",
+            "/config/workspace/moonlanding/src/app/api/admin",
+            "/config/workspace/moonlanding/src/app/api/audit",
+            "/config/workspace/moonlanding/src/app/api/audit/dashboard",
+            "/config/workspace/moonlanding/src/app/api/audit/permissions",
+            "/config/workspace/moonlanding/src/app/api/audit/permissions/[id]"
+          ],
+          "coverage_percentage": 0
+        },
+        "remediation": "Expand file watchers to cover all source directories.",
+        "detected_by": "WAVE-2.4",
+        "timestamp": "2026-02-19T17:56:22.151Z"
+      }
+    ],
+    "Concurrency": [
+      {
+        "category": "Concurrency",
+        "name": "Potential Race Conditions in State Management",
+        "severity": "critical",
+        "description": "7 state files have potential race conditions (async without locks).",
+        "evidence": {
+          "files_at_risk": [
+            "/config/workspace/moonlanding/src/app/api/auth/google/callback/route.js",
+            "/config/workspace/moonlanding/src/app/api/auth/google/route.js",
+            "/config/workspace/moonlanding/src/app/api/friday/rfi/route.js",
+            "/config/workspace/moonlanding/src/lib/audit-logger.js",
+            "/config/workspace/moonlanding/src/lib/auth-route-helpers.js",
+            "/config/workspace/moonlanding/src/lib/config-generator-engine.js",
+            "/config/workspace/moonlanding/src/lib/next-polyfills.js"
+          ],
+          "patterns_detected": [
+            "async without locks",
+            "unguarded state updates"
+          ]
+        },
+        "remediation": "Add mutex locks for state updates. Implement queue-based state updates. Use atomic operations.",
+        "detected_by": "WAVE-2.4",
+        "timestamp": "2026-02-19T17:56:22.158Z"
+      }
+    ],
+    "Module_Loading": [
+      {
+        "category": "Module_Loading",
+        "name": "Missing Cache Invalidation Mechanism",
+        "severity": "high",
+        "description": "No mechanism found to clear stale module cache on hot reload.",
+        "evidence": {
+          "cache_related_files": [
+            "/config/workspace/moonlanding/src/config/system-config-loader.js",
+            "/config/workspace/moonlanding/src/lib/domain-loader.js"
+          ],
+          "cache_clear_found": false
+        },
+        "remediation": "Implement cache invalidation on file changes. Add manual cache clear command.",
+        "detected_by": "WAVE-2.4",
+        "timestamp": "2026-02-19T17:56:22.158Z"
+      },
+      {
+        "category": "Module_Loading",
+        "name": "Relative Import Paths Found",
+        "severity": "medium",
+        "description": "25 files use relative imports instead of @/ alias.",
+        "evidence": {
+          "files_with_relative_imports": [
+            {
+              "path": "/config/workspace/moonlanding/src/adapters/google-drive.js",
+              "count": 2
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/adapters/google-gmail.js",
+              "count": 2
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/adapters/index.js",
+              "count": 3
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/config/env.js",
+              "count": 1
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/config/index.js",
+              "count": 4
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/config/spec-builder.js",
+              "count": 1
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/config/spec-helpers.js",
+              "count": 1
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/engine/notification-engine.js",
+              "count": 1
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/engine/recreation.js",
+              "count": 1
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/lib/action-utils.js",
+              "count": 1
+            }
+          ],
+          "total_violations": 51
+        },
+        "remediation": "Convert all relative imports to @/ alias. Required for tsx compatibility.",
+        "detected_by": "WAVE-2.4",
+        "timestamp": "2026-02-19T17:56:22.191Z"
+      }
+    ],
+    "Reliability": [
+      {
+        "category": "Reliability",
+        "name": "Incomplete Supervisor Coverage",
+        "severity": "high",
+        "description": "Only 0/23 engine files have supervisor patterns (0% coverage).",
+        "evidence": {
+          "files_with_supervisors": 0,
+          "total_engine_files": 23,
+          "coverage_percentage": 0,
+          "files_without_supervisors": [
+            "/config/workspace/moonlanding/src/engine/backup.js",
+            "/config/workspace/moonlanding/src/engine/drive.js",
+            "/config/workspace/moonlanding/src/engine/events.js",
+            "/config/workspace/moonlanding/src/engine/generate-checklist-pdf.js",
+            "/config/workspace/moonlanding/src/engine/gmail.js",
+            "/config/workspace/moonlanding/src/engine/google-auth.js",
+            "/config/workspace/moonlanding/src/engine/job-engine.js",
+            "/config/workspace/moonlanding/src/engine/notification-engine.js",
+            "/config/workspace/moonlanding/src/engine/recreation.js",
+            "/config/workspace/moonlanding/src/engine.js"
+          ]
+        },
+        "remediation": "Implement supervisor pattern for all engines. Add restart/recovery logic.",
+        "detected_by": "WAVE-2.4",
+        "timestamp": "2026-02-19T17:56:22.160Z"
+      },
+      {
+        "category": "Reliability",
+        "name": "Missing Checkpoint/Recovery Patterns",
+        "severity": "high",
+        "description": "Only 0/9 stateful files implement checkpoint/recovery (0% coverage).",
+        "evidence": {
+          "files_with_checkpoints": 0,
+          "total_stateful_files": 9,
+          "coverage_percentage": 0
+        },
+        "remediation": "Add checkpoint mechanism for all stateful operations. Implement recovery from checkpoints.",
+        "detected_by": "WAVE-2.4",
+        "timestamp": "2026-02-19T17:56:22.166Z"
+      }
+    ],
+    "Async_Control": [
+      {
+        "category": "Async_Control",
+        "name": "Uncontained Promises",
+        "severity": "critical",
+        "description": "55 files have promises without proper await or .catch() handling.",
+        "evidence": {
+          "files_at_risk": [
+            "/config/workspace/moonlanding/src/adapters/google-adapter-base.js",
+            "/config/workspace/moonlanding/src/adapters/google-auth.js",
+            "/config/workspace/moonlanding/src/adapters/google-drive.js",
+            "/config/workspace/moonlanding/src/adapters/google-gmail.js",
+            "/config/workspace/moonlanding/src/app/api/[entity]/[[...path]]/route.js",
+            "/config/workspace/moonlanding/src/app/api/audit/dashboard/route.js",
+            "/config/workspace/moonlanding/src/app/api/audit/permissions/stats/route.js",
+            "/config/workspace/moonlanding/src/app/api/audit/route.js",
+            "/config/workspace/moonlanding/src/app/api/auth/logout/route.js",
+            "/config/workspace/moonlanding/src/app/api/auth/me/route.js"
+          ],
+          "risk": "Unhandled promise rejections will crash the process"
+        },
+        "remediation": "Add .catch() to all promises. Use await for all async calls.",
+        "detected_by": "WAVE-2.4",
+        "timestamp": "2026-02-19T17:56:22.180Z"
+      },
+      {
+        "category": "Async_Control",
+        "name": "Missing Timeouts for Async Operations",
+        "severity": "medium",
+        "description": "Only 1/118 async operations have timeout protection (1% coverage).",
+        "evidence": {
+          "files_with_timeouts": 1,
+          "total_async_files": 118,
+          "coverage_percentage": 1
+        },
+        "remediation": "Add timeout wrappers for all async operations. Use AbortController for cancelable operations.",
+        "detected_by": "WAVE-2.4",
+        "timestamp": "2026-02-19T17:56:22.184Z"
+      }
+    ],
+    "Error_Handling": [
+      {
+        "category": "Error_Handling",
+        "name": "Missing Error Handlers on Routes",
+        "severity": "high",
+        "description": "20/59 route files lack error handling (66% coverage).",
+        "evidence": {
+          "routes_with_handlers": 39,
+          "total_route_files": 59,
+          "coverage_percentage": 66,
+          "files_without_handlers": [
+            "/config/workspace/moonlanding/src/app/api/[entity]/[[...path]]/route.js",
+            "/config/workspace/moonlanding/src/app/api/audit/route.js",
+            "/config/workspace/moonlanding/src/app/api/auth/google/route.js",
+            "/config/workspace/moonlanding/src/app/api/auth/logout/route.js",
+            "/config/workspace/moonlanding/src/app/api/auth/me/route.js",
+            "/config/workspace/moonlanding/src/app/api/auth/password-reset/route.js",
+            "/config/workspace/moonlanding/src/app/api/csrf-token/route.js",
+            "/config/workspace/moonlanding/src/app/api/domains/[domain]/route.js",
+            "/config/workspace/moonlanding/src/app/api/email/route.js",
+            "/config/workspace/moonlanding/src/app/api/friday/features/route.js"
+          ]
+        },
+        "remediation": "Add try/catch to all route handlers. Implement error response formatting.",
+        "detected_by": "WAVE-2.4",
+        "timestamp": "2026-02-19T17:56:22.185Z"
+      },
+      {
+        "category": "Error_Handling",
+        "name": "Unsafe Error Serialization",
+        "severity": "medium",
+        "description": "45 files may have unsafe error serialization (Symbol values crash).",
+        "evidence": {
+          "files_at_risk": [
+            "/config/workspace/moonlanding/src/app/api/audit/route.js",
+            "/config/workspace/moonlanding/src/app/api/auth/login/route.js",
+            "/config/workspace/moonlanding/src/app/api/auth/mwr-bridge/route.js",
+            "/config/workspace/moonlanding/src/app/api/auth/password-reset/route.js",
+            "/config/workspace/moonlanding/src/app/api/cron/trigger/route.js",
+            "/config/workspace/moonlanding/src/app/api/email/allocate/batch/route.js",
+            "/config/workspace/moonlanding/src/app/api/email/allocate/route.js",
+            "/config/workspace/moonlanding/src/app/api/email/receive/route.js",
+            "/config/workspace/moonlanding/src/app/api/email/send/route.js",
+            "/config/workspace/moonlanding/src/app/api/engagement/rate/route.js"
+          ]
+        },
+        "remediation": "Convert errors to safe objects before JSON.stringify. Extract message and stack explicitly.",
+        "detected_by": "WAVE-2.4",
+        "timestamp": "2026-02-19T17:56:22.195Z"
+      }
+    ],
+    "Debug": [
+      {
+        "category": "Debug",
+        "name": "Missing Debug Hook Exposure",
+        "severity": "low",
+        "description": "Only 1/23 engines expose state to global scope for debugging.",
+        "evidence": {
+          "exposed_count": 1,
+          "total_engines": 23,
+          "coverage_percentage": 4
+        },
+        "remediation": "Expose engine state to global scope. Provide REPL handles for live debugging.",
+        "detected_by": "WAVE-2.4",
+        "timestamp": "2026-02-19T17:56:22.196Z"
+      }
+    ],
+    "Code_Quality": [
+      {
+        "category": "Code_Quality",
+        "name": "Files Exceeding 200 Line Limit",
+        "severity": "medium",
+        "description": "22 files exceed 200 line limit.",
+        "evidence": {
+          "large_files": [
+            {
+              "path": "/config/workspace/moonlanding/src/app/api/email/send/route.js",
+              "lines": 360
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/app/api/engagement/rate/route.js",
+              "lines": 238
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/app/api/mwr/collaborator-role/route.js",
+              "lines": 367
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/config/spec-builder.js",
+              "lines": 259
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/engine/job-engine.js",
+              "lines": 284
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/lib/audit-logger.js",
+              "lines": 204
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/lib/config-generator-engine.js",
+              "lines": 1277
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/lib/crud-factory.js",
+              "lines": 321
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/lib/database-core.js",
+              "lines": 285
+            },
+            {
+              "path": "/config/workspace/moonlanding/src/lib/date-choice-dialog.js",
+              "lines": 331
+            }
+          ],
+          "total_violations": 22
+        },
+        "remediation": "Refactor large files into smaller modules. Extract repeated patterns.",
+        "detected_by": "WAVE-2.4",
+        "timestamp": "2026-02-19T17:56:22.200Z"
+      }
+    ]
+  },
+  "detailed_gaps": [
+    {
+      "category": "Hot_Reload",
+      "name": "Incomplete Directory Watching",
+      "severity": "medium",
+      "description": "87/87 directories not watched for hot reload (0% coverage).",
+      "evidence": {
+        "watched_count": 0,
+        "total_count": 87,
+        "unwatched_directories": [
+          "/config/workspace/moonlanding/src/adapters",
+          "/config/workspace/moonlanding/src/app",
+          "/config/workspace/moonlanding/src/app/api",
+          "/config/workspace/moonlanding/src/app/api/[entity]",
+          "/config/workspace/moonlanding/src/app/api/[entity]/[[...path]]",
+          "/config/workspace/moonlanding/src/app/api/admin",
+          "/config/workspace/moonlanding/src/app/api/audit",
+          "/config/workspace/moonlanding/src/app/api/audit/dashboard",
+          "/config/workspace/moonlanding/src/app/api/audit/permissions",
+          "/config/workspace/moonlanding/src/app/api/audit/permissions/[id]"
+        ],
+        "coverage_percentage": 0
+      },
+      "remediation": "Expand file watchers to cover all source directories.",
+      "detected_by": "WAVE-2.4",
+      "timestamp": "2026-02-19T17:56:22.151Z"
+    },
+    {
+      "category": "Concurrency",
+      "name": "Potential Race Conditions in State Management",
+      "severity": "critical",
+      "description": "7 state files have potential race conditions (async without locks).",
+      "evidence": {
+        "files_at_risk": [
+          "/config/workspace/moonlanding/src/app/api/auth/google/callback/route.js",
+          "/config/workspace/moonlanding/src/app/api/auth/google/route.js",
+          "/config/workspace/moonlanding/src/app/api/friday/rfi/route.js",
+          "/config/workspace/moonlanding/src/lib/audit-logger.js",
+          "/config/workspace/moonlanding/src/lib/auth-route-helpers.js",
+          "/config/workspace/moonlanding/src/lib/config-generator-engine.js",
+          "/config/workspace/moonlanding/src/lib/next-polyfills.js"
+        ],
+        "patterns_detected": [
+          "async without locks",
+          "unguarded state updates"
+        ]
+      },
+      "remediation": "Add mutex locks for state updates. Implement queue-based state updates. Use atomic operations.",
+      "detected_by": "WAVE-2.4",
+      "timestamp": "2026-02-19T17:56:22.158Z"
+    },
+    {
+      "category": "Module_Loading",
+      "name": "Missing Cache Invalidation Mechanism",
+      "severity": "high",
+      "description": "No mechanism found to clear stale module cache on hot reload.",
+      "evidence": {
+        "cache_related_files": [
+          "/config/workspace/moonlanding/src/config/system-config-loader.js",
+          "/config/workspace/moonlanding/src/lib/domain-loader.js"
+        ],
+        "cache_clear_found": false
+      },
+      "remediation": "Implement cache invalidation on file changes. Add manual cache clear command.",
+      "detected_by": "WAVE-2.4",
+      "timestamp": "2026-02-19T17:56:22.158Z"
+    },
+    {
+      "category": "Reliability",
+      "name": "Incomplete Supervisor Coverage",
+      "severity": "high",
+      "description": "Only 0/23 engine files have supervisor patterns (0% coverage).",
+      "evidence": {
+        "files_with_supervisors": 0,
+        "total_engine_files": 23,
+        "coverage_percentage": 0,
+        "files_without_supervisors": [
+          "/config/workspace/moonlanding/src/engine/backup.js",
+          "/config/workspace/moonlanding/src/engine/drive.js",
+          "/config/workspace/moonlanding/src/engine/events.js",
+          "/config/workspace/moonlanding/src/engine/generate-checklist-pdf.js",
+          "/config/workspace/moonlanding/src/engine/gmail.js",
+          "/config/workspace/moonlanding/src/engine/google-auth.js",
+          "/config/workspace/moonlanding/src/engine/job-engine.js",
+          "/config/workspace/moonlanding/src/engine/notification-engine.js",
+          "/config/workspace/moonlanding/src/engine/recreation.js",
+          "/config/workspace/moonlanding/src/engine.js"
+        ]
+      },
+      "remediation": "Implement supervisor pattern for all engines. Add restart/recovery logic.",
+      "detected_by": "WAVE-2.4",
+      "timestamp": "2026-02-19T17:56:22.160Z"
+    },
+    {
+      "category": "Reliability",
+      "name": "Missing Checkpoint/Recovery Patterns",
+      "severity": "high",
+      "description": "Only 0/9 stateful files implement checkpoint/recovery (0% coverage).",
+      "evidence": {
+        "files_with_checkpoints": 0,
+        "total_stateful_files": 9,
+        "coverage_percentage": 0
+      },
+      "remediation": "Add checkpoint mechanism for all stateful operations. Implement recovery from checkpoints.",
+      "detected_by": "WAVE-2.4",
+      "timestamp": "2026-02-19T17:56:22.166Z"
+    },
+    {
+      "category": "Async_Control",
+      "name": "Uncontained Promises",
+      "severity": "critical",
+      "description": "55 files have promises without proper await or .catch() handling.",
+      "evidence": {
+        "files_at_risk": [
+          "/config/workspace/moonlanding/src/adapters/google-adapter-base.js",
+          "/config/workspace/moonlanding/src/adapters/google-auth.js",
+          "/config/workspace/moonlanding/src/adapters/google-drive.js",
+          "/config/workspace/moonlanding/src/adapters/google-gmail.js",
+          "/config/workspace/moonlanding/src/app/api/[entity]/[[...path]]/route.js",
+          "/config/workspace/moonlanding/src/app/api/audit/dashboard/route.js",
+          "/config/workspace/moonlanding/src/app/api/audit/permissions/stats/route.js",
+          "/config/workspace/moonlanding/src/app/api/audit/route.js",
+          "/config/workspace/moonlanding/src/app/api/auth/logout/route.js",
+          "/config/workspace/moonlanding/src/app/api/auth/me/route.js"
+        ],
+        "risk": "Unhandled promise rejections will crash the process"
+      },
+      "remediation": "Add .catch() to all promises. Use await for all async calls.",
+      "detected_by": "WAVE-2.4",
+      "timestamp": "2026-02-19T17:56:22.180Z"
+    },
+    {
+      "category": "Async_Control",
+      "name": "Missing Timeouts for Async Operations",
+      "severity": "medium",
+      "description": "Only 1/118 async operations have timeout protection (1% coverage).",
+      "evidence": {
+        "files_with_timeouts": 1,
+        "total_async_files": 118,
+        "coverage_percentage": 1
+      },
+      "remediation": "Add timeout wrappers for all async operations. Use AbortController for cancelable operations.",
+      "detected_by": "WAVE-2.4",
+      "timestamp": "2026-02-19T17:56:22.184Z"
+    },
+    {
+      "category": "Error_Handling",
+      "name": "Missing Error Handlers on Routes",
+      "severity": "high",
+      "description": "20/59 route files lack error handling (66% coverage).",
+      "evidence": {
+        "routes_with_handlers": 39,
+        "total_route_files": 59,
+        "coverage_percentage": 66,
+        "files_without_handlers": [
+          "/config/workspace/moonlanding/src/app/api/[entity]/[[...path]]/route.js",
+          "/config/workspace/moonlanding/src/app/api/audit/route.js",
+          "/config/workspace/moonlanding/src/app/api/auth/google/route.js",
+          "/config/workspace/moonlanding/src/app/api/auth/logout/route.js",
+          "/config/workspace/moonlanding/src/app/api/auth/me/route.js",
+          "/config/workspace/moonlanding/src/app/api/auth/password-reset/route.js",
+          "/config/workspace/moonlanding/src/app/api/csrf-token/route.js",
+          "/config/workspace/moonlanding/src/app/api/domains/[domain]/route.js",
+          "/config/workspace/moonlanding/src/app/api/email/route.js",
+          "/config/workspace/moonlanding/src/app/api/friday/features/route.js"
+        ]
+      },
+      "remediation": "Add try/catch to all route handlers. Implement error response formatting.",
+      "detected_by": "WAVE-2.4",
+      "timestamp": "2026-02-19T17:56:22.185Z"
+    },
+    {
+      "category": "Module_Loading",
+      "name": "Relative Import Paths Found",
+      "severity": "medium",
+      "description": "25 files use relative imports instead of @/ alias.",
+      "evidence": {
+        "files_with_relative_imports": [
+          {
+            "path": "/config/workspace/moonlanding/src/adapters/google-drive.js",
+            "count": 2
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/adapters/google-gmail.js",
+            "count": 2
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/adapters/index.js",
+            "count": 3
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/config/env.js",
+            "count": 1
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/config/index.js",
+            "count": 4
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/config/spec-builder.js",
+            "count": 1
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/config/spec-helpers.js",
+            "count": 1
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/engine/notification-engine.js",
+            "count": 1
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/engine/recreation.js",
+            "count": 1
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/lib/action-utils.js",
+            "count": 1
+          }
+        ],
+        "total_violations": 51
+      },
+      "remediation": "Convert all relative imports to @/ alias. Required for tsx compatibility.",
+      "detected_by": "WAVE-2.4",
+      "timestamp": "2026-02-19T17:56:22.191Z"
+    },
+    {
+      "category": "Error_Handling",
+      "name": "Unsafe Error Serialization",
+      "severity": "medium",
+      "description": "45 files may have unsafe error serialization (Symbol values crash).",
+      "evidence": {
+        "files_at_risk": [
+          "/config/workspace/moonlanding/src/app/api/audit/route.js",
+          "/config/workspace/moonlanding/src/app/api/auth/login/route.js",
+          "/config/workspace/moonlanding/src/app/api/auth/mwr-bridge/route.js",
+          "/config/workspace/moonlanding/src/app/api/auth/password-reset/route.js",
+          "/config/workspace/moonlanding/src/app/api/cron/trigger/route.js",
+          "/config/workspace/moonlanding/src/app/api/email/allocate/batch/route.js",
+          "/config/workspace/moonlanding/src/app/api/email/allocate/route.js",
+          "/config/workspace/moonlanding/src/app/api/email/receive/route.js",
+          "/config/workspace/moonlanding/src/app/api/email/send/route.js",
+          "/config/workspace/moonlanding/src/app/api/engagement/rate/route.js"
+        ]
+      },
+      "remediation": "Convert errors to safe objects before JSON.stringify. Extract message and stack explicitly.",
+      "detected_by": "WAVE-2.4",
+      "timestamp": "2026-02-19T17:56:22.195Z"
+    },
+    {
+      "category": "Debug",
+      "name": "Missing Debug Hook Exposure",
+      "severity": "low",
+      "description": "Only 1/23 engines expose state to global scope for debugging.",
+      "evidence": {
+        "exposed_count": 1,
+        "total_engines": 23,
+        "coverage_percentage": 4
+      },
+      "remediation": "Expose engine state to global scope. Provide REPL handles for live debugging.",
+      "detected_by": "WAVE-2.4",
+      "timestamp": "2026-02-19T17:56:22.196Z"
+    },
+    {
+      "category": "Code_Quality",
+      "name": "Files Exceeding 200 Line Limit",
+      "severity": "medium",
+      "description": "22 files exceed 200 line limit.",
+      "evidence": {
+        "large_files": [
+          {
+            "path": "/config/workspace/moonlanding/src/app/api/email/send/route.js",
+            "lines": 360
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/app/api/engagement/rate/route.js",
+            "lines": 238
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/app/api/mwr/collaborator-role/route.js",
+            "lines": 367
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/config/spec-builder.js",
+            "lines": 259
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/engine/job-engine.js",
+            "lines": 284
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/lib/audit-logger.js",
+            "lines": 204
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/lib/config-generator-engine.js",
+            "lines": 1277
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/lib/crud-factory.js",
+            "lines": 321
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/lib/database-core.js",
+            "lines": 285
+          },
+          {
+            "path": "/config/workspace/moonlanding/src/lib/date-choice-dialog.js",
+            "lines": 331
+          }
+        ],
+        "total_violations": 22
+      },
+      "remediation": "Refactor large files into smaller modules. Extract repeated patterns.",
+      "detected_by": "WAVE-2.4",
+      "timestamp": "2026-02-19T17:56:22.200Z"
+    }
+  ],
+  "priority_breakdown": {
+    "critical": [
+      "Potential Race Conditions in State Management",
+      "Uncontained Promises"
+    ],
+    "high": [
+      "Missing Cache Invalidation Mechanism",
+      "Incomplete Supervisor Coverage",
+      "Missing Checkpoint/Recovery Patterns",
+      "Missing Error Handlers on Routes"
+    ],
+    "medium": [
+      "Incomplete Directory Watching",
+      "Missing Timeouts for Async Operations",
+      "Relative Import Paths Found",
+      "Unsafe Error Serialization",
+      "Files Exceeding 200 Line Limit"
+    ],
+    "low": [
+      "Missing Debug Hook Exposure"
+    ]
+  },
+  "category_breakdown": {
+    "Hot_Reload": {
+      "total": 1,
+      "by_severity": {
+        "critical": 0,
+        "high": 0,
+        "medium": 1,
+        "low": 0
+      }
+    },
+    "Concurrency": {
+      "total": 1,
+      "by_severity": {
+        "critical": 1,
+        "high": 0,
+        "medium": 0,
+        "low": 0
+      }
+    },
+    "Module_Loading": {
+      "total": 2,
+      "by_severity": {
+        "critical": 0,
+        "high": 1,
+        "medium": 1,
+        "low": 0
+      }
+    },
+    "Reliability": {
+      "total": 2,
+      "by_severity": {
+        "critical": 0,
+        "high": 2,
+        "medium": 0,
+        "low": 0
+      }
+    },
+    "Async_Control": {
+      "total": 2,
+      "by_severity": {
+        "critical": 1,
+        "high": 0,
+        "medium": 1,
+        "low": 0
+      }
+    },
+    "Error_Handling": {
+      "total": 2,
+      "by_severity": {
+        "critical": 0,
+        "high": 1,
+        "medium": 1,
+        "low": 0
+      }
+    },
+    "Debug": {
+      "total": 1,
+      "by_severity": {
+        "critical": 0,
+        "high": 0,
+        "medium": 0,
+        "low": 1
+      }
+    },
+    "Code_Quality": {
+      "total": 1,
+      "by_severity": {
+        "critical": 0,
+        "high": 0,
+        "medium": 1,
+        "low": 0
+      }
+    }
+  }
+}
