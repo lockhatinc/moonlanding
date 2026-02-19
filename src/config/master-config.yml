@@ -2663,6 +2663,43 @@ notifications:
           - email
     template: "rfi_response_clarification_needed"
     enabled: true
+
+  trigger_types:
+    - rfi_escalation
+    - rfi_deadline_warning
+    - engagement_stage_change
+    - review_ready
+    - highlight_comment
+    - collaborator_added
+    - tender_deadline
+    - tender_created
+    - tender_closed
+    - tender_awarded
+    - tender_critical
+    - engagement_created
+    - engagement_status_changed
+    - rfi_response_submitted_client
+    - rfi_response_clarification_needed
+
+  engagement_notification_settings:
+    stage_change:
+      enabled: true
+      notify_roles:
+        - partner
+        - manager
+      channels:
+        - email
+        - in_app
+    deadline_approaching:
+      enabled: true
+      days_before: 7
+      notify_roles:
+        - partner
+        - manager
+      channels:
+        - email
+        - in_app
+
 document_generation:
   templates:
     engagement_letter:
@@ -3165,6 +3202,176 @@ dialogs:
         label: Cancel
       - type: submit
         label: Save Tags
+
+authentication:
+  password_reset_endpoint: /api/auth/password-reset
+  password_reset_expiry_hours: 24
+  email_template_id: password_reset_template
+  max_reset_attempts: 3
+  reset_attempt_lockout_minutes: 30
+
+session:
+  idle_timeout_ms: 1800000
+  idle_warning_ms: 1500000
+  idle_warning_dialog_config:
+    title: Session Expiring
+    message: Your session will expire in 5 minutes due to inactivity
+    buttons:
+      - label: Stay Logged In
+        action: extend_session
+      - label: Logout
+        action: logout
+
+engagement:
+  fee_split:
+    type: json
+    description: Fee split allocation between partner and manager
+    default:
+      partner_percentage: 70
+      manager_percentage: 30
+    validation:
+      total_must_equal_100: true
+      min_value: 0
+      max_value: 100
+
+rfi:
+  templates:
+    - id: standard_audit_rfi
+      name: Standard Audit RFI
+      description: Standard request for information in audit engagement
+      category: audit
+      enabled: true
+      required_fields:
+        - title
+        - due_date
+        - assigned_to
+    - id: compliance_rfi
+      name: Compliance RFI
+      description: Compliance and regulatory information request
+      category: compliance
+      enabled: true
+      required_fields:
+        - title
+        - due_date
+        - regulatory_reference
+    - id: financial_rfi
+      name: Financial RFI
+      description: Financial statement and data request
+      category: financial
+      enabled: true
+      required_fields:
+        - title
+        - due_date
+        - financial_period
+
+review:
+  tabs:
+    - id: active
+      label: Active
+      filter: status == 'active'
+      icon: CheckCircle
+      order: 1
+    - id: priority
+      label: Priority
+      filter: priority_level == 'high' OR priority_level == 'critical'
+      icon: AlertCircle
+      order: 2
+    - id: history
+      label: History
+      filter: status == 'completed' OR status == 'archived'
+      icon: History
+      order: 3
+    - id: archive
+      label: Archive
+      filter: status == 'archived'
+      icon: Archive
+      order: 4
+
+tender:
+  default_deadline_days: 30
+  warning_days_before: 7
+  status_options:
+    - open
+    - closed
+    - awarded
+    - cancelled
+  priority_levels:
+    - low
+    - medium
+    - high
+    - critical
+  types:
+    - government
+    - private_sector
+    - nonprofit
+    - education
+    - other
+
+checklist:
+  templates:
+    - id: standard_review_checklist
+      name: Standard Review Checklist
+      description: Default checklist for financial statement review
+      items:
+        - Review financial statements for accuracy
+        - Verify audit trail completeness
+        - Check consolidation entries
+        - Verify disclosure adequacy
+    - id: compliance_checklist
+      name: Compliance Checklist
+      description: Checklist for regulatory compliance verification
+      items:
+        - Verify regulatory filings
+        - Check compliance documentation
+        - Review audit findings follow-up
+        - Verify corrective actions
+    - id: closeout_checklist
+      name: Closeout Checklist
+      description: Final checklist for engagement closeout
+      items:
+        - Sign off on final review
+        - Generate closeout report
+        - Archive engagement files
+        - Notify client of completion
+
+settings:
+  navigation:
+    - id: general
+      label: General Settings
+      icon: Settings
+      items:
+        - organization_name
+        - organization_logo
+        - default_timezone
+        - language
+    - id: users
+      label: User Management
+      icon: Users
+      items:
+        - user_roles
+        - permissions
+        - team_structure
+    - id: notifications
+      label: Notifications
+      icon: Bell
+      items:
+        - notification_preferences
+        - email_templates
+        - alert_triggers
+    - id: integrations
+      label: Integrations
+      icon: Link
+      items:
+        - google_drive
+        - email_settings
+        - api_keys
+    - id: security
+      label: Security
+      icon: Lock
+      items:
+        - password_policy
+        - session_timeout
+        - data_encryption
 
 components:
   avatar_group:
