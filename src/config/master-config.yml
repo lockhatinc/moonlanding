@@ -162,6 +162,40 @@ permission_templates:
     - view_own
     client_admin: []
     client_user: []
+  review_management:
+    description: Review management with full CASL permissions
+    partner:
+    - list
+    - view
+    - create
+    - edit
+    - delete
+    - manage_collaborators
+    - manage_highlights
+    - resolve_highlight
+    - mark_all_resolved
+    - change_status
+    - private
+    - attach_checklist
+    - manage_flags
+    - archive
+    manager:
+    - list
+    - view
+    - create
+    - edit
+    - manage_collaborators_own
+    - manage_highlights_own
+    - resolve_highlight
+    - change_status
+    - attach_checklist
+    clerk:
+    - list
+    - view
+    - view_assigned
+    - resolve_highlight
+    client_admin: []
+    client_user: []
 workflows:
   engagement_lifecycle:
     description: 6-stage engagement lifecycle workflow
@@ -353,16 +387,45 @@ workflows:
       label: Unresolved
       color: grey
       forward:
+      - partial_resolved
       - resolved
+      - manager_resolved
+      - partner_resolved
       backward: []
       actions:
       - resolve_highlight
+    - name: partial_resolved
+      label: Partially Resolved
+      color: amber
+      forward:
+      - resolved
+      - manager_resolved
+      backward:
+      - unresolved
+    - name: manager_resolved
+      label: Manager Resolved
+      color: blue
+      forward:
+      - resolved
+      - partner_resolved
+      backward:
+      - partial_resolved
+    - name: partner_resolved
+      label: Partner Resolved
+      color: green
+      forward:
+      - resolved
+      backward:
+      - manager_resolved
     - name: resolved
       label: Resolved
       color: green
       forward: []
       backward:
       - unresolved
+      - partial_resolved
+      - manager_resolved
+      - partner_resolved
       readonly: true
       actions:
       - reopen_highlight
@@ -657,6 +720,48 @@ engagement_status_types:
         label: Needs Revision
         color: red
         description: Post-RFI needs revision
+  engagement_post_rfi_journal_auditor_status:
+    description: Tracks post-RFI journal status from auditor perspective
+    options:
+      - value: pending
+        label: Pending
+        color: grey
+        description: Post-RFI journal not yet issued
+      - value: issued
+        label: Issued
+        color: blue
+        description: Post-RFI journal issued to client
+      - value: under_review
+        label: Under Review
+        color: blue
+        description: Post-RFI journal response under review
+      - value: accepted
+        label: Accepted
+        color: green
+        description: Post-RFI journal accepted
+      - value: needs_revision
+        label: Needs Revision
+        color: red
+        description: Post-RFI journal needs revision
+  engagement_post_rfi_journal_client_status:
+    description: Tracks post-RFI journal status from client perspective
+    options:
+      - value: pending
+        label: Pending
+        color: grey
+        description: Awaiting post-RFI journal submission
+      - value: received
+        label: Received
+        color: blue
+        description: Post-RFI journal received from client
+      - value: accepted
+        label: Accepted
+        color: green
+        description: Post-RFI journal accepted
+      - value: rejected
+        label: Rejected
+        color: red
+        description: Post-RFI journal requires revision
   engagement_auditor_status:
     description: Tracks engagement status from auditor perspective
     options:
@@ -684,6 +789,34 @@ engagement_status_types:
         label: Closed Out
         color: green
         description: Engagement closed out
+
+engagement_views:
+  tabs:
+    - id: my
+      label: My Engagements
+      filter: assigned_to CONTAINS current_user.id
+      icon: User
+      order: 1
+    - id: team
+      label: Team Engagements
+      filter: team_id IN current_user.teams
+      icon: Users
+      order: 2
+    - id: all
+      label: All Engagements
+      filter: null
+      icon: Globe
+      order: 3
+      requires_role:
+      - partner
+      - manager
+  current_year_toggle:
+    enabled: true
+    field: year
+    label: Current Year Only
+  stage_counts_bar:
+    enabled: true
+    stages: engagement_lifecycle.stages
 
 entities:
   engagement:
@@ -774,6 +907,46 @@ entities:
         auto: user
         auto_generate: true
         readOnly: true
+      repeat_interval:
+        type: enum
+        options:
+        - once
+        - monthly
+        - yearly
+        default: once
+        label: Repeat Interval
+      fee:
+        type: decimal
+        precision: 2
+        label: Fee
+      scope:
+        type: textarea
+        label: Scope
+      period:
+        type: text
+        label: Period
+      end_date:
+        type: date
+        label: End Date
+      deadline_date:
+        type: date
+        label: Deadline Date
+      title:
+        type: text
+        label: Title
+      client_progress:
+        type: number
+        default: 0
+        label: Client Progress
+      team_id:
+        type: ref
+        ref: team
+        label: Team
+      users:
+        type: json
+        default: '[]'
+        label: Assigned Users
+        description: Array of user IDs assigned to engagement
     field_overrides:
       stage:
         type: enum
@@ -794,6 +967,12 @@ entities:
       post_rfi_auditor_status:
         type: enum
         options: engagement_post_rfi_auditor_status
+      post_rfi_journal_auditor_status:
+        type: enum
+        options: engagement_post_rfi_journal_auditor_status
+      post_rfi_journal_client_status:
+        type: enum
+        options: engagement_post_rfi_journal_client_status
       auditor_status:
         type: enum
         options: engagement_auditor_status
@@ -996,6 +1175,60 @@ entities:
       component: review-list
     detail:
       component: review-detail
+    field_overrides:
+      tags:
+        type: json
+        default: '[]'
+        label: Tags
+        description: Array of tag strings
+      flags:
+        type: json
+        default: '[]'
+        label: Flags
+        description: Array of flag objects
+      priority_level:
+        type: enum
+        options:
+        - normal
+        - high
+        - critical
+        default: normal
+        label: Priority
+      starred_by:
+        type: json
+        default: '[]'
+        label: Starred By
+        description: Array of user IDs who starred this review
+      template_id:
+        type: ref
+        ref: review_template
+        label: Template
+      review_type:
+        type: enum
+        options:
+        - standard
+        - tender
+        default: standard
+        label: Review Type
+      archived:
+        type: bool
+        default: false
+        label: Archived
+      archived_at:
+        type: timestamp
+        label: Archived At
+      archived_by:
+        type: ref
+        ref: user
+        label: Archived By
+      total_highlights:
+        type: number
+        default: 0
+        label: Total Highlights
+      resolved_highlights:
+        type: number
+        default: 0
+        label: Resolved Highlights
   highlight:
     label: Highlight
     label_plural: Highlights
@@ -1050,6 +1283,70 @@ entities:
       is_active_focus:
         type: bool
         default: false
+      text:
+        type: text
+        label: Highlight Text
+        description: Selected text content
+      comment:
+        type: textarea
+        label: Comment
+        description: User annotation
+      page_number:
+        type: number
+        required: true
+        label: Page Number
+      bounding_rect:
+        type: json
+        label: Bounding Rectangle
+        description: "{ x1, y1, x2, y2, width, height } in PDF coordinates"
+      rects:
+        type: json
+        label: Rectangles
+        description: "Array of {x1,y1,x2,y2,width,height,pageNumber} for text highlights"
+      scaled_position:
+        type: json
+        label: Scaled Position
+        description: Position data with page dimensions for coordinate scaling
+      highlight_type:
+        type: enum
+        options:
+        - text
+        - area
+        default: text
+        label: Highlight Type
+      highlight_number:
+        type: number
+        label: Highlight Number
+        description: Auto-increment number per review
+      section_id:
+        type: ref
+        ref: template_section
+        label: Section
+        description: Section this highlight belongs to
+      is_mandatory:
+        type: bool
+        default: false
+        label: Mandatory
+      partial_resolved:
+        type: bool
+        default: false
+        label: Partially Resolved
+      manager_resolved:
+        type: bool
+        default: false
+        label: Manager Resolved
+      partner_resolved:
+        type: bool
+        default: false
+        label: Partner Resolved
+      resolved_role:
+        type: text
+        label: Resolved By Role
+        description: Role of user who resolved (clerk/manager/partner)
+      attachment:
+        type: json
+        label: Attachment
+        description: File attachment on highlight
 
   highlight_comment:
     label: Highlight Comment
@@ -1083,6 +1380,36 @@ entities:
       parent_comment_id:
         type: ref
         ref: highlight_comment
+
+  highlight_response:
+    label: Highlight Response
+    label_plural: Highlight Responses
+    icon: MessageCircle
+    order: 10.7
+    permission_template: review_collaboration
+    parent: highlight
+    fields:
+      id:
+        type: id
+        required: true
+      highlight_id:
+        type: ref
+        ref: highlight
+        required: true
+      user_id:
+        type: ref
+        ref: user
+        required: true
+      text:
+        type: textarea
+        required: true
+        label: Response Text
+      created_at:
+        type: timestamp
+        required: true
+        auto: now
+        auto_generate: true
+        readOnly: true
 
   removedHighlight:
     label: Removed Highlight
@@ -1166,6 +1493,24 @@ entities:
         label: Expiry Notification Sent At
         description: Timestamp when 7-day expiry warning was sent
         required: false
+      user_id:
+        type: ref
+        ref: user
+        required: true
+        label: User
+      name:
+        type: text
+        label: Name
+      role:
+        type: text
+        label: Role
+      access_type:
+        type: enum
+        options:
+        - permanent
+        - temporary
+        default: permanent
+        label: Access Type
       created_at:
         type: timestamp
         required: true
@@ -1221,6 +1566,34 @@ entities:
       description:
         type: textarea
         label: Description
+      mandatory:
+        type: bool
+        default: false
+        label: Mandatory
+      manager_approve:
+        type: bool
+        default: false
+        label: Requires Manager Approval
+      assigned_to:
+        type: ref
+        ref: user
+        label: Assigned To
+      status:
+        type: enum
+        options:
+        - pending
+        - in_progress
+        - completed
+        - approved
+        default: pending
+        label: Status
+      approved_by:
+        type: ref
+        ref: user
+        label: Approved By
+      approved_at:
+        type: timestamp
+        label: Approved At
       created_at:
         type: timestamp
         required: true
@@ -1560,6 +1933,29 @@ entities:
         required: true
       award_date:
         type: timestamp
+      contact_person:
+        type: text
+        label: Contact Person
+      contact_number:
+        type: text
+        label: Contact Number
+      contact_email:
+        type: text
+        label: Contact Email
+      address:
+        type: textarea
+        label: Address
+      announcement_date:
+        type: date
+        label: Announcement Date
+      winning_price:
+        type: decimal
+        precision: 2
+        label: Winning Price
+      days_remaining:
+        type: number
+        label: Days Remaining
+        description: Computed field
       created_at:
         type: timestamp
         required: true
@@ -1759,6 +2155,12 @@ entities:
     - review_comment
     - highlight
     - priority
+    - open
+    - missed
+    - declined
+    - won
+    - lost
+    - awaiting_adjudication
   message:
     label: Message
     label_plural: Messages
@@ -2397,6 +2799,24 @@ automation:
         - \[RFI[:\s#-]*([a-zA-Z0-9_-]+)\]
         - request[:\s]*for[:\s]*information[:\s#-]*([a-zA-Z0-9_-]+)
         - information[:\s]*request[:\s#-]*([a-zA-Z0-9_-]+)
+  - name: daily_manager_clerk_notifications
+    trigger: 0 6 * * *
+    description: Daily consolidated RFI notifications to managers/clerks
+    action: send_manager_clerk_rfi_notifications
+    entity: rfi
+    enabled: true
+  - name: weekly_client_engagement_emails
+    trigger: 0 9 * * 1
+    description: Weekly engagement progress emails to all active clients
+    action: send_weekly_client_engagement_emails
+    entity: engagement
+    enabled: true
+  - name: tender_missed_deadline_check
+    trigger: 0 10 * * *
+    description: Auto-flag reviews past tender deadline
+    action: check_tender_missed_deadlines
+    entity: tender
+    enabled: true
 notifications:
   rfi_escalation:
     description: RFI outstanding escalation notifications
@@ -2585,6 +3005,51 @@ notifications:
     template: engagement_status_changed
     enabled: true
 
+  review_created:
+    description: New review created
+    trigger: review.onCreate
+    recipients:
+    - entity: team
+      channels:
+      - in_app
+    template: review_created
+    enabled: true
+
+  review_status_changed:
+    description: Review status changed
+    trigger: review.onStatusChange
+    recipients:
+    - entity: team
+      channels:
+      - in_app
+    - entity: collaborators
+      channels:
+      - in_app
+    template: review_status_changed
+    enabled: true
+
+  collaborator_added:
+    description: Collaborator added to review
+    trigger: collaborator.onCreate
+    recipients:
+    - entity: collaborator.user
+      channels:
+      - email
+      - in_app
+    template: collaborator_added
+    enabled: true
+
+  collaborator_removed:
+    description: Collaborator removed from review
+    trigger: collaborator.onDelete
+    recipients:
+    - entity: collaborator.user
+      channels:
+      - email
+      - in_app
+    template: collaborator_removed
+    enabled: true
+
   rfi_response_submitted_client:
     description: "Client submitted RFI response - notify auditor"
     trigger: "rfi_response.onCreate AND response_type == 'client_response'"
@@ -2664,6 +3129,72 @@ notifications:
     template: "rfi_response_clarification_needed"
     enabled: true
 
+  daily_manager_clerk_digest:
+    description: Daily RFI digest for managers/clerks
+    trigger: daily_cron
+    recipients:
+    - role: manager
+      channels:
+      - email
+    - role: clerk
+      channels:
+      - email
+    template: daily_rfi_digest
+    enabled: true
+    batch: true
+
+  weekly_client_summary:
+    description: Weekly engagement summary for clients
+    trigger: weekly_cron
+    recipients:
+    - role: client_admin
+      channels:
+      - email
+    template: weekly_client_summary
+    enabled: true
+    batch: true
+
+  client_signup:
+    description: Welcome email for new client users
+    trigger: client_user.onCreate
+    recipients:
+    - entity: client_user
+      channels:
+      - email
+    template: client_signup_welcome
+    enabled: true
+
+  engagement_finalization_notice:
+    description: Engagement moving to finalization
+    trigger: engagement.onStageChange(finalization)
+    recipients:
+    - role: client_admin
+      channels:
+      - email
+    template: engagement_finalization_notice
+    enabled: true
+
+  engagement_files_download:
+    description: Engagement files zip ready for download
+    trigger: engagement.filesZipReady
+    recipients:
+    - entity: requested_by
+      channels:
+      - email
+    template: engagement_files_download
+    enabled: true
+
+  bug_report_developer:
+    description: Auto-send error reports to developer
+    trigger: system.error
+    recipients:
+    - static: developer_email
+      channels:
+      - email
+    template: bug_report_developer
+    enabled: true
+    immediate: true
+
   trigger_types:
     - rfi_escalation
     - rfi_deadline_warning
@@ -2680,6 +3211,9 @@ notifications:
     - engagement_status_changed
     - rfi_response_submitted_client
     - rfi_response_clarification_needed
+    - review_created
+    - review_status_changed
+    - collaborator_removed
 
   engagement_notification_settings:
     stage_change:
@@ -3203,6 +3737,126 @@ dialogs:
       - type: submit
         label: Save Tags
 
+  engagement_date_choice:
+    title: Choose Engagement Dates
+    width: 640px
+    fields:
+      - name: commencement_date
+        label: Commencement Date
+        type: date
+        required: true
+      - name: deadline_date
+        label: Deadline Date
+        type: date
+        required: true
+      - name: end_date
+        label: End Date
+        type: date
+        required: false
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Save Dates
+
+  engagement_section_order:
+    title: Reorder Engagement Sections
+    width: 640px
+    fields:
+      - name: sections
+        label: Sections
+        type: multi-select
+        required: true
+        options: []
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Save Order
+
+  engagement_team_users:
+    title: Manage Team Users
+    width: 700px
+    fields:
+      - name: users
+        label: Users
+        type: multi-select
+        required: true
+        options: []
+      - name: role
+        label: Role
+        type: select
+        required: true
+        options:
+          - value: lead
+            label: Lead
+          - value: support
+            label: Support
+          - value: reviewer
+            label: Reviewer
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Save Team
+
+  color_picker:
+    title: Choose Color
+    width: 400px
+    fields:
+      - name: color
+        label: Color
+        type: color
+        required: true
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Select Color
+
+  engagement_zip_download:
+    title: Download Engagement Files
+    width: 500px
+    fields:
+      - name: format
+        label: Format
+        type: select
+        required: true
+        options:
+          - value: zip
+            label: ZIP Archive
+          - value: individual
+            label: Individual Files
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Download
+
+  rfi_reminder:
+    title: Send RFI Reminder
+    width: 640px
+    fields:
+      - name: message
+        label: Message
+        type: textarea
+        required: false
+        placeholder: Optional reminder message
+      - name: priority
+        label: Priority
+        type: select
+        required: true
+        options:
+          - value: normal
+            label: Normal
+          - value: urgent
+            label: Urgent
+    actions:
+      - type: cancel
+        label: Cancel
+      - type: submit
+        label: Send Reminder
+
 authentication:
   password_reset_endpoint: /api/auth/password-reset
   password_reset_expiry_hours: 24
@@ -3263,6 +3917,27 @@ rfi:
         - title
         - due_date
         - financial_period
+
+review_settings:
+  temp_review_access_period: 7
+  flags:
+    standard:
+      - Review Comment
+      - Highlight Note
+      - Priority
+      - Urgent
+    tender:
+      - Open
+      - Missed
+      - Declined
+      - Won
+      - Lost
+      - Awaiting Adjudication
+  flags_managers: []
+  highlight_resolution_levels:
+    - clerk
+    - manager
+    - partner
 
 review:
   tabs:
