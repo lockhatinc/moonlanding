@@ -1,7 +1,16 @@
-import { loadConfigSync } from '../config/index.js';
+import { getConfigEngineSync } from '@/lib/config-generator-engine';
 
-const config = loadConfigSync();
-const componentDefs = config?.components || {};
+function getComponentDefs() {
+  try {
+    const engine = getConfigEngineSync();
+    const config = engine.getConfig();
+    return config?.components || {};
+  } catch {
+    return {};
+  }
+}
+
+let componentDefs = getComponentDefs();
 
 export function renderComponent(componentId, props = {}) {
   const def = componentDefs[componentId];

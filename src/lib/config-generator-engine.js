@@ -887,8 +887,15 @@ export class ConfigGeneratorEngine {
         const optionsRef = fieldDef.options;
 
         if (typeof optionsRef === 'string' && (optionsRef.includes('workflow') || optionsRef.includes('stages'))) {
-          if (workflow && workflow.stages && Array.isArray(workflow.stages)) {
-            options[optionsRef] = workflow.stages.map(stage => ({
+          let resolvedWorkflow = workflow;
+          if ((!resolvedWorkflow || !resolvedWorkflow.stages) && config.workflows) {
+            const wfName = optionsRef.split('.')[0];
+            if (config.workflows[wfName]) {
+              resolvedWorkflow = config.workflows[wfName];
+            }
+          }
+          if (resolvedWorkflow && resolvedWorkflow.stages && Array.isArray(resolvedWorkflow.stages)) {
+            options[optionsRef] = resolvedWorkflow.stages.map(stage => ({
               value: stage.name,
               label: stage.label || stage.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
               color: stage.color || 'blue'
@@ -911,6 +918,17 @@ export class ConfigGeneratorEngine {
             label: data.label || value,
             color: data.color || 'gray'
           }));
+        } else if (config.engagement_status_types && config.engagement_status_types[optionsRef]) {
+          const statusType = config.engagement_status_types[optionsRef];
+          if (Array.isArray(statusType.options)) {
+            options[optionsRef] = statusType.options.map(opt => ({
+              value: opt.value,
+              label: opt.label || opt.value,
+              color: opt.color || 'gray'
+            }));
+          } else {
+            options[optionsRef] = [];
+          }
         } else {
           console.warn(`[ConfigGeneratorEngine] _buildEnumOptions: Unknown options reference ${optionsRef} for field ${fieldKey}`);
           options[optionsRef] = [];

@@ -89,6 +89,24 @@ export const migrate = () => {
       console.error(`[Database] Table creation failed for ${tableName}:`, e.message, '\nSQL:', sql);
       throw e;
     }
+
+    try {
+      const existingCols = new Set(db.prepare(`PRAGMA table_info("${tableName}")`).all().map(c => c.name));
+      forEachField(spec, (key, field) => {
+        if (!existingCols.has(key)) {
+          let colType = SQL_TYPES[field.type] || 'TEXT';
+          let alterSql = `ALTER TABLE "${tableName}" ADD COLUMN "${key}" ${colType}`;
+          if (field.default !== undefined && (typeof field.default === 'string' || typeof field.default === 'number' || typeof field.default === 'boolean')) {
+            const defaultVal = typeof field.default === 'string' ? `'${field.default.replace(/'/g, "''")}'` : field.default;
+            alterSql += ` DEFAULT ${defaultVal}`;
+          }
+          db.exec(alterSql);
+          console.log(`[Database] Added missing column ${tableName}.${key}`);
+        }
+      });
+    } catch (e) {
+      console.error(`[Database] Column migration failed for ${tableName}:`, e.message);
+    }
   }
 
   for (const spec of Object.values(specsToUse)) {

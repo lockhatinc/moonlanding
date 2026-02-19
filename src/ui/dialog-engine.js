@@ -1,7 +1,7 @@
-import { getConfig } from '../lib/config-generator-engine.js';
+import { getConfigEngineSync } from '@/lib/config-generator-engine';
 
 export function renderDialog(dialogId, context = {}) {
-  const config = getConfig();
+  const config = getConfigEngineSync().getConfig();
   const dialogConfig = config.dialogs?.[dialogId];
 
   if (!dialogConfig) {
@@ -113,17 +113,16 @@ function generateFieldHtml(field, dialogId, context) {
 }
 
 function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  if (text == null) return '';
+  return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
 export function getDialogConfig(dialogId) {
-  const config = getConfig();
+  const config = getConfigEngineSync().getConfig();
   return config.dialogs?.[dialogId];
 }
 
 export function listDialogs() {
-  const config = getConfig();
+  const config = getConfigEngineSync().getConfig();
   return Object.keys(config.dialogs || {});
 }
