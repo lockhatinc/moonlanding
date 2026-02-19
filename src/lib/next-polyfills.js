@@ -103,7 +103,6 @@ export function revalidateTag(tag) {
   // No-op in zero-build mode
 }
 
-// Frontend polyfills for Next.js navigation
 export function redirect(path, status = 302) {
   if (typeof window !== 'undefined') {
     window.location.href = path;
@@ -124,84 +123,3 @@ export function notFound() {
     throw new Error('notFound()');
   }
 }
-
-export function useRouter() {
-  if (typeof window === 'undefined') {
-    throw new Error('useRouter() cannot be called on server');
-  }
-
-  return {
-    push: (path) => window.location.href = path,
-    replace: (path) => window.location.replace(path),
-    back: () => window.history.back(),
-    forward: () => window.history.forward(),
-    refresh: () => window.location.reload(),
-    prefetch: (path) => {}, // No-op
-  };
-}
-
-export function usePathname() {
-  if (typeof window === 'undefined') {
-    throw new Error('usePathname() cannot be called on server');
-  }
-  return typeof window !== 'undefined' ? window.location.pathname : '/';
-}
-
-export function useSearchParams() {
-  if (typeof window === 'undefined') {
-    throw new Error('useSearchParams() cannot be called on server');
-  }
-
-  const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-
-  return {
-    get: (name) => searchParams.get(name),
-    getAll: (name) => searchParams.getAll(name),
-    has: (name) => searchParams.has(name),
-    entries: () => searchParams.entries(),
-    keys: () => searchParams.keys(),
-    values: () => searchParams.values(),
-    forEach: (callback) => searchParams.forEach(callback),
-    toString: () => searchParams.toString(),
-  };
-}
-
-export function Link({ href, children, ...props }) {
-  // Simple client-side link component
-  return {
-    _type: 'Link',
-    href,
-    children,
-    props,
-    onClick: (e) => {
-      e.preventDefault();
-      if (typeof window !== 'undefined') {
-        window.location.href = href;
-      }
-    }
-  };
-}
-
-export function dynamic(fn, options = {}) {
-  // Return a lazy-loaded component wrapper
-  return async () => {
-    try {
-      const module = await fn();
-      return module.default || module;
-    } catch (err) {
-      console.error('[Dynamic Import Error]', err);
-      // Return error component
-      return () => null;
-    }
-  };
-}
-
-export const useFormStatus = () => {
-  // Mock form status hook
-  return {
-    pending: false,
-    data: null,
-    method: null,
-    action: null,
-  };
-};

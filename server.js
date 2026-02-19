@@ -116,6 +116,18 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    if (pathname === '/ui/client.js') {
+      const jsPath = path.join(__dirname, 'src/ui/client.js');
+      if (fs.existsSync(jsPath)) {
+        const js = fs.readFileSync(jsPath, 'utf-8');
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        res.setHeader('Content-Length', Buffer.byteLength(js, 'utf-8'));
+        res.writeHead(200);
+        res.end(js);
+        return;
+      }
+    }
+
     // Handle page requests (non-API routes) with new Ripple UI renderer
     if (!pathname.startsWith('/api/')) {
       try {

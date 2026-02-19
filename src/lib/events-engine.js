@@ -3,7 +3,7 @@ import { list, get, update, create, remove } from '../engine.js';
 import { queueEmail } from '@/engine/notification-engine';
 import { safeJsonParse } from './safe-json.js';
 import { registerWorkflowHooks } from './workflow-engine.js';
-import { registerChecklistHooks } from './hooks/checklist-hooks.js';
+
 
 const logActivity = (t, id, act, msg, u, d) =>
   create('activity_log', { entity_type: t, entity_id: id, action: act, message: msg, details: d ? JSON.stringify(d) : null, user_email: u?.email }, u);
@@ -45,7 +45,6 @@ const activateWorkflowsForStage = async (engagementId, stage, user) => {
 
 export const registerEntityHandlers = () => {
   registerWorkflowHooks(hookEngine);
-  registerChecklistHooks(hookEngine);
 
   hookEngine.on('create:rfi_response:after', async (ctx) => {
     if (!ctx.data?.rfi_id) return;

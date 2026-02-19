@@ -24,23 +24,10 @@ export {
   SUCCESS_MESSAGES,
 } from './constants';
 
-import { getFormFields, getListFields } from '@/lib/field-iterator';
 export { fieldQuery, is, getFormFields, getListFields, getDisplayFields, getEditableFields, getRequiredFields, getSearchFields, getFilterableFields, getRefFields, getField, getFieldType, forEachField, iterateCreateFields, iterateUpdateFields } from '@/lib/field-iterator';
-
-export const buildFormFields = getFormFields;
-export const buildListColumns = getListFields;
 
 export { config, VALIDATORS, hasGoogleAuth, hasDriveConfig, hasEmailConfig } from './env';
 export { SESSION, TOKEN, AUTH_CONFIG } from './auth-config';
-export { MODAL_SIZES, CONTAINER_HEIGHTS, SPACING, GRID_BREAKPOINTS, LAYOUT } from './ui-config';
-export { THEME, getStatusColor, getStageColor, getSeverityColor, getBadgeProps, getColorMapping } from './theme-config';
-export { ENTITY_ICONS, STATUS_ICONS, ACTION_ICONS, NAVIGATION_ICONS, UI_ICONS, getEntityIcon, getStatusIcon, getActionIcon, getNavigationIcon, getUIIcon, Icons } from './icon-config';
-export { SpecBuilder, spec } from './spec-builder';
-export { COMPONENT_PATHS, COMPONENT_REGISTRY, getComponent, getComponentPath, getComponentFilePath, getComponentLoader, createComponentLoader, hasComponent, listComponents, listCategories } from './component-paths';
-export { EMAIL_DEFAULTS, EMAIL_TEMPLATES, getEmailTemplate, EMAIL_RESOLVERS as RECIPIENT_RESOLVERS, resolveRecipientsForTemplate as resolveRecipients } from '@/engine/notification-engine';
-export { DATABASE_LIMITS, MEMORY_LIMITS, QUERY_LIMITS, VALIDATION_LIMITS, FILE_LIMITS, API_LIMITS, SEARCH_LIMITS } from './system-limits-config';
-export { TimelineEngine, timelineEngine } from '@/lib/timeline-engine';
-
 export const API_ENDPOINTS = {
   entity: (name) => `/api/${name}`,
   entityId: (name, id) => `/api/${name}/${id}`,

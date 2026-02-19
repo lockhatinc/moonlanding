@@ -72,6 +72,7 @@ export function generateHtml(title, bodyContent, scripts = []) {
   <script type="importmap">
   { "imports": { "webjsx": "/lib/webjsx/index.js", "webjsx/jsx-runtime": "/lib/webjsx/jsx-runtime.js" } }
   </script>
+  <script type="module" src="/ui/client.js"></script>
   ${scriptTags}
 </body>
 </html>`;

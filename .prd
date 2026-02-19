@@ -1,0 +1,902 @@
+MOONLANDING CLEANUP + FULL PARITY PRD
+======================================
+Goal: Remove dead code, achieve 1:1 feature parity with friday-staging + myworkreview-staging,
+maximally generalize, leverage webjsx for buildlessness, smallest possible codebase.
+AI features NOT needed.
+
+DEPENDENCY GRAPH KEY:
+  [INDEPENDENT] = can execute in parallel with other independents
+  [BLOCKS: X] = must complete before X can start
+  [BLOCKED-BY: X] = cannot start until X completes
+  [WAVE-N] = parallel execution wave number
+
+================================================================================
+WAVE 1: DELETE DEAD CODE (all independent, execute in parallel)
+================================================================================
+
+- [ ] W1-DEL-01 [INDEPENDENT] [WAVE-1]: Delete root-level migration scripts
+      Files: data-migration-pipeline.mjs, data-migration-report.html, exec-migration.mjs,
+      execute-all-phases-real.js, execute-phase-3.4.js, execute-phase-3.5-real.js,
+      execute-phase-3.6.js, execute-phase-3.7.js, execute-phases-3.5-to-3.10.js,
+      execute-phases-real.js, execute-real-phases.js, export-firebase-data.js,
+      export-sqlite-data.js, init-migration-database.js, migrate-components.js,
+      MIGRATION_COMPLETE.js, migration.js, run-migration.js, run-migration-phases.js,
+      run-phase-3.4.sh, start-migration.sh, verify-migration.mjs,
+      phase-3.4-sample-testing.js, phase-3.5-pilot-testing.js,
+      phase-3.6-full-migration.js, phase-3.7-verification.js, inspect-schema.js
+
+- [ ] W1-DEL-02 [INDEPENDENT] [WAVE-1]: Delete root-level status/report/marker files
+      Files: EXECUTION_COMPLETE.txt, FEATURE_PARITY_REPORT.txt, MIGRATION_STATUS.txt,
+      MIGRATION_COMPLETION_SUMMARY.md, MIGRATION_INDEX.md, PHASE_1_COMPLETE.md,
+      PHASE_2_COMPLETE.md, PHASE3_COMPLETE.md, PHASE_3_RBAC_COMPLETE.md,
+      .PHASE4_COMPLETION.txt, PHASE4_IMPLEMENTATION.md, PHASE4_SUMMARY.md,
+      PHASE_5_IMPLEMENTATION.md, PHASE_5_SUMMARY.txt, PHASE6_COMPLETION.md,
+      PROGRESS_SUMMARY.md, RBAC_IMPLEMENTATION.md, IMPLEMENTATION_SUMMARY.md,
+      DELIVERABLES.md, WAVE-5-VERIFICATION-REPORT.md, UX-PARITY-GAPS.md,
+      api-validation-report.html, feature-parity-audit.html
+
+- [ ] W1-DEL-03 [INDEPENDENT] [WAVE-1]: Delete root-level debug/utility scripts
+      Files: debug-login-session.js, simple-http-check.js, validate-system.js,
+      next-server-shim.js, screenshot.png
+
+- [ ] W1-DEL-04 [INDEPENDENT] [WAVE-1]: Delete entire src/migration/ directory
+      All files: entity-migrators.js, index.js, orchestrator.js, transformers.js,
+      validators.js, user-dedup.js, schema-mapping.json, phase-3.8-setup.js,
+      phase-3.8-test.js, phase-3.9-cutover.js, phase-3.10-monitoring.js
+
+- [ ] W1-DEL-05 [INDEPENDENT] [WAVE-1]: Delete phase-execution-logs/ directory entirely
+
+- [ ] W1-DEL-06 [INDEPENDENT] [WAVE-1]: Delete tmp/ directory (playwright screenshots)
+
+- [ ] W1-DEL-07 [INDEPENDENT] [WAVE-1]: Delete data/backups/ and data/app.db.backup-* files
+      Keep data/app.db and data/.gitkeep only
+
+- [ ] W1-DEL-08 [INDEPENDENT] [WAVE-1]: Delete AI/ML feature files
+      Files: src/components/ml-query-console.jsx,
+      src/app/api/mwr/review/[id]/ml-query/route.js,
+      src/app/api/mwr/review/[id]/highlight-suggestions/route.js,
+      src/app/api/chat/route.js (AI chat, not RFI messaging),
+      src/components/chat-avatar.jsx (AI chat avatar)
+      Verify: chat-panel.jsx is RFI messaging NOT AI - keep if so
+
+- [ ] W1-DEL-09 [INDEPENDENT] [WAVE-1]: Delete unused Next.js app directory pages
+      These are SSR React pages that duplicate the server-rendered HTML UI:
+      src/app/page.jsx, src/app/layout.jsx, src/app/not-found.jsx,
+      src/app/error-403.jsx, src/app/error-500.jsx, src/app/error-timeout.jsx,
+      src/app/login/page.jsx, src/app/login/login-form.jsx, src/app/login/actions.js,
+      src/app/[entity]/page.jsx, src/app/[entity]/actions.js,
+      src/app/[entity]/[id]/page.jsx, src/app/[entity]/[id]/edit/page.jsx,
+      src/app/[entity]/new/page.jsx, src/app/rfi/page.jsx, src/app/rfi/[id]/page.jsx,
+      src/app/dashboard/page.jsx, src/app/audit/page.jsx,
+      src/app/user-settings/page.jsx, src/app/globals.css
+      VERIFY: these are dead code duplicates of src/ui/* server-rendered pages
+      If server.js never routes to these, delete them
+
+- [ ] W1-DEL-10 [INDEPENDENT] [WAVE-1]: Delete src/client/ directory
+      Files: src/client/app.jsx, src/client/index.jsx
+      These are client-side React SPA entry points - verify they are not served
+      If server.js does not serve a client bundle, delete
+
+- [ ] W1-DEL-11 [INDEPENDENT] [WAVE-1]: Delete dead component files that import @mantine but are never used
+      Audit each file in src/components/ against actual usage from:
+      - src/ui/*.js (server-rendered pages)
+      - src/app/api/ routes
+      - server.js
+      If a component is only imported by deleted app/ pages, delete it
+      Candidates: entity-detail.jsx, entity-detail/*.jsx, builders/*.jsx,
+      dashboard/*.jsx, form-field.jsx, form-sections.jsx, field-render.jsx,
+      layout.jsx, app-shell.jsx, page-loader.jsx, skeleton.jsx,
+      keyboard-shortcuts.jsx, polished-button.jsx, protected-component.jsx,
+      generic-action.jsx, generic-filter.jsx, generic-workflow-ui.jsx,
+      offline-indicator.jsx, debug-init.jsx
+
+- [ ] W1-DEL-12 [INDEPENDENT] [WAVE-1]: Delete dead lib files
+      Candidates (verify no live imports before deleting):
+      src/lib/migration-engine.js (migration only),
+      src/lib/dual-database-router.js (migration parallel ops),
+      src/lib/page-renderer.js (duplicate of ui/renderer.js?),
+      src/lib/page-factory.js (duplicate of ui/page-handler.js?),
+      src/lib/rendering-engine.js (duplicate?),
+      src/lib/entity-generator.js (unused?),
+      src/lib/entity-component.jsx (unused React component?),
+      src/lib/error-boundary.jsx (React component, server-rendered app?),
+      src/lib/mantine-compat.jsx (874 lines - if nothing imports it, delete),
+      src/lib/next-polyfills.js (Next.js polyfills not needed),
+      src/lib/component-registry.js (if unused),
+      src/lib/field-registry.js (if unused),
+      src/lib/renderer-helpers.js (if unused),
+      src/lib/notifications.js (if unused),
+      src/lib/notification-helpers.js (if unused),
+      src/lib/table-selection.js (if unused)
+
+- [ ] W1-DEL-13 [INDEPENDENT] [WAVE-1]: Delete dead hook files
+      src/lib/hooks/use-debounce.js, use-entity-data.js, use-filter-state.js,
+      use-form.js, use-global-loading.js, use-highlights.js, use-loading-error.js,
+      use-online-status.js, use-permissions.js, use-responsive-screen.js,
+      use-sort-state.js, use-text-input.js, use-throttled-media-query.js,
+      use-toggle.js, use-ui.js, checklist-hooks.js, user-password-hook.js
+      src/lib/hooks/index.js, src/lib/hooks.js
+      src/lib/use-permissions.js, src/lib/use-realtime.js, src/lib/use-review-handlers.js
+      src/lib/builder-hooks.js, src/lib/accessibility-hooks.js
+      These are React client-side hooks - if app is server-rendered HTML, all dead
+
+- [ ] W1-DEL-14 [INDEPENDENT] [WAVE-1]: Delete dead PDF lib files if not imported by ui/ renderer
+      Verify usage: src/lib/pdf-*.js files (17 files)
+      If server-rendered HTML does not use these client-side PDF libs, delete
+      Keep only what the server-side PDF viewer/annotator HTML needs
+
+- [ ] W1-DEL-15 [INDEPENDENT] [WAVE-1]: Delete dead adapter files if Google integration unused
+      src/adapters/ (5 files) - verify if google-auth, google-drive, google-gmail
+      are imported by live code. Keep if used by engine/ or services/
+
+- [ ] W1-DEL-16 [INDEPENDENT] [WAVE-1]: Delete src/ui/test-page.js (14 lines, test only)
+
+- [ ] W1-DEL-17 [INDEPENDENT] [WAVE-1]: Delete src/ui/simple-page-handler.js (9 lines, unused)
+
+- [ ] W1-DEL-18 [INDEPENDENT] [WAVE-1]: Remove data-migration section from CLAUDE.md
+      The Phase 3 migration docs are ~400 lines. Remove them entirely.
+      Keep only the Architecture and Critical Caveats sections.
+
+================================================================================
+WAVE 2: AUDIT + VERIFY LIVE CODE (blocked by Wave 1 deletions)
+================================================================================
+
+- [ ] W2-AUDIT-01 [BLOCKED-BY: W1-DEL-*] [WAVE-2]: Map every import chain from server.js
+      Trace: server.js -> src/ui/page-handler.js -> src/ui/renderer.js -> ...
+      Trace: server.js -> src/ui/standalone-login.js
+      Trace: server.js -> src/config/system-config-loader.js
+      Trace: server.js -> src/engine.server.js
+      Trace: server.js -> API routes -> src/lib/crud-factory.js -> ...
+      Document every file that is actually reachable from server.js
+      Delete any src/ file NOT in the reachable set
+
+- [ ] W2-AUDIT-02 [BLOCKED-BY: W1-DEL-*] [WAVE-2]: Verify package.json dependencies
+      Remove: @sequentialos/dynamic-react-renderer (file: dependency not found)
+      Remove: workspaces entry (../dynamic-react-renderer does not exist)
+      Verify: lucide-react (used in server HTML string? or only dead components?)
+      Verify: react, react-dom (used by server HTML generation or dead?)
+      Verify: rippleui (CDN loaded, npm package unnecessary?)
+      Verify: puppeteer (used by pdf-generator.service.js? keep if so)
+      Verify: firebase-admin (used by adapters/engine? keep if so)
+      Verify: googleapis (used by google-drive/gmail/auth? keep if so)
+      Remove unused deps, keep only what live code imports
+
+- [ ] W2-AUDIT-03 [BLOCKED-BY: W1-DEL-*] [WAVE-2]: Verify config files
+      tsconfig.json - needed for tsx? verify minimal config
+      jsconfig.json - needed for @/ alias? verify minimal config
+      import-hook.js - verify still needed for tsx module resolution
+
+- [ ] W2-AUDIT-04 [BLOCKED-BY: W1-DEL-*] [WAVE-2]: Count lines per file, flag >200 lines
+      src/ui/renderer.js (848 lines) - must split
+      src/ui/page-handler.js (612 lines) - must split
+      src/lib/mantine-compat.jsx (874 lines) - delete if dead, split if live
+      src/config/master-config.yml (2733 lines) - acceptable for config
+      Any other file >200 lines needs splitting or deletion
+
+================================================================================
+WAVE 3: WEBJSX LEVERAGE + ARCHITECTURE CLEANUP (blocked by Wave 2)
+================================================================================
+
+- [ ] W3-ARCH-01 [BLOCKED-BY: W2-*] [WAVE-3] [BLOCKS: W3-ARCH-02]: Decide rendering architecture
+      Current: server.js generates HTML strings via src/ui/*.js template functions
+      webjsx is loaded via importmap but only used client-side for DOM diffing
+      Decision: Keep server-side HTML string generation for initial page load
+      Use webjsx client-side for dynamic interactions (dialogs, forms, real-time)
+      This is the correct buildless architecture:
+      - Server renders full HTML page (fast first paint, SEO, no JS required for content)
+      - Client-side webjsx handles interactivity (dialogs, form submit, data updates)
+      - No React, no build step, no bundle
+
+- [ ] W3-ARCH-02 [BLOCKED-BY: W3-ARCH-01] [WAVE-3]: Remove React dependency entirely
+      If all rendering is server HTML + client webjsx:
+      Remove: react, react-dom from package.json
+      Remove: @types/react, @types/react-dom from devDependencies
+      Remove: any remaining JSX components that use React
+      Update: tsconfig.json jsx setting if needed
+      webjsx provides jsx-runtime, no React needed
+
+- [ ] W3-ARCH-03 [BLOCKED-BY: W3-ARCH-01] [WAVE-3]: Remove Mantine dependency entirely
+      mantine-compat.jsx is 874 lines of Mantine component shims
+      If server renders HTML with Ripple UI CSS classes, Mantine is dead code
+      Delete mantine-compat.jsx and all imports of it
+      Use Ripple UI CSS classes directly in HTML strings
+
+- [ ] W3-ARCH-04 [BLOCKED-BY: W3-ARCH-01] [WAVE-3]: Consolidate CSS
+      Current: Ripple UI via CDN + src/ui/styles.css
+      Verify styles.css has all needed custom styles
+      Remove any Mantine CSS references
+      Ensure all UI components use Ripple UI classes or custom CSS
+
+- [ ] W3-ARCH-05 [BLOCKED-BY: W3-ARCH-01] [WAVE-3]: Create client-side webjsx interaction module
+      Pattern: Server renders HTML with data-* attributes
+      Client webjsx module hydrates interactive elements:
+      - Dialog open/close
+      - Form submission with fetch()
+      - Real-time data updates via polling
+      - Toast notifications
+      - Dropdown menus
+      Single module: src/ui/client.js (loaded via script tag in generateHtml)
+
+================================================================================
+WAVE 4: FRIDAY FEATURE PARITY - SERVER SIDE (blocked by Wave 3)
+================================================================================
+
+Each item maps to a Friday user flow. MISSING items from UX-PARITY-GAPS.md.
+Excludes AI features (F-UI-07, M-AI-*).
+
+--- Authentication & Authorization ---
+
+- [ ] W4-F-AUTH-03 [BLOCKED-BY: W3-*] [WAVE-4]: Password reset page + API
+      Friday: src/ForgotPassword.js -> Cloud Function reset-password-email
+      Moonlanding: needs /password-reset page + /api/auth/password-reset endpoint
+      Already partially exists in page-handler.js but verify full flow
+
+- [ ] W4-F-AUTH-06 [BLOCKED-BY: W3-*] [WAVE-4]: Auto-logout idle detection
+      Friday: implicit via Firebase session
+      Moonlanding: add idle timer, warning dialog, session refresh
+
+--- Engagement Features ---
+
+- [ ] W4-F-FEE-01 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement fee split
+      Friday: EngagementsEdit.js has fee split UI with sliders
+      Moonlanding: add fee_split field to engagement entity, UI tab, validation
+      Schema: add fee_split JSON field to engagement in master-config.yml
+
+- [ ] W4-F-ENG-05 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement list grouping + detail panels
+      Friday: DataGrid with grouping by stage/year/client
+      Moonlanding: add grouping capability to renderEntityList
+
+- [ ] W4-F-ENG-08 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement search field
+      Friday: dedicated SearchField component
+      Moonlanding: add real-time search filtering to entity list pages
+
+- [ ] W4-F-ENG-09 [BLOCKED-BY: W3-*] [WAVE-4]: Client engagement view
+      Friday: EngagementsClientView.js - different layout for clients
+      Moonlanding: add client-specific view to page-handler.js
+
+- [ ] W4-F-LIFE-02 [BLOCKED-BY: W3-*] [WAVE-4]: Stage transition dialog
+      Friday: EngagementSwitchStageDialog.js - visual stage pipeline
+      Moonlanding: add stage visualization + confirmation + reason input dialog
+
+- [ ] W4-F-LIFE-04 [BLOCKED-BY: W3-*] [WAVE-4]: Stage selection UI
+      Friday: EngagementStageSelection.js - visual progress pipeline
+      Moonlanding: add visual stage pipeline component in HTML
+
+--- Team Features ---
+
+- [ ] W4-F-TEAM-01 [BLOCKED-BY: W3-*] [WAVE-4]: Team assignment dialog
+      Friday: EngagementTeamUsersDialog.js - multi-select with avatars
+      Moonlanding: add team user picker dialog
+
+- [ ] W4-F-TEAM-02 [BLOCKED-BY: W3-*] [WAVE-4]: Team selector
+      Friday: rich multi-user selector with avatars and search
+      Moonlanding: add to engagement create/edit forms
+
+- [ ] W4-F-TEAM-03 [BLOCKED-BY: W3-*] [WAVE-4]: Team avatar group display
+      Friday: auditingTeamAvatars.js - stacked avatar circles
+      Moonlanding: add avatar group HTML/CSS component
+
+--- Client Features ---
+
+- [ ] W4-F-CLIENT-06 [BLOCKED-BY: W3-*] [WAVE-4]: Client dashboard
+      Friday: separate client home page with stats
+      Moonlanding: partially exists, complete it
+
+- [ ] W4-F-CLIENT-07 [BLOCKED-BY: W3-*] [WAVE-4]: Client user management dialog
+      Friday: ClientManageUserDialog.js
+      Moonlanding: add dialog for managing client users
+
+- [ ] W4-F-CLIENT-08 [BLOCKED-BY: W3-*] [WAVE-4]: Client user replace dialog
+      Friday: ClientUserReplaceDialog.js - replace user across engagements
+      Moonlanding: add replace user dialog + API endpoint
+
+- [ ] W4-F-CLIENT-09 [BLOCKED-BY: W3-*] [WAVE-4]: Client test email dialog
+      Friday: ClientTestEmailDialog.js
+      Moonlanding: add test email dialog + API endpoint
+
+- [ ] W4-F-CLIENT-10 [BLOCKED-BY: W3-*] [WAVE-4]: Client risk assessment dialog
+      Friday: ClientRiskAssessmentDialog.js
+      Moonlanding: add risk assessment dialog (fields exist in config)
+
+--- RFI Features ---
+
+- [ ] W4-F-RFI-07 [BLOCKED-BY: W3-*] [WAVE-4]: RFI section CRUD + color coding
+      Friday: sections with color picker, ordering
+      Moonlanding: add section management UI
+
+- [ ] W4-F-RFI-08 [BLOCKED-BY: W3-*] [WAVE-4]: RFI section drag-and-drop reorder
+      Friday: EngagementSectionOrderDialog.js
+      Moonlanding: add drag-drop reordering (or up/down buttons for simplicity)
+
+- [ ] W4-F-RFI-10 [BLOCKED-BY: W3-*] [WAVE-4]: RFI question edit dialog
+      Friday: EditRFIQuestionDialog.js
+      Moonlanding: add edit question dialog
+
+- [ ] W4-F-RFI-16 [BLOCKED-BY: W3-*] [WAVE-4]: RFI question client user assignment
+      Friday: AttachRFIQuestionClientUserDialog.js
+      Moonlanding: add client user assignment per question
+
+- [ ] W4-F-RFI-17 [BLOCKED-BY: W3-*] [WAVE-4]: RFI bulk client user assignment
+      Friday: AttachRFIClientUserDialog.js
+      Moonlanding: add bulk assignment dialog
+
+- [ ] W4-F-RFI-18 [BLOCKED-BY: W3-*] [WAVE-4]: RFI bulk deadline setting
+      Friday: AttachBulkDeadlinesRFIDialog.js
+      Moonlanding: add bulk deadline dialog
+
+- [ ] W4-F-RFI-20 [BLOCKED-BY: W3-*] [WAVE-4]: RFI response attachment preview
+      Friday: ResponseAttachmentPreview.js
+      Moonlanding: add inline attachment preview
+
+- [ ] W4-F-RFI-21 [BLOCKED-BY: W3-*] [WAVE-4]: RFI response attachment lazy load
+      Friday: ResponseAttachmentLoad.js
+      Moonlanding: add lazy load for large attachments
+
+- [ ] W4-F-RFI-22 [BLOCKED-BY: W3-*] [WAVE-4]: RFI report generation
+      Friday: GetRFIReport.js + RFIReport.js
+      Moonlanding: add RFI report generation (HTML/PDF)
+
+- [ ] W4-F-RFI-23 [BLOCKED-BY: W3-*] [WAVE-4]: RFI email reminders per question
+      Friday: RFIItemReminderDialog.js
+      Moonlanding: add per-question reminder dialog + API
+
+- [ ] W4-F-RFI-28 [BLOCKED-BY: W3-*] [WAVE-4]: RFI template select field
+      Friday: RFITemplateSelectField.js
+      Moonlanding: add template dropdown to RFI create/edit
+
+- [ ] W4-F-RFI-30 [BLOCKED-BY: W3-*] [WAVE-4]: RFI DataGrid grouping
+      Friday: group by section/assigned/status/flagged
+      Moonlanding: add grouping to RFI list
+
+- [ ] W4-F-RFI-31 [BLOCKED-BY: W3-*] [WAVE-4]: Hide completed questions toggle
+      Moonlanding: add toggle button to RFI detail view
+
+- [ ] W4-F-RFI-32 [BLOCKED-BY: W3-*] [WAVE-4]: Unread message count badges per RFI question
+      Moonlanding: add badge counts in RFI question list
+
+- [ ] W4-F-RFI-33 [BLOCKED-BY: W3-*] [WAVE-4]: RFI item dialog
+      Friday: RFIEngagementItemDialog.js
+      Moonlanding: add RFI item creation/edit dialog
+
+- [ ] W4-F-RFI-34 [BLOCKED-BY: W3-*] [WAVE-4]: RFI attach dialog
+      Friday: AttachRFIDialog.js
+      Moonlanding: add RFI attach to engagement dialog
+
+- [ ] W4-F-RFI-35 [BLOCKED-BY: W3-*] [WAVE-4]: RFI attach question dialog
+      Friday: AttachRFIQuestionDialog.js
+      Moonlanding: add question attach dialog
+
+- [ ] W4-F-RFI-36 [BLOCKED-BY: W3-*] [WAVE-4]: RFI response choice box
+      Friday: ResponseChoiceBox.js
+      Moonlanding: add response type selector
+
+- [ ] W4-F-RFI-37 [BLOCKED-BY: W3-*] [WAVE-4]: Color picker for RFI sections
+      Friday: ColorPickerDialog.js
+      Moonlanding: add HTML color picker dialog
+
+--- Letter Features ---
+
+- [ ] W4-F-LETTER-01 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement letter dialog
+      Friday: generate/upload/status/template selection
+      Moonlanding: add letter management dialog
+
+- [ ] W4-F-LETTER-02 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement letter template upload
+      Friday: uploadEngagementLetterTemplate.js
+      Moonlanding: add upload API + UI
+
+--- Notification Features ---
+
+- [ ] W4-F-NOTIF-01 [BLOCKED-BY: W3-*] [WAVE-4]: Notification settings UI
+      Friday: SettingsEngagementNotifications.js
+      Moonlanding: add notification enable/disable UI in settings
+
+- [ ] W4-F-NOTIF-02 [BLOCKED-BY: W3-*] [WAVE-4]: Notification trigger dialog
+      Friday: SettingsEngagementNotificationTriggerDialog.js
+      Moonlanding: add trigger configuration dialog
+
+--- File Features ---
+
+- [ ] W4-F-FILE-03 [BLOCKED-BY: W3-*] [WAVE-4]: Zip file creation for multi-download
+      Friday: create-engagement-files-zip endpoint
+      Moonlanding: add zip creation API + download button
+
+- [ ] W4-F-FILE-04 [BLOCKED-BY: W3-*] [WAVE-4]: Cross-engagement file picker
+      Friday: ChooseFilesFromOtherEngagementsDialog.js
+      Moonlanding: add cross-engagement file picker dialog
+
+- [ ] W4-F-FILE-06 [BLOCKED-BY: W3-*] [WAVE-4]: User CV upload
+      Friday: uploadUserCV.js
+      Moonlanding: add CV upload to user settings
+
+- [ ] W4-F-FILE-07 [BLOCKED-BY: W3-*] [WAVE-4]: Quick view attachment inline preview
+      Friday: QuickViewAttachment.jsx
+      Moonlanding: add inline file preview component
+
+- [ ] W4-F-FILE-08 [BLOCKED-BY: W3-*] [WAVE-4]: RFI response attachment preview
+      Friday: RFIResponseAttachmentPreview.js
+      Moonlanding: add response attachment preview
+
+--- Import/Export Features ---
+
+- [ ] W4-F-IMPORT-01 [BLOCKED-BY: W3-*] [WAVE-4]: Import review queries from MWR
+      Friday: ImportReviewQueriesDialog.js
+      Moonlanding: unified system, this becomes internal linking
+
+- [ ] W4-F-PUSH-01 [BLOCKED-BY: W3-*] [WAVE-4]: Push to MWR dialog
+      Friday: PushMWRDialog.js
+      Moonlanding: unified system, this becomes internal linking
+
+--- Search Features ---
+
+- [ ] W4-F-SEARCH-01 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement file search dialog
+      Friday: RFIEngagementFileSearchDialog.js
+      Moonlanding: add file search dialog
+
+--- Post-RFI Features ---
+
+- [ ] W4-F-POSTRFI-02 [BLOCKED-BY: W3-*] [WAVE-4]: Post-RFI journal dialog
+      Friday: RFIEngagementPostRFIJournalDialog.js
+      Moonlanding: add post-RFI journal dialog
+
+- [ ] W4-F-POSTRFI-03 [BLOCKED-BY: W3-*] [WAVE-4]: Post-RFI file upload
+      Friday: uploadPostRFIFiles.js
+      Moonlanding: add post-RFI file upload API + UI
+
+--- Email Features ---
+
+- [ ] W4-F-EMAIL-03 [BLOCKED-BY: W3-*] [WAVE-4]: Email receive dialog UI
+      Friday: EmailReceiveDialog.js
+      Moonlanding: add email receive/preview dialog
+
+--- Settings Features ---
+
+- [ ] W4-F-SET-01 [BLOCKED-BY: W3-*] [WAVE-4]: Settings home landing page
+      Friday: SettingsHome.js with section navigation
+      Moonlanding: partially exists, complete with all sections
+
+- [ ] W4-F-SET-07 [BLOCKED-BY: W3-*] [WAVE-4]: Settings RFI sections page
+      Friday: with color picker and ordering
+      Moonlanding: partially exists, add color picker + ordering
+
+- [ ] W4-F-SET-11 [BLOCKED-BY: W3-*] [WAVE-4]: Settings engagement notifications
+      Moonlanding: add notification configuration UI
+
+- [ ] W4-F-SET-12 [BLOCKED-BY: W3-*] [WAVE-4]: Settings integrations
+      Friday: SettingsIntegrations.js
+      Moonlanding: partially exists, complete with credential management
+
+- [ ] W4-F-SET-13 [BLOCKED-BY: W3-*] [WAVE-4]: Settings recreation logs
+      Friday: SettingsRecreationLogs.js
+      Moonlanding: partially exists, complete UI
+
+--- UI Components ---
+
+- [ ] W4-F-UI-05 [BLOCKED-BY: W3-*] [WAVE-4]: Drag-and-drop reordering
+      For RFI sections, checklist items
+      Implement with HTML5 drag-drop API (no library needed)
+
+- [ ] W4-F-UI-06 [BLOCKED-BY: W3-*] [WAVE-4]: Date choice dialogs
+      Friday: EngagementDateChoiceDialog.js
+      Moonlanding: add date picker dialog using HTML date input
+
+- [ ] W4-F-UI-09 [BLOCKED-BY: W3-*] [WAVE-4]: Linear progress label component
+      Friday: LinearProgressLabel.js
+      Moonlanding: add HTML/CSS progress bar component
+
+- [ ] W4-F-UI-10 [BLOCKED-BY: W3-*] [WAVE-4]: Circular progress label
+      Friday: CircularProgressLabel.js
+      Moonlanding: add SVG circular progress component
+
+- [ ] W4-F-UI-11 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement progress label
+      Friday: EngagementProgressLabel.js
+      Moonlanding: add engagement-specific progress display
+
+- [ ] W4-F-UI-17 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement card item view
+      Friday: EngagementCardItem.js
+      Moonlanding: add card view for engagement list items
+
+--- PDF Features ---
+
+- [ ] W4-F-PDF-01 [BLOCKED-BY: W3-*] [WAVE-4]: PDF Editor dialog wrapper
+      Friday: PDFEditorDialog.tsx
+      Moonlanding: add full editor dialog with open/close from engagement
+
+- [ ] W4-F-PDF-09 [BLOCKED-BY: W3-*] [WAVE-4]: PDF Tip/TipContainer
+      Friday: Tip.tsx, TipContainer.tsx
+      Moonlanding: add highlight creation tooltip
+
+- [ ] W4-F-PDF-19 [BLOCKED-BY: W3-*] [WAVE-4]: ConvertDataUrlFile
+      Friday: ConvertDataUrlFile.tsx
+      Moonlanding: add data URL to file conversion
+
+- [ ] W4-F-PDF-21 [BLOCKED-BY: W3-*] [WAVE-4]: MobileResizableRectangle
+      Friday: MobileResizableRectangle.tsx
+      Moonlanding: add touch device resize for highlights
+
+--- Miscellaneous ---
+
+- [ ] W4-F-MISC-01 [BLOCKED-BY: W3-*] [WAVE-4]: Global tags system
+      Friday: GlobalTags.js
+      Moonlanding: src/ui/global-tags.js exists (11 lines) - complete it
+
+- [ ] W4-F-MISC-10 [BLOCKED-BY: W3-*] [WAVE-4]: Engagement checklist push to MWR
+      Friday: EngagementChecklistPushMyReviewDialog.js
+      Moonlanding: unified system - internal linking instead
+
+- [ ] W4-F-BUILD-01 [BLOCKED-BY: W3-*] [WAVE-4]: Build/deployment logs page
+      Friday: BuildLogsPage.js
+      Moonlanding: page-handler already has route, verify complete
+
+================================================================================
+WAVE 5: MWR FEATURE PARITY (parallel with Wave 4 for independent items)
+================================================================================
+
+--- Review Features ---
+
+- [ ] W5-M-REV-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review list tabs
+      MWR: HomeTabs.tsx with Active/Priority/History/Archive
+      Moonlanding: partially exists in page-handler.js, complete UI
+
+- [ ] W5-M-REV-02 [BLOCKED-BY: W3-*] [WAVE-5]: Review create dialog
+      MWR: FileReviewCreateDialog.tsx with PDF upload + template selection
+      Moonlanding: add full create dialog
+
+- [ ] W5-M-REV-05 [BLOCKED-BY: W3-*] [WAVE-5]: Review template choice dialog
+      MWR: FileReviewTemplateChoice.tsx
+      Moonlanding: add template selection in review creation
+
+- [ ] W5-M-REV-06 [BLOCKED-BY: W3-*] [WAVE-5]: Review context menu
+      MWR: FileReviewMenu.tsx
+      Moonlanding: add right-click context menu
+
+- [ ] W5-M-HOME-01 [BLOCKED-BY: W3-*] [WAVE-5]: Home tabs tabbed view
+      MWR: HomeTabs.tsx
+      Moonlanding: add tabbed home page
+
+- [ ] W5-M-HOME-02 [BLOCKED-BY: W3-*] [WAVE-5]: MWR-specific home layout
+      MWR: Home.tsx - review-focused dashboard
+      Moonlanding: add review dashboard view
+
+--- Collaboration Features ---
+
+- [ ] W5-M-COLLAB-01 [BLOCKED-BY: W3-*] [WAVE-5]: Collaborator management dialog
+      MWR: FileReviewCollaboratorDialog.tsx
+      Moonlanding: add collaborator dialog
+
+- [ ] W5-M-COLLAB-03 [BLOCKED-BY: W3-*] [WAVE-5]: Collaborator expiry UI
+      MWR: expiry date setting
+      Moonlanding: add expiry UI to collaborator dialog
+
+--- Checklist Features ---
+
+- [ ] W5-M-CHECK-01 [BLOCKED-BY: W3-*] [WAVE-5]: Checklist templates management
+      MWR: ReviewTemplateManage.tsx + ReviewChecklistManage.tsx
+      Moonlanding: add template management UI
+
+- [ ] W5-M-CHECK-06 [BLOCKED-BY: W3-*] [WAVE-5]: Push checklist cross-reference
+      MWR: cross-app checklist push
+      Moonlanding: unified system equivalent
+
+--- Flag/Tag Features ---
+
+- [ ] W5-M-FLAG-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review flags management dialog
+      MWR: FileReviewFlagDialog.tsx
+      Moonlanding: add flag dialog
+
+- [ ] W5-M-TAG-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review tags dialog
+      MWR: FileReviewTagsDialog.tsx
+      Moonlanding: add tags dialog
+
+- [ ] W5-M-VALUE-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review WIP value dialog
+      MWR: FileReviewValueDialog.tsx
+      Moonlanding: add WIP value dialog
+
+- [ ] W5-M-DATE-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review deadline date dialog
+      MWR: FileReviewDateDialog.tsx
+      Moonlanding: add deadline dialog
+
+--- Grouping/Filtering ---
+
+- [ ] W5-M-GROUP-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review list grouping
+      MWR: group by template/flag/stage/creator/manager/team
+      Moonlanding: add grouping to review list
+
+- [ ] W5-M-HIDE-01 [BLOCKED-BY: W3-*] [WAVE-5]: Hide empty reviews toggle
+      Moonlanding: add toggle button
+
+- [ ] W5-M-SEARCH-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review search
+      MWR: SearchReviewField.tsx
+      Moonlanding: add search to review list
+
+--- Status Features ---
+
+- [ ] W5-M-STATUS-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review open/close toggle
+      MWR: toggle in review detail
+      Moonlanding: add toggle UI
+
+- [ ] W5-M-STATUS-02 [BLOCKED-BY: W3-*] [WAVE-5]: Review private toggle
+      MWR: toggle in review detail
+      Moonlanding: add toggle UI
+
+- [ ] W5-M-STATUS-03 [BLOCKED-BY: W3-*] [WAVE-5]: Bulk resolve highlights
+      MWR: mark all resolved action
+      Moonlanding: add bulk action
+
+--- Notification Features ---
+
+- [ ] W5-M-NOTIF-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review notification dialog
+      MWR: FileReviewNotificationDialog.tsx
+      Moonlanding: add manual notification send dialog
+
+--- Section/Report Features ---
+
+- [ ] W5-M-SECT-01 [BLOCKED-BY: W3-*] [WAVE-5]: Review sections view
+      MWR: Sections.tsx
+      Moonlanding: add sections view UI
+
+- [ ] W5-M-SECT-02 [BLOCKED-BY: W3-*] [WAVE-5]: Section reports
+      MWR: SectionReport.tsx + GetSectionReport.tsx
+      Moonlanding: add section report generation
+
+--- Mobile Features ---
+
+- [ ] W5-M-MOB-01 [BLOCKED-BY: W3-*] [WAVE-5]: Mobile review cards
+      MWR: MobileReviewCard.tsx
+      Moonlanding: add responsive card layout
+
+- [ ] W5-M-MOB-02 [BLOCKED-BY: W3-*] [WAVE-5]: Mobile engagement cards
+      MWR: MobileEngagementCard.tsx
+      Moonlanding: add responsive card layout
+
+--- PDF Features ---
+
+- [ ] W5-M-PDF-07 [BLOCKED-BY: W3-*] [WAVE-5]: Response attachment preview
+      MWR: ResponseAttachmentPreview.tsx
+      Moonlanding: add preview component
+
+- [ ] W5-M-PDF-08 [BLOCKED-BY: W3-*] [WAVE-5]: Response attachment load
+      MWR: ResponseAttachmentLoad.tsx
+      Moonlanding: add lazy load component
+
+- [ ] W5-M-PDF-16 [BLOCKED-BY: W3-*] [WAVE-5]: Area highlight image load
+      MWR: AreaHighlightImageLoad.tsx
+      Moonlanding: add image load for area highlights
+
+- [ ] W5-M-PDF-17 [BLOCKED-BY: W3-*] [WAVE-5]: Retry highlight dialog
+      MWR: RetryHighlightDialog.tsx
+      Moonlanding: add retry dialog
+
+- [ ] W5-M-PDF-18 [BLOCKED-BY: W3-*] [WAVE-5]: Mobile resizable rectangle
+      MWR: MobileResizableRectangle.tsx
+      Moonlanding: add touch resize for highlights
+
+--- File Features ---
+
+- [ ] W5-M-FILE-02 [BLOCKED-BY: W3-*] [WAVE-5]: Upload Friday files cross-app
+      MWR: uploadFridayFilesToApi.tsx
+      Moonlanding: unified system - internal file reference
+
+- [ ] W5-M-FILE-05 [BLOCKED-BY: W3-*] [WAVE-5]: File attachment bar
+      MWR: FileReviewAttachmentBar.tsx
+      Moonlanding: add attachment bar to review detail
+
+- [ ] W5-M-FILE-06 [BLOCKED-BY: W3-*] [WAVE-5]: File links bar
+      MWR: FileReviewLinksBar.tsx
+      Moonlanding: add links bar to review detail
+
+- [ ] W5-M-FILE-07 [BLOCKED-BY: W3-*] [WAVE-5]: Quick view attachment
+      MWR: QuickViewAttachment.tsx
+      Moonlanding: add inline preview
+
+- [ ] W5-M-FILE-08 [BLOCKED-BY: W3-*] [WAVE-5]: Review attachment choice dialog
+      MWR: ReviewAttachmentChoiceDialog.tsx
+      Moonlanding: add attachment choice dialog
+
+--- Tender Features ---
+
+- [ ] W5-M-TENDER-01 [BLOCKED-BY: W3-*] [WAVE-5]: Tender details dialog
+      MWR: TenderDetailsDialog.tsx
+      Moonlanding: add tender dialog
+
+- [ ] W5-M-TENDER-02 [BLOCKED-BY: W3-*] [WAVE-5]: Tender details holder
+      MWR: FileReviewTenderDetailsHolder.tsx
+      Moonlanding: add tender details in review
+
+--- Settings Features ---
+
+- [ ] W5-M-SET-01 [BLOCKED-BY: W3-*] [WAVE-5]: MWR settings home
+      MWR: SettingsHome.tsx
+      Moonlanding: settings renderer partially exists, complete
+
+- [ ] W5-M-SET-02 [BLOCKED-BY: W3-*] [WAVE-5]: MWR user management
+      MWR: UsersManagement.tsx
+      Moonlanding: settings renderer partially exists, complete
+
+- [ ] W5-M-SET-03 [BLOCKED-BY: W3-*] [WAVE-5]: MWR team management
+      MWR: TeamsManagement.tsx
+      Moonlanding: settings renderer partially exists, complete
+
+- [ ] W5-M-SET-05 [BLOCKED-BY: W3-*] [WAVE-5]: MWR template management
+      MWR: TemplateManagement.tsx
+      Moonlanding: add template management UI
+
+- [ ] W5-M-SET-08 [BLOCKED-BY: W3-*] [WAVE-5]: Review settings page
+      MWR: SettingsFileReviewSettings.tsx
+      Moonlanding: add review-specific settings
+
+--- UI Components ---
+
+- [ ] W5-M-UI-01 [BLOCKED-BY: W3-*] [WAVE-5]: Collapsible sidebar
+      MWR: Sidebar.tsx - desktop resizable
+      Moonlanding: add collapsible sidebar CSS/JS
+
+- [ ] W5-M-UI-02 [BLOCKED-BY: W3-*] [WAVE-5]: Tooltip info bubbles
+      MWR: FileReviewInfoBubble.tsx + FileReviewToolTip.tsx
+      Moonlanding: add tooltip components
+
+- [ ] W5-M-UI-12 [BLOCKED-BY: W3-*] [WAVE-5]: Response choice box
+      MWR: ResponseChoiceBox.tsx
+      Moonlanding: add response type selector
+
+- [ ] W5-M-UI-13 [BLOCKED-BY: W3-*] [WAVE-5]: Response attachment component
+      MWR: ResponseAttachment.tsx
+      Moonlanding: add attachment component
+
+- [ ] W5-M-UI-17 [BLOCKED-BY: W3-*] [WAVE-5]: Sidebar review details panel
+      MWR: SidebarReviewDetails.tsx
+      Moonlanding: add review details sidebar
+
+--- Misc ---
+
+- [ ] W5-M-MISC-01 [BLOCKED-BY: W3-*] [WAVE-5]: Global tags system
+      MWR: globalTags.tsx
+      Moonlanding: complete src/ui/global-tags.js
+
+- [ ] W5-M-MISC-04 [BLOCKED-BY: W3-*] [WAVE-5]: File review calculations
+      MWR: FileReviewCalcs.tsx
+      Moonlanding: add calculation utilities
+
+- [ ] W5-M-MISC-06 [BLOCKED-BY: W3-*] [WAVE-5]: Friday team dialog
+      MWR: FridayTeamDialog.tsx
+      Moonlanding: unified system - internal team assignment
+
+- [ ] W5-M-MISC-07 [BLOCKED-BY: W3-*] [WAVE-5]: Friday due date dialog
+      MWR: FridayDueDateDialog.tsx
+      Moonlanding: unified system - internal date setting
+
+- [ ] W5-M-MISC-11 [BLOCKED-BY: W3-*] [WAVE-5]: Convert data URL to file utility
+      MWR: ConvertDataUrlFile.tsx
+      Moonlanding: add utility function
+
+- [ ] W5-M-ARCHIVE-01 [BLOCKED-BY: W3-*] [WAVE-5]: Archive review double confirmation
+      MWR: double confirmation dialog
+      Moonlanding: add archive with confirmation
+
+================================================================================
+WAVE 6: GENERALIZATION + CODE REDUCTION (blocked by Waves 4+5)
+================================================================================
+
+- [ ] W6-GEN-01 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Generalize dialog system
+      All dialogs follow same pattern: open/close, form fields, submit API call
+      Create single configurable dialog generator that reads master-config.yml
+      Every dialog becomes a config entry, not a separate file
+      Target: replace 20+ dialog files with 1 dialog engine + config entries
+
+- [ ] W6-GEN-02 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Generalize list rendering
+      All entity lists follow same pattern: table, columns from spec, actions
+      Create single configurable list renderer
+      Target: replace per-entity list renderers with 1 list engine
+
+- [ ] W6-GEN-03 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Generalize form rendering
+      All forms follow same pattern: fields from spec, validation, submit
+      Already partially generalized in page-handler.js
+      Complete generalization so no entity-specific form code exists
+
+- [ ] W6-GEN-04 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Generalize detail view rendering
+      All detail views follow same pattern: header, fields, child tabs
+      Already partially generalized
+      Complete so no entity-specific detail code exists
+
+- [ ] W6-GEN-05 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Consolidate renderer files
+      Split renderer.js (848 lines) into focused modules <200 lines each
+      Merge overlapping renderers (client-renderer, review-renderer, rfi-renderer,
+      checklist-renderer into generalized renderers)
+
+- [ ] W6-GEN-06 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Consolidate dialog files
+      Merge: engagement-dialogs.js, review-dialogs.js, file-dialogs.js,
+      letter-dialogs.js, misc-dialogs.js, collaboration-dialogs.js,
+      tender-dialogs.js, push-mwr-dialog.js
+      Into: single dialog-engine.js that generates any dialog from config
+
+- [ ] W6-GEN-07 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Reduce API routes
+      The [entity]/[[...path]]/route.js already handles most CRUD generically
+      Verify domain-specific routes (friday/*, mwr/*) are truly needed
+      If they just add domain filtering, absorb into generic route
+      Target: minimal number of route files
+
+- [ ] W6-GEN-08 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Reduce config files
+      Consolidate: spec-builder.js, spec-helpers.js into one module
+      Consolidate: constants.js, env.js, system-limits-config.js into config/index.js
+      Consolidate: theme-config.js, timing-config.js, ui-config.js into config/index.js
+      Target: master-config.yml + config/index.js + config-generator-engine.js only
+
+- [ ] W6-GEN-09 [BLOCKED-BY: W4-*, W5-*] [WAVE-6]: Reduce lib files
+      Many small utility files could merge:
+      - All pdf-*.js files that are needed -> single pdf-utils.js
+      - status-helpers.js, date-utils.js, utils.js -> single utils.js
+      - All engine files: workflow-engine, lifecycle-engine, rfi-engine,
+        events-engine, business-rules-engine -> evaluate consolidation
+      Target: each remaining lib file must be necessary and <200 lines
+
+================================================================================
+WAVE 7: FINAL CLEANUP + VERIFICATION (blocked by Wave 6)
+================================================================================
+
+- [ ] W7-CLEAN-01 [BLOCKED-BY: W6-*] [WAVE-7]: Remove all comments from code
+      Per coding standards: no comments in production code
+
+- [ ] W7-CLEAN-02 [BLOCKED-BY: W6-*] [WAVE-7]: Remove all hardcoded values
+      Move to master-config.yml or environment variables
+
+- [ ] W7-CLEAN-03 [BLOCKED-BY: W6-*] [WAVE-7]: Ensure all files <200 lines
+      Split any file exceeding 200 lines
+
+- [ ] W7-CLEAN-04 [BLOCKED-BY: W6-*] [WAVE-7]: Remove duplicate code
+      Scan for repeated patterns across files
+
+- [ ] W7-CLEAN-05 [BLOCKED-BY: W6-*] [WAVE-7]: Update CLAUDE.md
+      Remove migration docs, update architecture description
+      Document new webjsx + server HTML architecture
+      Keep critical caveats section
+
+- [ ] W7-CLEAN-06 [BLOCKED-BY: W6-*] [WAVE-7]: Update package.json
+      Remove unused dependencies
+      Remove workspaces entry
+      Clean scripts
+
+- [ ] W7-CLEAN-07 [BLOCKED-BY: W6-*] [WAVE-7]: Final file count audit
+      List every file in src/ with purpose
+      Verify no dead files remain
+      Target: <100 files total in src/
+
+- [ ] W7-VERIFY-01 [BLOCKED-BY: W7-CLEAN-*] [WAVE-7]: Start server and verify
+      Run: npm run dev
+      Verify: login page renders
+      Verify: dashboard renders after auth
+      Verify: entity CRUD works
+      Verify: all pages render without errors
+      Verify: hot reload works
+
+- [ ] W7-VERIFY-02 [BLOCKED-BY: W7-VERIFY-01] [WAVE-7]: Verify Friday user flows
+      Test every Friday flow against friday-staging behavior:
+      - Login/logout
+      - Engagement CRUD + lifecycle transitions
+      - Client management
+      - RFI workflow (create, assign, respond, close)
+      - Team management
+      - File upload/download
+      - Settings pages
+      - Email features
+      - Notification features
+
+- [ ] W7-VERIFY-03 [BLOCKED-BY: W7-VERIFY-01] [WAVE-7]: Verify MWR user flows
+      Test every MWR flow against myworkreview-staging behavior:
+      - Review CRUD + PDF viewer
+      - Highlight creation/resolution
+      - Collaborator management
+      - Checklist management
+      - Tender tracking
+      - Settings pages
+      - Template management
+
+================================================================================
+SUMMARY
+================================================================================
+WAVE 1: 18 deletion tasks (all parallel)
+WAVE 2: 4 audit tasks (parallel after Wave 1)
+WAVE 3: 5 architecture tasks (sequential chain)
+WAVE 4: 58 Friday parity tasks (parallel after Wave 3)
+WAVE 5: 48 MWR parity tasks (parallel with Wave 4, after Wave 3)
+WAVE 6: 9 generalization tasks (after Waves 4+5)
+WAVE 7: 9 cleanup + 3 verification tasks (after Wave 6)
+TOTAL: 154 items
