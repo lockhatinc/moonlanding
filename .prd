@@ -12,42 +12,10 @@ parallel groups, then Wave 6 generalization, then Wave 7 cleanup.
 Estimated timeline: 20-26 hours wall time with parallelism (2.5-3.5 days)
 
 ================================================================================
-PHASE 0: FOUNDATION (Blocking most of W4-5, highest ROI)
+PHASE 0: FOUNDATION ✅ COMPLETE
 ================================================================================
-
-CRITICAL PATH: Dialog Registry (0.2) blocks 21 items. Start here.
-
-- [x] P0-0.1 [WAVE-6-prep] ✅ COMPLETED: List grouping infrastructure
-      Added: groupBy parameter to renderEntityList (optional options.groupBy)
-      Features: Collapsible group sections, count badges, group sorting
-      Blocks: W4-F-ENG-05, W4-F-RFI-30, W5-M-GROUP-01
-      Status: COMPLETED - ready for grouping features
-
-- [x] P0-0.2 [WAVE-6-prep] ✅ COMPLETED: Dialog Registry engine
-      Created: src/ui/dialog-engine.js (172 lines)
-      Config: Added 24 dialog definitions to master-config.yml
-      Features: renderDialog, generateDialogHtml, generateFieldHtml (10+ field types)
-      Unblocks: 21+ items across W4-5
-      Status: COMPLETED - ready for dialog-based features
-
-- [x] P0-0.3 [WAVE-6-prep] ✅ COMPLETED: Search system (global text search)
-      Added: Real-time search filtering to renderEntityList
-      Features: Multi-word AND logic, case-insensitive, grouped list support
-      Blocks: W4-F-ENG-08, W4-F-SEARCH-01, W5-M-SEARCH-01
-      Status: COMPLETED - ready for search features
-
-- [x] P0-0.4 [WAVE-6-prep] ✅ COMPLETED: Component library (visual elements)
-      Created: src/ui/component-engine.js (95 lines)
-      Config: Added 8 component definitions (avatar_group, linear_progress, etc.)
-      Features: renderComponent, getComponentConfig, validateComponentProps
-      Blocks: W4-F-TEAM-03, W4-F-UI-09/10/11, W5-M-UI-01/02
-      Status: COMPLETED - ready for UI component features
-
-- [x] P0-0.5 [WAVE-6-prep] ✅ COMPLETED: Global tags system
-      Updated: src/ui/global-tags.js (145 lines, from 11)
-      Features: createTag, updateTag, deleteTag, listTags, renderTagsList
-      Blocks: W4-F-MISC-01, W5-M-MISC-01
-      Status: COMPLETED - ready for tag management features
+Completed: Dialog Registry, List Grouping, Search, Component Library, Global Tags
+All 5 foundation items implemented and ready to unblock Phases 1-4
 
 ================================================================================
 PHASE 1A: QUICK WINS (Config-only additions, ~45 min total)
@@ -499,20 +467,20 @@ EXECUTION STRATEGY
 PROGRESS TRACKING
 ================================================================================
 
-COMPLETED (Waves 1-3):
-  ✓ Dead code removal: 299 files deleted
-  ✓ Live code audit: 156 files verified, server starts on port 3004
-  ✓ Architecture: Zero-build tsx, server HTML + webjsx client, hot reload enabled
+COMPLETED (Waves 1-3 + Phase 0):
+  ✓ Wave 1-3: Dead code removal (299 files), code audit (156 files), architecture verification
+  ✓ Phase 0: Foundation complete (Dialog Registry, List Grouping, Search, Components, Tags)
+  ✓ Infrastructure: 5 new modules (dialog-engine.js, component-engine.js, global-tags.js updates)
+  ✓ Config: 32 new definitions (24 dialogs + 8 components in master-config.yml)
 
-CURRENT (Waves 4-7):
-  → PHASE 0: Foundation (Dialog Registry, List Grouping, Search, Components, Tags)
-  → PHASE 1A: Quick Wins (9 items, config-only)
-  → PHASE 1B: Unblocked Wave 4 (15 items, independent)
-  → PHASE 1C: Blocked Wave 4 (43 items, 4 parallel groups)
-  → PHASE 2: Wave 5 (48 items, 6 parallel groups)
-  → PHASE 3: Wave 6 (9 generalization items)
-  → PHASE 4: Wave 7 (12 cleanup + verification items)
+CURRENT (Phase 1 - Feature Implementation):
+  → PHASE 1A: Quick Wins (9 items, config-only, ~45 min)
+  → PHASE 1B: Unblocked Wave 4 (15 items, independent, 2-3 hours)
+  → PHASE 1C: Blocked Wave 4 (43 items, 4 parallel groups, 4-8 hours)
+  → PHASE 2: Wave 5 (48 items, 6 parallel groups, 6-8 hours)
+  → PHASE 3: Wave 6 (9 generalization items, 4-6 hours)
+  → PHASE 4: Wave 7 (12 cleanup + verification items, 3-4 hours)
 
-TOTAL REMAINING: 127 items across 4 waves
+TOTAL REMAINING: 136 items (9+15+43+48+9+12)
 
-Next action: Start P0-0.2 (Dialog Registry engine)
+Next action: Execute Phase 1A (Quick Wins) - add missing config entries
