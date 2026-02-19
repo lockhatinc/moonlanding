@@ -1,0 +1,414 @@
+{
+  "title": "Wave 2.3: Overlap Analysis - Friday-staging & MyWorkReview-staging",
+  "summary": "Friday (audit engagement management) and MyWorkReview/MWR (PDF file review/annotation) share approximately 60% of their infrastructure code. Both apps serve the same organization (Lockhat Incorporated / Coastal Accounting), share the same user base (internal auditors), and already have cross-app integration (Friday pushes checklists to MWR, MWR reads Friday data). Consolidation into Moonlanding eliminates two Firebase projects, one Google Cloud Functions deployment, and dozens of duplicated modules.",
+
+  "shared_entities": {
+    "users": {
+      "criticality": "CRITICAL",
+      "overlap_rate": "10-15% by email",
+      "friday": {
+        "collection": "friday/users/list",
+        "fields": ["name", "email", "uid", "role (cloud_id ref)", "teams[]", "status", "type (auditor|client)", "authProvider", "photo", "clients[]"],
+        "roles": {
+          "Partner": "KBCSEHD91PdSh4StXOZe",
+          "Manager": "hXbxDR3GfCHtrtjrn2wC",
+          "Clerk": "xNexLKjl1m3kPTG8BBaF"
+        },
+        "has_client_users": true,
+        "client_user_fields": "nested clients[] array with per-client role/status"
+      },
+      "mwr": {
+        "collection": "myworkreview/users/list",
+        "fields": ["name", "email", "uid", "role (cloud_id ref)", "teams[]", "status", "authProvider", "photo", "active"],
+        "roles": {
+          "default_clerk": "A3KQ4WpdhLj2Vo2oSS2x"
+        },
+        "has_client_users": false
+      },
+      "shared_patterns": [
+        "Same Google Sheets sync source (identical API endpoint)",
+        "Same user schema shape (name, email, uid, role, teams, status)",
+        "Same daily sync pattern",
+        "Same photo/name matching logic",
+        "Role names identical (Partner/Manager/Clerk) but role cloud_ids differ"
+      ],
+      "consolidation": "Single users table with unified role system. Add type field for auditor vs client. Email-based dedup (case-insensitive). Replace cloud_id roles with named roles."
+    },
+
+    "teams": {
+      "friday": {
+        "collection": "friday/clients/teams",
+        "fields": ["name", "users[]", "partners[]"],
+        "purpose": "Auditor teams assigned to engagements"
+      },
+      "mwr": {
+        "collection": "myworkreview/teams/list",
+        "fields": ["name", "users[]", "partners[]"],
+        "purpose": "Reviewer teams assigned to file reviews"
+      },
+      "schema_identical": true,
+      "consolidation": "Single teams table with context field (engagement_team | review_team | general)"
+    },
+
+    "templates": {
+      "friday": {
+        "collection": "friday/templates/list",
+        "purpose": "RFI templates with section/question lists"
+      },
+      "mwr": {
+        "collection": "myworkreview/templates/list",
+        "purpose": "Review templates with section/checklist items",
+        "template_types": ["review", "tender"]
+      },
+      "shared_pattern": "Both use sections -> items hierarchy",
+      "consolidation": "Single templates table with template_type discriminator"
+    },
+
+    "permissions": {
+      "friday": {
+        "model": "Role-based (Partner/Manager/Clerk) + type-based (auditor/client) + client-specific roles (admin/user)",
+        "route_protection": "useGetUserType hook checking currentUser.type and currentUser.role_name",
+        "client_auth": "isClientAuthorized(clientId) checks client membership"
+      },
+      "mwr": {
+        "model": "Role-based (Partner/Manager/Clerk) + ACL system in permissionTypes.ts",
+        "route_protection": "RoutePath.acl mapping Role -> DecisionType (allow/deny/redirect)",
+        "collaborator_access": "permanent or temporary with expiry dates, cloud_ids tracked per review"
+      },
+      "consolidation": "Unified RBAC with route-level ACL (MWR pattern). Add client authorization from Friday. Merge collaborator model. Single resolution: role -> route ACL -> entity-level access."
+    }
+  },
+
+  "duplicate_workflows": {
+    "user_synchronization": {
+      "duplication_level": "95%",
+      "friday": {
+        "function": "pubSub_dailyUserSync in functions/index.js",
+        "source": "Google Sheets API (identical URL and auth key)",
+        "target": "friday/users/list (type=auditor only)",
+        "modules": ["userUtils.js: getInternalEmailList, buildExistingInternalUsersMap, addInternalUsers, removeInternalUsers, checkPhotoUrlsAndNamesMatch"]
+      },
+      "mwr": {
+        "function": "pubSub_dailyUserSync in functions/index.js",
+        "source": "Same Google Sheets API (identical URL and auth key)",
+        "target": "myworkreview/users/list",
+        "modules": ["userUtils.js: identical function set (copy-pasted). One function name diff: checkPhotoUrlsMatch vs checkPhotoUrlsAndNamesMatch"]
+      },
+      "consolidation": "Single user sync job writing to unified users table"
+    },
+
+    "database_backup": {
+      "duplication_level": "90%",
+      "friday": "pubSub_dailyBackup -> gs://fridaydailybackups",
+      "mwr": "pubsub_dailyBackup -> gs://mwrdailybackups",
+      "consolidation": "Single backup job for Moonlanding SQLite database"
+    },
+
+    "email_notifications": {
+      "duplication_level": "40% structural",
+      "friday": {
+        "pattern": "PubSub-based (pubSubUtils.js publishes to email-content-generation topic)",
+        "module": "emailUtils.js: 15+ generators and 15+ senders",
+        "email_types": ["client signup", "reminder", "engagement commencement", "info gathering", "weekly summary", "notification", "password reset", "bug report", "files download", "finalization", "draft AFS", "draft journals"],
+        "sender": "My Friday <audit@l-inc.co.za>",
+        "template_style": "Branded HTML with Lockhat Inc / Coastal Accounting logos"
+      },
+      "mwr": {
+        "pattern": "Direct nodemailer in each function (no PubSub)",
+        "email_types": ["notification", "bug report", "review created", "review status changed", "collaborator added/removed", "tender deadline", "weekly checklist PDF"],
+        "sender": "My Review <audit@l-inc.co.za>",
+        "template_style": "Simple HTML (black header with plain text)"
+      },
+      "identical_aspects": [
+        "Nodemailer transport config (same Gmail credentials, same sender domain)",
+        "Email HTML structure patterns",
+        "Recipient resolution (lookup user, check active status, filter inactive)"
+      ],
+      "consolidation": "Unified email service. Friday's PubSub pattern as foundation. Single template engine. Template registry for both engagement and review types."
+    },
+
+    "authentication_flow": {
+      "duplication_level": "85%",
+      "friday": {
+        "file": "src/firebase.js",
+        "auth_methods": ["Google sign-in", "email/password"],
+        "verification": "Check user in friday/users/list, check inactive, update uid on first login",
+        "cross_app": "Also initializes MWR Firebase app for data access"
+      },
+      "mwr": {
+        "file": "client/src/firebase.tsx",
+        "auth_methods": ["Google sign-in", "email/password"],
+        "verification": "Check user in myworkreview/users/list, identical inactive/uid logic",
+        "cross_app": "Also initializes Friday Firebase app for data access"
+      },
+      "consolidation": "Single auth system with bcrypt passwords. No cross-app init needed."
+    },
+
+    "cross_app_token_exchange": {
+      "friday": "Initiates custom token request to MWR backend (/generate-custom-token)",
+      "mwr": "Validates Friday token, generates MWR custom token",
+      "consolidation": "Eliminated entirely. Single auth system."
+    }
+  },
+
+  "shared_ui_components": {
+    "UserAvatar": {
+      "friday": "src/components/UserAvatar.js",
+      "mwr": "client/src/components/UserAvatar.tsx",
+      "duplication_level": "90%",
+      "shared_features": ["Photo with error fallback to initials", "Initials from name/email", "Inactive/deleted greyscale+red border", "Tooltip with name/email/status", "~28-30px size"],
+      "differences": "MWR adds useEffect for photo reset; Friday has different tooltip placement",
+      "best_source": "MWR (TypeScript, photo reset). Merge Friday tooltip fix."
+    },
+    "StatusLabel": {
+      "friday": "src/components/StatusLabel.js",
+      "mwr": "client/src/components/StatusLabel.tsx",
+      "duplication_level": "95%",
+      "shared_features": ["Wraps RoundedLabelItem with identical props"],
+      "best_source": "MWR (TypeScript types)"
+    },
+    "CircularProgressLabel": {
+      "friday": "src/components/CircularProgressLabel.js",
+      "mwr": "client/src/components/CircularProgressLabel.tsx",
+      "duplication_level": "90%",
+      "best_source": "Either"
+    },
+    "LinearProgressLabel": {
+      "friday": "src/components/LinearProgressLabel.js",
+      "mwr": "client/src/components/LinearProgressLabel.tsx",
+      "duplication_level": "90%",
+      "best_source": "Either"
+    },
+    "EmptyContainer": {
+      "friday": "src/components/EmptyContainer.js",
+      "mwr": "client/src/components/EmptyContainer.tsx",
+      "duplication_level": "90%",
+      "best_source": "Either"
+    },
+    "SearchField": {
+      "friday": "src/components/SearchField.js",
+      "mwr": "client/src/components/SearchReviewField.tsx",
+      "duplication_level": "80%",
+      "best_source": "Friday (more complete)"
+    },
+    "AiTool": {
+      "friday": "src/components/AiTool.js",
+      "mwr": "client/src/components/AiTool.tsx",
+      "best_source": "Compare and merge"
+    },
+    "QuickViewAttachment": {
+      "friday": "src/components/QuickViewAttachment.jsx",
+      "mwr": "client/src/components/QuickViewAttachment.tsx",
+      "best_source": "Either"
+    },
+    "ResponseAttachment_suite": {
+      "friday": ["src/components/ResponseAttachment.js", "src/components/ResponseAttachmentPreview.js", "src/components/ResponseAttachmentLoad.js"],
+      "mwr": ["client/src/ResponseAttachment.tsx", "client/src/ResponseAttachmentPreview.tsx", "client/src/ResponseAttachmentLoad.tsx"],
+      "best_source": "Merge best features"
+    },
+    "ResponseChoiceBox": {
+      "friday": "src/components/ResponseChoiceBox.js",
+      "mwr": "client/src/ResponseChoiceBox.tsx",
+      "best_source": "Either"
+    },
+    "PDF_Editor": {
+      "friday": ["src/components/pdfEditor/AreaHighlight.tsx", "src/components/pdfEditor/lib/coordinates.ts", "src/components/PDFEditorDialog.tsx"],
+      "mwr": ["PdfHighlighter.tsx", "PdfLoader.tsx", "AreaHighlight.tsx", "Highlight.tsx", "HighlightLayer.tsx", "MouseSelection.tsx", "MouseMonitor.tsx", "Tip.tsx", "TipContainer.tsx", "Popup.tsx", "lib/coordinates.ts", "lib/get-area-as-png.ts", "lib/get-bounding-rect.ts", "lib/get-client-rects.ts", "lib/optimize-client-rects.ts", "lib/pdfjs-dom.ts"],
+      "note": "MWR has full PDF editor suite. Friday has subset (AreaHighlight + coordinates). Friday imports highlights from MWR.",
+      "best_source": "MWR (complete suite). Friday only needs display subset."
+    }
+  },
+
+  "shared_hooks": {
+    "useDebounce": {
+      "friday": "hooks/useDebounce.js (lodash debounce, 700ms)",
+      "mwr": "hooks/useDebounce.tsx (lodash debounce, 300ms)",
+      "duplication_level": "90%",
+      "difference": "Delay value only",
+      "consolidation": "Make delay parameterizable"
+    },
+    "useGetUserType": {
+      "friday": "Returns: loadingUserType, userType, isAuditor, isClient, isClientAdmin, isClientAuthorized, isPartner, isManager, isClerk",
+      "mwr": "Returns: loadingUserType, userType, isClerk, isManager, isPartner",
+      "note": "Friday is superset (has client types). MWR uses useMemo optimization.",
+      "consolidation": "Friday version with MWR's useMemo optimization"
+    },
+    "useOnlineStatus": {
+      "friday": "hooks/useOnlineStatus.tsx",
+      "mwr": "hooks/useOnlineStatus.tsx",
+      "duplication_level": "100%",
+      "note": "Byte-for-byte identical"
+    }
+  },
+
+  "shared_api_patterns": {
+    "file_upload": {
+      "friday": "Firebase Storage (direct client upload with progress tracking)",
+      "mwr": "Google Drive via server-side API (busboy parsing + Drive API)",
+      "note": "MWR also has local dev server (server.js) duplicating Cloud Functions file endpoints",
+      "consolidation": "Unified file storage with local filesystem. Eliminates both Firebase Storage and Google Drive."
+    },
+    "pdf_fetch": {
+      "mwr": "/api/fetch-review and /api/fetch-review-cached with GCS caching",
+      "friday": "Reads MWR review data via Firebase client SDK for highlights",
+      "consolidation": "PDFs stored locally. No Drive fetch needed."
+    },
+    "api_structure": {
+      "shared_pattern": "Express app + bodyParser + cors + Firebase Cloud Functions export + two tiers (standard + highMemory)",
+      "consolidation": "Single Node.js server. No Cloud Functions. Internal job scheduler replaces PubSub."
+    },
+    "caller_pattern": {
+      "friday": "callApi.js: axios-based, returns {status, data}, two base URLs",
+      "mwr": "Direct axios calls scattered through components",
+      "consolidation": "Single API client module with unified base URL"
+    }
+  },
+
+  "common_validation_rules": {
+    "email": "Case-insensitive comparison (email.trim().toLowerCase()), existence check, active status check",
+    "roles": "Identical hierarchy Partner > Manager > Clerk. Same names, different cloud_ids.",
+    "status": "User: active/inactive/deleted. Engagement: Pending/Active + stage. Review: open/closed + stage.",
+    "dates": {
+      "friday_utilities": ["isDateSelectedWithinTwoYears", "isDeadlineDateBeforeCommencementDate", "isDeadlineDateBeforeRequestedDate", "getYearOfEngagement (March-February financial year)", "calculateWorkingDays"],
+      "mwr_utilities": "Minimal - mainly tender deadline checks",
+      "consolidation": "Friday date utilities as base"
+    }
+  },
+
+  "common_business_logic": {
+    "status_constants": {
+      "duplication_level": "100%",
+      "note": "MWR contains fridayGlobals.tsx which is a FULL COPY of Friday's GlobalTags.js engagement status definitions. MWR needs these to display Friday engagement data.",
+      "affected_constants": ["EngagementStatusOptions", "EngagementStagingOptions", "EngagementClientStatusOptions", "EngagementAuditorStatusOptions", "EngagementLetterClientStatusOptions", "EngagementLetterAuditorStatusOptions", "EngagementPostRFIClientStatusOptions", "EngagementPostRFIAuditorStatusOptions", "RFIStatusOptions", "all color mappings", "all text color functions"]
+    },
+    "color_system": {
+      "duplication_level": "100%",
+      "note": "Identical color values and naming across both apps: blue_100-700, green_100-500, red_100-500, orange_100-500, purple_100-500, white_100-600",
+      "consolidation": "Single design tokens"
+    },
+    "file_size_conversion": {
+      "duplication_level": "90%",
+      "friday": "conversions.js: convertFileSizeToNearest returns '(X.X MB)'",
+      "mwr": "conversions.tsx: convertFileSizeToNearest returns 'X.X MB'",
+      "difference": "Parentheses formatting"
+    },
+    "timestamp_conversion": {
+      "duplication_level": "100%",
+      "functions": ["convertDateToTimestamp", "convertTimestampToMomentDate"]
+    },
+    "initials_generation": {
+      "duplication_level": "100%",
+      "locations": ["Friday GlobalTags.js", "MWR fridayGlobals.tsx", "Both UserAvatar components (inline)"]
+    }
+  },
+
+  "shared_infrastructure": {
+    "firebase_config": {
+      "shared": ["Firestore with persistent local cache + multi-tab manager", "Firebase Auth with browser local persistence", "Google sign-in provider", "Firebase Storage", "Cloud Functions (Express)", "PubSub"],
+      "cross_init": "Each app initializes the OTHER's Firebase app (Friday inits MWR, MWR inits Friday)"
+    },
+    "cors_shared_origins": ["https://myworkreview.netlify.app", "https://myworkreview-staging.web.app", "https://fridayinc.netlify.app", "localhost:3000"],
+    "nodemailer": "Identical transport: Gmail service, audit@l-inc.co.za, AUDIT_EMAIL_PASS env var",
+    "google_drive": "Both use googleapis Drive v3 with service account credentials",
+    "date_library": "Both use moment.js with Africa/Johannesburg timezone",
+    "pubsub_topics": {
+      "friday": ["daily-backup", "daily-user-sync", "daily-engagement-check", "email-content-generation", "yearly-engagements-creation", "monthly-engagements-creation"],
+      "mwr": ["daily-backup", "daily-user-sync", "temporary-access", "daily-tender-notifications", "daily-tender-missed-deadline", "generate-checklist-pdf"],
+      "overlap": ["daily-backup", "daily-user-sync"]
+    }
+  },
+
+  "cross_app_integration": {
+    "friday_to_mwr_push": {
+      "component": "PushMWRDialog.js",
+      "action": "Pushes engagement checklists to MWR reviews via /api/push-mwr-checklist",
+      "auth": "MWR API key"
+    },
+    "mwr_reads_friday": {
+      "components": ["FlexUpFridayChat.tsx", "fridayGlobals.tsx"],
+      "action": "MWR reads Friday engagement data and uses Friday business logic constants",
+      "method": "Initializes Friday Firebase app, reads directly"
+    },
+    "token_exchange": {
+      "flow": "Friday auth -> Friday requests MWR custom token -> MWR verifies -> MWR generates token -> user accesses both",
+      "eliminated_by": "Single Moonlanding auth system"
+    },
+    "shared_user_data": "Same internal users in both collections. Client users created in Friday also relevant to MWR collaborator lookups."
+  },
+
+  "consolidation_strategy": {
+    "priority_1_eliminate": {
+      "description": "Remove entirely in Moonlanding",
+      "items": [
+        {"item": "Cross-app Firebase initialization", "reason": "Single app, single database"},
+        {"item": "Custom token exchange", "reason": "Single auth system"},
+        {"item": "Dual Firebase projects", "reason": "One SQLite database"},
+        {"item": "Dual PubSub systems", "reason": "Internal job scheduler"},
+        {"item": "Dual CORS configs", "reason": "Single origin"},
+        {"item": "Dual user collections", "reason": "Single users table"},
+        {"item": "Dual team collections", "reason": "Single teams table"},
+        {"item": "Google Drive API (MWR)", "reason": "Local file storage"},
+        {"item": "Firebase Storage (Friday)", "reason": "Local file storage"}
+      ]
+    },
+    "priority_2_unify": {
+      "description": "Merge into single implementation",
+      "items": [
+        {"item": "User sync", "source": "Friday PQueue version", "strategy": "Single cron job, single users table"},
+        {"item": "Email system", "source": "Friday PubSub pattern", "strategy": "Unified template engine, single sender"},
+        {"item": "Authentication", "source": "Both", "strategy": "bcrypt + session-based auth"},
+        {"item": "Role system", "source": "Both", "strategy": "Named roles (Partner/Manager/Clerk) + client roles"},
+        {"item": "File upload", "source": "Both", "strategy": "Unified file service with local storage"},
+        {"item": "Date utilities", "source": "Friday", "strategy": "Single utility module"},
+        {"item": "Color system", "source": "Friday", "strategy": "Single design tokens file"},
+        {"item": "Status constants", "source": "Friday (superset)", "strategy": "Single constants module"}
+      ]
+    },
+    "priority_3_consolidate_components": {
+      "description": "Pick best version of each shared component",
+      "items": [
+        {"component": "UserAvatar", "best_source": "MWR (TS, photo reset)", "note": "Merge Friday tooltip fix"},
+        {"component": "StatusLabel", "best_source": "MWR (TS types)"},
+        {"component": "PDF Editor", "best_source": "MWR (complete suite)"},
+        {"component": "useDebounce", "best_source": "MWR", "note": "Make delay parameterizable"},
+        {"component": "useGetUserType", "best_source": "Friday (superset)", "note": "Add MWR useMemo"},
+        {"component": "useOnlineStatus", "best_source": "Either (identical)"},
+        {"component": "SearchField", "best_source": "Friday (more complete)"},
+        {"component": "CircularProgressLabel", "best_source": "Either"},
+        {"component": "LinearProgressLabel", "best_source": "Either"},
+        {"component": "EmptyContainer", "best_source": "Either"},
+        {"component": "QuickViewAttachment", "best_source": "Either"},
+        {"component": "ResponseAttachment suite", "best_source": "Merge both"},
+        {"component": "AiTool", "best_source": "Compare and merge"}
+      ]
+    },
+    "priority_4_domain_specific": {
+      "description": "Keep separate but co-located in Moonlanding",
+      "friday_domain": ["Engagement lifecycle (stages)", "RFI management", "Client management", "Engagement notifications", "Engagement letter workflows", "Client weekly emails", "Post-RFI workflows"],
+      "mwr_domain": ["Review lifecycle (stages)", "Section/checklist management", "Collaborator management", "Review notifications", "Tender deadline workflows", "Checklist PDF emails", "Highlight/annotation workflows"]
+    }
+  },
+
+  "migration_impact": {
+    "code_reduction": {
+      "backend_functions": "~40% (eliminate duplicate user sync, backup, email, auth, CORS, Firebase init)",
+      "frontend_components": "~30% (shared components, hooks, utilities, constants)",
+      "infrastructure": "~60% (single database, single auth, single file storage, single server)",
+      "total": "~35-40% smaller than combined Friday + MWR"
+    },
+    "risk_areas": [
+      {"risk": "User deduplication", "detail": "10-15% overlap. Email matching must be case-insensitive. Handle name/role differences."},
+      {"risk": "PDF coordinate preservation", "detail": "MWR highlights use exact pixel coordinates. Must preserve without any transformation."},
+      {"risk": "Cross-app feature coupling", "detail": "PushMWRDialog and FlexUpFridayChat depend on cross-app flow. Become same-DB queries in Moonlanding."},
+      {"risk": "Email branding", "detail": "Currently 'My Friday' vs 'My Review' sender names. Need unified strategy."},
+      {"risk": "Role ID mapping", "detail": "Both use cloud_id references. Need mapping table or named-role migration."}
+    ],
+    "wave_3_dependencies": [
+      "Entity migrator design (which tables merge, which stay separate)",
+      "User deduplication algorithm (email matching + conflict resolution)",
+      "Component library design (which components to build first)",
+      "API route design (unified endpoints replacing two Cloud Functions APIs)",
+      "Permission system design (merged RBAC from both systems)"
+    ]
+  }
+}

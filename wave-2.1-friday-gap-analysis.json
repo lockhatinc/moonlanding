@@ -1,0 +1,464 @@
+{
+  "meta": {
+    "title": "WAVE 2.1: Friday Feature Gap Analysis",
+    "generated": "2026-02-19",
+    "source": "/config/workspace/friday-staging (React + Firebase)",
+    "target": "/config/workspace/moonlanding (Node.js + SQLite)",
+    "summary": "Friday is a React SPA backed by Firebase Firestore with Cloud Functions (Express API). Moonlanding is a zero-build Node.js server with SQLite, server-rendered HTML, and a REST API. Overall gap: Moonlanding has ~70% of Friday backend features and ~40% of Friday UI features."
+  },
+
+  "feature_matrix": {
+    "authentication_authorization": [
+      { "feature": "Firebase Auth (email/password)", "status": "EXISTS", "notes": "Cookie-based session auth via src/lib/auth-middleware.js" },
+      { "feature": "Firebase Auth (Google SSO)", "status": "EXISTS", "notes": "Google OAuth2 via src/app/api/auth/google/" },
+      { "feature": "MyWorkReview cross-auth (custom token exchange)", "status": "EXISTS", "notes": "MWR bridge at src/app/api/auth/mwr-bridge/route.js" },
+      { "feature": "Role-based access (Partner/Manager/Clerk)", "status": "EXISTS", "notes": "Defined in master-config.yml roles section" },
+      { "feature": "Client user types (client_admin/client_user)", "status": "EXISTS", "notes": "In master-config.yml roles" },
+      { "feature": "Password reset flow", "status": "EXISTS", "notes": "src/app/api/auth/password-reset/route.js + src/ui/password-reset-page.js" },
+      { "feature": "Service worker auto-update", "status": "MISSING", "notes": "Friday uses ServiceWorkerUpdateListener for PWA updates" },
+      { "feature": "Version mismatch detection (Firestore settings.version)", "status": "MISSING", "notes": "Friday detects app version changes and prompts refresh" },
+      { "feature": "Online/offline status detection", "status": "MISSING", "notes": "Friday useOnlineStatus hook shows connectivity warnings" },
+      { "feature": "Inactive user auto-logout", "status": "PARTIAL", "notes": "Friday checks user status on auth and logs out inactive users; Moonlanding has session-based auth but may not check status on every request" },
+      { "feature": "CSRF protection", "status": "EXISTS", "notes": "src/lib/csrf-protection.js" },
+      { "feature": "Idle logout", "status": "EXISTS", "notes": "src/ui/idle-logout.js" }
+    ],
+
+    "engagements": [
+      { "feature": "Engagement CRUD", "status": "EXISTS", "notes": "Via generic entity API src/app/api/[entity]/[[...path]]/route.js" },
+      { "feature": "6-stage lifecycle (Info Gathering -> Close Out)", "status": "EXISTS", "notes": "Defined in master-config.yml workflows.engagement_lifecycle" },
+      { "feature": "Stage transition with validation", "status": "EXISTS", "notes": "src/lib/workflow-engine.js + src/lib/stage-pipeline.js" },
+      { "feature": "Auto-transition on commencement date", "status": "EXISTS", "notes": "job-engine.js handler auto_transition_engagement_stages" },
+      { "feature": "Engagement status (Active/Pending)", "status": "EXISTS", "notes": "In schema" },
+      { "feature": "Engagement progress tracking (% complete)", "status": "PARTIAL", "notes": "Schema has progress field; Friday computes from RFI completion counts" },
+      { "feature": "Engagement client progress tracking", "status": "PARTIAL", "notes": "Schema field exists; Friday auto-computes from client responses" },
+      { "feature": "Stage count tracking per team (dashboard counters)", "status": "MISSING", "notes": "Friday maintains denormalized counts on friday/engagements doc and friday/clients/list/{id} for each stage per team. Used for dashboard metrics." },
+      { "feature": "Engagement creation triggers (onCreate Cloud Function)", "status": "PARTIAL", "notes": "Moonlanding has recreation engine but no equivalent of Friday onCreate trigger that sends info-gathering or commencement emails, updates stage counts" },
+      { "feature": "Engagement update triggers (onUpdate Cloud Function)", "status": "MISSING", "notes": "Friday engagementUpdate trigger handles: stage change emails, status change counter updates, post-RFI AFS/journal emails, commencement date change -> RFI date updates, finalization notice" },
+      { "feature": "Engagement delete handling", "status": "PARTIAL", "notes": "Friday engagementDelete trigger decrements stage/pending counts" },
+      { "feature": "Engagement recreation (yearly/monthly)", "status": "EXISTS", "notes": "src/engine/recreation.js + job handler yearly/monthly_engagement_recreation" },
+      { "feature": "Engagement recreation batch processing (PubSub)", "status": "PARTIAL", "notes": "Moonlanding does sequential; Friday uses PubSub batches of 20 with concurrency" },
+      { "feature": "Recreation logs (settings/recreationLogs)", "status": "PARTIAL", "notes": "Friday logs to Firestore collection; Moonlanding uses activity_log" },
+      { "feature": "Engagement team assignment", "status": "EXISTS", "notes": "Users field on engagement" },
+      { "feature": "Engagement fee tracking", "status": "EXISTS", "notes": "Fee field on engagement schema" },
+      { "feature": "Engagement repeat interval (once/monthly/yearly)", "status": "EXISTS", "notes": "In schema" },
+      { "feature": "Engagement rating by clients", "status": "EXISTS", "notes": "src/app/api/engagement/rate/route.js" },
+      { "feature": "Engagement data grid (MUI DataGridPremium)", "status": "MISSING", "notes": "Friday uses MUI X DataGrid Premium with grouping, sorting, filtering. Moonlanding uses server-rendered HTML tables." },
+      { "feature": "Engagement card view (mobile)", "status": "MISSING", "notes": "Friday EngagementCardItem component for mobile layout" },
+      { "feature": "Engagement stage selection UI (visual pipeline)", "status": "MISSING", "notes": "Friday EngagementStageSelection component - visual stage picker" },
+      { "feature": "Engagement chat/messaging per engagement", "status": "PARTIAL", "notes": "Moonlanding has src/app/api/message/ but Friday EngagementChat is a real-time Firestore-based chat UI embedded in engagement view" },
+      { "feature": "Engagement section ordering (drag & drop)", "status": "MISSING", "notes": "Friday EngagementSectionOrderDialog for reordering RFI sections via drag-and-drop" },
+      { "feature": "Engagement date choice dialog", "status": "MISSING", "notes": "Friday EngagementDateChoiceDialog for selecting commencement/deadline dates" },
+      { "feature": "Engagement team users dialog", "status": "MISSING", "notes": "Friday EngagementTeamUsersDialog for managing team assignments" },
+      { "feature": "Engagement files zip download", "status": "MISSING", "notes": "Friday /create-engagement-files-zip endpoint creates zip of all engagement files and emails download link" },
+      { "feature": "Engagement delete (partner only)", "status": "PARTIAL", "notes": "Friday /delete-engagement restricts to Info Gathering stage with 0 progress; Moonlanding has generic delete" },
+      { "feature": "My engagements vs Team vs All tabs", "status": "MISSING", "notes": "Friday has tab switching between My, Team, All engagement views" },
+      { "feature": "Current year filter toggle", "status": "MISSING", "notes": "Friday showEngagementsCurrentYear toggle to filter by financial year" },
+      { "feature": "Engagement overview info (stage counts bar)", "status": "MISSING", "notes": "Friday shows per-stage engagement counts in a visual summary bar" }
+    ],
+
+    "rfi": [
+      { "feature": "RFI CRUD", "status": "EXISTS", "notes": "src/app/api/rfi/ routes" },
+      { "feature": "RFI sections (grouping questions)", "status": "EXISTS", "notes": "rfi_section entity" },
+      { "feature": "RFI questions within sections", "status": "EXISTS", "notes": "Via RFI entity with section_id" },
+      { "feature": "RFI status workflow (pending/sent/responded/completed)", "status": "EXISTS", "notes": "In master-config.yml rfi_type_standard" },
+      { "feature": "RFI deadline management", "status": "EXISTS", "notes": "deadline_date field" },
+      { "feature": "RFI deadline notifications (daily cron)", "status": "EXISTS", "notes": "job-engine.js handler send_rfi_deadline_notifications" },
+      { "feature": "RFI client user assignment per question", "status": "EXISTS", "notes": "assigned_users field on RFI" },
+      { "feature": "RFI response with file attachments", "status": "EXISTS", "notes": "src/app/api/rfi/[id]/questions/[qid]/responses/route.js" },
+      { "feature": "RFI template management", "status": "EXISTS", "notes": "src/app/api/rfi/_templates/route.js" },
+      { "feature": "RFI template apply to engagement", "status": "PARTIAL", "notes": "Friday has RFITemplateSelectField for selecting and applying templates to engagements" },
+      { "feature": "RFI bulk deadline assignment", "status": "MISSING", "notes": "Friday AttachBulkDeadlinesRFIDialog for setting deadlines across multiple RFI items" },
+      { "feature": "RFI reminder emails (per item)", "status": "MISSING", "notes": "Friday /send-rfi-reminder endpoint sends priority-based reminder emails for specific RFI items" },
+      { "feature": "RFI report generation", "status": "MISSING", "notes": "Friday GetRFIReport / RFIReport components generate PDF/printable RFI status reports" },
+      { "feature": "RFI item progress label", "status": "MISSING", "notes": "Friday EngagementProgressLabel shows per-section RFI completion percentage" },
+      { "feature": "RFI update monitor (Firestore trigger)", "status": "MISSING", "notes": "Friday rfiUpdateMonitor trigger: when client_status changes to Sent, creates clerk/manager notifications; when deadline changes, creates/updates RFI deadline notifications" },
+      { "feature": "RFI question activity logging", "status": "MISSING", "notes": "Friday useLogQuestionActivity hook logs all RFI question interactions" },
+      { "feature": "RFI date auto-update on commencement change", "status": "MISSING", "notes": "Friday handleUpdateRfiSectionItemDates updates all RFI dates when engagement commencement date changes" },
+      { "feature": "RFI import from other engagements", "status": "MISSING", "notes": "Friday ImportReviewQueriesDialog imports queries from other reviews/engagements" },
+      { "feature": "RFI drag & drop reordering", "status": "MISSING", "notes": "Friday uses react-beautiful-dnd for RFI item reordering" },
+      { "feature": "RFI attachment preview (inline)", "status": "MISSING", "notes": "Friday ResponseAttachmentPreview, QuickViewAttachment for inline file previews" },
+      { "feature": "RFI file search across engagements", "status": "MISSING", "notes": "Friday RFIEngagementFileSearchDialog searches files across all engagements" }
+    ],
+
+    "clients": [
+      { "feature": "Client CRUD", "status": "EXISTS", "notes": "Via generic entity API" },
+      { "feature": "Client users management", "status": "EXISTS", "notes": "client_user entity" },
+      { "feature": "Client user add (creates auth account)", "status": "MISSING", "notes": "Friday /add-client-user creates auth account, sends signup email with password reset link" },
+      { "feature": "Client user update", "status": "PARTIAL", "notes": "Friday /update-client-user validates against existing users, prevents duplicates" },
+      { "feature": "Client user delete (batch)", "status": "MISSING", "notes": "Friday /delete-client-user handles batch deletion with FK cleanup" },
+      { "feature": "Client user replace across engagements", "status": "MISSING", "notes": "Friday /replace-client-user-engagements swaps one client user for another in all RFI assignments" },
+      { "feature": "Client inactive processing (Firestore trigger)", "status": "MISSING", "notes": "Friday clientInactiveUpdate trigger: when client set inactive, changes all engagements to repeat=once and deletes Info Gathering engagements with 0 progress" },
+      { "feature": "Client entity types management", "status": "EXISTS", "notes": "Entity type settings in Moonlanding" },
+      { "feature": "Client engagement types management", "status": "EXISTS", "notes": "Engagement type settings" },
+      { "feature": "Client master emails (multiple admin emails)", "status": "PARTIAL", "notes": "Friday supports master_emails array for multiple primary client contacts" },
+      { "feature": "Client risk assessment", "status": "MISSING", "notes": "Friday ClientRiskAssessmentDialog for client risk scoring" },
+      { "feature": "Client test emails", "status": "MISSING", "notes": "Friday /test-client-emails endpoint + ClientTestEmailDialog sends test emails to verify client email addresses work" },
+      { "feature": "Client user replace dialog", "status": "MISSING", "notes": "Friday ClientUserReplaceDialog UI for user replacement workflow" },
+      { "feature": "Client status label (active/inactive visual)", "status": "PARTIAL", "notes": "Moonlanding has status field but Friday has dedicated StatusLabel component" }
+    ],
+
+    "settings_configuration": [
+      { "feature": "Settings dashboard", "status": "EXISTS", "notes": "src/ui/settings-renderer.js" },
+      { "feature": "User management (CRUD)", "status": "EXISTS", "notes": "Settings users page" },
+      { "feature": "Team management (CRUD)", "status": "EXISTS", "notes": "Settings teams page" },
+      { "feature": "RFI section templates", "status": "EXISTS", "notes": "Settings RFI sections" },
+      { "feature": "Engagement templates", "status": "EXISTS", "notes": "Settings templates" },
+      { "feature": "Engagement notification triggers", "status": "PARTIAL", "notes": "Friday SettingsEngagementNotifications manages custom notification rules (before/after commencement/deadline by N days, to specific user groups). Moonlanding has notification thresholds in config but no UI for custom triggers" },
+      { "feature": "Integration settings (API keys, MWR)", "status": "PARTIAL", "notes": "Friday SettingsIntegrations manages MWR keys and other integration credentials. Moonlanding has env-based config" },
+      { "feature": "Recreation logs viewer", "status": "EXISTS", "notes": "src/ui/settings-renderer.js has renderSettingsRecreation" },
+      { "feature": "Build & deployment logs", "status": "EXISTS", "notes": "Moonlanding has build logs page in page-handler" },
+      { "feature": "Entity type management", "status": "EXISTS", "notes": "Entity types CRUD" },
+      { "feature": "Engagement type management", "status": "EXISTS", "notes": "Engagement types CRUD" },
+      { "feature": "User roles/permissions editor", "status": "EXISTS", "notes": "src/app/api/audit/permissions/" },
+      { "feature": "Color picker for entities", "status": "MISSING", "notes": "Friday ColorPickerDialog for assigning colors to engagements/sections" },
+      { "feature": "Engagement section order management", "status": "MISSING", "notes": "Friday EngagementSectionOrderDialog in settings" }
+    ],
+
+    "email_system": [
+      { "feature": "Email sending (nodemailer)", "status": "EXISTS", "notes": "src/services/email-service.js" },
+      { "feature": "Email queue with rate limiting", "status": "EXISTS", "notes": "src/engine/notification-engine.js with queueEmail/sendQueuedEmails" },
+      { "feature": "Email templates (14+ types)", "status": "PARTIAL", "notes": "Friday has 14 email types: clientSignup, passwordReset, clientReminder, clientEngagement, engagementInfoGathering, engagementNotification, clerkRfiNotification, rfiDeadlineNotification, clientWeeklyEngagement, clientMasterWeeklyEngagement, engagementFinalization, engagementFiles, clientTest, bugReportDeveloper. Moonlanding has templates for most but implementation completeness varies" },
+      { "feature": "PubSub email content generation", "status": "MISSING", "notes": "Friday uses two-phase PubSub: content generation topic -> email sending topic. Moonlanding uses direct queue" },
+      { "feature": "Email rate limiting (1000/day, 20/min)", "status": "PARTIAL", "notes": "Moonlanding has rate limits in config but Friday implementation is more battle-tested with daily counter persistence" },
+      { "feature": "Email daily counter persistence", "status": "MISSING", "notes": "Friday persists email counts in Firestore friday/emailCounters doc" },
+      { "feature": "Email receive/inbound processing", "status": "EXISTS", "notes": "src/app/api/email/receive/route.js" },
+      { "feature": "Email allocation to engagements", "status": "EXISTS", "notes": "src/app/api/email/allocate/route.js" },
+      { "feature": "Email attachment handling (inbound)", "status": "EXISTS", "notes": "In email receive route" },
+      { "feature": "Client signup email (with password reset link)", "status": "MISSING", "notes": "Friday generates password reset link via Firebase Admin and includes in welcome email" },
+      { "feature": "Client engagement email (with letter/CV/details attachments)", "status": "MISSING", "notes": "Friday commencement email includes engagement letter PDF, team CVs, and engagement details as attachments" },
+      { "feature": "Weekly client engagement summary emails", "status": "MISSING", "notes": "Friday processAllClientWeeklyEngagementEmails sends weekly progress summaries to clients with master/individual versions" },
+      { "feature": "Draft AFS email (post-RFI financials)", "status": "MISSING", "notes": "Friday sends email with link to draft annual financial statements when post_rfi auditor_status changes to Sent" },
+      { "feature": "Draft journals email (post-RFI journals)", "status": "MISSING", "notes": "Friday sends email with link to draft journals when post_rfi_journal auditor_status changes to Sent" },
+      { "feature": "Engagement finalization notice to client", "status": "MISSING", "notes": "Friday sends finalization notice when engagement moves to Finalization stage" },
+      { "feature": "Bug report developer email", "status": "MISSING", "notes": "Friday auto-sends error reports to developer email on system failures" },
+      { "feature": "Engagement files download email", "status": "MISSING", "notes": "Friday emails zip download link when engagement files zip is created" }
+    ],
+
+    "scheduled_jobs": [
+      { "feature": "Daily database backup", "status": "EXISTS", "notes": "job-engine.js handler export_database" },
+      { "feature": "Daily user sync from Google Workspace", "status": "EXISTS", "notes": "job-engine.js handler sync_users_from_google_workspace" },
+      { "feature": "Daily engagement check (auto-transition)", "status": "EXISTS", "notes": "job-engine.js handler auto_transition_engagement_stages" },
+      { "feature": "Daily RFI deadline notifications", "status": "EXISTS", "notes": "job-engine.js handler send_rfi_deadline_notifications" },
+      { "feature": "Daily manager/clerk RFI notifications", "status": "MISSING", "notes": "Friday pubSub_dailyManagerClerkNotifications consolidates all client-sent RFI items and sends daily summary emails to engagement team (managers/clerks). Separate from deadline notifications" },
+      { "feature": "Weekly client engagement emails", "status": "MISSING", "notes": "Friday pubSub_weeklyClientEngagementEmails sends weekly progress reports to all active clients" },
+      { "feature": "Yearly engagement recreation", "status": "EXISTS", "notes": "Via job-engine recreation handler" },
+      { "feature": "Monthly engagement recreation", "status": "EXISTS", "notes": "Via job-engine recreation handler" },
+      { "feature": "Engagement recreation batch processing", "status": "PARTIAL", "notes": "Friday batches 20 engagements per PubSub message with 10x concurrency; Moonlanding processes sequentially" },
+      { "feature": "Email content generation (async)", "status": "MISSING", "notes": "Friday pubSub_generateEmailContent generates email HTML asynchronously via PubSub" },
+      { "feature": "Email sending (async queue)", "status": "PARTIAL", "notes": "Moonlanding has queue but not PubSub-based" }
+    ],
+
+    "file_storage": [
+      { "feature": "File upload (local storage)", "status": "EXISTS", "notes": "src/lib/file-storage.js" },
+      { "feature": "RFI response file attachments", "status": "EXISTS", "notes": "Via RFI response routes" },
+      { "feature": "Engagement template upload", "status": "PARTIAL", "notes": "Friday uploads to Firebase Storage at Engagement Templates/{entityType}/{filename}" },
+      { "feature": "User CV upload", "status": "MISSING", "notes": "Friday /upload-user-cv stores CVs at Users/{userId}/{filename} in Firebase Storage and generates signed URLs" },
+      { "feature": "Engagement details file upload", "status": "PARTIAL", "notes": "Friday /upload-engagement-details-file" },
+      { "feature": "Engagement letter upload (signed)", "status": "MISSING", "notes": "Friday /upload-engagement-letter stores signed engagement letters at {clientId}/{engagementId}/Engagement Letter/{filename}" },
+      { "feature": "Post-RFI file upload (Draft AFS/Journals)", "status": "MISSING", "notes": "Friday /upload-post-rfi stores draft financials/journals at {clientId}/{engagementId}/PostRFI/{filename}" },
+      { "feature": "Engagement files zip creation & email", "status": "MISSING", "notes": "Friday /create-engagement-files-zip creates a zip of all files for an engagement and emails the download link" },
+      { "feature": "Files from other engagements dialog", "status": "MISSING", "notes": "Friday ChooseFilesFromOtherEngagementsDialog for reusing files" },
+      { "feature": "File quick view (inline preview)", "status": "MISSING", "notes": "Friday QuickViewAttachment for inline file previews without download" }
+    ],
+
+    "google_drive_integration": [
+      { "feature": "Google Drive API client", "status": "EXISTS", "notes": "src/adapters/google-drive.js" },
+      { "feature": "Engagement letter generation (docx -> Google Docs -> PDF)", "status": "EXISTS", "notes": "src/engine/drive.js exports generateEngagementLetter" },
+      { "feature": "Template find & replace (mail merge)", "status": "EXISTS", "notes": "Via replaceInDoc in drive adapter" },
+      { "feature": "File upload to Google Drive", "status": "EXISTS", "notes": "uploadFile in drive adapter" },
+      { "feature": "PDF export from Google Docs", "status": "EXISTS", "notes": "exportToPdf in drive adapter" }
+    ],
+
+    "pdf_editor": [
+      { "feature": "PDF viewer/loader", "status": "PARTIAL", "notes": "Moonlanding has src/lib/pdf-editor-dialog.js but Friday has full pdfEditor/ directory with 16 files" },
+      { "feature": "Highlight creation (text + area)", "status": "PARTIAL", "notes": "Moonlanding has highlight API routes; Friday has full PdfHighlighter.tsx with mouse selection" },
+      { "feature": "Area highlight (rectangle selection)", "status": "MISSING", "notes": "Friday AreaHighlight.tsx for area-based highlights on PDFs" },
+      { "feature": "Mobile resizable rectangle", "status": "MISSING", "notes": "Friday MobileResizableRectangle.tsx for touch-based highlight resizing" },
+      { "feature": "Highlight layer rendering", "status": "MISSING", "notes": "Friday HighlightLayer.tsx overlays highlights on PDF pages" },
+      { "feature": "PDF coordinate system (bottom-left origin)", "status": "EXISTS", "notes": "Documented in CLAUDE.md as critical caveat" },
+      { "feature": "Tip/tooltip on highlights", "status": "MISSING", "notes": "Friday Tip.tsx and TipContainer.tsx for highlight annotation popups" },
+      { "feature": "PDF mouse monitor", "status": "MISSING", "notes": "Friday MouseMonitor.tsx for tracking cursor position on PDF" },
+      { "feature": "PDF mouse selection", "status": "MISSING", "notes": "Friday MouseSelection.tsx for text/area selection on PDF" },
+      { "feature": "Popup component for PDF", "status": "MISSING", "notes": "Friday Popup.tsx for context menus on PDF elements" },
+      { "feature": "ConvertDataUrlFile", "status": "MISSING", "notes": "Friday ConvertDataUrlFile.tsx for data URL file conversion" }
+    ],
+
+    "mwr_integration": [
+      { "feature": "MWR checklists fetch", "status": "PARTIAL", "notes": "Friday /get-mwr-checklists calls MWR API; Moonlanding has local checklist system" },
+      { "feature": "MWR reviews fetch", "status": "PARTIAL", "notes": "Friday /get-mwr-reviews calls MWR API; Moonlanding has local review system" },
+      { "feature": "MWR checklist push", "status": "PARTIAL", "notes": "Friday /push-mwr-checklist pushes local checklists to MWR API; Moonlanding has src/ui/push-mwr-dialog.js" },
+      { "feature": "MWR cross-auth token exchange", "status": "EXISTS", "notes": "src/app/api/auth/mwr-bridge/route.js" },
+      { "feature": "Engagement checklist push to MWR", "status": "PARTIAL", "notes": "Friday EngagementChecklistPushMyReviewDialog for pushing checklists" }
+    ],
+
+    "realtime_features": [
+      { "feature": "Firestore real-time listeners (onSnapshot)", "status": "MISSING", "notes": "Friday uses Firestore onSnapshot for real-time data: user list, teams, entity types, engagement types, user profile changes. Moonlanding uses polling via src/lib/realtime-server.js" },
+      { "feature": "Real-time engagement updates", "status": "MISSING", "notes": "Friday EngagementsView uses onSnapshot for live engagement data" },
+      { "feature": "Real-time user status changes", "status": "MISSING", "notes": "Friday App.js user listener auto-logs out inactive users in real-time" },
+      { "feature": "Real-time team updates", "status": "MISSING", "notes": "Friday App.js team listener updates team data live" }
+    ],
+
+    "ui_components": [
+      { "feature": "Material UI (MUI) component library", "status": "MISSING", "notes": "Friday uses @mui/material extensively. Moonlanding uses server-rendered HTML with Tailwind/DaisyUI classes" },
+      { "feature": "MUI X DataGrid Premium", "status": "MISSING", "notes": "Friday uses premium data grid with grouping, column pinning, row selection, export" },
+      { "feature": "React Router (client-side routing)", "status": "MISSING", "notes": "Moonlanding uses server-side routing" },
+      { "feature": "Snackbar notifications", "status": "PARTIAL", "notes": "Moonlanding has Toast component; Friday uses MUI Snackbar" },
+      { "feature": "Confirm dialog (delete/action confirmation)", "status": "EXISTS", "notes": "Moonlanding has Modal component" },
+      { "feature": "Loading spinner/overlay", "status": "EXISTS", "notes": "src/components/Spinner.jsx" },
+      { "feature": "Empty state containers", "status": "EXISTS", "notes": "src/components/EmptyState.jsx" },
+      { "feature": "Sidebar navigation drawer", "status": "PARTIAL", "notes": "Moonlanding has src/components/Navigation.jsx; Friday SideDrawer.js is a dedicated sidebar" },
+      { "feature": "Responsive screen detection", "status": "MISSING", "notes": "Friday useResponsiveScreen hook for mobile/tablet/desktop layout adaptation" },
+      { "feature": "User avatar component", "status": "MISSING", "notes": "Friday UserAvatar displays user avatar with initials fallback" },
+      { "feature": "Circular/linear progress labels", "status": "EXISTS", "notes": "src/components/Progress.jsx" },
+      { "feature": "Status label component", "status": "MISSING", "notes": "Friday StatusLabel renders colored status badges" },
+      { "feature": "Search field with debounce", "status": "EXISTS", "notes": "src/components/Search.jsx" },
+      { "feature": "Color picker", "status": "MISSING", "notes": "Friday ColorPickerDialog for entity color assignment" },
+      { "feature": "Expand/collapse animations", "status": "MISSING", "notes": "Friday ExpandMore animated expand icon" }
+    ],
+
+    "ai_features": [
+      { "feature": "AI Tool (Guru PDF analysis)", "status": "MISSING", "notes": "Friday AiTool.js opens PDF files in Guru AI for analysis. Only available to auditor users, excluded for images." }
+    ],
+
+    "engagement_letter_workflow": [
+      { "feature": "Engagement letter generation (docx template -> Google Docs -> PDF)", "status": "EXISTS", "notes": "Moonlanding has generateEngagementLetter in drive adapter" },
+      { "feature": "Engagement letter email to client (with CVs + details attachments)", "status": "MISSING", "notes": "Friday commencement email sends engagement letter, team CVs, and engagement details PDF as attachments" },
+      { "feature": "Engagement letter signed upload", "status": "MISSING", "notes": "Friday /upload-engagement-letter for client to upload signed letter" },
+      { "feature": "Engagement letter status tracking (auditor/client)", "status": "PARTIAL", "notes": "Schema fields exist (letter_client_status, letter_auditor_status) but no dedicated UI workflow" },
+      { "feature": "Engagement letter dialog", "status": "PARTIAL", "notes": "Moonlanding has src/ui/letter-dialogs.js" }
+    ],
+
+    "post_rfi_workflow": [
+      { "feature": "Post-RFI file upload (Draft AFS)", "status": "MISSING", "notes": "Friday has dedicated upload for draft annual financial statements" },
+      { "feature": "Post-RFI file upload (Draft Journals)", "status": "MISSING", "notes": "Friday has dedicated upload for draft journals" },
+      { "feature": "Post-RFI status tracking (auditor/client)", "status": "PARTIAL", "notes": "Schema fields exist but no dedicated workflow UI" },
+      { "feature": "Post-RFI email to client (Draft AFS)", "status": "MISSING", "notes": "Friday generateAndSendDraftAFSEmail auto-sends when auditor_status -> Sent" },
+      { "feature": "Post-RFI email to client (Draft Journals)", "status": "MISSING", "notes": "Friday generateAndSendDraftJournalsEmail auto-sends when auditor_status -> Sent" },
+      { "feature": "Post-RFI engagement item dialog", "status": "MISSING", "notes": "Friday RFIEngagementPostRFIDialog and RFIEngagementPostRFIJournalDialog" }
+    ],
+
+    "team_management": [
+      { "feature": "Team CRUD", "status": "EXISTS", "notes": "Settings teams" },
+      { "feature": "Team users management", "status": "EXISTS", "notes": "Team entity with users field" },
+      { "feature": "Team user removal from engagements (Firestore trigger)", "status": "MISSING", "notes": "Friday teamUsersUpdateMonitor trigger: when users removed from team, removes them from all team engagements user arrays in batch" },
+      { "feature": "Team-based engagement filtering", "status": "PARTIAL", "notes": "Friday filters engagements by team assignment" },
+      { "feature": "Team auth route (restrict to team members)", "status": "MISSING", "notes": "Friday TeamAuthRoute prevents non-team-members from accessing team engagements" }
+    ]
+  },
+
+  "missing_api_endpoints": [
+    { "endpoint": "POST /send-rfi-reminder", "purpose": "Send priority-based RFI reminder email to client users", "priority": "HIGH" },
+    { "endpoint": "POST /add-client-user", "purpose": "Create client user with auth account + signup email", "priority": "HIGH" },
+    { "endpoint": "POST /update-client-user", "purpose": "Update client user with duplicate prevention", "priority": "MEDIUM" },
+    { "endpoint": "POST /delete-client-user", "purpose": "Batch delete client users with FK cleanup", "priority": "MEDIUM" },
+    { "endpoint": "POST /replace-client-user-engagements", "purpose": "Swap client user across all engagement RFI assignments", "priority": "MEDIUM" },
+    { "endpoint": "POST /upload-user-cv", "purpose": "Upload user CV to storage", "priority": "LOW" },
+    { "endpoint": "POST /upload-engagement-letter", "purpose": "Upload signed engagement letter", "priority": "HIGH" },
+    { "endpoint": "POST /upload-post-rfi", "purpose": "Upload draft AFS/journals", "priority": "HIGH" },
+    { "endpoint": "POST /create-engagement-files-zip", "purpose": "Create zip of engagement files + email download", "priority": "MEDIUM" },
+    { "endpoint": "POST /delete-engagement", "purpose": "Delete engagement (partner only, Info Gathering, 0 progress)", "priority": "HIGH" },
+    { "endpoint": "POST /test-client-emails", "purpose": "Send test emails to verify client addresses", "priority": "LOW" },
+    { "endpoint": "POST /push-mwr-checklist", "purpose": "Push checklist to MWR external API", "priority": "LOW" },
+    { "endpoint": "POST /get-mwr-checklists", "purpose": "Fetch checklists from MWR external API", "priority": "LOW" },
+    { "endpoint": "POST /get-mwr-reviews", "purpose": "Fetch reviews from MWR external API", "priority": "LOW" }
+  ],
+
+  "missing_workflows_business_rules": {
+    "engagement_stage_transition_side_effects": [
+      {
+        "transition": "Info Gathering -> Commencement (auto or manual)",
+        "actions": "Send engagement letter email to client with PDF attachment, team CVs, engagement details. Email goes to master_emails + admin users + partner/manager team members.",
+        "status": "MISSING"
+      },
+      {
+        "transition": "Any stage -> Finalization",
+        "actions": "Send finalization notice email to client. Track finalization_notice_client.sent flag to prevent duplicate sends.",
+        "status": "MISSING"
+      },
+      {
+        "transition": "Status: Pending -> Active",
+        "actions": "Decrement PendingCounts for team. If still Info Gathering, send info gathering email. If commencement date passed, update date to today and update all RFI dates.",
+        "status": "MISSING"
+      },
+      {
+        "transition": "Commencement date change",
+        "actions": "Batch update all RFI date_requested fields to match new commencement date. Uses Firestore batch writes (395 per batch) with concurrency queue.",
+        "status": "MISSING"
+      },
+      {
+        "transition": "Post-RFI auditor_status -> Sent",
+        "actions": "Send Draft AFS email to client with attachment link. Send Draft Journals email to client with attachment link.",
+        "status": "MISSING"
+      }
+    ],
+    "client_lifecycle_rules": [
+      {
+        "rule": "Client -> Inactive",
+        "actions": "Find all engagements with repeat_interval != once and update to once. Delete all engagements in Info Gathering stage with 0 progress.",
+        "status": "MISSING"
+      }
+    ],
+    "team_user_removal_cascade": [
+      {
+        "rule": "User removed from team",
+        "actions": "Find all engagements for that team. Remove user from engagement user arrays in batch.",
+        "status": "MISSING"
+      }
+    ],
+    "rfi_side_effects": [
+      {
+        "rule": "RFI client_status -> Sent",
+        "actions": "Create notification record in client_sent_notifications collection. Include engagement team (non-partner) users as notification recipients.",
+        "status": "MISSING"
+      },
+      {
+        "rule": "RFI deadline_date changed",
+        "actions": "Create or update RFI notification record. Notify client admin users + assigned client users. If deadline removed, remove notification.",
+        "status": "MISSING"
+      }
+    ],
+    "engagement_user_array_sanitization": {
+      "rule": "Friday engagementUpdate detects when engagement user arrays contain objects instead of IDs, auto-sanitizes them, and reports the issue.",
+      "status": "MISSING"
+    }
+  },
+
+  "missing_integrations": [
+    { "integration": "Google Cloud PubSub (email queue)", "friday_impl": "Two-phase: content generation -> email sending", "status": "MISSING" },
+    { "integration": "Google Cloud Storage (file storage)", "friday_impl": "Signed URLs with 100-year expiry", "status": "MISSING (uses local storage)" },
+    { "integration": "Google Cloud Build (build logs)", "friday_impl": "Cloud Build API for deployment monitoring", "status": "MISSING" },
+    { "integration": "GQueues integration", "friday_impl": "Email CC to gqueues address for task tracking", "status": "MISSING" },
+    { "integration": "Guru AI tool", "friday_impl": "Opens PDF in AI analysis tool", "status": "MISSING" },
+    { "integration": "Inbound email processing", "friday_impl": "receiveEmailData Cloud Function with bearer token auth", "status": "EXISTS (different implementation)" }
+  ],
+
+  "missing_validation_logic": [
+    { "validation": "Engagement commencement date within 2 years", "friday_location": "isDateSelectedWithinTwoYears", "status": "MISSING" },
+    { "validation": "Deadline date after commencement date", "friday_location": "isDeadlineDateBeforeCommencementDate", "status": "MISSING" },
+    { "validation": "Deadline date after requested date", "friday_location": "isDeadlineDateBeforeRequestedDate", "status": "MISSING" },
+    { "validation": "Client user email uniqueness per client", "friday_location": "addClientUser server-side check", "status": "MISSING" },
+    { "validation": "Client user is not auditor check", "friday_location": "addClientUser status=601 response", "status": "MISSING" },
+    { "validation": "Engagement delete restricted to Info Gathering/0 progress", "friday_location": "/delete-engagement endpoint", "status": "PARTIAL" },
+    { "validation": "Partner-only engagement deletion", "friday_location": "Role check in delete endpoint", "status": "PARTIAL" },
+    { "validation": "Financial year calculation", "friday_location": "getCurrentFinancialYear", "status": "MISSING" },
+    { "validation": "File size conversion/display", "friday_location": "convertFileSizeToNearest", "status": "MISSING" },
+    { "validation": "User array sanitization (objects -> IDs)", "friday_location": "engagementUpdate trigger", "status": "MISSING" }
+  ],
+
+  "missing_permission_checks": [
+    { "check": "Partner/Manager only for client user CRUD", "friday_impl": "Token + role check in each endpoint", "status": "PARTIAL" },
+    { "check": "Partner only for engagement deletion", "friday_impl": "USER_ROLES.PARTNER check", "status": "PARTIAL" },
+    { "check": "Partner only for client user deletion", "friday_impl": "USER_ROLES.PARTNER check", "status": "PARTIAL" },
+    { "check": "Auditor only for RFI reminders", "friday_impl": "user.type !== auditor check", "status": "MISSING" },
+    { "check": "Team membership for engagement access", "friday_impl": "TeamAuthRoute + useUserBelongsToTeam", "status": "MISSING" },
+    { "check": "Non-clerk route (hides pages from clerks)", "friday_impl": "NonClerkRoute component wraps client/settings routes", "status": "PARTIAL" },
+    { "check": "Notification user filtering by role", "friday_impl": "Partners included/excluded based on includePartners flag", "status": "MISSING" }
+  ],
+
+  "firestore_triggers_needing_equivalents": [
+    { "trigger": "engagementCreate", "path": "friday/engagements/list/{id} onCreate", "actions": "Increment stage counts, send info gathering or commencement email, update stage if date passed" },
+    { "trigger": "engagementUpdate", "path": "friday/engagements/list/{id} onUpdate", "actions": "Handle stage changes, status changes, date changes, post-RFI emails, user array sanitization" },
+    { "trigger": "engagementDelete", "path": "friday/engagements/list/{id} onDelete", "actions": "Decrement stage/pending counts" },
+    { "trigger": "clientInactiveUpdate", "path": "friday/clients/list/{id} onUpdate", "actions": "When inactive: stop repeats, delete Info Gathering engagements" },
+    { "trigger": "rfiUpdateMonitor", "path": "friday/engagements/list/{id}/rfis/{rfiId} onUpdate", "actions": "Track client_status changes, deadline changes, create notifications" },
+    { "trigger": "teamUsersUpdateMonitor", "path": "friday/teams/list/{id} onUpdate", "actions": "Remove departed team members from all team engagements" }
+  ],
+
+  "firestore_collections_mapping": [
+    { "collection": "friday/users/list", "purpose": "Internal (auditor) and client users", "moonlanding": "user + client_user tables" },
+    { "collection": "friday/users/permissions", "purpose": "Role definitions with permission arrays", "moonlanding": "permission table + master-config roles" },
+    { "collection": "friday/clients/list", "purpose": "Client organizations", "moonlanding": "client table" },
+    { "collection": "friday/clients/entity_types", "purpose": "Entity type definitions", "moonlanding": "entity_type table" },
+    { "collection": "friday/clients/engagement_types", "purpose": "Engagement type definitions", "moonlanding": "engagement_type table" },
+    { "collection": "friday/engagements/list", "purpose": "Engagements", "moonlanding": "engagement table" },
+    { "collection": "friday/engagements/list/{id}/rfis", "purpose": "RFI items (subcollection)", "moonlanding": "rfi table" },
+    { "collection": "friday/engagements/list/{id}/sections", "purpose": "RFI sections (subcollection)", "moonlanding": "rfi_section table" },
+    { "collection": "friday/engagements/client_sent_notifications", "purpose": "Queued clerk/manager notifications", "moonlanding": "No equivalent" },
+    { "collection": "friday/teams/list", "purpose": "Team definitions with user arrays", "moonlanding": "team table" },
+    { "collection": "friday/templates/list", "purpose": "Engagement templates", "moonlanding": "template table" },
+    { "collection": "friday/settings", "purpose": "System settings (version, keys)", "moonlanding": "Config files / env vars" },
+    { "collection": "friday/settings/engagement_notifications", "purpose": "Custom notification triggers", "moonlanding": "No UI equivalent" },
+    { "collection": "friday/logs/list", "purpose": "System logs", "moonlanding": "activity_log table" },
+    { "collection": "friday/emailCounters", "purpose": "Email rate limiting counters", "moonlanding": "No equivalent" },
+    { "collection": "friday/recreationLogs/list", "purpose": "Engagement recreation logs", "moonlanding": "activity_log entries" },
+    { "collection": "emails (root collection)", "purpose": "Inbound emails from Mailgun", "moonlanding": "email table" }
+  ],
+
+  "priority_ranking": {
+    "P0_critical": [
+      "Engagement stage transition side-effects (emails, counter updates)",
+      "Client inactive cascade (engagement cleanup)",
+      "Team user removal cascade (engagement user cleanup)",
+      "RFI update side-effects (notifications, deadline tracking)",
+      "Post-RFI workflow (Draft AFS/Journal email flow)",
+      "Engagement letter email workflow (commencement email with attachments)",
+      "Client user CRUD with auth account management",
+      "Engagement delete with business rule enforcement"
+    ],
+    "P1_high": [
+      "RFI reminder emails",
+      "Weekly client engagement summary emails",
+      "Daily manager/clerk notification consolidation",
+      "Engagement files zip creation & email",
+      "Engagement date change -> RFI date cascade update",
+      "Custom engagement notification triggers (settings UI)",
+      "My engagements / Team / All tabs filtering",
+      "Engagement overview dashboard (stage count summary)"
+    ],
+    "P2_medium": [
+      "PDF editor full implementation (highlight creation, area selection, mobile)",
+      "RFI drag & drop reordering",
+      "RFI bulk deadline assignment",
+      "RFI report generation",
+      "Client user replace across engagements",
+      "Client risk assessment",
+      "Color picker for entities",
+      "Responsive screen adaptation",
+      "User avatar with initials fallback",
+      "Status label component"
+    ],
+    "P3_low": [
+      "AI Tool integration (Guru)",
+      "Service worker / PWA auto-update",
+      "Online/offline detection",
+      "Version mismatch detection",
+      "File quick view (inline preview)",
+      "Files from other engagements dialog",
+      "Cloud Build logs viewer",
+      "GQueues integration",
+      "Client test emails",
+      "Bug report developer auto-email"
+    ]
+  },
+
+  "summary_statistics": {
+    "friday_express_api_endpoints": 24,
+    "moonlanding_api_routes": "60+ (generic + specific)",
+    "friday_cloud_functions_pubsub_handlers": 12,
+    "moonlanding_job_handlers": 7,
+    "missing_job_handlers": 5,
+    "friday_firestore_triggers": 6,
+    "moonlanding_firestore_trigger_equivalents": 0,
+    "friday_email_templates": 14,
+    "moonlanding_email_templates": "~12",
+    "friday_react_components": "~80",
+    "moonlanding_jsx_components": "~25",
+    "friday_ui_pages": "~25",
+    "moonlanding_ui_pages": "~15",
+    "friday_pdf_editor_files": 16,
+    "moonlanding_pdf_editor_files": "~4",
+    "friday_scheduled_jobs": 8,
+    "moonlanding_scheduled_jobs": 5,
+    "friday_file_upload_endpoints": 6,
+    "moonlanding_file_upload_endpoints": "1 (generic)",
+    "overall_backend_coverage": "~70%",
+    "overall_ui_coverage": "~40%",
+    "largest_gaps": [
+      "Firestore trigger equivalents (6 triggers with complex business logic)",
+      "Email workflows (weekly summaries, commencement emails with attachments)",
+      "Interactive UI features (DataGrid, drag-drop, PDF editor, real-time updates)",
+      "Client user lifecycle management (CRUD with auth + email + cascade)",
+      "Engagement side-effect processing (stage change emails, counter updates)"
+    ]
+  }
+}
