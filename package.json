@@ -4,15 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx server.js"
+    "dev": "tsx server.js",
+    "start": "tsx server.js"
   },
-  "workspaces": [
-    "../dynamic-react-renderer"
-  ],
   "dependencies": {
     "@casl/ability": "^6.8.0",
     "@lucia-auth/adapter-sqlite": "^3.0.2",
-    "@sequentialos/dynamic-react-renderer": "file:../dynamic-react-renderer",
     "arctic": "^1.9.2",
     "bcrypt": "^5.1.1",
     "better-sqlite3": "^11.10.0",
@@ -20,20 +17,15 @@
     "googleapis": "^140.0.0",
     "js-yaml": "^4.1.1",
     "lucia": "^3.2.2",
-    "lucide-react": "^0.441.0",
     "nanoid": "^5.0.7",
     "nodemailer": "^6.9.7",
     "puppeteer": "^21.6.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
     "rippleui": "^1.12.1",
     "tsx": "^4.7.0",
     "webjsx": "^0.0.73"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.11",
-    "@types/node": "^20.16.5",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0"
+    "@types/node": "^20.16.5"
   }
 }
