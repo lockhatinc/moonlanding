@@ -15,7 +15,14 @@ export const lucia = new Lucia(adapter, {
 
 console.log('[Engine] Lucia session cookie name:', lucia.sessionCookieName);
 
-export const google = hasGoogleAuth
+console.log('[Engine] Google Auth Config:', {
+  hasGoogleAuth: hasGoogleAuth(),
+  clientId: config.auth.google.clientId ? '***set***' : 'MISSING',
+  clientSecret: config.auth.google.clientSecret ? '***set***' : 'MISSING',
+  redirectUri: config.auth.google.redirectUri
+});
+
+export const google = hasGoogleAuth()
   ? new Google(config.auth.google.clientId, config.auth.google.clientSecret, config.auth.google.redirectUri)
   : null;
 

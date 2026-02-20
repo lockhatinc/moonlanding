@@ -7,6 +7,24 @@ import { register } from 'module';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = 3000;
 
+// Load .env file manually
+function loadEnv(filePath) {
+  try {
+    const envFile = fs.readFileSync(filePath, 'utf-8');
+    envFile.split('\n').forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) return;
+      const [key, ...valueParts] = trimmed.split('=');
+      const value = valueParts.join('=').replace(/^['"]|['"]$/g, '');
+      if (key) process.env[key] = value;
+    });
+  } catch (e) {
+    console.warn('[Server] .env file not loaded:', e.message);
+  }
+}
+
+loadEnv(path.join(__dirname, '.env'));
+
 let _recordRequest = null;
 async function ensureMetrics() {
   if (!_recordRequest) {
