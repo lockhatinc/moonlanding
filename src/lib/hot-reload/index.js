@@ -1,16 +1,24 @@
-import promiseContainerMod from '/config/workspace/moonlanding/src/lib/hot-reload/promise-container.js';
-import { Mutex, MutexManager, globalManager } from '/config/workspace/moonlanding/src/lib/hot-reload/mutex.js';
-import supervisorMod from '/config/workspace/moonlanding/src/lib/hot-reload/supervisor.js';
-import checkpointMod from '/config/workspace/moonlanding/src/lib/hot-reload/checkpoint.js';
-import timeoutMod from '/config/workspace/moonlanding/src/lib/hot-reload/timeout-wrapper.js';
-import safeErrorMod from '/config/workspace/moonlanding/src/lib/hot-reload/safe-error.js';
-import cacheInvalidatorMod from '/config/workspace/moonlanding/src/lib/hot-reload/cache-invalidator.js';
-import directoryWatcherMod from '/config/workspace/moonlanding/src/lib/hot-reload/directory-watcher.js';
-import routeWrapperMod from '/config/workspace/moonlanding/src/lib/hot-reload/route-wrapper.js';
-import debugExposureMod from '/config/workspace/moonlanding/src/lib/hot-reload/debug-exposure.js';
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
+
+const promiseContainerMod = require('./promise-container.js');
+export { Mutex, MutexManager, globalManager } from './mutex.js';
+import { Supervisor, SupervisorTree, globalTree } from './supervisor.js';
+const checkpointMod = require('./checkpoint.js');
+const timeoutMod = require('./timeout-wrapper.js');
+const safeErrorMod = require('./safe-error.js');
+const cacheInvalidatorMod = require('./cache-invalidator.js');
+const directoryWatcherMod = require('./directory-watcher.js');
+const routeWrapperMod = require('./route-wrapper.js');
+const debugExposureMod = require('./debug-exposure.js');
 
 const { PromiseContainer, globalContainer, contain } = promiseContainerMod;
-const { Supervisor, SupervisorTree, globalTree } = supervisorMod;
+
 const { CheckpointManager, globalCheckpoint } = checkpointMod;
 const { TimeoutError, withTimeout, withAbortableTimeout, retry } = timeoutMod;
 const { safeError, safeStringify } = safeErrorMod;
@@ -31,7 +39,6 @@ expose('hotReload', {
 
 export {
   PromiseContainer, globalContainer, contain,
-  Mutex, MutexManager, globalManager,
   Supervisor, SupervisorTree, globalTree,
   CheckpointManager, globalCheckpoint,
   TimeoutError, withTimeout, withAbortableTimeout, retry,

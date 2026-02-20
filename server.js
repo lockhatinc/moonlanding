@@ -7,7 +7,35 @@ import { register } from 'module';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = 3000;
 
+let _recordRequest = null;
+async function ensureMetrics() {
+  if (!_recordRequest) {
+    try {
+      const mod = await import('./src/lib/metrics-collector.js');
+      _recordRequest = mod.recordRequest;
+    } catch { _recordRequest = () => {}; }
+  }
+  return _recordRequest;
+}
+
+function trackResponse(req, statusCode, startTime) {
+  const elapsed = Date.now() - startTime;
+  const pathname = req.url.split('?')[0];
+  if (_recordRequest) _recordRequest(pathname, req.method, elapsed, statusCode);
+  console.log(`[${req.method}] ${req.url} ${statusCode} ${elapsed}ms`);
+}
+
 register('./import-hook.js', import.meta.url);
+
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] Uncaught exception (process kept alive):', err?.message || err);
+  if (err?.stack) console.error(err.stack);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[FATAL] Unhandled rejection (process kept alive):', reason?.message || reason);
+  if (reason?.stack) console.error(reason.stack);
+});
 
 let systemInitialized = false;
 const moduleCache = new Map();
@@ -75,6 +103,7 @@ function setSecurityHeaders(res) {
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' wss: ws:; frame-ancestors 'none'");
   if (process.env.NODE_ENV === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }
@@ -83,6 +112,7 @@ function setSecurityHeaders(res) {
 const server = http.createServer(async (req, res) => {
   const startTime = Date.now();
   setSecurityHeaders(res);
+  await ensureMetrics();
 
   try {
     const { setCurrentRequest } = await loadModule(path.join(__dirname, 'src/engine.server.js'));
@@ -111,6 +141,7 @@ const server = http.createServer(async (req, res) => {
         res.setHeader('Content-Length', Buffer.byteLength(content, 'utf-8'));
         res.writeHead(200);
         res.end(content);
+        trackResponse(req, 200, startTime);
         return;
       }
     }
@@ -128,10 +159,12 @@ const server = http.createServer(async (req, res) => {
         res.setHeader('Content-Length', Buffer.byteLength(finalContent));
         res.writeHead(200);
         res.end(finalContent);
+        trackResponse(req, 200, startTime);
         return;
       }
       res.writeHead(404);
       res.end('Not found');
+      trackResponse(req, 404, startTime);
       return;
     }
 
@@ -149,6 +182,7 @@ const server = http.createServer(async (req, res) => {
         res.setHeader('Content-Length', Buffer.byteLength(finalContent));
         res.writeHead(200);
         res.end(finalContent);
+        trackResponse(req, 200, startTime);
         return;
       }
     }
@@ -167,6 +201,7 @@ const server = http.createServer(async (req, res) => {
         res.setHeader('Content-Length', Buffer.byteLength(finalContent));
         res.writeHead(200);
         res.end(finalContent);
+        trackResponse(req, 200, startTime);
         return;
       }
     }
@@ -182,10 +217,10 @@ const server = http.createServer(async (req, res) => {
           res.setHeader('Content-Length', Buffer.byteLength(html, 'utf-8'));
           res.writeHead(200);
           res.end(html);
+          trackResponse(req, 200, startTime);
           return;
         }
 
-        // Try standalone login page (no dependencies)
         if (pathname === '/login') {
           const { renderStandaloneLogin } = await loadModule(path.join(__dirname, 'src/ui/standalone-login.js'));
           const html = renderStandaloneLogin();
@@ -194,6 +229,7 @@ const server = http.createServer(async (req, res) => {
             res.setHeader('Content-Length', Buffer.byteLength(html, 'utf-8'));
             res.writeHead(200);
             res.end(html);
+            trackResponse(req, 200, startTime);
             return;
           }
         }
@@ -202,8 +238,7 @@ const server = http.createServer(async (req, res) => {
         const { REDIRECT } = await loadModule(path.join(__dirname, 'src/ui/renderer.js'));
         const html = await handlePage(pathname, req, res);
         if (html === REDIRECT) {
-          const elapsed = Date.now() - startTime;
-          console.log(`[${req.method}] ${req.url} ${res.statusCode} ${elapsed}ms (redirect)`);
+          trackResponse(req, res.statusCode, startTime);
           return;
         }
         if (html && html !== REDIRECT) {
@@ -215,8 +250,7 @@ const server = http.createServer(async (req, res) => {
           if (!res.writableEnded) {
             res.end(html);
           }
-          const elapsed = Date.now() - startTime;
-          console.log(`[${req.method}] ${req.url} 200 ${elapsed}ms (page)`);
+          trackResponse(req, 200, startTime);
           return;
         }
       } catch (err) {
@@ -292,6 +326,7 @@ const server = http.createServer(async (req, res) => {
       if (!fs.existsSync(routeFile)) {
         res.writeHead(404);
         res.end(JSON.stringify({ error: 'API route not found' }));
+        trackResponse(req, 404, startTime);
         return;
       }
 
@@ -310,10 +345,18 @@ const server = http.createServer(async (req, res) => {
       if (!handler) {
         res.writeHead(405);
         res.end(JSON.stringify({ error: 'Method not allowed' }));
+        trackResponse(req, 405, startTime);
         return;
       }
 
-      const body = await readBody(req);
+      let body;
+      try {
+        body = await readBody(req);
+      } catch (bodyErr) {
+        res.writeHead(413);
+        res.end(JSON.stringify({ error: 'Request body too large' }));
+        return;
+      }
       const request = new NextRequest(req, body, url);
       const context = { params };
 
@@ -330,6 +373,7 @@ const server = http.createServer(async (req, res) => {
         if (response.status >= 300 && response.status < 400) {
           res.writeHead(response.status, headerObj);
           res.end();
+          trackResponse(req, response.status, startTime);
           return;
         }
 
@@ -340,10 +384,12 @@ const server = http.createServer(async (req, res) => {
 
         res.writeHead(response.status, headerObj);
         res.end(JSON.stringify(responseBody));
+        trackResponse(req, response.status, startTime);
       } catch (err) {
         console.error('[API] Handler error:', err.message || err);
         res.writeHead(500);
         res.end(JSON.stringify({ error: err.message || String(err) }));
+        trackResponse(req, 500, startTime);
       }
       return;
     }
@@ -351,17 +397,17 @@ const server = http.createServer(async (req, res) => {
     if (!res.headersSent) {
       res.writeHead(404);
       res.end(JSON.stringify({ error: 'Not found' }));
+      trackResponse(req, 404, startTime);
     }
   } catch (err) {
     console.error('[Server] Error:', err);
     if (!res.headersSent) {
       res.writeHead(500);
-      res.end(JSON.stringify({ error: err.message }));
+      const safeMessage = process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message;
+      res.end(JSON.stringify({ error: safeMessage }));
     }
+    trackResponse(req, 500, startTime);
   }
-
-  const elapsed = Date.now() - startTime;
-  console.log(`[${req.method}] ${req.url} ${res.statusCode} ${elapsed}ms`);
 });
 
 class NextRequest {
@@ -397,10 +443,19 @@ class NextResponse {
   }
 }
 
+const MAX_BODY_SIZE = 10 * 1024 * 1024;
+
 async function readBody(req) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     let data = '';
+    let size = 0;
     req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size > MAX_BODY_SIZE) {
+        req.destroy();
+        reject(new Error('Request body too large'));
+        return;
+      }
       data += chunk;
     });
     req.on('end', () => {
@@ -410,6 +465,7 @@ async function readBody(req) {
         resolve(data);
       }
     });
+    req.on('error', (err) => reject(err));
   });
 }
 

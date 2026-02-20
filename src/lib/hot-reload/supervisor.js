@@ -1,6 +1,6 @@
-const EventEmitter = require('events');
+import { EventEmitter } from 'events';
 
-class Supervisor extends EventEmitter {
+export class Supervisor extends EventEmitter {
   constructor(name, workerFn, options = {}) {
     super();
     this.name = name;
@@ -19,6 +19,12 @@ class Supervisor extends EventEmitter {
     this.currentBackoff = this.options.backoffMs;
     this.running = false;
     this.stopping = false;
+
+    if (this.listenerCount('error') === 0) {
+      this.on('error', (data) => {
+        console.error(`[Supervisor:${this.name}] Worker error:`, data.error?.message || data.error);
+      });
+    }
   }
 
   async start() {
@@ -105,7 +111,7 @@ class Supervisor extends EventEmitter {
   }
 }
 
-class SupervisorTree extends EventEmitter {
+export class SupervisorTree extends EventEmitter {
   constructor() {
     super();
     this.supervisors = new Map();
@@ -154,6 +160,4 @@ class SupervisorTree extends EventEmitter {
   }
 }
 
-const globalTree = new SupervisorTree();
-
-module.exports = { Supervisor, SupervisorTree, globalTree };
+export const globalTree = new SupervisorTree();
