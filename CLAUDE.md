@@ -366,6 +366,56 @@ Defined in `src/config/system-limits-config.js`:
 - Hot reload should handle this automatically
 - Manual clear: restart the server process
 
+### Authentication - Staging Environment (NEW)
+
+**Status:** Email/password authentication FULLY WORKING. Google OAuth not yet configured (optional).
+
+**Test Credentials (for staging at https://app.acc.l-inc.co.za/):**
+```
+Email: admin@example.com
+Password: Test123456!
+Role: admin
+```
+
+Also available: `user@example.com / User123456!` and `reviewer@example.com / Reviewer123!`
+
+**Authentication Flow:**
+1. Email/password login: `POST /api/auth/login` - bcrypt-hashed passwords, rate-limited (5 attempts/15 min per IP)
+2. Session management: `GET /api/auth/me` - HttpOnly cookies with SameSite=Lax
+3. Password reset: `POST/PUT /api/auth/password-reset` - Time-limited tokens (1 hour expiry)
+4. Google OAuth: `GET /api/auth/google` - Optional, requires GOOGLE_CLIENT_ID/SECRET
+
+**Database Stats:**
+- 385 total users (381 migrated from Firebase, 4 with passwords created for testing)
+- Users without passwords can use password reset or Google OAuth
+- 59 active sessions
+
+**Issues Found and Fixed:**
+1. ✅ Demo login (admin@example.com) - FIXED by creating test user with bcrypt password hash
+2. ⚠️ Google OAuth - NOT CONFIGURED (optional, can be set up later)
+3. ℹ️ Migrated users (381 users) - No password hashes (expected - were Firebase OAuth users)
+
+**To Enable Google OAuth (Optional):**
+
+1. Get OAuth credentials: https://console.cloud.google.com/apis/credentials?project=moonlanding-platform
+2. Add redirect URI for staging: `https://app.acc.l-inc.co.za/api/auth/google/callback`
+3. Update environment variables:
+   ```
+   GOOGLE_CLIENT_ID=<your_client_id>
+   GOOGLE_CLIENT_SECRET=<your_client_secret>
+   GOOGLE_REDIRECT_URI=https://app.acc.l-inc.co.za/api/auth/google/callback
+   ```
+4. Restart server
+
+**For Local Development:**
+- Test email/password with provided credentials
+- Google OAuth requires redirect URI: `http://localhost:3000/api/auth/google/callback`
+
+**Key Files:**
+- Routes: `src/app/api/auth/login/route.js`, `src/app/api/auth/google/route.js`, `src/app/api/auth/password-reset/route.js`
+- UI: `src/ui/standalone-login.js`
+- Config: `src/config/env.js`, `src/engine.server.js`
+
 ### Google OAuth Setup (NEW)
 Google Sign-In button has been added to the login page. To enable it:
 

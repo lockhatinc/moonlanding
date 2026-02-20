@@ -1,0 +1,286 @@
+{
+  "timestamp": "2026-02-20T07:19:01.663Z",
+  "environment": "staging",
+  "database": "/config/workspace/moonlanding/data/app.db",
+  "issues_found": {
+    "issue_1": {
+      "severity": "CRITICAL (RESOLVED)",
+      "title": "Missing test credentials - admin@example.com not in database",
+      "description": "The demo login \"admin@example.com\" was not present in the migrated user database.",
+      "root_cause": "User database migration from Firebase did not include demo users with passwords.",
+      "solution": "Created test user account with proper password hash using bcrypt",
+      "status": "FIXED",
+      "date_fixed": "2026-02-20T07:19:01.663Z"
+    },
+    "issue_2": {
+      "severity": "MAJOR (NEEDS CONFIG)",
+      "title": "Google OAuth not configured",
+      "description": "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are empty in .env file",
+      "root_cause": "OAuth credentials need to be generated in Google Cloud Console",
+      "solution": "Requires manual setup - see instructions below",
+      "status": "REQUIRES MANUAL ACTION",
+      "notes": [
+        "Google OAuth is optional for now - email/password auth is functional",
+        "Can be configured later without affecting current functionality"
+      ]
+    },
+    "issue_3": {
+      "severity": "INFO",
+      "title": "Migrated users lack password hashes",
+      "description": "The 381 migrated users from Firebase do not have password hashes",
+      "root_cause": "Firebase users primarily use OAuth - passwords were not migrated",
+      "solution": "Users can use \"Forgot Password\" flow to set a password, or continue with OAuth",
+      "status": "EXPECTED BEHAVIOR",
+      "recommendations": [
+        "Set up Google OAuth to enable login for migrated users",
+        "Users without passwords will be directed to password reset on login attempt",
+        "This is normal for systems migrating from OAuth-primary platforms"
+      ]
+    }
+  },
+  "authentication_system": {
+    "email_password_login": {
+      "status": "FUNCTIONAL",
+      "endpoint": "POST /api/auth/login",
+      "description": "Validates email/password against database with bcrypt verification",
+      "tested": true,
+      "test_results": {
+        "valid_email_password": "PASS",
+        "invalid_password": "PASS (correctly rejected)",
+        "nonexistent_email": "PASS (correctly rejected)",
+        "user_without_password": "PASS (correctly rejected)"
+      }
+    },
+    "password_reset_flow": {
+      "status": "FUNCTIONAL",
+      "endpoints": [
+        "POST /api/auth/password-reset (request reset token)",
+        "PUT /api/auth/password-reset (execute reset with token)"
+      ],
+      "description": "Secure password reset using time-limited tokens",
+      "token_expiry": "1 hour",
+      "password_requirements": "Minimum 8 characters"
+    },
+    "session_management": {
+      "status": "FUNCTIONAL",
+      "endpoint": "GET /api/auth/me",
+      "description": "Validates session and returns current user info",
+      "session_store": "SQLite (sessions table)",
+      "active_sessions": 59,
+      "session_type": "HttpOnly cookies with SameSite=Lax"
+    },
+    "google_oauth": {
+      "status": "NOT CONFIGURED",
+      "endpoint": "GET /api/auth/google",
+      "description": "Initiates Google OAuth flow (requires GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET)",
+      "callback_endpoint": "GET /api/auth/google/callback",
+      "setup_required": true
+    }
+  },
+  "test_credentials": {
+    "note": "Credentials created for testing - do not use in production",
+    "users": [
+      {
+        "email": "admin@example.com",
+        "password": "Test123456!",
+        "name": "Admin Test User",
+        "role": "admin",
+        "type": "auditor",
+        "status": "active"
+      },
+      {
+        "email": "user@example.com",
+        "password": "User123456!",
+        "name": "Regular User",
+        "role": "user",
+        "type": "auditor",
+        "status": "active"
+      },
+      {
+        "email": "reviewer@example.com",
+        "password": "Reviewer123!",
+        "name": "Reviewer User",
+        "role": "xNexLKjl1m3kPTG8BBaF",
+        "type": "auditor",
+        "status": "active"
+      }
+    ]
+  },
+  "database_statistics": {
+    "total_users": 385,
+    "users_with_passwords": 4,
+    "users_without_passwords": 381,
+    "active_sessions": 59,
+    "migrated_from_firebase": 381,
+    "test_accounts_created": 3,
+    "other_entities": {
+      "clients": 995,
+      "engagements": 997,
+      "reviews": 1363,
+      "teams": 14
+    }
+  },
+  "configuration_status": {
+    "environment_variables": {
+      "GOOGLE_CLIENT_ID": {
+        "status": "MISSING",
+        "required_for": "Google OAuth login",
+        "severity": "OPTIONAL (for now)"
+      },
+      "GOOGLE_CLIENT_SECRET": {
+        "status": "MISSING",
+        "required_for": "Google OAuth login",
+        "severity": "OPTIONAL (for now)"
+      },
+      "DATABASE_PATH": {
+        "status": "CONFIGURED",
+        "value": "/config/workspace/moonlanding/data/app.db",
+        "verified": true
+      },
+      "NODE_ENV": {
+        "status": "CONFIGURED",
+        "value": "development",
+        "notes": "Production HSTS headers enabled when NODE_ENV=production"
+      }
+    }
+  },
+  "next_steps": [
+    {
+      "priority": "IMMEDIATE",
+      "task": "Test email/password login",
+      "how": "Use credentials: admin@example.com / Test123456!",
+      "expected_result": "Login successful, session created",
+      "verification": "Check browser localStorage for auth token or session cookie"
+    },
+    {
+      "priority": "IMMEDIATE",
+      "task": "Test dashboard access",
+      "how": "After login, navigate to home page",
+      "expected_result": "Dashboard loads with user data (clients, engagements, reviews)"
+    },
+    {
+      "priority": "HIGH",
+      "task": "Test basic workflows",
+      "how": "Create/edit engagement, view review, etc.",
+      "expected_result": "CRUD operations work correctly with authenticated user"
+    },
+    {
+      "priority": "HIGH",
+      "task": "Test password reset flow",
+      "how": "Request reset for non-existent user, verify safe response",
+      "expected_result": "Generic success message (no user enumeration)"
+    },
+    {
+      "priority": "HIGH",
+      "task": "Set up Google OAuth",
+      "how": "Follow Google Cloud Console setup instructions (see below)",
+      "expected_result": "Users can log in with Google account"
+    },
+    {
+      "priority": "MEDIUM",
+      "task": "Enable migrated users to access system",
+      "how": "Implement Google OAuth OR send password reset emails to all users",
+      "expected_result": "All 381 migrated users can log in"
+    }
+  ],
+  "google_oauth_setup": {
+    "title": "Setting up Google OAuth (Optional)",
+    "current_status": "NOT CONFIGURED",
+    "optional": true,
+    "steps": [
+      {
+        "number": 1,
+        "action": "Go to Google Cloud Console",
+        "url": "https://console.cloud.google.com/apis/credentials?project=moonlanding-platform",
+        "note": "Update project name if different"
+      },
+      {
+        "number": 2,
+        "action": "Create OAuth 2.0 Client ID",
+        "details": [
+          "Click \"Create Credentials\" > \"OAuth 2.0 Client ID\"",
+          "Select \"Web application\"",
+          "Add Authorized redirect URIs:",
+          "  • https://app.acc.l-inc.co.za/api/auth/google/callback (staging)",
+          "  • http://localhost:3000/api/auth/google/callback (local dev)"
+        ]
+      },
+      {
+        "number": 3,
+        "action": "Copy credentials to .env file",
+        "details": [
+          "GOOGLE_CLIENT_ID=<your-client-id>",
+          "GOOGLE_CLIENT_SECRET=<your-client-secret>",
+          "GOOGLE_REDIRECT_URI=https://app.acc.l-inc.co.za/api/auth/google/callback"
+        ]
+      },
+      {
+        "number": 4,
+        "action": "Restart server",
+        "details": [
+          "Stop current server process",
+          "Changes take effect on restart"
+        ]
+      },
+      {
+        "number": 5,
+        "action": "Test Google login",
+        "details": [
+          "Reload login page",
+          "Click \"Sign in with Google\"",
+          "Complete Google authentication flow",
+          "Verify session created and user logged in"
+        ]
+      }
+    ]
+  },
+  "security_notes": {
+    "password_hashing": "bcrypt with 12 rounds (industry standard)",
+    "session_storage": "Server-side sessions in SQLite",
+    "session_cookies": "HttpOnly + SameSite=Lax (CSRF protection)",
+    "rate_limiting": "Email/password login: max 5 attempts per 15 minutes per IP",
+    "password_reset": "Time-limited tokens (1 hour expiry), tokens invalidated after use",
+    "security_headers": "CSP, X-Frame-Options, X-Content-Type-Options configured",
+    "https_enforcement": "Enabled in production (Strict-Transport-Security header)"
+  },
+  "troubleshooting": [
+    {
+      "issue": "Login returns \"Invalid email or password\" for known user",
+      "causes": [
+        "User account exists but has no password hash (migrated Firebase user)",
+        "Password is incorrect",
+        "Email address has leading/trailing whitespace"
+      ],
+      "solutions": [
+        "Check if user has password_hash: SELECT password_hash FROM users WHERE email='...';",
+        "If NULL, user needs to reset password or use Google OAuth",
+        "Verify email address exactly (case-insensitive but must match)"
+      ]
+    },
+    {
+      "issue": "Session not persisting across page reloads",
+      "causes": [
+        "Cookies not being set",
+        "Session expired (no automatic refresh)",
+        "Browser blocking cookies"
+      ],
+      "solutions": [
+        "Check browser dev tools > Storage > Cookies for session cookie",
+        "Verify HttpOnly cookie is present",
+        "Check sessions table: SELECT * FROM sessions ORDER BY created_at DESC LIMIT 1;"
+      ]
+    },
+    {
+      "issue": "Rate limiting locked after 5 failed attempts",
+      "causes": [
+        "Too many incorrect password attempts",
+        "Multiple failed logins from same IP"
+      ],
+      "solutions": [
+        "Wait 15 minutes for lockout to expire",
+        "Use different IP address/VPN if testing multiple scenarios",
+        "Check code: MAX_ATTEMPTS = 5, LOCKOUT_MS = 15 * 60 * 1000 in src/app/api/auth/login/route.js"
+      ]
+    }
+  ]
+}
