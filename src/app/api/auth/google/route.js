@@ -1,11 +1,33 @@
 import { NextResponse } from '@/lib/next-polyfills';
 import { google } from '@/engine.server';
+import { Google } from 'arctic';
 import { generateState, generateCodeVerifier } from 'arctic';
 import { globalManager } from '@/lib/hot-reload/mutex';
+import { config } from '@/config';
 import { validateOAuthProvider, setOAuthCookie, buildOAuthErrorResponse } from '@/lib/auth-route-helpers';
 
 export async function GET(request) {
-  const { valid, error } = validateOAuthProvider(google);
+  // Build redirect URI from request to support reverse proxies (Traefik, etc.)
+  // Node.js http.IncomingMessage headers are lowercase object properties
+  const protocol = request.headers['x-forwarded-proto'] || 'http';
+  const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:3000';
+  const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
+
+  console.log('[OAuth] Redirect URI:', {
+    'x-forwarded-proto': request.headers['x-forwarded-proto'],
+    'x-forwarded-host': request.headers['x-forwarded-host'],
+    'host': request.headers.host,
+    'computed-redirectUri': redirectUri
+  });
+
+  // Create a dynamic Google client instance with the request-specific redirect URI
+  const dynamicGoogle = new Google(
+    config.auth.google.clientId,
+    config.auth.google.clientSecret,
+    redirectUri
+  );
+
+  const { valid, error } = validateOAuthProvider(dynamicGoogle);
   if (!valid) {
     return buildOAuthErrorResponse(error);
   }
@@ -14,21 +36,8 @@ export async function GET(request) {
     const state = generateState();
     const codeVerifier = generateCodeVerifier();
 
-    // Build redirect URI from request to support reverse proxies (Traefik, etc.)
-    // Handle both Map-like headers (with .get()) and object-like headers
-    const getHeader = (name) => {
-      return (typeof request.headers?.get === 'function'
-        ? request.headers.get(name)
-        : request.headers?.[name]) || undefined;
-    };
-
-    const protocol = getHeader('x-forwarded-proto') || 'http';
-    const host = getHeader('x-forwarded-host') || getHeader('host') || 'localhost:3000';
-    const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
-
-    const url = await google.createAuthorizationURL(state, codeVerifier, {
+    const url = await dynamicGoogle.createAuthorizationURL(state, codeVerifier, {
       scopes: ['profile', 'email'],
-      redirectUri,
     });
 
     await setOAuthCookie('google_oauth_state', state);

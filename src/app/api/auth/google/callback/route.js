@@ -1,6 +1,8 @@
 import { google, createSession } from '@/engine.server';
 import { getBy, create } from '@/engine';
+import { Google } from 'arctic';
 import { GOOGLE_APIS } from '@/config/constants';
+import { config } from '@/config';
 import { getConfigEngine } from '@/lib/config-generator-engine';
 import { globalManager } from '@/lib/hot-reload/mutex';
 import {
@@ -13,7 +15,27 @@ import {
 } from '@/lib/auth-route-helpers';
 
 export async function GET(request) {
-  const { valid, error } = validateOAuthProvider(google);
+  // Build redirect URI from request to match what was used in authorization
+  // Node.js http.IncomingMessage headers are lowercase object properties
+  const protocol = request.headers['x-forwarded-proto'] || 'http';
+  const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:3000';
+  const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
+
+  console.log('[OAuth Callback] Processing with redirect URI:', {
+    'x-forwarded-proto': request.headers['x-forwarded-proto'],
+    'x-forwarded-host': request.headers['x-forwarded-host'],
+    'host': request.headers.host,
+    'computed-redirectUri': redirectUri
+  });
+
+  // Create a dynamic Google client instance with the request-specific redirect URI
+  const dynamicGoogle = new Google(
+    config.auth.google.clientId,
+    config.auth.google.clientSecret,
+    redirectUri
+  );
+
+  const { valid, error } = validateOAuthProvider(dynamicGoogle);
   if (!valid) {
     return buildOAuthErrorResponse(error, request);
   }
@@ -31,19 +53,7 @@ export async function GET(request) {
   }
 
   try {
-    // Build redirect URI from request to match what was used in authorization
-    // Handle both Map-like headers (with .get()) and object-like headers
-    const getHeader = (name) => {
-      return (typeof request.headers?.get === 'function'
-        ? request.headers.get(name)
-        : request.headers?.[name]) || undefined;
-    };
-
-    const protocol = getHeader('x-forwarded-proto') || 'http';
-    const host = getHeader('x-forwarded-host') || getHeader('host') || 'localhost:3000';
-    const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
-
-    const tokens = await google.validateAuthorizationCode(code, storedCodeVerifier, redirectUri);
+    const tokens = await dynamicGoogle.validateAuthorizationCode(code, storedCodeVerifier);
     const accessToken = tokens.accessToken();
 
     const response = await fetch(GOOGLE_APIS.oauth2, {
