@@ -190,14 +190,14 @@ export function renderSettingsNotifications(user, config = {}) {
     <label class="toggle-switch"><input type="checkbox" name="${tg.id}" ${tg.checked ? 'checked' : ''} aria-label="${tg.label}"/><span class="toggle-slider"></span></label>
   </div>`).join('');
   const content = `${settingsBack()}<h1 class="text-2xl font-bold mb-6">Notifications</h1>
-    <form id="notif-form">
+    <form id="notif-form" aria-label="Notification settings">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="card bg-white shadow"><div class="card-body"><h2 class="card-title">Notification Toggles</h2><div class="mt-4">${toggleHtml}</div></div></div>
       <div class="card bg-white shadow"><div class="card-body"><h2 class="card-title">Configuration</h2><div class="space-y-4 mt-4">
-        <div class="form-group"><label class="form-label">RFI Notification Days</label><input type="text" name="notification_days" class="input input-bordered w-full" value="${(rfi.notification_days || [7, 3, 1, 0]).join(', ')}" placeholder="7, 3, 1, 0"/><p class="text-xs text-gray-500 mt-1">Comma-separated days before deadline</p></div>
-        <div class="form-group"><label class="form-label">Escalation Delay (hours)</label><input type="number" name="escalation_delay_hours" class="input input-bordered w-full" value="${rfi.escalation_delay_hours || 24}"/></div>
-        <div class="form-group"><label class="form-label">Batch Size</label><input type="number" name="batch_size" class="input input-bordered w-full" value="${notif.batch_size || 50}"/></div>
-        <div class="form-group"><label class="form-label">Consolidation Window (hours)</label><input type="number" name="consolidation_window_hours" class="input input-bordered w-full" value="${notif.consolidation_window_hours || 24}"/></div>
+        <div class="form-group"><label class="form-label" for="notif-notification-days">RFI Notification Days</label><input type="text" id="notif-notification-days" name="notification_days" class="input input-bordered w-full" value="${(rfi.notification_days || [7, 3, 1, 0]).join(', ')}" placeholder="7, 3, 1, 0" aria-describedby="notif-days-desc"/><p id="notif-days-desc" class="text-xs text-gray-500 mt-1">Comma-separated days before deadline</p></div>
+        <div class="form-group"><label class="form-label" for="notif-escalation-delay">Escalation Delay (hours)</label><input type="number" id="notif-escalation-delay" name="escalation_delay_hours" class="input input-bordered w-full" value="${rfi.escalation_delay_hours || 24}"/></div>
+        <div class="form-group"><label class="form-label" for="notif-batch-size">Batch Size</label><input type="number" id="notif-batch-size" name="batch_size" class="input input-bordered w-full" value="${notif.batch_size || 50}"/></div>
+        <div class="form-group"><label class="form-label" for="notif-consolidation">Consolidation Window (hours)</label><input type="number" id="notif-consolidation" name="consolidation_window_hours" class="input input-bordered w-full" value="${notif.consolidation_window_hours || 24}"/></div>
       </div></div></div>
     </div>
     <div class="mt-6"><button type="submit" class="btn btn-primary">Save Notification Settings</button></div>
@@ -302,13 +302,13 @@ export function renderSettingsReviewSettings(user, config = {}) {
     <label class="toggle-switch"><input type="checkbox" name="${tg.id}" ${tg.checked ? 'checked' : ''} aria-label="${tg.label}"/><span class="toggle-slider"></span></label>
   </div>`).join('');
   const content = `${settingsBack()}<h1 class="text-2xl font-bold mb-6">Review Settings</h1>
-    <form id="review-settings-form">
+    <form id="review-settings-form" aria-label="Review settings">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="card bg-white shadow"><div class="card-body"><h2 class="card-title">Review Options</h2><div class="mt-4">${toggleHtml}</div></div></div>
       <div class="card bg-white shadow"><div class="card-body"><h2 class="card-title">Defaults</h2><div class="space-y-4 mt-4">
-        <div class="form-group"><label class="form-label">Default Status</label><select name="default_status" class="select select-bordered w-full"><option value="active" ${review.default_status === 'active' ? 'selected' : ''}>Active</option><option value="draft" ${review.default_status === 'draft' ? 'selected' : ''}>Draft</option></select></div>
-        <div class="form-group"><label class="form-label">Max Highlights Per Review</label><input type="number" name="max_highlights" class="input input-bordered w-full" value="${review.max_highlights || 500}" min="1"/></div>
-        <div class="form-group"><label class="form-label">Default Currency</label><select name="default_currency" class="select select-bordered w-full"><option value="ZAR" ${review.default_currency === 'ZAR' ? 'selected' : ''}>ZAR</option><option value="USD" ${review.default_currency === 'USD' ? 'selected' : ''}>USD</option><option value="EUR" ${review.default_currency === 'EUR' ? 'selected' : ''}>EUR</option><option value="GBP" ${review.default_currency === 'GBP' ? 'selected' : ''}>GBP</option></select></div>
+        <div class="form-group"><label class="form-label" for="rvw-default-status">Default Status</label><select id="rvw-default-status" name="default_status" class="select select-bordered w-full"><option value="active" ${review.default_status === 'active' ? 'selected' : ''}>Active</option><option value="draft" ${review.default_status === 'draft' ? 'selected' : ''}>Draft</option></select></div>
+        <div class="form-group"><label class="form-label" for="rvw-max-highlights">Max Highlights Per Review</label><input type="number" id="rvw-max-highlights" name="max_highlights" class="input input-bordered w-full" value="${review.max_highlights || 500}" min="1"/></div>
+        <div class="form-group"><label class="form-label" for="rvw-default-currency">Default Currency</label><select id="rvw-default-currency" name="default_currency" class="select select-bordered w-full"><option value="ZAR" ${review.default_currency === 'ZAR' ? 'selected' : ''}>ZAR</option><option value="USD" ${review.default_currency === 'USD' ? 'selected' : ''}>USD</option><option value="EUR" ${review.default_currency === 'EUR' ? 'selected' : ''}>EUR</option><option value="GBP" ${review.default_currency === 'GBP' ? 'selected' : ''}>GBP</option></select></div>
       </div></div></div>
     </div>
     <div class="mt-6"><button type="submit" class="btn btn-primary">Save Review Settings</button></div>
@@ -330,14 +330,14 @@ export function renderSettingsFileReview(user, config = {}) {
     <label class="toggle-switch"><input type="checkbox" name="${tg.id}" ${tg.checked ? 'checked' : ''} aria-label="${tg.label}"/><span class="toggle-slider"></span></label>
   </div>`).join('');
   const content = `${settingsBack()}<h1 class="text-2xl font-bold mb-6">File Review Settings</h1>
-    <form id="file-review-settings-form">
+    <form id="file-review-settings-form" aria-label="File review settings">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="card bg-white shadow"><div class="card-body"><h2 class="card-title">File Review Options</h2><div class="mt-4">${toggleHtml}</div></div></div>
       <div class="card bg-white shadow"><div class="card-body"><h2 class="card-title">File Limits</h2><div class="space-y-4 mt-4">
-        <div class="form-group"><label class="form-label">Max File Size (MB)</label><input type="number" name="max_file_size_mb" class="input input-bordered w-full" value="${fileReview.max_file_size_mb || 50}" min="1"/></div>
-        <div class="form-group"><label class="form-label">Max Files Per Review</label><input type="number" name="max_files_per_review" class="input input-bordered w-full" value="${fileReview.max_files_per_review || 20}" min="1"/></div>
-        <div class="form-group"><label class="form-label">Allowed File Types</label><input type="text" name="allowed_types" class="input input-bordered w-full" value="${fileReview.allowed_types || 'pdf,doc,docx,xls,xlsx,png,jpg'}" placeholder="pdf,doc,docx,..."/><p class="text-xs text-gray-500 mt-1">Comma-separated file extensions</p></div>
-        <div class="form-group"><label class="form-label">PDF Render Quality</label><select name="pdf_quality" class="select select-bordered w-full"><option value="low" ${fileReview.pdf_quality === 'low' ? 'selected' : ''}>Low (faster)</option><option value="medium" ${fileReview.pdf_quality === 'medium' || !fileReview.pdf_quality ? 'selected' : ''}>Medium</option><option value="high" ${fileReview.pdf_quality === 'high' ? 'selected' : ''}>High (slower)</option></select></div>
+        <div class="form-group"><label class="form-label" for="fr-max-file-size">Max File Size (MB)</label><input type="number" id="fr-max-file-size" name="max_file_size_mb" class="input input-bordered w-full" value="${fileReview.max_file_size_mb || 50}" min="1"/></div>
+        <div class="form-group"><label class="form-label" for="fr-max-files">Max Files Per Review</label><input type="number" id="fr-max-files" name="max_files_per_review" class="input input-bordered w-full" value="${fileReview.max_files_per_review || 20}" min="1"/></div>
+        <div class="form-group"><label class="form-label" for="fr-allowed-types">Allowed File Types</label><input type="text" id="fr-allowed-types" name="allowed_types" class="input input-bordered w-full" value="${fileReview.allowed_types || 'pdf,doc,docx,xls,xlsx,png,jpg'}" placeholder="pdf,doc,docx,..." aria-describedby="fr-types-desc"/><p id="fr-types-desc" class="text-xs text-gray-500 mt-1">Comma-separated file extensions</p></div>
+        <div class="form-group"><label class="form-label" for="fr-pdf-quality">PDF Render Quality</label><select id="fr-pdf-quality" name="pdf_quality" class="select select-bordered w-full"><option value="low" ${fileReview.pdf_quality === 'low' ? 'selected' : ''}>Low (faster)</option><option value="medium" ${fileReview.pdf_quality === 'medium' || !fileReview.pdf_quality ? 'selected' : ''}>Medium</option><option value="high" ${fileReview.pdf_quality === 'high' ? 'selected' : ''}>High (slower)</option></select></div>
       </div></div></div>
     </div>
     <div class="mt-6"><button type="submit" class="btn btn-primary">Save File Review Settings</button></div>

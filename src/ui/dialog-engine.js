@@ -29,7 +29,7 @@ function generateDialogHtml(dialogId, title, fields, actions, width, context, on
   }).join('');
 
   return `
-    <div id="${dialogId}" class="dialog-overlay" style="display:none" ${role.dialog} ${aria.labelledBy(titleId)} ${aria.hidden(true)} onclick="if(event.target===this)closeDialog('${dialogId}')" onkeydown="${keyboard.escape(`closeDialog('${dialogId}')`)}">
+    <div id="${dialogId}" class="dialog-overlay" style="display:none" ${role.dialog} aria-modal="true" ${aria.labelledBy(titleId)} ${aria.hidden(true)} onclick="if(event.target===this)closeDialog('${dialogId}')" onkeydown="${keyboard.escape(`closeDialog('${dialogId}')`)}">
       <div id="${dialogId}-panel" class="dialog-panel" style="max-width:${width}">
         <div class="dialog-header">
           <h2 id="${titleId}" class="dialog-title">${escapeHtml(title)}</h2>

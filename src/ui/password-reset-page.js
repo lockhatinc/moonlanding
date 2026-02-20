@@ -48,7 +48,7 @@ export function renderPasswordResetPage(params = {}) {
 
       <div id="alertContainer"></div>
 
-      <form id="resetForm">
+      <form id="resetForm" aria-label="Password reset">
         ${!isConfirm ? `
           <div class="form-group">
             <label for="email">Email Address</label>

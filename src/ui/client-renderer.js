@@ -120,7 +120,7 @@ export function clientTestEmailDialog(clientId) {
 }
 
 export function clientRiskAssessmentDialog(clientId, currentRisk) {
-  const options = RISK_LEVELS.map(r => `<div class="choice-option" onclick="cradSelect('${r.value}')"><input type="radio" name="crad-risk" value="${r.value}" ${currentRisk === r.value ? 'checked' : ''}/><span class="choice-label"><span class="risk-badge ${r.class}">${r.label}</span></span></div>`).join('');
+  const options = RISK_LEVELS.map(r => `<label class="choice-option"><input type="radio" name="crad-risk" value="${r.value}" ${currentRisk === r.value ? 'checked' : ''} onclick="cradSelect('${r.value}')"/><span class="choice-label"><span class="risk-badge ${r.class}">${r.label}</span></span></label>`).join('');
   return `<div id="risk-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="risk-dialog-title" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title" id="risk-dialog-title">Risk Assessment</span><button class="dialog-close" onclick="document.getElementById('risk-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>

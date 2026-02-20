@@ -37,7 +37,7 @@ export function renderStandaloneLogin() {
         <p class="text-gray">Sign in to your account</p>
       </div>
 
-      <form id="loginForm">
+      <form id="loginForm" aria-label="Sign in">
         <div class="form-group">
           <label for="email">Email</label>
           <input type="email" name="email" id="email" placeholder="Enter your email" required>
