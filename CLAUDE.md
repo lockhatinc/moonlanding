@@ -58,6 +58,47 @@ form.querySelectorAll('input[type=number]').forEach(inp => {
 ### Dynamic Enum Options
 Enum fields with dynamic options (e.g., `options: engagement_lifecycle.stages[].name`) must be resolved at render time by looking up the workflow definition in the config.
 
+### Audit Logging (NEW)
+Comprehensive audit logging system in `src/lib/audit-logger-enhanced.js`:
+- All CREATE/UPDATE/DELETE operations must call `auditCreate/auditUpdate/auditDelete` from `@/lib/with-audit-logging`
+- Auth events logged via `logAuthSuccess/logAuthFailure` from `@/lib/audit-logger-enhanced`
+- Authorization failures logged via `logAuthzFailure`
+- Performance tracking for operations >500ms via `logPerformance`
+- Errors logged with stack traces via `logError`
+- Query logs: `GET /api/audit/logs?level=error&entityType=engagement&from=<timestamp>&to=<timestamp>&q=<search>`
+- Statistics: `GET /api/audit/stats?from=<timestamp>&to=<timestamp>`
+- Log rotation: `POST /api/audit/logs` with `{"action": "rotate", "daysOld": 90}`
+
+Example usage in routes:
+```js
+import { auditCreate, auditUpdate, auditDelete } from '@/lib/with-audit-logging';
+import { logAuthzFailure } from '@/lib/audit-logger-enhanced';
+
+// Log creation
+const entity = create('engagement', data);
+auditCreate('engagement', entity.id, user.id, entity);
+
+// Log update
+const before = get('engagement', id);
+const after = update('engagement', id, changes, user);
+auditUpdate('engagement', id, user.id, before, after);
+
+// Log deletion
+const entity = get('engagement', id);
+remove('engagement', id);
+auditDelete('engagement', id, user.id, entity);
+
+// Log authorization failure
+if (!hasPermission(user, 'review', reviewId, 'edit')) {
+  logAuthzFailure(user.id, 'review', reviewId, 'edit');
+  return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+}
+```
+
+Log structure: `{ id, timestamp, level, operation, entity_type, entity_id, user_id, action, details, error_message, error_stack, performance_ms }`
+
+Test: `node test-audit-simple.js`
+
 ---
 
 ## Phase 3: Complete Data Migration (Phase 3.1-3.10)

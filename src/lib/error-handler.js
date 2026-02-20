@@ -143,3 +143,13 @@ export const createErrorLogger = (context = '') => {
     },
   };
 };
+
+export {
+  retryWithBackoff,
+  createCircuitBreaker,
+  withCircuitBreaker,
+  checkpoint,
+  restoreCheckpoint,
+  logRecovery,
+  getErrorStats,
+} from '@/lib/error-resilience';

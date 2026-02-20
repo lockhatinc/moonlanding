@@ -88,15 +88,36 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const pathname = url.pathname;
 
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    const { compress, getCacheHeaders } = await loadModule(path.join(__dirname, 'src/lib/compression.js'));
+    const acceptEncoding = req.headers['accept-encoding'] || '';
+
+    if (pathname === '/service-worker.js') {
+      const swPath = path.join(__dirname, 'src/service-worker.js');
+      if (fs.existsSync(swPath)) {
+        let content = fs.readFileSync(swPath, 'utf-8');
+        const cacheHeaders = getCacheHeaders('dynamic');
+        Object.entries(cacheHeaders).forEach(([k, v]) => res.setHeader(k, v));
+        res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        res.setHeader('Content-Length', Buffer.byteLength(content, 'utf-8'));
+        res.writeHead(200);
+        res.end(content);
+        return;
+      }
+    }
 
     if (pathname.startsWith('/lib/webjsx/')) {
       const file = pathname.slice(12);
       const filePath = path.join(__dirname, 'node_modules/webjsx/dist', file);
       if (fs.existsSync(filePath)) {
+        let content = fs.readFileSync(filePath, 'utf-8');
+        const cacheHeaders = getCacheHeaders('static', 31536000);
+        Object.entries(cacheHeaders).forEach(([k, v]) => res.setHeader(k, v));
+        const { content: finalContent, encoding } = compress(content, acceptEncoding);
         res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        if (encoding) res.setHeader('Content-Encoding', encoding);
+        res.setHeader('Content-Length', Buffer.byteLength(finalContent));
         res.writeHead(200);
-        res.end(fs.readFileSync(filePath, 'utf-8'));
+        res.end(finalContent);
         return;
       }
       res.writeHead(404);
@@ -107,11 +128,17 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/ui/styles.css') {
       const cssPath = path.join(__dirname, 'src/ui/styles.css');
       if (fs.existsSync(cssPath)) {
-        const css = fs.readFileSync(cssPath, 'utf-8');
+        let content = fs.readFileSync(cssPath, 'utf-8');
+        const { minifyCSS } = await loadModule(path.join(__dirname, 'src/lib/minifier.js'));
+        content = minifyCSS(content);
+        const cacheHeaders = getCacheHeaders('static', 86400);
+        Object.entries(cacheHeaders).forEach(([k, v]) => res.setHeader(k, v));
+        const { content: finalContent, encoding } = compress(content, acceptEncoding);
         res.setHeader('Content-Type', 'text/css; charset=utf-8');
-        res.setHeader('Content-Length', Buffer.byteLength(css, 'utf-8'));
+        if (encoding) res.setHeader('Content-Encoding', encoding);
+        res.setHeader('Content-Length', Buffer.byteLength(finalContent));
         res.writeHead(200);
-        res.end(css);
+        res.end(finalContent);
         return;
       }
     }
@@ -119,11 +146,17 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/ui/client.js') {
       const jsPath = path.join(__dirname, 'src/ui/client.js');
       if (fs.existsSync(jsPath)) {
-        const js = fs.readFileSync(jsPath, 'utf-8');
+        let content = fs.readFileSync(jsPath, 'utf-8');
+        const { minifyJS } = await loadModule(path.join(__dirname, 'src/lib/minifier.js'));
+        content = minifyJS(content);
+        const cacheHeaders = getCacheHeaders('static', 86400);
+        Object.entries(cacheHeaders).forEach(([k, v]) => res.setHeader(k, v));
+        const { content: finalContent, encoding } = compress(content, acceptEncoding);
         res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-        res.setHeader('Content-Length', Buffer.byteLength(js, 'utf-8'));
+        if (encoding) res.setHeader('Content-Encoding', encoding);
+        res.setHeader('Content-Length', Buffer.byteLength(finalContent));
         res.writeHead(200);
-        res.end(js);
+        res.end(finalContent);
         return;
       }
     }

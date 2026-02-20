@@ -1,5 +1,8 @@
 import { statusLabel, linearProgress, engagementProgress, userAvatar, teamAvatarGroup, generateHtml } from '@/ui/renderer.js';
 import { canCreate, canEdit, canDelete, getNavItems, getAdminItems } from '@/ui/permissions-ui.js';
+import { memoize } from '@/lib/render-cache.js';
+import { virtualScrollScript, deferOffscreen } from '@/ui/virtual-scroll.js';
+import { eventDelegation, perfBudget } from '@/ui/perf-helpers.js';
 
 const STAGE_KEYS = ['info_gathering', 'commencement', 'team_execution', 'partner_review', 'finalization', 'closeout'];
 
@@ -18,14 +21,18 @@ function page(user, title, crumbs, content, scripts = []) {
   return generateHtml(title, body, scripts);
 }
 
-function stageCounts(engagements) {
+function escapeHtml(str) {
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+const stageCounts = memoize(function stageCounts(engagements) {
   const counts = {};
   STAGE_KEYS.forEach(k => { counts[k] = 0; });
   engagements.forEach(e => { if (counts[e.stage] !== undefined) counts[e.stage]++; });
   return counts;
-}
+});
 
-function stageCountBar(counts, total) {
+const stageCountBar = memoize(function stageCountBar(counts, total) {
   const pills = STAGE_KEYS.map(k => {
     const n = counts[k] || 0;
     const pct = total > 0 ? Math.round((n / total) * 100) : 0;
@@ -33,7 +40,7 @@ function stageCountBar(counts, total) {
     return `<div class="flex flex-col items-center flex-1 min-w-[80px]"><div class="text-lg font-bold">${n}</div><div class="text-xs text-gray-500 text-center">${label}</div><div class="w-full bg-gray-200 rounded-full h-1 mt-1"><div class="bg-blue-500 h-1 rounded-full" style="width:${pct}%"></div></div></div>`;
   }).join('');
   return `<div class="card bg-white shadow mb-6"><div class="card-body"><div class="flex justify-between items-center mb-3"><span class="font-semibold">Stage Overview</span><span class="text-sm text-gray-500">${total} total</span></div><div class="flex gap-2">${pills}</div></div></div>`;
-}
+});
 
 function engagementRow(e, canEditEng) {
   const sts = e.status ? statusLabel(e.status) : '-';
@@ -64,15 +71,22 @@ export function renderEngagementGrid(user, engagements, options = {}) {
   const filters = `<div class="flex gap-2 mb-4 flex-wrap"><input type="text" id="grid-search" placeholder="Search engagements..." class="input input-bordered input-sm" style="width:250px"/>${teamFilter}${yearFilter}<label class="flex items-center gap-1 text-sm"><input type="checkbox" id="current-year-toggle" class="checkbox checkbox-sm"/>Current Year</label></div>`;
 
   const headers = '<th>Name</th><th>Client</th><th>Status</th><th>Stage</th><th>Progress</th><th>Team</th><th>Created</th>';
-  const rows = engagements.map(e => engagementRow(e, userCanEdit)).join('');
+  const initialRows = engagements.slice(0, 100).map(e => engagementRow(e, userCanEdit)).join('');
+  const deferredRows = engagements.slice(100).map(e => engagementRow(e, userCanEdit)).join('');
+  const rows = initialRows + (deferredRows ? `<div class="defer-load" data-content="${escapeHtml(deferredRows)}"></div>` : '');
   const createBtn = userCanCreate ? `<a href="/engagement/new" class="btn btn-primary btn-sm">New Engagement</a>` : '';
-  const table = `<div class="card bg-white shadow" style="overflow-x:auto"><table class="table table-zebra w-full"><thead><tr>${headers}</tr></thead><tbody id="eng-tbody">${rows || '<tr><td colspan="7" class="text-center py-8 text-gray-500">No engagements found</td></tr>'}</tbody></table></div>`;
+  const table = `<div id="eng-grid" class="card bg-white shadow" style="overflow-x:auto;max-height:800px"><table class="table table-zebra w-full"><thead><tr>${headers}</tr></thead><tbody id="eng-tbody">${rows || '<tr><td colspan="7" class="text-center py-8 text-gray-500">No engagements found</td></tr>'}</tbody></table></div>`;
 
   const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Engagements</h1>${createBtn}</div>${stageCountBar(counts, total)}${tabBar}${filters}${table}`;
 
-  const gridScript = `function filterGrid(){const q=(document.getElementById('grid-search')?.value||'').toLowerCase();const tm=document.getElementById('filter-team')?.value||'';const yr=document.getElementById('filter-year')?.value||'';const cy=document.getElementById('current-year-toggle')?.checked;const now=new Date().getFullYear();document.querySelectorAll('#eng-tbody tr[data-searchable]').forEach(r=>{let show=true;if(q&&!r.textContent.toLowerCase().includes(q))show=false;if(tm&&r.dataset.team!==tm)show=false;if(yr&&r.dataset.year!==yr)show=false;if(cy&&r.dataset.year&&Number(r.dataset.year)!==now)show=false;r.style.display=show?'':'none'})}document.getElementById('grid-search')?.addEventListener('input',()=>{clearTimeout(window._gst);window._gst=setTimeout(filterGrid,300)})`;
+  const filterScript = `function filterGrid(){const q=(document.getElementById('grid-search')?.value||'').toLowerCase();const tm=document.getElementById('filter-team')?.value||'';const yr=document.getElementById('filter-year')?.value||'';const cy=document.getElementById('current-year-toggle')?.checked;const now=new Date().getFullYear();document.querySelectorAll('#eng-tbody tr[data-searchable]').forEach(r=>{let show=true;if(q&&!r.textContent.toLowerCase().includes(q))show=false;if(tm&&r.dataset.team!==tm)show=false;if(yr&&r.dataset.year!==yr)show=false;if(cy&&r.dataset.year&&Number(r.dataset.year)!==now)show=false;r.style.display=show?'':'none'})}document.getElementById('grid-search')?.addEventListener('input',()=>{clearTimeout(window._gst);window._gst=setTimeout(filterGrid,300)})`;
+  const clickScript = eventDelegation('eng-tbody', 'tr[data-searchable]', 'click', `window.location=t.querySelector('td')?.parentElement?.onclick?.toString().match(/\\/engagement\\/[^']+/)?.[0]||'#'`);
+  const perfScript = perfBudget('engagement-grid-render', 200);
+  const deferScript = deferOffscreen('.defer-load');
+  const virtualScript = engagements.length > 200 ? virtualScrollScript('eng-grid', 48, 10) : '';
+  const scripts = [filterScript, clickScript, perfScript, deferScript, virtualScript].filter(Boolean);
 
-  return page(user, 'Engagements', [{ href: '/', label: 'Dashboard' }, { label: 'Engagements' }], content, [gridScript]);
+  return page(user, 'Engagements', [{ href: '/', label: 'Dashboard' }, { label: 'Engagements' }], content, scripts);
 }
 
 export function renderEngagementCardView(user, engagements) {
