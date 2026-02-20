@@ -1,5 +1,6 @@
-import { html } from '@/ui/renderer.js'
 import { monitoringDashboardScript } from '@/ui/monitoring-dashboard-client.js'
+
+const html = (strings, ...values) => strings.reduce((r, s, i) => r + s + (values[i] ?? ''), '')
 
 export function renderMonitoringDashboard() {
   return html`
