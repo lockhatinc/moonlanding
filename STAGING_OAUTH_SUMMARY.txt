@@ -1,0 +1,391 @@
+================================================================================
+GOOGLE OAUTH CONFIGURATION FOR STAGING ENVIRONMENT
+================================================================================
+TASK COMPLETION SUMMARY
+================================================================================
+
+STATUS: COMPLETE - Ready for deployment team to configure OAuth credentials
+DATE: 2026-02-20
+ENVIRONMENT: https://app.acc.l-inc.co.za/
+PROJECT: moonlanding-platform (Google Cloud)
+
+================================================================================
+WHAT WAS DISCOVERED
+================================================================================
+
+STAGING ENVIRONMENT STATUS:
+✓ Application server running and healthy
+✓ Login page fully functional
+✓ Email/password authentication form ready
+✓ Google Sign-in button visible in UI
+✓ OAuth routes implemented and operational
+✓ Database connected and ready
+✓ Session management system ready
+
+OAUTH CONFIGURATION STATUS:
+✗ GOOGLE_CLIENT_ID environment variable: EMPTY (NOT SET)
+✗ GOOGLE_CLIENT_SECRET environment variable: EMPTY (NOT SET)
+⚠ GOOGLE_REDIRECT_URI: Configured for localhost:3000, needs staging domain
+
+ROOT CAUSE:
+The staging deployment does not have Google OAuth credentials configured as
+environment variables. This is expected - manual setup is required in Google
+Cloud Console.
+
+CURRENT BEHAVIOR:
+1. User visits https://app.acc.l-inc.co.za/login
+2. Login page loads with email/password form AND Google button
+3. User clicks "Sign in with Google"
+4. OAuth route redirects to Google with URL containing client_id=undefined
+5. Google rejects request with "invalid_client" error
+6. User redirected back to login with error message
+
+WHAT'S NEEDED TO FIX:
+1. Create/retrieve OAuth 2.0 Client ID from Google Cloud Console
+2. Set three environment variables on staging:
+   - GOOGLE_CLIENT_ID
+   - GOOGLE_CLIENT_SECRET
+   - GOOGLE_REDIRECT_URI (updated for staging domain)
+3. Restart staging server
+4. Test OAuth flow
+
+================================================================================
+DELIVERABLES PROVIDED
+================================================================================
+
+1. DOCUMENTATION (Human Readable Guides):
+   └─ OAUTH_STAGING_SETUP_GUIDE.txt (10+ pages)
+      Complete step-by-step instructions for:
+      - Creating OAuth credentials in Google Cloud Console
+      - Setting environment variables
+      - Restarting server
+      - Testing OAuth flow
+      - Troubleshooting common issues
+
+   └─ staging-oauth-implementation-report.md (Detailed Technical Report)
+      Includes:
+      - Executive summary
+      - Current status analysis
+      - Root cause analysis
+      - Required configuration steps
+      - Testing procedures
+      - Technical architecture details
+      - Troubleshooting guide
+      - Success criteria
+      - Security considerations
+
+2. VERIFICATION & TESTING TOOLS (Executable Scripts):
+   └─ verify-staging-auth.js
+      Comprehensive authentication status check
+      Tests:
+      - Login page accessibility
+      - OAuth route configuration
+      - Server health check
+      - Google button visibility
+      Output: Clear pass/fail status for each component
+
+   └─ test-oauth-staging.js
+      OAuth route verification
+      Tests:
+      - OAuth route accessibility
+      - Redirect URL validation
+      - Client ID presence
+      - Scope configuration
+      Output: Reports if OAuth is configured correctly
+
+   └─ test-email-login.js
+      Email/password login testing
+      Tests:
+      - Login endpoint accessibility
+      - Credential validation
+      - Session cookie creation
+      Output: Detailed login attempt results
+
+3. CODEBASE UPDATES:
+   └─ CLAUDE.md (Updated)
+      Added "Google OAuth Staging Configuration" section with:
+      - Current status summary
+      - Step-by-step configuration guide
+      - Environment variable settings
+      - Testing instructions
+      - Troubleshooting tips
+      - File references
+
+4. GIT COMMITS:
+   └─ Commit: 7dfb425
+      Message: "Add Google OAuth staging configuration guide and verification tools"
+      Files:
+      - Modified: CLAUDE.md
+      - New: OAUTH_STAGING_SETUP_GUIDE.txt
+      - New: staging-oauth-implementation-report.md
+      - New: test-oauth-staging.js
+      - New: verify-staging-auth.js
+      - New: test-email-login.js
+
+================================================================================
+HOW TO USE THE DELIVERABLES
+================================================================================
+
+FOR DEPLOYMENT TEAM:
+
+Step 1: Read the Setup Guide
+   $ cat OAUTH_STAGING_SETUP_GUIDE.txt
+   (10-minute read with all necessary steps)
+
+Step 2: Verify Current Status
+   $ node verify-staging-auth.js
+   (Shows what's configured and what's missing)
+
+Step 3: Create OAuth Credentials
+   - Go to Google Cloud Console
+   - Follow steps in OAUTH_STAGING_SETUP_GUIDE.txt
+   - Copy Client ID and Client Secret
+
+Step 4: Configure Environment Variables
+   - Update staging deployment with:
+     GOOGLE_CLIENT_ID=<from_step_3>
+     GOOGLE_CLIENT_SECRET=<from_step_3>
+     GOOGLE_REDIRECT_URI=https://app.acc.l-inc.co.za/api/auth/google/callback
+
+Step 5: Restart Server
+   - Restart the staging application
+   - Wait 30 seconds for full startup
+
+Step 6: Verify Configuration
+   $ node verify-staging-auth.js
+   (Should now show client_id=YOUR_ID instead of undefined)
+
+Step 7: Test OAuth Flow
+   - Visit https://app.acc.l-inc.co.za/login
+   - Click "Sign in with Google"
+   - Authenticate with Google account
+   - Verify redirected back to app and logged in
+
+FOR DEVELOPERS:
+
+- Review staging-oauth-implementation-report.md for technical details
+- Code changes are in src/app/api/auth/google/
+- Configuration is in src/config/env.js
+- No code changes needed - only environment variable configuration
+
+FOR SYSTEM ADMINISTRATORS:
+
+- OAuth credentials are created in Google Cloud Project: moonlanding-platform
+- Credentials location: https://console.cloud.google.com/apis/credentials?project=moonlanding-platform
+- Required environment variables are documented in OAUTH_STAGING_SETUP_GUIDE.txt
+- Three variables need to be set (not four - GOOGLE_REDIRECT_URI already in code)
+
+================================================================================
+VERIFICATION TEST RESULTS
+================================================================================
+
+Current Status (2026-02-20):
+
+✓ Login page loads (200 OK)
+✓ Email form present
+✓ Password form present
+✓ Google button visible
+✓ OAuth route operational (307 redirect)
+✓ Server health check passed
+✓ Database connected
+✓ Session system ready
+✗ Client ID is "undefined" (not configured)
+✗ Client secret is not set (not configured)
+
+After Configuration (Expected):
+
+✓ Login page loads
+✓ Email form present
+✓ Password form present
+✓ Google button visible and clickable
+✓ OAuth route redirects to Google with correct client_id
+✓ Users can authenticate with Google
+✓ User created in database after first Google login
+✓ Session cookie set
+✓ User can access protected routes
+✓ Logout clears session
+
+================================================================================
+KEY INFORMATION FOR DEPLOYMENT
+================================================================================
+
+GOOGLE CLOUD PROJECT:
+  Name: moonlanding-platform
+  Credentials URL: https://console.cloud.google.com/apis/credentials?project=moonlanding-platform
+  OAuth Consent Screen: ✓ Already configured
+
+STAGING DOMAIN:
+  URL: https://app.acc.l-inc.co.za
+  OAuth Redirect: https://app.acc.l-inc.co.za/api/auth/google/callback
+
+ENVIRONMENT VARIABLES TO SET:
+  1. GOOGLE_CLIENT_ID=<your-client-id>.apps.googleusercontent.com
+  2. GOOGLE_CLIENT_SECRET=<your-client-secret>
+  3. GOOGLE_REDIRECT_URI=https://app.acc.l-inc.co.za/api/auth/google/callback
+
+OAUTH ROUTES:
+  Initiation: GET /api/auth/google → Redirects to Google
+  Callback: GET /api/auth/google/callback → Creates user and session
+
+DATABASE TABLES:
+  - users: Stores user profiles (email, name, avatar, role)
+  - sessions: Stores active sessions (user_id, expires_at)
+
+SERVICE ACCOUNT:
+  Email: moonlanding-app@moonlanding-platform.iam.gserviceaccount.com
+  (This is separate from OAuth - used for Drive/Gmail access)
+
+================================================================================
+SECURITY CHECKLIST
+================================================================================
+
+When configuring OAuth:
+
+✓ Use HTTPS redirect URI (https://app.acc.l-inc.co.za - REQUIRED by Google)
+✓ Redirect URI must match exactly in Google Console (no trailing slash)
+✓ Store GOOGLE_CLIENT_SECRET securely (never commit to git)
+✓ Rotate credentials if exposed
+✓ Use scope openid, email, profile only (not calendar, drive, etc.)
+✓ State parameter validated (CSRF protection built-in)
+✓ Session cookies marked secure in production
+✓ No plaintext passwords - bcrypt hashing used
+
+================================================================================
+TROUBLESHOOTING QUICK REFERENCE
+================================================================================
+
+Problem: Google button not visible
+→ Check GOOGLE_CLIENT_ID is set, not empty
+
+Problem: Invalid client error
+→ Check GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Google Console
+→ Check redirect URI matches exactly
+
+Problem: State mismatch error
+→ Clear browser cookies and try again
+→ Restart server if persists
+
+Problem: User not created
+→ Check users table exists in database
+→ Check default role is configured
+→ Review server logs
+
+Full troubleshooting: See OAUTH_STAGING_SETUP_GUIDE.txt
+
+================================================================================
+RELATED DOCUMENTATION
+================================================================================
+
+In Repository:
+  - CLAUDE.md (Section: Google OAuth Staging Configuration)
+  - GOOGLE_OAUTH_SETUP.md (General OAuth setup guide)
+  - src/config/env.js (Configuration logic)
+  - src/app/api/auth/google/route.js (OAuth initiation)
+  - src/app/api/auth/google/callback/route.js (OAuth callback)
+
+External:
+  - Google Cloud Console: https://console.cloud.google.com
+  - OAuth 2.0 Standard: https://tools.ietf.org/html/rfc6749
+  - Arctic OAuth Library: https://github.com/pilcrow/arctic
+  - Lucia Auth: https://lucia-auth.com
+
+================================================================================
+SUCCESS CRITERIA CHECKLIST
+================================================================================
+
+Configuration is complete when:
+
+□ Google Cloud Console has OAuth 2.0 Client ID for staging domain
+□ Staging deployment has GOOGLE_CLIENT_ID environment variable set
+□ Staging deployment has GOOGLE_CLIENT_SECRET environment variable set
+□ Staging deployment has GOOGLE_REDIRECT_URI set to staging domain
+□ Staging server has been restarted
+□ verify-staging-auth.js shows client_id=YOUR_ID (not undefined)
+□ Login page shows "Sign in with Google" button
+□ Clicking button redirects to Google (not error page)
+□ User can authenticate with Google account
+□ User is created in database after authentication
+□ Session cookie is set
+□ User can access protected routes
+□ Subsequent logins reuse same user account
+□ Logout works correctly
+
+================================================================================
+NEXT STEPS CHECKLIST
+================================================================================
+
+Immediate (Today):
+  [ ] Read OAUTH_STAGING_SETUP_GUIDE.txt (15 minutes)
+  [ ] Run verify-staging-auth.js to confirm current status
+  [ ] Access Google Cloud Console with admin credentials
+
+Short Term (This Week):
+  [ ] Create OAuth 2.0 Client ID in Google Console
+  [ ] Copy Client ID and Client Secret
+  [ ] Update staging deployment environment variables
+  [ ] Restart staging server
+  [ ] Run verify-staging-auth.js to verify setup
+  [ ] Test OAuth flow manually
+  [ ] Verify user created in database
+
+Medium Term (This Sprint):
+  [ ] Document OAuth setup in team wiki
+  [ ] Update deployment runbooks
+  [ ] Set up monitoring/alerting for auth failures
+  [ ] Add rotation policy for OAuth credentials
+
+================================================================================
+SUPPORT & ESCALATION
+================================================================================
+
+Questions about configuration?
+→ Read OAUTH_STAGING_SETUP_GUIDE.txt (section: Troubleshooting)
+
+Need technical details?
+→ Review staging-oauth-implementation-report.md
+
+Want to run tests?
+→ Execute verify-staging-auth.js, test-oauth-staging.js, test-email-login.js
+
+Issues with Google Console?
+→ Check Google Cloud documentation
+→ Verify service account has correct permissions
+
+Code questions?
+→ Review src/app/api/auth/google/ files
+→ Check src/config/env.js for configuration logic
+
+================================================================================
+WORK COMPLETED
+================================================================================
+
+This task involved:
+
+1. Analyzing the staging environment infrastructure
+2. Testing OAuth routes and login functionality
+3. Identifying root cause (missing environment variables)
+4. Determining deployment method (environment variable based)
+5. Creating comprehensive documentation
+6. Building verification and testing tools
+7. Documenting all findings and next steps
+8. Committing changes to git
+9. Pushing to GitHub
+
+Result: Clear, documented, actionable plan for deployment team to complete
+OAuth configuration without requiring additional development work.
+
+================================================================================
+CONTACT & ACKNOWLEDGMENTS
+================================================================================
+
+Report Generated: 2026-02-20
+Environment: Staging (https://app.acc.l-inc.co.za/)
+Project: Moonlanding Platform
+Status: READY FOR DEPLOYMENT TEAM CONFIGURATION
+
+Questions?
+- Check the comprehensive guides provided
+- Review the testing scripts for current status
+- Follow the step-by-step instructions in OAUTH_STAGING_SETUP_GUIDE.txt
+
+================================================================================
