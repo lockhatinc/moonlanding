@@ -31,6 +31,7 @@ export const PUT = withErrorHandler(async (request, { params }) => {
   const question = db.prepare('SELECT * FROM rfi_questions WHERE id = ? AND rfi_id = ?').get(qid, id);
   if (!question) return notFound('Question not found');
 
+  const ALLOWED_FIELDS = new Set(['status', 'assigned_to', 'due_date']);
   const updates = {};
   if (body.status !== undefined) updates.status = body.status;
   if (body.assigned_to !== undefined) updates.assigned_to = body.assigned_to;
@@ -40,8 +41,11 @@ export const PUT = withErrorHandler(async (request, { params }) => {
     return ok(question);
   }
 
-  const setClauses = Object.keys(updates).map(k => `${k} = ?`).join(', ');
-  const values = Object.values(updates);
+  const safeKeys = Object.keys(updates).filter(k => ALLOWED_FIELDS.has(k));
+  if (safeKeys.length === 0) return ok(question);
+
+  const setClauses = safeKeys.map(k => `"${k}" = ?`).join(', ');
+  const values = safeKeys.map(k => updates[k]);
   values.push(now());
   values.push(qid);
 
@@ -50,7 +54,7 @@ export const PUT = withErrorHandler(async (request, { params }) => {
   `);
   stmt.run(...values);
 
-  logAction(user.id, 'rfi_question', qid, 'update', question, updates);
+  logAction('rfi_question', qid, 'update', user.id, question, updates);
 
   const updated = db.prepare('SELECT * FROM rfi_questions WHERE id = ?').get(qid);
   return ok(updated);
@@ -66,7 +70,7 @@ export const DELETE = withErrorHandler(async (request, { params }) => {
   db.prepare('DELETE FROM rfi_responses WHERE question_id = ?').run(qid);
   db.prepare('DELETE FROM rfi_questions WHERE id = ?').run(qid);
 
-  logAction(user.id, 'rfi_question', qid, 'delete', question, null);
+  logAction('rfi_question', qid, 'delete', user.id, question, null);
 
   return ok({ deleted: true });
 }, 'DELETE /api/rfi/[id]/questions/[qid]');

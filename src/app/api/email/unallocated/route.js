@@ -3,6 +3,10 @@ import { getDatabase } from '@/lib/database-core';
 
 export async function GET(request) {
   try {
+    const { requireUser, setCurrentRequest } = await import('@/engine.server');
+    setCurrentRequest(request);
+    await requireUser();
+
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '50', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);

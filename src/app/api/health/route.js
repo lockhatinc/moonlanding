@@ -26,15 +26,20 @@ export const GET = async (request) => {
     }
 
     if (detailed) {
-      health.metrics = getAllMetrics()
-      health.database.stats = getDatabaseStats()
-      health.resources = getCurrentResources()
-      health.alerts = getRecentAlerts(10)
-      health.memory = {
-        heapUsed: process.memoryUsage().heapUsed,
-        heapTotal: process.memoryUsage().heapTotal,
-        external: process.memoryUsage().external,
-        rss: process.memoryUsage().rss
+      const { getUser, setCurrentRequest } = await import('@/engine.server')
+      setCurrentRequest(request)
+      const user = await getUser()
+      if (user && (user.role === 'admin' || user.role === 'partner')) {
+        health.metrics = getAllMetrics()
+        health.database.stats = getDatabaseStats()
+        health.resources = getCurrentResources()
+        health.alerts = getRecentAlerts(10)
+        health.memory = {
+          heapUsed: process.memoryUsage().heapUsed,
+          heapTotal: process.memoryUsage().heapTotal,
+          external: process.memoryUsage().external,
+          rss: process.memoryUsage().rss
+        }
       }
     }
 

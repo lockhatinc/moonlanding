@@ -230,6 +230,12 @@ function checkFailureRate(db) {
 }
 
 export async function POST(request) {
+  const authHeader = request.headers.get('authorization');
+  const token = authHeader?.replace('Bearer ', '');
+  if (!token || token !== process.env.CRON_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const db = getDatabase();
 
   try {
@@ -313,6 +319,12 @@ export async function POST(request) {
 }
 
 export async function GET(request) {
+  const authHeader = request.headers.get('authorization');
+  const token = authHeader?.replace('Bearer ', '');
+  if (!token || token !== process.env.CRON_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const db = getDatabase();
 
   try {

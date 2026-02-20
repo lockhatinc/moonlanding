@@ -6,6 +6,13 @@ import { getLogs } from '@/lib/log-aggregator.js'
 
 export const GET = async (request) => {
   try {
+    const { requireUser, setCurrentRequest } = await import('@/engine.server')
+    setCurrentRequest(request)
+    const user = await requireUser()
+    if (user.role !== 'admin' && user.role !== 'partner') {
+      return new Response(JSON.stringify({ error: 'Permission denied' }), { status: 403, headers: { 'Content-Type': 'application/json' } })
+    }
+
     const url = new URL(request.url)
     const type = url.searchParams.get('type') || 'all'
 
@@ -57,6 +64,13 @@ export const GET = async (request) => {
 
 export const DELETE = async (request) => {
   try {
+    const { requireUser, setCurrentRequest } = await import('@/engine.server')
+    setCurrentRequest(request)
+    const user = await requireUser()
+    if (user.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Permission denied' }), { status: 403, headers: { 'Content-Type': 'application/json' } })
+    }
+
     clearMetrics()
 
     return new Response(

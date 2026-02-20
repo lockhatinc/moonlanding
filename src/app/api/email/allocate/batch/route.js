@@ -4,6 +4,13 @@ import { autoAllocateEmail } from '@/lib/email-parser';
 
 export async function POST(request) {
   try {
+    const { requireUser, setCurrentRequest } = await import('@/engine.server');
+    setCurrentRequest(request);
+    const user = await requireUser();
+    if (user.role !== 'admin' && user.role !== 'partner') {
+      return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
+    }
+
     const body = await request.json();
     const { min_confidence = 70, batch_size = 50 } = body;
 

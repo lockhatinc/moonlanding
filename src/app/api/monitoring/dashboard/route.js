@@ -2,6 +2,13 @@ import { renderMonitoringDashboard } from '@/ui/monitoring-dashboard.js'
 
 export const GET = async (request) => {
   try {
+    const { requireUser, setCurrentRequest } = await import('@/engine.server')
+    setCurrentRequest(request)
+    const user = await requireUser()
+    if (user.role !== 'admin' && user.role !== 'partner') {
+      return new Response(JSON.stringify({ error: 'Permission denied' }), { status: 403, headers: { 'Content-Type': 'application/json' } })
+    }
+
     const html = renderMonitoringDashboard()
 
     return new Response(html, {

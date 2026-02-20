@@ -72,7 +72,7 @@ export const searchLogs = (filters = {}, page = 1, pageSize = 100) => {
   if (filters.action) { wc.push('action = ?'); params.push(filters.action); }
   if (filters.fromDate) { wc.push('timestamp >= ?'); params.push(filters.fromDate); }
   if (filters.toDate) { wc.push('timestamp <= ?'); params.push(filters.toDate); }
-  if (filters.searchText) { wc.push('(details LIKE ? OR error_message LIKE ? OR action LIKE ?)'); const pat = `%${filters.searchText}%`; params.push(pat, pat, pat); }
+  if (filters.searchText) { wc.push('(details LIKE ? OR error_message LIKE ? OR action LIKE ?)'); const escaped = filters.searchText.replace(/[%_]/g, c => '\\' + c); const pat = `%${escaped}%`; params.push(pat, pat, pat); }
   const where = wc.length ? 'WHERE ' + wc.join(' AND ') : '';
   const { count: total } = db.prepare(`SELECT COUNT(*) as count FROM structured_logs ${where}`).get(...params);
   const offset = (page - 1) * pageSize;

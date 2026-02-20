@@ -80,8 +80,11 @@ function buildSpecQuery(spec, where = {}, options = {}) {
   if (joins.length) sql += ' ' + joins.join(' ');
   if (wc.length) sql += ` WHERE ` + wc.join(` AND `);
   const sort = options.sort || spec.list?.defaultSort;
-  if (sort) sql += ` ORDER BY ${table}."${sort.field}" ${(sort.dir || 'ASC').toUpperCase()}`;
-  if (options.limit) { sql += ` LIMIT ${options.limit}`; if (options.offset) sql += ` OFFSET ${options.offset}`; }
+  if (sort && sort.field && spec.fields[sort.field]) {
+    const dir = (sort.dir || 'ASC').toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+    sql += ` ORDER BY ${table}."${sort.field}" ${dir}`;
+  }
+  if (options.limit) { sql += ` LIMIT ${parseInt(options.limit, 10)}`; if (options.offset) sql += ` OFFSET ${parseInt(options.offset, 10)}`; }
   return { sql, params: p };
 }
 
@@ -128,10 +131,11 @@ export const search = (entity, query, where = {}, opts = {}) => {
   const tbl = tableName(spec);
   const searchFields = spec.list?.searchFields || spec.fields ? Object.entries(spec.fields).filter(([,f]) => f.search).map(([k]) => k) : [];
   if (!searchFields.length || !query) return list(entity, where, opts);
+  const escaped = query.replace(/[%_]/g, c => '\\' + c);
   const { sql: baseSql, params: baseParams } = buildSpecQuery(spec, where, opts);
-  const table = `"${tbl}"`, searchClauses = searchFields.map(f => `${table}."${f}" LIKE ?`).join(` OR `);
+  const table = `"${tbl}"`, searchClauses = searchFields.map(f => `${table}."${f}" LIKE ? ESCAPE '\\'`).join(` OR `);
   const sql = baseSql.includes('WHERE') ? baseSql.replace(` WHERE `, ` WHERE (${searchClauses}) AND `) : `${baseSql} WHERE (${searchClauses})`;
-  return execQuery(sql, [...searchFields.map(() => `%${query}%`), ...baseParams], { entity, operation: 'Search' });
+  return execQuery(sql, [...searchFields.map(() => `%${escaped}%`), ...baseParams], { entity, operation: 'Search' });
 };
 
 export const searchWithPagination = async (entity, query, where = {}, page = 1, pageSize = null) => {
@@ -139,6 +143,7 @@ export const searchWithPagination = async (entity, query, where = {}, page = 1, 
   const tbl = tableName(spec);
   const searchFields = spec.list?.searchFields || spec.fields ? Object.entries(spec.fields).filter(([,f]) => f.search).map(([k]) => k) : [];
   if (!searchFields.length || !query) return await listWithPagination(entity, where, page, pageSize);
+  const escaped = query.replace(/[%_]/g, c => '\\' + c);
   const paginationCfg = await getPaginationConfig();
   const defaultPageSize = spec.list?.pageSize || paginationCfg.default_page_size;
   const maxPageSize = paginationCfg.max_page_size;
@@ -146,14 +151,14 @@ export const searchWithPagination = async (entity, query, where = {}, page = 1, 
   const parsedPage = parseInt(page, 10);
   const finalPageSize = parsedPageSize && !isNaN(parsedPageSize) ? Math.min(parsedPageSize, maxPageSize) : defaultPageSize;
   const finalPage = !isNaN(parsedPage) ? Math.max(1, parsedPage) : 1;
-  const table = tbl, searchClauses = searchFields.map(f => `${table}.${f} LIKE ?`).join(` OR `);
+  const table = tbl, searchClauses = searchFields.map(f => `"${table}"."${f}" LIKE ? ESCAPE '\\'`).join(` OR `);
   const wc = [], p = [];
-  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`${table}.${k}=?`); p.push(v); } });
-  if (spec.fields.status && !where.status) wc.push(`${table}.status!='${RECORD_STATUS.DELETED}'`);
-  if (spec.fields.archived && !where.archived) wc.push(`${table}.archived=0`);
+  Object.entries(where).forEach(([k, v]) => { if (v !== undefined && v !== null) { wc.push(`"${table}"."${k}"=?`); p.push(v); } });
+  if (spec.fields.status && !where.status) wc.push(`"${table}"."status"!='${RECORD_STATUS.DELETED}'`);
+  if (spec.fields.archived && !where.archived) wc.push(`"${table}"."archived"=0`);
   const whereClause = wc.length ? ` AND (${wc.join(` AND `)})` : '';
-  const countSql = `SELECT COUNT(*) as c FROM ${table} WHERE (${searchClauses})${whereClause}`;
-  const total = execGet(countSql, [...searchFields.map(() => `%${query}%`), ...p], { entity, operation: 'Count' }).c;
+  const countSql = `SELECT COUNT(*) as c FROM "${table}" WHERE (${searchClauses})${whereClause}`;
+  const total = execGet(countSql, [...searchFields.map(() => `%${escaped}%`), ...p], { entity, operation: 'Count' }).c;
   const items = search(entity, query, where, { limit: finalPageSize, offset: (finalPage - 1) * finalPageSize });
   return { items, pagination: { page: finalPage, pageSize: finalPageSize, total, totalPages: Math.ceil(total / finalPageSize), hasMore: finalPage < Math.ceil(total / finalPageSize) } };
 };

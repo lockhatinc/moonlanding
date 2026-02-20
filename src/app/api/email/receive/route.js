@@ -11,6 +11,12 @@ if (!fs.existsSync(TEMP_EMAIL_ATTACHMENTS_DIR)) {
 
 export async function POST(request) {
   try {
+    const authHeader = request.headers.get('authorization');
+    const token = authHeader?.replace('Bearer ', '');
+    if (!token || token !== process.env.EMAIL_WEBHOOK_SECRET) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
 
     const {

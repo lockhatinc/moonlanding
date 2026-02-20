@@ -9,6 +9,10 @@ import {
 
 export async function POST(request) {
   try {
+    const { requireUser, setCurrentRequest } = await import('@/engine.server');
+    setCurrentRequest(request);
+    await requireUser();
+
     const body = await request.json();
     const { email_id, engagement_id, rfi_id, auto = false } = body;
 

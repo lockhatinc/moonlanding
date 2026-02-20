@@ -90,8 +90,11 @@ export function buildSpecQuery(spec, where = {}, options = {}) {
     if (joins.length) sql += ' ' + joins.join(' ');
     if (wc.length) sql += ` WHERE ` + wc.join(` AND `);
     const sort = options.sort || spec.list?.defaultSort;
-    if (sort) sql += ` ORDER BY ${table}."${sort.field}" ${(sort.dir || 'ASC').toUpperCase()}`;
-    if (options.limit) { sql += ` LIMIT ${options.limit}`; if (options.offset) sql += ` OFFSET ${options.offset}`; }
+    if (sort && sort.field && spec.fields[sort.field]) {
+      const dir = (sort.dir || 'ASC').toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+      sql += ` ORDER BY ${table}."${sort.field}" ${dir}`;
+    }
+    if (options.limit) { sql += ` LIMIT ${parseInt(options.limit, 10)}`; if (options.offset) sql += ` OFFSET ${parseInt(options.offset, 10)}`; }
     return { sql, params: p };
   });
 }
