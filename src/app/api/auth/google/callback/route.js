@@ -31,7 +31,19 @@ export async function GET(request) {
   }
 
   try {
-    const tokens = await google.validateAuthorizationCode(code, storedCodeVerifier);
+    // Build redirect URI from request to match what was used in authorization
+    // Handle both Map-like headers (with .get()) and object-like headers
+    const getHeader = (name) => {
+      return (typeof request.headers?.get === 'function'
+        ? request.headers.get(name)
+        : request.headers?.[name]) || undefined;
+    };
+
+    const protocol = getHeader('x-forwarded-proto') || 'http';
+    const host = getHeader('x-forwarded-host') || getHeader('host') || 'localhost:3000';
+    const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
+
+    const tokens = await google.validateAuthorizationCode(code, storedCodeVerifier, redirectUri);
     const accessToken = tokens.accessToken();
 
     const response = await fetch(GOOGLE_APIS.oauth2, {
