@@ -322,10 +322,45 @@ Defined in `src/config/system-limits-config.js`:
 - Hot reload should handle this automatically
 - Manual clear: restart the server process
 
-### Google OAuth not working
-- Verify `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env`
-- Check redirect URI matches Google Console configuration
-- Service account needs Domain-Wide Delegation for Drive/Gmail
+### Google OAuth Setup (NEW)
+Google Sign-In button has been added to the login page. To enable it:
+
+**Configuration:**
+1. Get OAuth 2.0 credentials from Google Cloud Console: https://console.cloud.google.com/apis/credentials?project=moonlanding-platform
+   - Click "Create Credentials" → "OAuth 2.0 Client ID"
+   - Select "Web application"
+   - Add authorized redirect URI: `http://localhost:3000/api/auth/google/callback`
+   - Copy Client ID and Client Secret
+
+2. Update `.env`:
+   ```env
+   GOOGLE_CLIENT_ID=YOUR_CLIENT_ID.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=YOUR_CLIENT_SECRET
+   GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
+   ```
+
+3. Restart server: `npm run dev`
+
+**Features:**
+- Login page shows "Sign in with Google" button when configured
+- Auto-creates users from Google profile (email, name, avatar)
+- Uses email matching for existing users (no duplicates)
+- Session managed by Lucia with secure cookies
+- PKCE flow for security
+
+**Workspace Users (can login via Google):**
+- admin@coas.co.za, zahra3014@gmail.com, kerishnie@l-inc.co.za, ks@l-inc.co.za, and 16+ others
+
+**Key Files:**
+- Routes: `/src/app/api/auth/google/route.js`, `/src/app/api/auth/google/callback/route.js`
+- UI: `/src/ui/standalone-login.js` (Google button + state detection)
+- Config: `/src/config/env.js`, `/src/engine.server.js`
+
+**Troubleshooting:**
+- "Google Sign-in not configured" warning → Set GOOGLE_CLIENT_ID/SECRET
+- "Invalid authorization code" error → Check redirect URI matches Cloud Console
+- OAuth consent screen not configured → Set up screen in Cloud Console (External type for workspace)
+- For production: Change GOOGLE_REDIRECT_URI to your domain and update Cloud Console
 
 ### Incomplete HTML responses
 - Ensure `Content-Length` header is set (see Critical Caveats above)
