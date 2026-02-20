@@ -1,13 +1,13 @@
 import { canCreate, canEdit, canDelete } from '@/ui/permissions-ui.js';
 import { generateHtml } from '@/ui/renderer.js';
 
-const TOAST_SCRIPT = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
+const TOAST_SCRIPT = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';c.setAttribute('role','status');c.setAttribute('aria-live','polite');c.setAttribute('aria-atomic','true');document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
 
 function nav(user) {
   const { getNavItems, getAdminItems } = require_perms();
   const navLinks = getNavItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
   const adminLinks = getAdminItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
-  return `<nav class="navbar bg-white shadow-sm px-4">
+  return `<nav class="navbar bg-white shadow-sm px-4" role="navigation" aria-label="Main navigation">
   <div class="navbar-start">
     <a href="/" class="font-bold text-lg">Platform</a>
     <div class="hidden md:flex gap-1 ml-6">${navLinks}${adminLinks}</div>
@@ -39,7 +39,7 @@ await_import_cache = { getNavItems, getAdminItems };
 
 function breadcrumb(items) {
   if (!items?.length) return '';
-  return `<nav class="breadcrumb">${items.map((item, i) =>
+  return `<nav class="breadcrumb" aria-label="Breadcrumb">${items.map((item, i) =>
     i === items.length - 1 ? `<span>${item.label}</span>` : `<a href="${item.href}">${item.label}</a><span class="breadcrumb-separator">/</span>`
   ).join('')}</nav>`;
 }
@@ -96,7 +96,7 @@ export function renderSettingsSystem(user, config = {}) {
 }
 
 export function renderSettingsUsers(user, users = []) {
-  const rows = users.map(u => `<tr class="hover cursor-pointer" onclick="window.location='/user/${u.id}'">
+  const rows = users.map(u => `<tr class="hover cursor-pointer" tabindex="0" role="link" onclick="window.location='/user/${u.id}'" onkeydown="if(event.key==='Enter'){window.location='/user/${u.id}'}">
     <td>${u.name || '-'}</td><td>${u.email || '-'}</td>
     <td><span class="badge-status" style="background:#dbeafe;color:#1e40af">${u.role || '-'}</span></td>
     <td><span class="badge-status" style="background:${u.status === 'active' ? '#d1fae5;color:#065f46' : '#fef3c7;color:#92400e'}">${u.status || '-'}</span></td>
@@ -110,7 +110,7 @@ export function renderSettingsUsers(user, users = []) {
 }
 
 export function renderSettingsTeams(user, teams = []) {
-  const rows = teams.map(t => `<tr class="hover cursor-pointer" onclick="window.location='/team/${t.id}'">
+  const rows = teams.map(t => `<tr class="hover cursor-pointer" tabindex="0" role="link" onclick="window.location='/team/${t.id}'" onkeydown="if(event.key==='Enter'){window.location='/team/${t.id}'}">
     <td>${t.name || '-'}</td><td>${t.member_count || 0}</td>
     <td><a href="/team/${t.id}/edit" class="btn btn-xs btn-outline">Edit</a></td>
   </tr>`).join('');
@@ -162,7 +162,7 @@ export function renderSettingsRfiSections(user, sections = []) {
 }
 
 export function renderSettingsTemplates(user, templates = []) {
-  const rows = templates.map(t => `<tr class="hover cursor-pointer" onclick="window.location='/review_template/${t.id}'">
+  const rows = templates.map(t => `<tr class="hover cursor-pointer" tabindex="0" role="link" onclick="window.location='/review_template/${t.id}'" onkeydown="if(event.key==='Enter'){window.location='/review_template/${t.id}'}">
     <td>${t.name || '-'}</td><td><span class="badge-status" style="background:#ede9fe;color:#5b21b6">${t.type || 'standard'}</span></td>
     <td>${t.is_active ? '<span style="color:#22c55e">Active</span>' : '<span style="color:#9ca3af">Inactive</span>'}</td>
     <td><a href="/review_template/${t.id}/edit" class="btn btn-xs btn-outline">Edit</a></td>
@@ -248,7 +248,7 @@ export function renderSettingsIntegrations(user, integrations = {}) {
 }
 
 export function renderSettingsChecklists(user, checklists = []) {
-  const rows = checklists.map(c => `<tr class="hover cursor-pointer" onclick="window.location='/checklist/${c.id}'">
+  const rows = checklists.map(c => `<tr class="hover cursor-pointer" tabindex="0" role="link" onclick="window.location='/checklist/${c.id}'" onkeydown="if(event.key==='Enter'){window.location='/checklist/${c.id}'}">
     <td>${c.name || '-'}</td><td>${c.type || '-'}</td>
     <td>${c.review_id || '-'}</td>
     <td><a href="/checklist/${c.id}/edit" class="btn btn-xs btn-outline">Edit</a></td>

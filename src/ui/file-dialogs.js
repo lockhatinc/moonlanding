@@ -1,7 +1,7 @@
 import { statusLabel } from '@/ui/renderer.js';
 
 export function zipFileCreationDialog(engagementId) {
-  return `<div id="zip-create-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="zip-create-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title">Create Zip Archive</span><button class="dialog-close" onclick="document.getElementById('zip-create-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body"><div id="zcd-files" class="flex flex-col gap-2" style="max-height:300px;overflow:auto"></div><div class="flex items-center gap-2 mt-3"><label class="flex items-center gap-2 text-sm"><input type="checkbox" id="zcd-all" class="checkbox checkbox-sm" checked/><span>Select All</span></label></div></div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('zip-create-dialog').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="zcdCreate()">Create Zip</button></div>
@@ -13,7 +13,7 @@ export function zipFileCreationDialog(engagementId) {
   </script>`;
 }
 export function crossEngagementFilePicker(currentEngId) {
-  return `<div id="cross-file-picker" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="cross-file-picker" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel" style="max-width:640px"><div class="dialog-header"><span class="dialog-title">Pick File from Another Engagement</span><button class="dialog-close" onclick="document.getElementById('cross-file-picker').style.display='none'">&times;</button></div>
       <div class="dialog-body"><div class="modal-form-group"><label>Engagement</label><select id="cfp-eng" class="select select-bordered w-full" onchange="cfpLoadFiles()"></select></div><div id="cfp-files" class="flex flex-col gap-2 mt-3" style="max-height:300px;overflow:auto"></div></div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('cross-file-picker').style.display='none'">Close</button></div>
@@ -37,13 +37,13 @@ export function userCvUpload(userId) {
   </script>`;
 }
 export function quickViewAttachment() {
-  return `<div id="quick-view" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="quick-view" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel" style="max-width:900px;max-height:90vh"><div class="dialog-header"><span class="dialog-title" id="qv-title">Preview</span><button class="dialog-close" onclick="document.getElementById('quick-view').style.display='none'">&times;</button></div>
       <div class="dialog-body" style="overflow:auto;max-height:75vh"><div id="qv-content" class="text-center"><div class="text-gray-500">Loading...</div></div></div>
       <div class="dialog-footer"><a id="qv-download" href="#" download class="btn btn-primary btn-sm">Download</a><button class="btn btn-ghost btn-sm" onclick="document.getElementById('quick-view').style.display='none'">Close</button></div>
     </div></div>
   <script>
-  window.quickView=function(url,name,type){document.getElementById('quick-view').style.display='flex';document.getElementById('qv-title').textContent=name||'Preview';document.getElementById('qv-download').href=url;var c=document.getElementById('qv-content');if(type&&type.startsWith('image/')){c.innerHTML='<img src="'+url+'" style="max-width:100%;max-height:70vh"/>'}else if(type==='application/pdf'){c.innerHTML='<iframe src="'+url+'" style="width:100%;height:70vh;border:none"></iframe>'}else{c.innerHTML='<div class="py-8 text-gray-500"><div style="font-size:3rem">&#128196;</div><div class="mt-2">'+name+'</div><div class="text-xs mt-1">Preview not available</div></div>'}};
+  window.quickView=function(url,name,type){document.getElementById('quick-view').style.display='flex';document.getElementById('qv-title').textContent=name||'Preview';document.getElementById('qv-download').href=url;var c=document.getElementById('qv-content');if(type&&type.startsWith('image/')){c.innerHTML='<img src="'+url+'" alt="'+(name||'File preview')+'" style="max-width:100%;max-height:70vh"/>'}else if(type==='application/pdf'){c.innerHTML='<iframe src="'+url+'" style="width:100%;height:70vh;border:none"></iframe>'}else{c.innerHTML='<div class="py-8 text-gray-500"><div style="font-size:3rem">&#128196;</div><div class="mt-2">'+name+'</div><div class="text-xs mt-1">Preview not available</div></div>'}};
   </script>`;
 }
 export function fetchCachedPdf(fileId) {
@@ -62,7 +62,7 @@ export function fileLinksBar(links = []) {
   return `<div class="flex flex-wrap gap-1 mt-2">${items}</div>`;
 }
 export function reviewAttachmentChoiceDialog(reviewId) {
-  return `<div id="rev-attach-choice" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="rev-attach-choice" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title">Add Attachment</span><button class="dialog-close" onclick="document.getElementById('rev-attach-choice').style.display='none'">&times;</button></div>
       <div class="dialog-body"><div class="flex flex-col gap-3"><button class="btn btn-outline w-full text-left" onclick="document.getElementById('rev-attach-choice').style.display='none';document.getElementById('rac-upload').click()">&#128206; Upload New File</button><button class="btn btn-outline w-full text-left" onclick="document.getElementById('rev-attach-choice').style.display='none';openCrossFilePicker()">&#128279; Link Existing File</button><button class="btn btn-outline w-full text-left" onclick="document.getElementById('rev-attach-choice').style.display='none';racUrl()">&#127760; Add URL</button></div><input type="file" id="rac-upload" style="display:none" onchange="racUploadFile()"/></div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('rev-attach-choice').style.display='none'">Cancel</button></div>

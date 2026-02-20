@@ -9,7 +9,7 @@ export function fridayGlobalsCrossApp() {
 }
 
 export function fridayTeamDialog() {
-  return `<div id="friday-team-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="friday-team-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Assign Team</span><button class="dialog-close" onclick="document.getElementById('friday-team-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body"><div id="ftd-teams" class="flex flex-col gap-2"></div></div>
@@ -23,7 +23,7 @@ export function fridayTeamDialog() {
 }
 
 export function fridayDueDateDialog() {
-  return `<div id="friday-due-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="friday-due-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel" style="max-width:380px">
       <div class="dialog-header"><span class="dialog-title">Set Due Date</span><button class="dialog-close" onclick="document.getElementById('friday-due-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -47,7 +47,7 @@ export function fridayDueDateDialog() {
 }
 
 export function emailReceiveDialog() {
-  return `<div id="email-receive-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="email-receive-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel" style="max-width:640px">
       <div class="dialog-header"><span class="dialog-title">Received Emails</span><button class="dialog-close" onclick="document.getElementById('email-receive-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body"><div id="erd-list" class="flex flex-col gap-2" style="max-height:400px;overflow:auto"><div class="text-gray-500 text-center py-4">Loading...</div></div></div>
@@ -60,7 +60,7 @@ export function emailReceiveDialog() {
 }
 
 export function feeSplitDialog(engagementId) {
-  return `<div id="fee-split-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="fee-split-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel" style="max-width:560px">
       <div class="dialog-header"><span class="dialog-title">Fee Split</span><button class="dialog-close" onclick="document.getElementById('fee-split-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">

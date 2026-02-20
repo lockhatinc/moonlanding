@@ -1,4 +1,4 @@
-class Mutex {
+export class Mutex {
   constructor(name = 'anonymous') {
     this.name = name;
     this.locked = false;
@@ -43,7 +43,7 @@ class Mutex {
   }
 }
 
-class MutexManager {
+export class MutexManager {
   constructor() {
     this.mutexes = new Map();
   }
@@ -72,6 +72,4 @@ class MutexManager {
   }
 }
 
-const globalManager = new MutexManager();
-
-module.exports = { Mutex, MutexManager, globalManager };
+export const globalManager = new MutexManager();

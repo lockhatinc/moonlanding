@@ -1,7 +1,7 @@
 const TOAST_SCRIPT_INLINE = `if(!window.showToast)window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
 
 export function reviewCreateDialog() {
-  return `<div id="review-create-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="review-create-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Create Review</span><button class="dialog-close" onclick="document.getElementById('review-create-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -26,7 +26,7 @@ export function reviewCreateDialog() {
 }
 
 export function reviewTemplateChoiceDialog() {
-  return `<div id="review-template-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="review-template-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Choose Template</span><button class="dialog-close" onclick="document.getElementById('review-template-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -57,7 +57,7 @@ export function reviewContextMenu() {
 }
 
 export function reviewFlagsDialog() {
-  return `<div id="review-flags-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="review-flags-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Review Flags</span><button class="dialog-close" onclick="document.getElementById('review-flags-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -81,7 +81,7 @@ export function reviewFlagsDialog() {
 }
 
 export function reviewTagsDialog() {
-  return `<div id="review-tags-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="review-tags-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Review Tags</span><button class="dialog-close" onclick="document.getElementById('review-tags-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -106,7 +106,7 @@ export function reviewTagsDialog() {
 }
 
 export function reviewValueDialog() {
-  return `<div id="review-value-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="review-value-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">WIP Value</span><button class="dialog-close" onclick="document.getElementById('review-value-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -128,7 +128,7 @@ export function reviewValueDialog() {
 }
 
 export function reviewDeadlineDialog() {
-  return `<div id="review-deadline-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="review-deadline-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Set Deadline</span><button class="dialog-close" onclick="document.getElementById('review-deadline-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -158,7 +158,7 @@ export function reviewDeadlineDialog() {
 }
 
 export function reviewNotificationDialog() {
-  return `<div id="review-notif-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="review-notif-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Notification Settings</span><button class="dialog-close" onclick="document.getElementById('review-notif-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">

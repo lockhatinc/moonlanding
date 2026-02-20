@@ -1,5 +1,5 @@
 export function collaboratorManagementDialog(entityType, entityId) {
-  return `<div id="collab-mgmt-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="collab-mgmt-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel" style="max-width:640px">
       <div class="dialog-header"><span class="dialog-title">Manage Collaborators</span><button class="dialog-close" onclick="document.getElementById('collab-mgmt-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">

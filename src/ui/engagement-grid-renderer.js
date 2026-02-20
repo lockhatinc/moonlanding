@@ -9,11 +9,11 @@ const STAGE_KEYS = ['info_gathering', 'commencement', 'team_execution', 'partner
 function nav(user) {
   const links = getNavItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
   const admin = getAdminItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
-  return `<nav class="navbar bg-white shadow-sm px-4"><div class="navbar-start"><a href="/" class="font-bold text-lg">Platform</a><div class="hidden md:flex gap-1 ml-6">${links}${admin}</div></div><div class="navbar-end"><div id="user-dropdown" class="dropdown dropdown-end"><button type="button" onclick="toggleUserMenu(event)" class="btn btn-ghost btn-circle avatar placeholder" style="cursor:pointer"><div class="bg-primary text-white rounded-full w-10" style="display:flex;align-items:center;justify-content:center;height:2.5rem"><span>${user?.name?.charAt(0) || 'U'}</span></div></button></div></div></nav>`;
+  return `<nav class="navbar bg-white shadow-sm px-4" role="navigation" aria-label="Main navigation"><div class="navbar-start"><a href="/" class="font-bold text-lg">Platform</a><div class="hidden md:flex gap-1 ml-6">${links}${admin}</div></div><div class="navbar-end"><div id="user-dropdown" class="dropdown dropdown-end"><button type="button" onclick="toggleUserMenu(event)" class="btn btn-ghost btn-circle avatar placeholder" style="cursor:pointer"><div class="bg-primary text-white rounded-full w-10" style="display:flex;align-items:center;justify-content:center;height:2.5rem"><span>${user?.name?.charAt(0) || 'U'}</span></div></button></div></div></nav>`;
 }
 
 function bc(items) {
-  return `<nav class="breadcrumb">${items.map((item, i) => i === items.length - 1 ? `<span>${item.label}</span>` : `<a href="${item.href}">${item.label}</a><span class="breadcrumb-separator">/</span>`).join('')}</nav>`;
+  return `<nav class="breadcrumb" aria-label="Breadcrumb">${items.map((item, i) => i === items.length - 1 ? `<span>${item.label}</span>` : `<a href="${item.href}">${item.label}</a><span class="breadcrumb-separator">/</span>`).join('')}</nav>`;
 }
 
 function page(user, title, crumbs, content, scripts = []) {
@@ -49,7 +49,7 @@ function engagementRow(e, canEditEng) {
   const date = e.created_at ? (typeof e.created_at === 'number' ? new Date(e.created_at * 1000).toLocaleDateString() : e.created_at) : '-';
   const team = e.team_name || e.team_id_display || '-';
   const client = e.client_name || e.client_id_display || '-';
-  return `<tr class="hover cursor-pointer" data-searchable data-stage="${e.stage || ''}" data-status="${e.status || ''}" data-team="${e.team_id || ''}" data-year="${e.year || ''}" onclick="window.location='/engagement/${e.id}'"><td class="font-medium">${e.name || 'Untitled'}</td><td>${client}</td><td>${sts}</td><td style="min-width:200px">${stage}</td><td style="min-width:120px">${pct}</td><td>${team}</td><td>${date}</td></tr>`;
+  return `<tr class="hover cursor-pointer" data-searchable data-stage="${e.stage || ''}" data-status="${e.status || ''}" data-team="${e.team_id || ''}" data-year="${e.year || ''}" tabindex="0" role="link" onclick="window.location='/engagement/${e.id}'" onkeydown="if(event.key==='Enter'){window.location='/engagement/${e.id}'}"><td class="font-medium">${e.name || 'Untitled'}</td><td>${client}</td><td>${sts}</td><td style="min-width:200px">${stage}</td><td style="min-width:120px">${pct}</td><td>${team}</td><td>${date}</td></tr>`;
 }
 
 export function renderEngagementGrid(user, engagements, options = {}) {

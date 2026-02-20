@@ -1,13 +1,13 @@
 import { canCreate, canEdit, canDelete } from '@/ui/permissions-ui.js';
 import { generateHtml, statusLabel, linearProgress, userAvatar, teamAvatarGroup } from '@/ui/renderer.js';
 
-const TOAST_SCRIPT = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
+const TOAST_SCRIPT = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';c.setAttribute('role','status');c.setAttribute('aria-live','polite');c.setAttribute('aria-atomic','true');document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
 
 function nav(user) {
   const { getNavItems, getAdminItems } = require_perms();
   const navLinks = getNavItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
   const adminLinks = getAdminItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
-  return `<nav class="navbar bg-white shadow-sm px-4"><div class="navbar-start"><a href="/" class="font-bold text-lg">Platform</a><div class="hidden md:flex gap-1 ml-6">${navLinks}${adminLinks}</div></div><div class="navbar-end"><div id="user-dropdown" class="dropdown dropdown-end"><button type="button" onclick="toggleUserMenu(event)" class="btn btn-ghost btn-circle avatar placeholder" style="cursor:pointer"><div class="bg-primary text-white rounded-full w-10" style="display:flex;align-items:center;justify-content:center;height:2.5rem"><span>${user?.name?.charAt(0) || 'U'}</span></div></button><ul class="dropdown-menu mt-2 w-52"><li class="dropdown-header">${user?.email || ''}<br/><small class="text-gray-500">${user?.role || ''}</small></li><li><a href="/api/auth/logout">Logout</a></li></ul></div></div></nav><script>function toggleUserMenu(e){e.stopPropagation();document.getElementById('user-dropdown').classList.toggle('open')}document.addEventListener('click',function(e){var d=document.getElementById('user-dropdown');if(d&&!d.contains(e.target))d.classList.remove('open')})</script>`;
+  return `<nav class="navbar bg-white shadow-sm px-4" role="navigation" aria-label="Main navigation"><div class="navbar-start"><a href="/" class="font-bold text-lg">Platform</a><div class="hidden md:flex gap-1 ml-6">${navLinks}${adminLinks}</div></div><div class="navbar-end"><div id="user-dropdown" class="dropdown dropdown-end"><button type="button" onclick="toggleUserMenu(event)" class="btn btn-ghost btn-circle avatar placeholder" style="cursor:pointer"><div class="bg-primary text-white rounded-full w-10" style="display:flex;align-items:center;justify-content:center;height:2.5rem"><span>${user?.name?.charAt(0) || 'U'}</span></div></button><ul class="dropdown-menu mt-2 w-52"><li class="dropdown-header">${user?.email || ''}<br/><small class="text-gray-500">${user?.role || ''}</small></li><li><a href="/api/auth/logout">Logout</a></li></ul></div></div></nav><script>function toggleUserMenu(e){e.stopPropagation();document.getElementById('user-dropdown').classList.toggle('open')}document.addEventListener('click',function(e){var d=document.getElementById('user-dropdown');if(d&&!d.contains(e.target))d.classList.remove('open')})</script>`;
 }
 
 let _permsCache = null;
@@ -17,7 +17,7 @@ function require_perms() { return _permsCache; }
 
 function breadcrumb(items) {
   if (!items?.length) return '';
-  return `<nav class="breadcrumb">${items.map((item, i) => i === items.length - 1 ? `<span>${item.label}</span>` : `<a href="${item.href}">${item.label}</a><span class="breadcrumb-separator">/</span>`).join('')}</nav>`;
+  return `<nav class="breadcrumb" aria-label="Breadcrumb">${items.map((item, i) => i === items.length - 1 ? `<span>${item.label}</span>` : `<a href="${item.href}">${item.label}</a><span class="breadcrumb-separator">/</span>`).join('')}</nav>`;
 }
 
 function page(user, title, bc, content, scripts = []) {
@@ -48,7 +48,7 @@ export function renderClientDashboard(user, client, stats = {}) {
     <div class="card bg-white shadow"><div class="card-body"><h3 class="text-gray-500 text-sm">Active RFIs</h3><p class="text-2xl font-bold text-blue-600">${stats.activeRfis || 0}</p></div></div>
     <div class="card bg-white shadow"><div class="card-body"><h3 class="text-gray-500 text-sm">Users</h3><p class="text-2xl font-bold">${stats.users || 0}</p></div></div>
     <div class="card bg-white shadow"><div class="card-body"><h3 class="text-gray-500 text-sm">Reviews</h3><p class="text-2xl font-bold">${stats.reviews || 0}</p></div></div></div>`;
-  const engRows = (stats.engagementList || []).map(e => `<tr class="hover cursor-pointer" onclick="window.location='/engagement/${e.id}'"><td>${e.name || '-'}</td><td>${e.stage ? statusLabel(e.stage) : '-'}</td><td>${e.status ? statusLabel(e.status) : '-'}</td></tr>`).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-500">No engagements</td></tr>';
+  const engRows = (stats.engagementList || []).map(e => `<tr class="hover cursor-pointer" tabindex="0" role="link" onclick="window.location='/engagement/${e.id}'" onkeydown="if(event.key==='Enter'){window.location='/engagement/${e.id}'}"><td>${e.name || '-'}</td><td>${e.stage ? statusLabel(e.stage) : '-'}</td><td>${e.status ? statusLabel(e.status) : '-'}</td></tr>`).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-500">No engagements</td></tr>';
   const actions = canEdit(user, 'client') ? `<div class="flex gap-2"><a href="/client/${c.id}/edit" class="btn btn-outline btn-sm">Edit</a><button onclick="document.getElementById('risk-dialog').style.display='flex'" class="btn btn-outline btn-sm">Risk Assessment</button><button onclick="document.getElementById('test-email-dialog').style.display='flex'" class="btn btn-outline btn-sm">Test Email</button></div>` : '';
   const content = `<div class="flex justify-between items-center mb-6"><div><h1 class="text-2xl font-bold">${c.name || 'Client'}</h1>${riskBadge}</div>${actions}</div>
     ${statCards}
@@ -62,7 +62,7 @@ export function renderClientDashboard(user, client, stats = {}) {
 }
 
 export function clientUserManagementDialog(clientId) {
-  return `<div id="client-user-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="client-user-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel" style="max-width:560px">
       <div class="dialog-header"><span class="dialog-title">Manage Client Users</span><button class="dialog-close" onclick="document.getElementById('client-user-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -86,7 +86,7 @@ export function clientUserManagementDialog(clientId) {
 }
 
 export function clientUserReplaceDialog(clientId) {
-  return `<div id="client-replace-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="client-replace-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Replace Client User</span><button class="dialog-close" onclick="document.getElementById('client-replace-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -104,7 +104,7 @@ export function clientUserReplaceDialog(clientId) {
 }
 
 export function clientTestEmailDialog(clientId) {
-  return `<div id="test-email-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="test-email-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Send Test Email</span><button class="dialog-close" onclick="document.getElementById('test-email-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -121,7 +121,7 @@ export function clientTestEmailDialog(clientId) {
 
 export function clientRiskAssessmentDialog(clientId, currentRisk) {
   const options = RISK_LEVELS.map(r => `<div class="choice-option" onclick="cradSelect('${r.value}')"><input type="radio" name="crad-risk" value="${r.value}" ${currentRisk === r.value ? 'checked' : ''}/><span class="choice-label"><span class="risk-badge ${r.class}">${r.label}</span></span></div>`).join('');
-  return `<div id="risk-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="risk-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Risk Assessment</span><button class="dialog-close" onclick="document.getElementById('risk-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">

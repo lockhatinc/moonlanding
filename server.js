@@ -27,14 +27,11 @@ watchedDirs.forEach((dir) => {
 
       if (filename.endsWith('master-config.yml') || filename.includes('master-config')) {
         try {
-          const { getConfigEngineSync } = await import('./src/lib/config-generator-engine.js');
-          const engine = getConfigEngineSync();
-          if (engine && engine.invalidateCache) {
-            engine.invalidateCache();
-            console.log('[Hot] Invalidated ConfigGeneratorEngine cache');
-          }
+          const { resetConfigEngine } = await import('./src/lib/config-generator-engine.js');
+          resetConfigEngine();
+          console.log('[Hot] Reset ConfigGeneratorEngine for re-init');
         } catch (e) {
-          console.log('[Hot] Could not invalidate config cache:', e.message);
+          console.log('[Hot] Could not reset config engine:', e.message);
         }
       }
     }
@@ -71,8 +68,21 @@ function normalizeHeaderName(key) {
   return headerMap[key.toLowerCase()] || key;
 }
 
+function setSecurityHeaders(res) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   const startTime = Date.now();
+  setSecurityHeaders(res);
 
   try {
     const { setCurrentRequest } = await loadModule(path.join(__dirname, 'src/engine.server.js'));

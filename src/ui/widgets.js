@@ -19,7 +19,7 @@ export function circularProgress(value = 0, max = 100, label = '') {
   const color = pct < 30 ? '#ef4444' : pct < 70 ? '#f59e0b' : '#22c55e'
   const r = 40, circ = 2 * Math.PI * r, offset = circ - (pct / 100) * circ
   return `<div class="circular-progress" style="width:100px;height:100px">
-    <svg width="100" height="100" viewBox="0 0 100 100">
+    <svg width="100" height="100" viewBox="0 0 100 100" aria-hidden="true">
       <circle cx="50" cy="50" r="${r}" fill="none" stroke="#e5e7eb" stroke-width="8"/>
       <circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="8"
         stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round"/>
@@ -56,7 +56,7 @@ export function getUserAvatarUrl(user) {
   const name = user?.name || user?.email || 'User'
   const initials = getInitials(name)
   const color = AVATAR_COLORS[nameHash(name) % AVATAR_COLORS.length]
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><rect width="48" height="48" rx="24" fill="${color}"/><text x="24" y="24" dy=".35em" text-anchor="middle" fill="white" font-family="sans-serif" font-size="18" font-weight="600">${initials}</text></svg>`
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="24" fill="${color}"/><text x="24" y="24" dy=".35em" text-anchor="middle" fill="white" font-family="sans-serif" font-size="18" font-weight="600">${initials}</text></svg>`
   return `data:image/svg+xml,${encodeURIComponent(svg)}`
 }
 
@@ -80,7 +80,7 @@ export function teamAvatarGroup(users = [], maxShow = 3) {
 }
 
 export function infoBubble(text, position = 'top') {
-  return `<span class="info-bubble info-bubble-${position}" data-tooltip="${text.replace(/"/g, '&quot;')}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><text x="8" y="12" text-anchor="middle" fill="currentColor" font-size="10" font-weight="600">i</text></svg></span>`
+  return `<span class="info-bubble info-bubble-${position}" data-tooltip="${text.replace(/"/g, '&quot;')}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><text x="8" y="12" text-anchor="middle" fill="currentColor" font-size="10" font-weight="600">i</text></svg></span>`
 }
 
 export function sortableList(items = [], containerId = 'sortable') {

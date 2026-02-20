@@ -1,5 +1,5 @@
 export function pushToMwrDialog(engagementId) {
-  return `<div id="push-mwr-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="push-mwr-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Push to MWR</span><button class="dialog-close" onclick="document.getElementById('push-mwr-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -21,7 +21,7 @@ export function pushToMwrDialog(engagementId) {
 }
 
 export function engagementChecklistPush(engagementId) {
-  return `<div id="checklist-push-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="checklist-push-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Push Checklist to Engagement</span><button class="dialog-close" onclick="document.getElementById('checklist-push-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">

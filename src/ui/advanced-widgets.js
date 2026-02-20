@@ -24,7 +24,7 @@ export function dataGridAdvanced(config) {
     bodyHtml = Object.entries(groups).map(([key, items]) => {
       const gid = `${gridId}-g-${key.replace(/\W/g, '_')}`
       const rows = items.map((item, i) => renderRow(item, `${gid}-r${i}`, gid)).join('')
-      return `<tr class="dg-group-header" data-dg-group="${gid}" onclick="dgToggleGroup('${gid}')"><td colspan="${columns.length + (expandable ? 1 : 0)}"><span class="dg-group-arrow">&#9660;</span> <strong>${key}</strong> <span class="dg-group-count">(${items.length})</span></td></tr>${rows}`
+      return `<tr class="dg-group-header" data-dg-group="${gid}" tabindex="0" onclick="dgToggleGroup('${gid}')" onkeydown="if(event.key==='Enter')dgToggleGroup('${gid}')"><td colspan="${columns.length + (expandable ? 1 : 0)}"><span class="dg-group-arrow">&#9660;</span> <strong>${key}</strong> <span class="dg-group-count">(${items.length})</span></td></tr>${rows}`
     }).join('')
   } else {
     bodyHtml = data.map((item, i) => renderRow(item, `${gridId}-r${i}`, null)).join('')

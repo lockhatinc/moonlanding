@@ -4,11 +4,11 @@ import { canEdit, getNavItems, getAdminItems } from '@/ui/permissions-ui.js';
 function nav(user) {
   const links = getNavItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
   const admin = getAdminItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
-  return `<nav class="navbar bg-white shadow-sm px-4"><div class="navbar-start"><a href="/" class="font-bold text-lg">Platform</a><div class="hidden md:flex gap-1 ml-6">${links}${admin}</div></div><div class="navbar-end"></div></nav>`;
+  return `<nav class="navbar bg-white shadow-sm px-4" role="navigation" aria-label="Main navigation"><div class="navbar-start"><a href="/" class="font-bold text-lg">Platform</a><div class="hidden md:flex gap-1 ml-6">${links}${admin}</div></div><div class="navbar-end"></div></nav>`;
 }
 
 function bc(items) {
-  return `<nav class="breadcrumb">${items.map((item, i) => i === items.length - 1 ? `<span>${item.label}</span>` : `<a href="${item.href}">${item.label}</a><span class="breadcrumb-separator">/</span>`).join('')}</nav>`;
+  return `<nav class="breadcrumb" aria-label="Breadcrumb">${items.map((item, i) => i === items.length - 1 ? `<span>${item.label}</span>` : `<a href="${item.href}">${item.label}</a><span class="breadcrumb-separator">/</span>`).join('')}</nav>`;
 }
 
 function page(user, title, crumbs, content, scripts = []) {
@@ -54,7 +54,7 @@ function tenderFlagBadge(flag) {
 function tenderRow(tender) {
   const days = daysRemaining(tender.deadline_date);
   const flag = tender.flag || tender.status || 'open';
-  return `<tr class="hover cursor-pointer" onclick="window.location='/review/${tender.review_id}'" data-flag="${flag}" data-overdue="${days !== null && days < 0 ? '1' : '0'}"><td class="font-medium">${tender.review_name || tender.name || 'Untitled'}</td><td>${tenderFlagBadge(flag)}</td><td>${fmtDate(tender.deadline_date)}</td><td>${deadlineBadge(days)}</td><td class="text-sm">${tender.contact_person || '-'}</td><td class="text-sm">${tender.price ? '$' + Number(tender.price).toLocaleString() : '-'}</td><td class="text-sm">${fmtDate(tender.announcement_date)}</td></tr>`;
+  return `<tr class="hover cursor-pointer" tabindex="0" role="link" onclick="window.location='/review/${tender.review_id}'" onkeydown="if(event.key==='Enter'){window.location='/review/${tender.review_id}'}" data-flag="${flag}" data-overdue="${days !== null && days < 0 ? '1' : '0'}"><td class="font-medium">${tender.review_name || tender.name || 'Untitled'}</td><td>${tenderFlagBadge(flag)}</td><td>${fmtDate(tender.deadline_date)}</td><td>${deadlineBadge(days)}</td><td class="text-sm">${tender.contact_person || '-'}</td><td class="text-sm">${tender.price ? '$' + Number(tender.price).toLocaleString() : '-'}</td><td class="text-sm">${fmtDate(tender.announcement_date)}</td></tr>`;
 }
 
 export function renderTenderDashboard(user, tenders, reviews = []) {

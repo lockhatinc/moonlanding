@@ -92,5 +92,5 @@ export function createSkeleton(type = 'list', count = 3) {
 }
 
 export function perfBudget(key, maxMs) {
-  return `performance.mark('${key}-start');requestIdleCallback(()=>{performance.mark('${key}-end');const m=performance.measure('${key}','${key}-start','${key}-end');if(m.duration>${maxMs})console.warn('[PERF] ${key} exceeded budget: '+m.duration.toFixed(2)+'ms > ${maxMs}ms')});`
+  return `performance.mark('${key}-start');(window.requestIdleCallback||function(cb){setTimeout(cb,1)})(()=>{performance.mark('${key}-end');const m=performance.measure('${key}','${key}-start','${key}-end');if(m.duration>${maxMs})console.warn('[PERF] ${key} exceeded budget: '+m.duration.toFixed(2)+'ms > ${maxMs}ms')});`
 }

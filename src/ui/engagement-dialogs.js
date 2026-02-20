@@ -1,7 +1,7 @@
 import { statusLabel } from '@/ui/renderer.js';
 
 export function engagementFileSearchDialog(engagementId) {
-  return `<div id="file-search-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="file-search-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel" style="max-width:640px"><div class="dialog-header"><span class="dialog-title">Search Engagement Files</span><button class="dialog-close" onclick="document.getElementById('file-search-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body"><div class="modal-form-group"><input type="text" id="efs-query" class="input input-bordered w-full" placeholder="Search files..." oninput="efsSearch()"/></div><div id="efs-results" class="flex flex-col gap-2" style="max-height:400px;overflow:auto"></div></div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('file-search-dialog').style.display='none'">Close</button></div>
@@ -13,7 +13,7 @@ export function engagementFileSearchDialog(engagementId) {
 }
 
 export function postRfiJournalDialog(engagementId) {
-  return `<div id="post-rfi-journal" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="post-rfi-journal" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel" style="max-width:640px"><div class="dialog-header"><span class="dialog-title">Post-RFI Journal Entry</span><button class="dialog-close" onclick="document.getElementById('post-rfi-journal').style.display='none'">&times;</button></div>
       <div class="dialog-body">
         <div class="modal-form-group"><label>Entry Type</label><select id="prj-type" class="select select-bordered w-full"><option value="note">Note</option><option value="finding">Finding</option><option value="follow_up">Follow Up</option><option value="resolution">Resolution</option></select></div>
@@ -37,7 +37,7 @@ export function postRfiFileUpload(engagementId) {
 }
 
 export function importReviewQueriesDialog(engagementId) {
-  return `<div id="import-queries-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="import-queries-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title">Import Review Queries</span><button class="dialog-close" onclick="document.getElementById('import-queries-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
         <div class="modal-form-group"><label>Source</label><select id="irq-source" class="select select-bordered w-full"><option value="csv">CSV File</option><option value="review">From Another Review</option><option value="template">From Template</option></select></div>
@@ -54,7 +54,7 @@ export function importReviewQueriesDialog(engagementId) {
 }
 
 export function engagementNotificationSettings(engagementId) {
-  return `<div id="eng-notif-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="eng-notif-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title">Notification Settings</span><button class="dialog-close" onclick="document.getElementById('eng-notif-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
         <div class="flex flex-col gap-3">
@@ -75,7 +75,7 @@ export function engagementNotificationSettings(engagementId) {
 }
 
 export function notificationTriggerDialog() {
-  return `<div id="notif-trigger-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="notif-trigger-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title">Create Notification Trigger</span><button class="dialog-close" onclick="document.getElementById('notif-trigger-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
         <div class="modal-form-group"><label>Event</label><select id="ntr-event" class="select select-bordered w-full"><option value="rfi_overdue">RFI Overdue</option><option value="deadline_approaching">Deadline Approaching</option><option value="stage_change">Stage Change</option><option value="assignment">New Assignment</option><option value="response_received">Response Received</option></select></div>

@@ -37,7 +37,7 @@ export function sidebarReviewDetails(review) {
 }
 
 export function archiveReviewDialog() {
-  return `<div id="archive-review-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="archive-review-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Archive Review</span><button class="dialog-close" onclick="document.getElementById('archive-review-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -73,7 +73,7 @@ export function reviewPrivateToggle(reviewId, isPrivate) {
 }
 
 export function markAllHighlightsResolved(reviewId, unresolvedCount = 0) {
-  return `<div id="bulk-resolve-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="bulk-resolve-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel" style="max-width:380px">
       <div class="dialog-header"><span class="dialog-title">Resolve All Highlights</span><button class="dialog-close" onclick="document.getElementById('bulk-resolve-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">

@@ -1221,7 +1221,7 @@ let initPromise = null;
 
 export async function getConfigEngine() {
   const g = getGlobalScope();
-  if (g.__configEngine__) return g.__configEngine__;
+  if (g.__configEngine__ && g.__configEngine__.masterConfig) return g.__configEngine__;
 
   if (!initPromise) {
     initPromise = (async () => {
@@ -1260,7 +1260,8 @@ export function resetConfigEngine() {
 
 export function getConfigEngineSync() {
   const g = getGlobalScope();
-  if (!g.__configEngine__) {
+  const needsInit = !g.__configEngine__ || !g.__configEngine__.masterConfig;
+  if (needsInit) {
     try {
       const projectRoot = path.join(__dirname, '../..');
       const configPath = path.join(projectRoot, 'src/config/master-config.yml');

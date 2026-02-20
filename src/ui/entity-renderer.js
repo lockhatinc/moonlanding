@@ -19,7 +19,7 @@ export function renderEntityList(entityName, items, spec, user, options = {}) {
     const cells = listFields.map(([k]) => `<td>${fmtVal(item[k], k, item)}</td>`).join('')
     const editBtn = userCanEdit ? `<a href="/${entityName}/${item.id}/edit" class="btn btn-xs btn-outline">Edit</a>` : `<span class="btn btn-xs btn-outline btn-disabled tooltip" data-tip="No permission">Edit</span>`
     const delBtn = userCanDelete ? `<button onclick="event.stopPropagation();confirmDelete('${item.id}')" class="btn btn-xs btn-error btn-outline">Delete</button>` : `<span class="btn btn-xs btn-error btn-outline btn-disabled tooltip" data-tip="No permission">Delete</span>`
-    return `<tr class="hover cursor-pointer" data-searchable onclick="window.location='/${entityName}/${item.id}'">${cells}<td class="flex gap-1"><a href="/${entityName}/${item.id}" class="btn btn-xs btn-ghost">View</a>${editBtn}${delBtn}</td></tr>`
+    return `<tr class="hover cursor-pointer" data-searchable tabindex="0" role="link" onclick="window.location='/${entityName}/${item.id}'" onkeydown="if(event.key==='Enter'){window.location='/${entityName}/${item.id}'}">${cells}<td class="flex gap-1"><a href="/${entityName}/${item.id}" class="btn btn-xs btn-ghost">View</a>${editBtn}${delBtn}</td></tr>`
   }
 
   let tableContent
@@ -32,7 +32,7 @@ export function renderEntityList(entityName, items, spec, user, options = {}) {
       const groupId = `group-${gkey.replace(/\s+/g, '-').toLowerCase()}`
       const togglerId = `toggle-${gkey.replace(/\s+/g, '-').toLowerCase()}`
       const itemRows = groupItems.map(buildRow).join('')
-      return `<tbody class="group-section" data-group="${gkey}"><tr class="group-header hover cursor-pointer" onclick="document.getElementById('${togglerId}').checked=!document.getElementById('${togglerId}').checked"><td colspan="100" style="padding:12px"><div class="flex items-center gap-2"><input type="checkbox" id="${togglerId}" class="group-toggle" style="cursor:pointer" checked/><span class="font-semibold text-base">${gkey}</span><span class="badge badge-sm">${groupItems.length}</span></div></td></tr><tr class="group-content" id="${groupId}" style="display:contents"><td colspan="100"><table class="table table-sm w-full" style="background:transparent"><tbody>${itemRows}</tbody></table></td></tr></tbody>`
+      return `<tbody class="group-section" data-group="${gkey}"><tr class="group-header hover cursor-pointer" tabindex="0" onclick="document.getElementById('${togglerId}').checked=!document.getElementById('${togglerId}').checked"><td colspan="100" style="padding:12px"><div class="flex items-center gap-2"><input type="checkbox" id="${togglerId}" class="group-toggle" style="cursor:pointer" checked/><span class="font-semibold text-base">${gkey}</span><span class="badge badge-sm">${groupItems.length}</span></div></td></tr><tr class="group-content" id="${groupId}" style="display:contents"><td colspan="100"><table class="table table-sm w-full" style="background:transparent"><tbody>${itemRows}</tbody></table></td></tr></tbody>`
     }).join('')
     tableContent = `<div class="card bg-white shadow" style="overflow-x:auto"><table class="table w-full"><thead><tr>${headers}</tr></thead>${groupRows}</table></div>`
   } else {

@@ -7,7 +7,7 @@ export function colorPickerDialog(id = 'cpd', selected = '#B0B0B0', onSelect = '
   const swatches = DIALOG_COLORS.map(c =>
     `<div class="cpd-swatch${c === selected ? ' cpd-selected' : ''}" style="background:${c}" data-color="${c}" onclick="cpdSelect('${id}','${c}',${onSelect ? 'true' : 'false'})"></div>`
   ).join('')
-  return `<div id="${id}-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="${id}-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel" style="max-width:360px">
       <div class="dialog-header"><span class="dialog-title">Choose Color</span><button class="dialog-close" onclick="document.getElementById('${id}-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body"><div class="color-picker-grid">${swatches}</div>
@@ -28,7 +28,7 @@ export function dateChoiceDialog(id = 'dcd') {
     { label: '+3 Months', days: 90 }, { label: 'End of Month', days: 'eom' }, { label: 'End of Quarter', days: 'eoq' },
   ]
   const presetBtns = presets.map(p => `<button class="date-preset-btn" onclick="dcdPreset('${id}',${typeof p.days === 'number' ? p.days : "'" + p.days + "'"})">${p.label}</button>`).join('')
-  return `<div id="${id}-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="${id}-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel" style="max-width:380px">
       <div class="dialog-header"><span class="dialog-title">Choose Date</span><button class="dialog-close" onclick="document.getElementById('${id}-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -45,7 +45,7 @@ export function dateChoiceDialog(id = 'dcd') {
 
 export function stageTransitionDialog(stages = null) {
   const stageKeys = stages || Object.keys(STAGE_COLORS)
-  return `<div id="stage-trans-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="stage-trans-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Transition Stage</span><button class="dialog-close" onclick="document.getElementById('stage-trans-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -63,7 +63,7 @@ export function stageTransitionDialog(stages = null) {
 }
 
 export function teamAssignmentDialog(id = 'tad') {
-  return `<div id="${id}-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="${id}-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Assign Team Members</span><button class="dialog-close" onclick="document.getElementById('${id}-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">

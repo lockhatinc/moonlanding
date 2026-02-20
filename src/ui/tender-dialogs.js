@@ -1,7 +1,7 @@
 import { statusLabel } from '@/ui/renderer.js';
 
 export function tenderDetailsDialog(tenderId) {
-  return `<div id="tender-detail-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="tender-detail-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel" style="max-width:640px">
       <div class="dialog-header"><span class="dialog-title">Tender Details</span><button class="dialog-close" onclick="document.getElementById('tender-detail-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body" id="tdd-body"><div class="text-gray-500 text-center py-4">Loading...</div></div>

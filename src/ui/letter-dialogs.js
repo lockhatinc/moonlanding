@@ -1,5 +1,5 @@
 export function engagementLetterDialog(engagementId) {
-  return `<div id="eng-letter-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="eng-letter-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel" style="max-width:640px">
       <div class="dialog-header"><span class="dialog-title">Engagement Letter</span><button class="dialog-close" onclick="document.getElementById('eng-letter-dialog').style.display='none'">&times;</button></div>
       <div class="dialog-body">
@@ -20,7 +20,7 @@ export function engagementLetterDialog(engagementId) {
 }
 
 export function engagementLetterTemplateUpload() {
-  return `<div id="letter-tpl-upload" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="letter-tpl-upload" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
     <div class="dialog-panel">
       <div class="dialog-header"><span class="dialog-title">Upload Letter Template</span><button class="dialog-close" onclick="document.getElementById('letter-tpl-upload').style.display='none'">&times;</button></div>
       <div class="dialog-body">

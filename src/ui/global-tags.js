@@ -64,7 +64,7 @@ function renderTagsList() {
 function showDialog(mode = 'create', tagId = null) {
   const tag = mode === 'edit' ? tagsStore[tagId] : null;
   const html = `
-    <div class="dialog-overlay" id="tag-dialog-overlay" onclick="gtsCloseDialog()">
+    <div class="dialog-overlay" id="tag-dialog-overlay" onclick="gtsCloseDialog()" role="dialog" aria-hidden="true">
       <div class="dialog-content" onclick="event.stopPropagation()">
         <div class="dialog-header"><h2>${mode === 'create' ? 'Create New Tag' : 'Edit Tag'}</h2><button class="btn btn-sm btn-ghost" onclick="gtsCloseDialog()">×</button></div>
         <div class="dialog-body">
