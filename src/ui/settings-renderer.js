@@ -9,24 +9,24 @@ function nav(user) {
   const adminLinks = getAdminItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
   return `<nav class="navbar bg-white shadow-sm px-4" role="navigation" aria-label="Main navigation">
   <div class="navbar-start">
-    <a href="/" class="font-bold text-lg">Platform</a>
+    <a href="/" class="font-bold text-lg" aria-label="Home">Platform</a>
     <div class="hidden md:flex gap-1 ml-6">${navLinks}${adminLinks}</div>
   </div>
   <div class="navbar-end">
     <div id="user-dropdown" class="dropdown dropdown-end">
-      <button type="button" onclick="toggleUserMenu(event)" class="btn btn-ghost btn-circle avatar placeholder" style="cursor:pointer">
+      <button type="button" onclick="toggleUserMenu(event)" class="btn btn-ghost btn-circle avatar placeholder" aria-label="User menu for ${user?.name || 'user'}" aria-haspopup="menu" aria-expanded="false" style="cursor:pointer">
         <div class="bg-primary text-white rounded-full w-10 flex items-center justify-content-center" style="display:flex;align-items:center;justify-content:center;height:2.5rem">
-          <span>${user?.name?.charAt(0) || 'U'}</span>
+          <span aria-hidden="true">${user?.name?.charAt(0) || 'U'}</span>
         </div>
       </button>
-      <ul class="dropdown-menu mt-2 w-52">
-        <li class="dropdown-header">${user?.email || ''}<br/><small class="text-gray-500">${user?.role || ''}</small></li>
-        <li><a href="/api/auth/logout">Logout</a></li>
+      <ul class="dropdown-menu mt-2 w-52" role="menu">
+        <li class="dropdown-header" role="presentation">${user?.email || ''}<br/><small class="text-gray-500">${user?.role || ''}</small></li>
+        <li role="menuitem"><a href="/api/auth/logout">Logout</a></li>
       </ul>
     </div>
   </div>
 </nav>
-<script>function toggleUserMenu(e){e.stopPropagation();document.getElementById('user-dropdown').classList.toggle('open')}document.addEventListener('click',function(e){const d=document.getElementById('user-dropdown');if(d&&!d.contains(e.target))d.classList.remove('open')})</script>`;
+<script>function toggleUserMenu(e){e.stopPropagation();var d=document.getElementById('user-dropdown');var isOpen=d.classList.toggle('open');e.currentTarget.setAttribute('aria-expanded',isOpen)}document.addEventListener('click',function(e){var d=document.getElementById('user-dropdown');if(d&&!d.contains(e.target)){d.classList.remove('open');var btn=d.querySelector('button');if(btn)btn.setAttribute('aria-expanded','false')}})</script>`;
 }
 
 function require_perms() {
@@ -45,7 +45,7 @@ function breadcrumb(items) {
 }
 
 function page(user, title, bc, content, scripts = []) {
-  const body = `<div class="min-h-screen">${nav(user)}<div class="p-6">${breadcrumb(bc)}${content}</div></div>`;
+  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" role="main"><div class="p-6">${breadcrumb(bc)}${content}</div></main></div>`;
   return generateHtml(title, body, scripts);
 }
 
@@ -134,12 +134,12 @@ export function renderSettingsRfiSections(user, sections = []) {
       <button onclick="deleteSection('${s.id}')" class="btn btn-xs btn-error btn-outline">Delete</button>
     </td></tr>`).join('');
   const empty = `<tr><td colspan="4" class="text-center py-8 text-gray-500">No RFI sections. Add one below.</td></tr>`;
-  const palette = RFI_PALETTE.map(c => `<div class="color-palette-item" data-color="${c}" style="background:${c}" onclick="selectColor('${c}')"></div>`).join('');
+  const palette = RFI_PALETTE.map(c => `<div class="color-palette-item" data-color="${c}" style="background:${c}" role="option" tabindex="0" aria-label="Color ${c}" onclick="selectColor('${c}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectColor('${c}')}"></div>`).join('');
   const content = `${settingsBack()}<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">RFI Sections</h1>
     <button onclick="toggleAddForm()" class="btn btn-primary btn-sm" id="add-btn">Add Section</button></div>
     <div id="section-form" class="inline-form" style="display:none;margin-bottom:1rem">
       <div class="inline-form-row">
-        <div class="inline-form-field"><label>Name</label><input type="text" id="section-name" class="input input-bordered input-sm" style="width:200px" placeholder="Section name"/></div>
+        <div class="inline-form-field"><label for="section-name">Name</label><input type="text"  id="section-name" class="input input-bordered input-sm" style="width:200px" placeholder="Section name"/></div>
         <div class="inline-form-field"><label>Color</label><div class="color-palette" id="color-palette">${palette}</div><input type="hidden" id="section-color" value="#B0B0B0"/></div>
         <div class="inline-form-field"><label>&nbsp;</label><div class="flex gap-2"><button onclick="saveSection()" class="btn btn-primary btn-sm">Save</button><button onclick="cancelForm()" class="btn btn-ghost btn-sm">Cancel</button></div></div>
       </div>
@@ -187,7 +187,7 @@ export function renderSettingsNotifications(user, config = {}) {
   ];
   const toggleHtml = toggles.map(tg => `<div class="toggle-wrap">
     <div><div class="toggle-label">${tg.label}</div><div class="toggle-desc">${tg.desc}</div></div>
-    <label class="toggle-switch"><input type="checkbox" name="${tg.id}" ${tg.checked ? 'checked' : ''}/><span class="toggle-slider"></span></label>
+    <label class="toggle-switch"><input type="checkbox" name="${tg.id}" ${tg.checked ? 'checked' : ''} aria-label="${tg.label}"/><span class="toggle-slider"></span></label>
   </div>`).join('');
   const content = `${settingsBack()}<h1 class="text-2xl font-bold mb-6">Notifications</h1>
     <form id="notif-form">
@@ -231,7 +231,7 @@ export function renderSettingsIntegrations(user, integrations = {}) {
     </div>
     <div id="config-${integ.id}" class="inline-form" style="display:none">
       <div class="inline-form-row">
-        <div class="inline-form-field" style="flex:1"><label>API Key / Credentials</label><input type="password" id="key-${integ.id}" class="input input-bordered input-sm w-full" placeholder="Enter API key or credentials path"/></div>
+        <div class="inline-form-field" style="flex:1"><label for="key-${integ.id}">API Key / Credentials</label><input type="password"  id="key-${integ.id}" class="input input-bordered input-sm w-full" placeholder="Enter API key or credentials path"/></div>
         <div class="inline-form-field"><label>&nbsp;</label><div class="flex gap-2">
           <button onclick="saveIntegration('${integ.id}')" class="btn btn-primary btn-sm">Save</button>
           <button onclick="testIntegration('${integ.id}')" class="btn btn-outline btn-sm">Test</button>
@@ -277,9 +277,9 @@ export function renderSettingsRecreation(user, logs = [], users = []) {
   const empty = `<tr><td colspan="6" class="text-center py-8 text-gray-500">No recreation logs found</td></tr>`;
   const content = `${settingsBack()}<h1 class="text-2xl font-bold mb-6">Recreation Logs</h1>
     <div class="filter-bar">
-      <div class="filter-field"><label>Start Date</label><input type="date" id="filter-start" class="input input-bordered input-sm"/></div>
-      <div class="filter-field"><label>End Date</label><input type="date" id="filter-end" class="input input-bordered input-sm"/></div>
-      <div class="filter-field"><label>User</label><select id="filter-user" class="select select-bordered select-sm"><option value="">All Users</option>${userOpts}</select></div>
+      <div class="filter-field"><label for="filter-start">Start Date</label><input type="date"  id="filter-start" class="input input-bordered input-sm"/></div>
+      <div class="filter-field"><label for="filter-end">End Date</label><input type="date"  id="filter-end" class="input input-bordered input-sm"/></div>
+      <div class="filter-field"><label for="filter-user">User</label><select id="filter-user" class="select select-bordered select-sm"><option value="">All Users</option>${userOpts}</select></div>
       <div class="filter-field"><label>&nbsp;</label><button onclick="applyFilters()" class="btn btn-primary btn-sm">Filter</button></div>
     </div>
     <div class="card bg-white shadow" style="overflow-x:auto"><table class="table table-zebra w-full"><thead><tr><th>Date</th><th>User</th><th>Action</th><th>Entity</th><th>Entity ID</th><th>Details</th></tr></thead><tbody id="log-body">${rows || empty}</tbody></table></div>`;
@@ -299,7 +299,7 @@ export function renderSettingsReviewSettings(user, config = {}) {
   ];
   const toggleHtml = toggles.map(tg => `<div class="toggle-wrap">
     <div><div class="toggle-label">${tg.label}</div><div class="toggle-desc">${tg.desc}</div></div>
-    <label class="toggle-switch"><input type="checkbox" name="${tg.id}" ${tg.checked ? 'checked' : ''}/><span class="toggle-slider"></span></label>
+    <label class="toggle-switch"><input type="checkbox" name="${tg.id}" ${tg.checked ? 'checked' : ''} aria-label="${tg.label}"/><span class="toggle-slider"></span></label>
   </div>`).join('');
   const content = `${settingsBack()}<h1 class="text-2xl font-bold mb-6">Review Settings</h1>
     <form id="review-settings-form">
@@ -327,7 +327,7 @@ export function renderSettingsFileReview(user, config = {}) {
   ];
   const toggleHtml = toggles.map(tg => `<div class="toggle-wrap">
     <div><div class="toggle-label">${tg.label}</div><div class="toggle-desc">${tg.desc}</div></div>
-    <label class="toggle-switch"><input type="checkbox" name="${tg.id}" ${tg.checked ? 'checked' : ''}/><span class="toggle-slider"></span></label>
+    <label class="toggle-switch"><input type="checkbox" name="${tg.id}" ${tg.checked ? 'checked' : ''} aria-label="${tg.label}"/><span class="toggle-slider"></span></label>
   </div>`).join('');
   const content = `${settingsBack()}<h1 class="text-2xl font-bold mb-6">File Review Settings</h1>
     <form id="file-review-settings-form">
@@ -358,8 +358,8 @@ export function renderSettingsTemplateManage(user, template = {}, sections = [])
   const content = `${settingsBack()}<div class="mb-6"><h1 class="text-2xl font-bold">${template.name || 'Template'}</h1><p class="text-gray-500 text-sm">Manage template sections and configuration</p></div>
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="card bg-white shadow"><div class="card-body"><h2 class="card-title">Template Info</h2><div class="space-y-4 mt-4">
-        <div class="form-group"><label class="form-label">Name</label><input type="text" id="tpl-name" class="input input-bordered w-full" value="${template.name || ''}"/></div>
-        <div class="form-group"><label class="form-label">Type</label><select id="tpl-type" class="select select-bordered w-full"><option value="standard" ${template.type === 'standard' ? 'selected' : ''}>Standard</option><option value="checklist" ${template.type === 'checklist' ? 'selected' : ''}>Checklist</option><option value="audit" ${template.type === 'audit' ? 'selected' : ''}>Audit</option></select></div>
+        <div class="form-group"><label class="form-label" for="tpl-name">Name</label><input type="text"  id="tpl-name" class="input input-bordered w-full" value="${template.name || ''}"/></div>
+        <div class="form-group"><label class="form-label" for="tpl-type">Type</label><select id="tpl-type" class="select select-bordered w-full"><option value="standard" ${template.type === 'standard' ? 'selected' : ''}>Standard</option><option value="checklist" ${template.type === 'checklist' ? 'selected' : ''}>Checklist</option><option value="audit" ${template.type === 'audit' ? 'selected' : ''}>Audit</option></select></div>
         <div class="form-group"><label class="flex items-center gap-2"><input type="checkbox" id="tpl-active" class="checkbox" ${template.is_active ? 'checked' : ''}/><span>Active</span></label></div>
         <button onclick="saveTplInfo()" class="btn btn-primary btn-sm">Save Template Info</button>
       </div></div></div>
@@ -369,8 +369,8 @@ export function renderSettingsTemplateManage(user, template = {}, sections = [])
     </div>
     <div id="tpl-section-form" class="inline-form" style="display:none;margin-top:1rem">
       <div class="inline-form-row">
-        <div class="inline-form-field"><label>Name</label><input type="text" id="tpl-sec-name" class="input input-bordered input-sm" placeholder="Section name"/></div>
-        <div class="inline-form-field"><label>Color</label><input type="color" id="tpl-sec-color" value="#B0B0B0"/></div>
+        <div class="inline-form-field"><label for="tpl-sec-name">Name</label><input type="text"  id="tpl-sec-name" class="input input-bordered input-sm" placeholder="Section name"/></div>
+        <div class="inline-form-field"><label for="tpl-sec-color">Color</label><input type="color"  id="tpl-sec-color" value="#B0B0B0"/></div>
         <div class="inline-form-field"><label>&nbsp;</label><div class="flex gap-2"><button onclick="saveTplSection()" class="btn btn-primary btn-sm">Save</button><button onclick="cancelTplSection()" class="btn btn-ghost btn-sm">Cancel</button></div></div>
       </div>
       <input type="hidden" id="tpl-sec-id" value=""/>

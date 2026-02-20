@@ -1,7 +1,6 @@
-class DebugExposure {
+export class DebugExposure {
   constructor() {
     this.exposed = new Map();
-
     if (typeof global !== 'undefined') {
       global.__debug = this;
     }
@@ -13,11 +12,9 @@ class DebugExposure {
       description,
       exposedAt: new Date().toISOString()
     });
-
     if (typeof global !== 'undefined' && !global[key]) {
       global[key] = value;
     }
-
     return value;
   }
 
@@ -42,7 +39,6 @@ class DebugExposure {
   inspect(key) {
     const entry = this.exposed.get(key);
     if (!entry) return null;
-
     const value = entry.value;
     const info = {
       key,
@@ -51,19 +47,11 @@ class DebugExposure {
       type: typeof value,
       constructor: value?.constructor?.name
     };
-
     if (typeof value === 'object' && value !== null) {
-      if (typeof value.getStats === 'function') {
-        info.stats = value.getStats();
-      }
-
-      if (typeof value.getState === 'function') {
-        info.state = value.getState();
-      }
-
+      if (typeof value.getStats === 'function') info.stats = value.getStats();
+      if (typeof value.getState === 'function') info.state = value.getState();
       info.keys = Object.keys(value);
     }
-
     return info;
   }
 
@@ -81,6 +69,5 @@ class DebugExposure {
   }
 }
 
-const globalDebug = new DebugExposure();
-
-module.exports = { DebugExposure, globalDebug, expose: globalDebug.expose.bind(globalDebug) };
+export const globalDebug = new DebugExposure();
+export const expose = globalDebug.expose.bind(globalDebug);

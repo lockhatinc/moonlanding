@@ -146,3 +146,38 @@ export const REPEAT_INTERVALS = getRepeatIntervalsFromConfig();
 
 export const RECORD_STATUS = 'active';
 export const EMAIL_STATUS = 'pending';
+
+export {
+  ENGAGEMENT_STATUS,
+  ENGAGEMENT_STAGE,
+  STAGE_TRANSITIONS,
+  RFI_STATUS,
+  RFI_CLIENT_STATUS,
+  RFI_AUDITOR_STATUS,
+  REVIEW_STATUS,
+  HIGHLIGHT_STATUS,
+} from '@/lib/status-helpers';
+
+export const COLORS = {
+  primary: '#228be6',
+  success: '#40c057',
+  warning: '#fab005',
+  danger: '#fa5252',
+  info: '#15aabf',
+  gray: '#868e96',
+};
+
+export const BADGE_COLORS_MANTINE = {
+  active: 'green',
+  pending: 'yellow',
+  completed: 'blue',
+  archived: 'gray',
+  open: 'cyan',
+  closed: 'red',
+  in_progress: 'orange',
+  draft: 'gray',
+  sent: 'blue',
+  resolved: 'green',
+  unresolved: 'red',
+  partially_resolved: 'yellow',
+};

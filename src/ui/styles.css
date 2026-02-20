@@ -490,3 +490,38 @@ details[open] .accordion-summary::after { transform: rotate(180deg); }
 
 /* Flex column utility */
 .flex-col { flex-direction: column; }
+
+/* Accessibility: Focus indicators */
+.btn:focus-visible, .select:focus-visible, .input:focus-visible, .textarea:focus-visible,
+.file-input:focus-visible, .checkbox:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+.dialog-close:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; border-radius: 4px; }
+.ctx-item:focus-visible { outline: 2px solid #3b82f6; outline-offset: -2px; }
+.cpd-swatch:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+.color-palette-item:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+.rvw-toggle-track:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; border-radius: 9999px; }
+.toggle-switch input:focus-visible + .toggle-slider { outline: 2px solid #3b82f6; outline-offset: 2px; }
+.tad-row:focus-visible { outline: 2px solid #3b82f6; outline-offset: -2px; }
+.review-tab:focus-visible { outline: 2px solid #3b82f6; outline-offset: -2px; }
+.sidebar-link:focus-visible { outline: 2px solid #3b82f6; outline-offset: -2px; }
+.accordion-summary:focus-visible { outline: 2px solid #3b82f6; outline-offset: -2px; }
+
+/* Accessibility: High contrast mode */
+@media (forced-colors: active) {
+  .btn-primary { border: 2px solid ButtonText; }
+  .badge-stage, .badge-status, .status-label { border: 1px solid ButtonText; }
+  .linear-progress-bar { forced-color-adjust: none; }
+  .toggle-slider { border: 1px solid ButtonText; }
+  .dialog-overlay, .confirm-overlay, .modal-overlay { background: rgba(0,0,0,0.75); }
+}
+
+/* Accessibility: Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  .toast { animation: none; }
+  .splash-spinner-ring { animation: none; }
+}
+
+/* Accessibility: Error feedback for forms */
+[aria-invalid="true"], .input-error { border-color: #ef4444 !important; box-shadow: 0 0 0 1px #ef4444; }
+.error-message { color: #dc2626; font-size: 0.75rem; margin-top: 0.25rem; }
+.error-message::before { content: ''; display: inline; }

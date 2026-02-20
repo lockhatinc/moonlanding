@@ -37,12 +37,12 @@ export function sidebarReviewDetails(review) {
 }
 
 export function archiveReviewDialog() {
-  return `<div id="archive-review-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="archive-review-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="archive-review-dialog-title" aria-hidden="true">
     <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title">Archive Review</span><button class="dialog-close" onclick="document.getElementById('archive-review-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="archive-review-dialog-title">Archive Review</span><button class="dialog-close" onclick="document.getElementById('archive-review-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div class="archive-ctx">This action will archive the review. Archived reviews are hidden from active lists but can be restored.</div>
-        <div class="modal-form-group"><label class="form-label">Type ARCHIVE to confirm</label><input type="text" id="ard-confirm" class="archive-type-input" placeholder="Type ARCHIVE"/></div>
+        <div class="modal-form-group"><label class="form-label" for="ard-confirm">Type ARCHIVE to confirm</label><input type="text"  id="ard-confirm" class="archive-type-input" placeholder="Type ARCHIVE"/></div>
       </div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('archive-review-dialog').style.display='none'">Cancel</button><button class="btn btn-error btn-sm" id="ard-btn" onclick="ardConfirm()">Archive</button></div>
     </div></div>
@@ -55,17 +55,17 @@ export function archiveReviewDialog() {
 export function reviewOpenCloseToggle(reviewId, isOpen) {
   const on = isOpen ? 'rvw-on rvw-green' : ''
   return `<div class="rvw-toggle">
-    <div class="rvw-toggle-track ${on}" id="rvw-oc-track" onclick="rvwToggleOC('${reviewId}')"><div class="rvw-toggle-knob"></div></div>
+    <div class="rvw-toggle-track ${on}" id="rvw-oc-track" role="switch" tabindex="0" aria-checked="${isOpen}" aria-label="Review open/closed status" onclick="rvwToggleOC('${reviewId}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();rvwToggleOC('${reviewId}')}"><div class="rvw-toggle-knob"></div></div>
     <span class="rvw-toggle-label">${isOpen ? 'Open' : 'Closed'}</span>
   </div>
   <script>${TOAST_SCRIPT}
-  window.rvwToggleOC=async function(id){var t=document.getElementById('rvw-oc-track');var isOn=t.classList.contains('rvw-on');var newStatus=isOn?'closed':'open';try{var res=await fetch('/api/review/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:newStatus})});if(res.ok){t.classList.toggle('rvw-on');t.classList.toggle('rvw-green');t.nextElementSibling.textContent=isOn?'Closed':'Open';showToast('Review '+(isOn?'closed':'opened'),'success')}else{showToast('Failed','error')}}catch(e){showToast('Error','error')}};</script>`
+  window.rvwToggleOC=async function(id){var t=document.getElementById('rvw-oc-track');var isOn=t.classList.contains('rvw-on');var newStatus=isOn?'closed':'open';try{var res=await fetch('/api/review/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:newStatus})});if(res.ok){t.classList.toggle('rvw-on');t.classList.toggle('rvw-green');t.setAttribute('aria-checked',!isOn);t.nextElementSibling.textContent=isOn?'Closed':'Open';showToast('Review '+(isOn?'closed':'opened'),'success')}else{showToast('Failed','error')}}catch(e){showToast('Error','error')}};</script>`
 }
 
 export function reviewPrivateToggle(reviewId, isPrivate) {
   const on = isPrivate ? 'rvw-on rvw-purple' : ''
   return `<div class="rvw-toggle">
-    <div class="rvw-toggle-track ${on}" id="rvw-priv-track" onclick="rvwTogglePriv('${reviewId}')"><div class="rvw-toggle-knob"></div></div>
+    <div class="rvw-toggle-track ${on}" id="rvw-priv-track" role="switch" tabindex="0" aria-checked="${isPrivate}" aria-label="Review private/public toggle" onclick="rvwTogglePriv('${reviewId}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();rvwTogglePriv('${reviewId}')}"><div class="rvw-toggle-knob"></div></div>
     <span class="rvw-toggle-label"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:middle;margin-right:4px"><path d="${isPrivate ? 'M8 1a4 4 0 014 4v2h1a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1h1V5a4 4 0 014-4zm2 6V5a2 2 0 10-4 0v2h4z' : 'M12 7h1a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1h7V5a2 2 0 10-4 0v1H4V5a4 4 0 018 0v2z'}"/></svg>${isPrivate ? 'Private' : 'Public'}</span>
   </div>
   <script>${TOAST_SCRIPT}
@@ -73,9 +73,9 @@ export function reviewPrivateToggle(reviewId, isPrivate) {
 }
 
 export function markAllHighlightsResolved(reviewId, unresolvedCount = 0) {
-  return `<div id="bulk-resolve-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="bulk-resolve-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="bulk-resolve-dialog-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:380px">
-      <div class="dialog-header"><span class="dialog-title">Resolve All Highlights</span><button class="dialog-close" onclick="document.getElementById('bulk-resolve-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="bulk-resolve-dialog-title">Resolve All Highlights</span><button class="dialog-close" onclick="document.getElementById('bulk-resolve-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div class="bulk-resolve-count" id="brc-count">${unresolvedCount}</div>
         <div class="bulk-resolve-label">unresolved highlights will be marked as resolved</div>

@@ -50,7 +50,7 @@ function initializeMonitoring(config = {}) {
   info('Monitoring system initialized')
 }
 
-function shutdownMonitoring() {
+async function shutdownMonitoring() {
   if (!initialized) return
 
   if (alertCheckInterval) {

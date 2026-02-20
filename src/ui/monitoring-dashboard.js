@@ -24,6 +24,7 @@ export function renderMonitoringDashboard() {
         </style>
       </head>
       <body class="bg-base-100">
+        <main id="main-content" role="main">
         <div class="container mx-auto p-4">
           <h1 class="text-3xl font-bold mb-6">System Monitoring Dashboard</h1>
 
@@ -106,14 +107,16 @@ export function renderMonitoringDashboard() {
               <div class="card-body">
                 <h2 class="card-title">System Logs</h2>
                 <div class="mb-4 flex gap-2">
-                  <select id="log-level" class="select select-bordered">
+                  <label for="log-level" class="sr-only">Log level filter</label>
+                  <select id="log-level" class="select select-bordered" aria-label="Log level filter">
                     <option value="">All Levels</option>
                     <option value="debug">Debug</option>
                     <option value="info">Info</option>
                     <option value="warn">Warning</option>
                     <option value="error">Error</option>
                   </select>
-                  <input id="log-search" type="text" placeholder="Search logs..." class="input input-bordered flex-1">
+                  <label for="log-search" class="sr-only">Search logs</label>
+                  <input id="log-search" type="text" placeholder="Search logs..." class="input input-bordered flex-1" aria-label="Search logs">
                 </div>
                 <div id="log-list" class="overflow-auto max-h-96 font-mono text-sm"></div>
               </div>
@@ -121,6 +124,7 @@ export function renderMonitoringDashboard() {
           </div>
         </div>
 
+        </main>
         ${monitoringDashboardScript()}
       </body>
     </html>

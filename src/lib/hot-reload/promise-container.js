@@ -1,6 +1,6 @@
-const EventEmitter = require('events');
+import { EventEmitter } from 'events';
 
-class PromiseContainer extends EventEmitter {
+export class PromiseContainer extends EventEmitter {
   constructor() {
     super();
     this.activePromises = new Set();
@@ -52,7 +52,7 @@ class PromiseContainer extends EventEmitter {
   }
 }
 
-const globalContainer = new PromiseContainer();
+export const globalContainer = new PromiseContainer();
 
 globalContainer.setGlobalHandler((err, context) => {
   console.error(`[PromiseContainer] Unhandled rejection in ${context}:`, err);
@@ -63,4 +63,4 @@ process.on('unhandledRejection', (reason, promise) => {
   globalContainer.emit('processRejection', { reason, promise });
 });
 
-module.exports = { PromiseContainer, globalContainer, contain: globalContainer.wrap.bind(globalContainer) };
+export const contain = globalContainer.wrap.bind(globalContainer);

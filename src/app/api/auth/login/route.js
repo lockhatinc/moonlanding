@@ -1,13 +1,39 @@
 import { getBy, verifyPassword, migrate } from '@/engine';
 import { initializeSystemConfig } from '@/config/system-config-loader';
-import { ok } from '@/lib/response-formatter';
 import { withErrorHandler } from '@/lib/with-error-handler';
 import { lucia } from '@/engine.server';
 
 let initialized = false;
 
+const loginAttempts = new Map();
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 15 * 60 * 1000;
+
+function checkRateLimit(ip) {
+  const record = loginAttempts.get(ip);
+  if (!record) return { allowed: true };
+  if (Date.now() - record.firstAttempt > LOCKOUT_MS) {
+    loginAttempts.delete(ip);
+    return { allowed: true };
+  }
+  if (record.count >= MAX_ATTEMPTS) {
+    const retryAfter = Math.ceil((record.firstAttempt + LOCKOUT_MS - Date.now()) / 1000);
+    return { allowed: false, retryAfter };
+  }
+  return { allowed: true };
+}
+
+function recordFailedAttempt(ip) {
+  const record = loginAttempts.get(ip) || { count: 0, firstAttempt: Date.now() };
+  record.count++;
+  loginAttempts.set(ip, record);
+}
+
+function clearAttempts(ip) {
+  loginAttempts.delete(ip);
+}
+
 export const POST = withErrorHandler(async (request) => {
-  // Initialize system
   if (!initialized) {
     initialized = true;
     try {
@@ -19,17 +45,23 @@ export const POST = withErrorHandler(async (request) => {
     }
   }
 
-  try {
-    // Parse request body - request.body is already parsed by server.js
-    let email, password;
+  const ip = request.headers?.get?.('x-forwarded-for') || request.headers?.['x-forwarded-for'] || 'unknown';
+  const rateCheck = checkRateLimit(ip);
+  if (!rateCheck.allowed) {
+    return new Response(JSON.stringify({ error: 'Too many login attempts. Try again later.' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'Retry-After': String(rateCheck.retryAfter) }
+    });
+  }
 
+  try {
+    let email, password;
     const body = request.body;
 
     if (typeof body === 'object' && body !== null) {
       email = body.email;
       password = body.password;
     } else if (typeof body === 'string') {
-      // Handle URL-encoded form data
       const params = new URLSearchParams(body);
       email = params.get('email');
       password = params.get('password');
@@ -41,31 +73,31 @@ export const POST = withErrorHandler(async (request) => {
       return new Response(JSON.stringify({ error: 'Email and password required' }), { status: 400 });
     }
 
-    // Get user
     const user = getBy('user', 'email', email);
     if (!user) {
+      recordFailedAttempt(ip);
       return new Response(JSON.stringify({ error: 'Invalid email or password' }), { status: 401 });
     }
 
-    // Verify password
-    if (user.password_hash) {
-      const passwordValid = await verifyPassword(password, user.password_hash);
-      if (!passwordValid) {
-        return new Response(JSON.stringify({ error: 'Invalid email or password' }), { status: 401 });
-      }
+    if (!user.password_hash) {
+      recordFailedAttempt(ip);
+      return new Response(JSON.stringify({ error: 'Invalid email or password' }), { status: 401 });
     }
 
-    // Create session using Lucia
+    const passwordValid = await verifyPassword(password, user.password_hash);
+    if (!passwordValid) {
+      recordFailedAttempt(ip);
+      return new Response(JSON.stringify({ error: 'Invalid email or password' }), { status: 401 });
+    }
+
+    clearAttempts(ip);
+
     const session = await lucia.createSession(user.id, {});
     const sessionCookie = lucia.createSessionCookie(session.id);
-
-    // Create response with session cookie header
     const cookieHeader = `${sessionCookie.name}=${sessionCookie.value}; Path=/; HttpOnly; SameSite=Lax${sessionCookie.attributes.secure ? '; Secure' : ''}`;
 
-    console.log('[Login] Session created:', session.id);
-    console.log('[Login] Cookie header:', cookieHeader.slice(0, 50) + '...');
+    console.log('[Login] Session created for user:', user.id);
 
-    // Return response with session cookie header
     const responseBody = JSON.stringify({
       status: 'success',
       message: 'Login successful',
@@ -86,6 +118,6 @@ export const POST = withErrorHandler(async (request) => {
     });
   } catch (err) {
     console.error('[Login] Error:', err.message);
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Authentication failed' }), { status: 500 });
   }
 }, 'Auth:Login');

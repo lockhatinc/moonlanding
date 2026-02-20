@@ -1,8 +1,8 @@
-const fs = require('fs');
-const path = require('path');
-const EventEmitter = require('events');
+import fs from 'fs';
+import path from 'path';
+import { EventEmitter } from 'events';
 
-class DirectoryWatcher extends EventEmitter {
+export class DirectoryWatcher extends EventEmitter {
   constructor(options = {}) {
     super();
     this.rootDir = options.rootDir || path.join(process.cwd(), 'src');
@@ -25,7 +25,7 @@ class DirectoryWatcher extends EventEmitter {
 
   stop() {
     this.running = false;
-    for (const [dir, watcher] of this.watchers.entries()) {
+    for (const [, watcher] of this.watchers.entries()) {
       try { watcher.close(); } catch (_) {}
     }
     this.watchers.clear();
@@ -46,12 +46,10 @@ class DirectoryWatcher extends EventEmitter {
         if (!filename) return;
         this._handleChange(dir, filename, eventType);
       });
-
       watcher.on('error', (err) => {
         this.emit('watchError', { dir, error: err });
         this.watchers.delete(dir);
       });
-
       this.watchers.set(dir, watcher);
       this.stats.totalWatched++;
     } catch (err) {
@@ -73,25 +71,15 @@ class DirectoryWatcher extends EventEmitter {
   _handleChange(dir, filename, eventType) {
     const ext = path.extname(filename);
     if (!this.extensions.includes(ext)) return;
-
     this.stats.eventsReceived++;
     const fullPath = path.join(dir, filename);
-    const debounceKey = fullPath;
-
-    if (this.debounceTimers.has(debounceKey)) {
-      clearTimeout(this.debounceTimers.get(debounceKey));
+    if (this.debounceTimers.has(fullPath)) {
+      clearTimeout(this.debounceTimers.get(fullPath));
     }
-
-    this.debounceTimers.set(debounceKey, setTimeout(() => {
-      this.debounceTimers.delete(debounceKey);
+    this.debounceTimers.set(fullPath, setTimeout(() => {
+      this.debounceTimers.delete(fullPath);
       this.stats.invalidations++;
-      this.emit('change', {
-        path: fullPath,
-        dir,
-        filename,
-        eventType,
-        timestamp: Date.now()
-      });
+      this.emit('change', { path: fullPath, dir, filename, eventType, timestamp: Date.now() });
     }, this.debounceMs));
   }
 
@@ -105,6 +93,4 @@ class DirectoryWatcher extends EventEmitter {
   }
 }
 
-const globalWatcher = new DirectoryWatcher();
-
-module.exports = { DirectoryWatcher, globalWatcher };
+export const globalWatcher = new DirectoryWatcher();

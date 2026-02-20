@@ -1,9 +1,9 @@
 import { statusLabel } from '@/ui/renderer.js';
 
 export function engagementFileSearchDialog(engagementId) {
-  return `<div id="file-search-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
-    <div class="dialog-panel" style="max-width:640px"><div class="dialog-header"><span class="dialog-title">Search Engagement Files</span><button class="dialog-close" onclick="document.getElementById('file-search-dialog').style.display='none'">&times;</button></div>
-      <div class="dialog-body"><div class="modal-form-group"><input type="text" id="efs-query" class="input input-bordered w-full" placeholder="Search files..." oninput="efsSearch()"/></div><div id="efs-results" class="flex flex-col gap-2" style="max-height:400px;overflow:auto"></div></div>
+  return `<div id="file-search-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="file-search-dialog-title" aria-hidden="true">
+    <div class="dialog-panel" style="max-width:640px"><div class="dialog-header"><span class="dialog-title" id="file-search-dialog-title">Search Engagement Files</span><button class="dialog-close" onclick="document.getElementById('file-search-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
+      <div class="dialog-body"><div class="modal-form-group"><label for="efs-query" class="sr-only">Search files</label><input type="text" id="efs-query" class="input input-bordered w-full" placeholder="Search files..." aria-label="Search engagement files" oninput="efsSearch()"/></div><div id="efs-results" class="flex flex-col gap-2" style="max-height:400px;overflow:auto"></div></div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('file-search-dialog').style.display='none'">Close</button></div>
     </div></div>
   <script>
@@ -13,13 +13,13 @@ export function engagementFileSearchDialog(engagementId) {
 }
 
 export function postRfiJournalDialog(engagementId) {
-  return `<div id="post-rfi-journal" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
-    <div class="dialog-panel" style="max-width:640px"><div class="dialog-header"><span class="dialog-title">Post-RFI Journal Entry</span><button class="dialog-close" onclick="document.getElementById('post-rfi-journal').style.display='none'">&times;</button></div>
+  return `<div id="post-rfi-journal" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="post-rfi-journal-title" aria-hidden="true">
+    <div class="dialog-panel" style="max-width:640px"><div class="dialog-header"><span class="dialog-title" id="post-rfi-journal-title">Post-RFI Journal Entry</span><button class="dialog-close" onclick="document.getElementById('post-rfi-journal').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
-        <div class="modal-form-group"><label>Entry Type</label><select id="prj-type" class="select select-bordered w-full"><option value="note">Note</option><option value="finding">Finding</option><option value="follow_up">Follow Up</option><option value="resolution">Resolution</option></select></div>
-        <div class="modal-form-group"><label>Title</label><input id="prj-title" class="input input-bordered w-full" placeholder="Journal entry title"/></div>
-        <div class="modal-form-group"><label>Content</label><textarea id="prj-content" class="textarea textarea-bordered w-full" rows="5" placeholder="Describe the entry..."></textarea></div>
-        <div class="modal-form-group"><label>File Attachment</label><input type="file" id="prj-file" class="file-input file-input-bordered w-full file-input-sm"/></div>
+        <div class="modal-form-group"><label for="prj-type">Entry Type</label><select id="prj-type" class="select select-bordered w-full"><option value="note">Note</option><option value="finding">Finding</option><option value="follow_up">Follow Up</option><option value="resolution">Resolution</option></select></div>
+        <div class="modal-form-group"><label for="prj-title">Title</label><input id="prj-title" class="input input-bordered w-full" placeholder="Journal entry title"/></div>
+        <div class="modal-form-group"><label for="prj-content">Content</label><textarea id="prj-content" class="textarea textarea-bordered w-full" rows="5" placeholder="Describe the entry..."></textarea></div>
+        <div class="modal-form-group"><label for="prj-file">File Attachment</label><input type="file"  id="prj-file" class="file-input file-input-bordered w-full file-input-sm"/></div>
       </div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('post-rfi-journal').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="prjSave()">Save Entry</button></div>
     </div></div>
@@ -37,12 +37,12 @@ export function postRfiFileUpload(engagementId) {
 }
 
 export function importReviewQueriesDialog(engagementId) {
-  return `<div id="import-queries-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
-    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title">Import Review Queries</span><button class="dialog-close" onclick="document.getElementById('import-queries-dialog').style.display='none'">&times;</button></div>
+  return `<div id="import-queries-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="import-queries-dialog-title" aria-hidden="true">
+    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="import-queries-dialog-title">Import Review Queries</span><button class="dialog-close" onclick="document.getElementById('import-queries-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
-        <div class="modal-form-group"><label>Source</label><select id="irq-source" class="select select-bordered w-full"><option value="csv">CSV File</option><option value="review">From Another Review</option><option value="template">From Template</option></select></div>
-        <div id="irq-csv-upload"><div class="modal-form-group"><label>CSV File</label><input type="file" id="irq-file" class="file-input file-input-bordered w-full" accept=".csv,.xlsx"/></div></div>
-        <div id="irq-review-select" style="display:none"><div class="modal-form-group"><label>Select Review</label><select id="irq-review" class="select select-bordered w-full"></select></div></div>
+        <div class="modal-form-group"><label for="irq-source">Source</label><select id="irq-source" class="select select-bordered w-full"><option value="csv">CSV File</option><option value="review">From Another Review</option><option value="template">From Template</option></select></div>
+        <div id="irq-csv-upload"><div class="modal-form-group"><label for="irq-file">CSV File</label><input type="file"  id="irq-file" class="file-input file-input-bordered w-full" accept=".csv,.xlsx"/></div></div>
+        <div id="irq-review-select" style="display:none"><div class="modal-form-group"><label for="irq-review">Select Review</label><select id="irq-review" class="select select-bordered w-full"></select></div></div>
         <div id="irq-preview" class="text-sm text-gray-500 mt-2"></div>
       </div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('import-queries-dialog').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="irqImport()">Import</button></div>
@@ -54,8 +54,8 @@ export function importReviewQueriesDialog(engagementId) {
 }
 
 export function engagementNotificationSettings(engagementId) {
-  return `<div id="eng-notif-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
-    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title">Notification Settings</span><button class="dialog-close" onclick="document.getElementById('eng-notif-dialog').style.display='none'">&times;</button></div>
+  return `<div id="eng-notif-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="eng-notif-dialog-title" aria-hidden="true">
+    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="eng-notif-dialog-title">Notification Settings</span><button class="dialog-close" onclick="document.getElementById('eng-notif-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div class="flex flex-col gap-3">
           <label class="flex items-center gap-2"><input type="checkbox" class="checkbox eng-notif-cb" value="rfi_response" checked/><span class="text-sm">RFI Responses</span></label>
@@ -75,12 +75,12 @@ export function engagementNotificationSettings(engagementId) {
 }
 
 export function notificationTriggerDialog() {
-  return `<div id="notif-trigger-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
-    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title">Create Notification Trigger</span><button class="dialog-close" onclick="document.getElementById('notif-trigger-dialog').style.display='none'">&times;</button></div>
+  return `<div id="notif-trigger-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="notif-trigger-dialog-title" aria-hidden="true">
+    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="notif-trigger-dialog-title">Create Notification Trigger</span><button class="dialog-close" onclick="document.getElementById('notif-trigger-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
-        <div class="modal-form-group"><label>Event</label><select id="ntr-event" class="select select-bordered w-full"><option value="rfi_overdue">RFI Overdue</option><option value="deadline_approaching">Deadline Approaching</option><option value="stage_change">Stage Change</option><option value="assignment">New Assignment</option><option value="response_received">Response Received</option></select></div>
-        <div class="modal-form-group"><label>Channel</label><select id="ntr-channel" class="select select-bordered w-full"><option value="email">Email</option><option value="in_app">In-App</option><option value="both">Both</option></select></div>
-        <div class="modal-form-group"><label>Recipients</label><select id="ntr-recipients" class="select select-bordered w-full"><option value="team">Engagement Team</option><option value="assigned">Assigned User Only</option><option value="managers">Managers Only</option><option value="all">All Stakeholders</option></select></div>
+        <div class="modal-form-group"><label for="ntr-event">Event</label><select id="ntr-event" class="select select-bordered w-full"><option value="rfi_overdue">RFI Overdue</option><option value="deadline_approaching">Deadline Approaching</option><option value="stage_change">Stage Change</option><option value="assignment">New Assignment</option><option value="response_received">Response Received</option></select></div>
+        <div class="modal-form-group"><label for="ntr-channel">Channel</label><select id="ntr-channel" class="select select-bordered w-full"><option value="email">Email</option><option value="in_app">In-App</option><option value="both">Both</option></select></div>
+        <div class="modal-form-group"><label for="ntr-recipients">Recipients</label><select id="ntr-recipients" class="select select-bordered w-full"><option value="team">Engagement Team</option><option value="assigned">Assigned User Only</option><option value="managers">Managers Only</option><option value="all">All Stakeholders</option></select></div>
       </div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('notif-trigger-dialog').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="ntrSave()">Create Trigger</button></div>
     </div></div>
@@ -91,8 +91,8 @@ export function notificationTriggerDialog() {
 }
 
 export function teamChatChannelToggle(engagementId, chatEnabled) {
-  return `<div class="flex items-center gap-3"><span class="text-sm">Team Chat</span><div class="rvw-toggle ${chatEnabled ? 'rvw-toggle-on' : ''}" onclick="toggleTeamChat(this)"><div class="rvw-toggle-track"><div class="rvw-toggle-knob"></div></div></div></div>
+  return `<div class="flex items-center gap-3"><span class="text-sm" id="team-chat-label">Team Chat</span><div class="rvw-toggle ${chatEnabled ? 'rvw-toggle-on' : ''}" role="switch" tabindex="0" aria-checked="${chatEnabled}" aria-labelledby="team-chat-label" onclick="toggleTeamChat(this)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleTeamChat(this)}"><div class="rvw-toggle-track"><div class="rvw-toggle-knob"></div></div></div></div>
   <script>
-  window.toggleTeamChat=async function(el){var on=el.classList.toggle('rvw-toggle-on');try{await fetch('/api/engagement/${engagementId}',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_enabled:on})});showToast('Chat '+(on?'enabled':'disabled'),'success')}catch(e){el.classList.toggle('rvw-toggle-on');showToast('Error','error')}};
+  window.toggleTeamChat=async function(el){var on=el.classList.toggle('rvw-toggle-on');el.setAttribute('aria-checked',on);try{await fetch('/api/engagement/${engagementId}',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_enabled:on})});showToast('Chat '+(on?'enabled':'disabled'),'success')}catch(e){el.classList.toggle('rvw-toggle-on');el.setAttribute('aria-checked',!on);showToast('Error','error')}};
   </script>`;
 }

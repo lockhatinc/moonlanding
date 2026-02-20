@@ -12,7 +12,7 @@ function bc(items) {
 }
 
 function page(user, title, crumbs, content, scripts = []) {
-  const body = `<div class="min-h-screen">${nav(user)}<div class="p-6">${bc(crumbs)}${content}</div></div>`;
+  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" role="main"><div class="p-6">${bc(crumbs)}${content}</div></main></div>`;
   return generateHtml(title, body, scripts);
 }
 
@@ -65,7 +65,7 @@ export function renderReviewComparison(user, leftReview, rightReview, leftHighli
 
 export function renderComparisonPicker(user, reviews) {
   const reviewOptions = reviews.map(r => `<option value="${r.id}">${r.name || r.title || 'Untitled'} ${r.status ? '(' + r.status + ')' : ''}</option>`).join('');
-  const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Compare Reviews</h1><a href="/reviews" class="btn btn-ghost btn-sm">Back to Reviews</a></div><div class="card bg-white shadow max-w-lg mx-auto"><div class="card-body"><p class="text-sm text-gray-500 mb-4">Select two reviews to compare their highlights side by side.</p><div class="form-group mb-4"><label class="text-sm font-medium block mb-1">Left Review</label><select id="left-review" class="select select-bordered w-full">${reviewOptions}</select></div><div class="form-group mb-4"><label class="text-sm font-medium block mb-1">Right Review</label><select id="right-review" class="select select-bordered w-full">${reviewOptions}</select></div><button class="btn btn-primary w-full" onclick="startComparison()">Compare</button></div></div>`;
+  const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Compare Reviews</h1><a href="/reviews" class="btn btn-ghost btn-sm">Back to Reviews</a></div><div class="card bg-white shadow max-w-lg mx-auto"><div class="card-body"><p class="text-sm text-gray-500 mb-4">Select two reviews to compare their highlights side by side.</p><div class="form-group mb-4"><label class="text-sm font-medium block mb-1" for="left-review">Left Review</label><select id="left-review" class="select select-bordered w-full">${reviewOptions}</select></div><div class="form-group mb-4"><label class="text-sm font-medium block mb-1" for="right-review">Right Review</label><select id="right-review" class="select select-bordered w-full">${reviewOptions}</select></div><button class="btn btn-primary w-full" onclick="startComparison()">Compare</button></div></div>`;
 
   const script = `window.startComparison=function(){const l=document.getElementById('left-review')?.value;const r=document.getElementById('right-review')?.value;if(!l||!r)return alert('Select both reviews');if(l===r)return alert('Select different reviews');window.location='/reviews/compare?left='+l+'&right='+r}`;
 

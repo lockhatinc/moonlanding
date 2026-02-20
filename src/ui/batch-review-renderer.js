@@ -12,7 +12,7 @@ function bc(items) {
 }
 
 function page(user, title, crumbs, content, scripts = []) {
-  const body = `<div class="min-h-screen">${nav(user)}<div class="p-6">${bc(crumbs)}${content}</div></div>`;
+  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" role="main"><div class="p-6">${bc(crumbs)}${content}</div></main></div>`;
   return generateHtml(title, body, scripts);
 }
 
@@ -32,7 +32,7 @@ function reviewCheckRow(review) {
 export function renderBatchOperations(user, reviews) {
   const canEditReview = canEdit(user, 'review');
   if (!canEditReview) {
-    const body = `<div class="min-h-screen">${nav(user)}<div class="p-6"><div class="text-center py-12"><h1 class="text-xl font-bold mb-2">Access Denied</h1><p class="text-gray-500">You need edit permissions for batch operations.</p><a href="/reviews" class="btn btn-primary btn-sm mt-4">Back to Reviews</a></div></div></div>`;
+    const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" role="main"><div class="p-6"><div class="text-center py-12"><h1 class="text-xl font-bold mb-2">Access Denied</h1><p class="text-gray-500">You need edit permissions for batch operations.</p><a href="/reviews" class="btn btn-primary btn-sm mt-4">Back to Reviews</a></div></div></main></div>`;
     return generateHtml('Batch Operations', body, []);
   }
 
@@ -46,7 +46,7 @@ export function renderBatchOperations(user, reviews) {
   const rows = reviews.map(r => reviewCheckRow(r)).join('');
   const table = `<div class="card bg-white shadow" style="overflow-x:auto"><table class="table table-zebra w-full"><thead><tr>${headers}</tr></thead><tbody id="batch-tbody">${rows || '<tr><td colspan="7" class="text-center py-8 text-gray-500">No reviews found</td></tr>'}</tbody></table></div>`;
 
-  const filterBar = `<div class="flex gap-2 mb-4"><input type="text" id="batch-search" placeholder="Filter reviews..." class="input input-bordered input-sm" style="width:250px"/><select id="batch-filter-status" class="select select-bordered select-sm" onchange="filterBatch()"><option value="">All Statuses</option>${statusOptions}</select></div>`;
+  const filterBar = `<div class="flex gap-2 mb-4"><label for="batch-search" class="sr-only">Filter reviews</label><input type="text" id="batch-search" placeholder="Filter reviews..." class="input input-bordered input-sm" style="width:250px" aria-label="Filter reviews"/><label for="batch-filter-status" class="sr-only">Filter by status</label><select id="batch-filter-status" class="select select-bordered select-sm" onchange="filterBatch()" aria-label="Filter by status"><option value="">All Statuses</option>${statusOptions}</select></div>`;
 
   const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Batch Operations</h1><a href="/reviews" class="btn btn-ghost btn-sm">Back to Reviews</a></div>${actionBar}${filterBar}${table}`;
 

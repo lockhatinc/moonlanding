@@ -71,7 +71,7 @@ export const POST = withErrorHandler(async (request, { params }) => {
     timestamp
   );
 
-  logAction(user.id, 'rfi_question', questionId, 'create', null, body);
+  logAction('rfi_question', questionId, 'create', user.id, null, body);
 
   const question = db.prepare('SELECT * FROM rfi_questions WHERE id = ?').get(questionId);
   return created({

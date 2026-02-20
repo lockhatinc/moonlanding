@@ -78,7 +78,7 @@ export const POST = withErrorHandler(async (request) => {
     timestamp
   );
 
-  logAction(user.id, 'rfi', id, 'create', null, { id, engagement_id: body.engagement_id, status: body.status || 'draft' });
+  logAction('rfi', id, 'create', user.id, null, { id, engagement_id: body.engagement_id, status: body.status || 'draft' });
 
   const rfi = db.prepare('SELECT * FROM rfis WHERE id = ?').get(id);
   return created(rfi);

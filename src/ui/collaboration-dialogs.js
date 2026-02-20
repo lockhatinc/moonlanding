@@ -1,13 +1,13 @@
 export function collaboratorManagementDialog(entityType, entityId) {
-  return `<div id="collab-mgmt-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="collab-mgmt-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="collab-mgmt-dialog-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:640px">
-      <div class="dialog-header"><span class="dialog-title">Manage Collaborators</span><button class="dialog-close" onclick="document.getElementById('collab-mgmt-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="collab-mgmt-dialog-title">Manage Collaborators</span><button class="dialog-close" onclick="document.getElementById('collab-mgmt-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div id="cmd-list" class="flex flex-col gap-2" style="max-height:300px;overflow:auto"><div class="text-gray-500 text-sm text-center py-4">Loading...</div></div>
         <div class="inline-form" style="margin-top:1rem">
           <div class="inline-form-row">
-            <div class="inline-form-field" style="flex:1"><label>Email</label><input type="email" id="cmd-email" class="input input-bordered input-sm w-full" placeholder="collaborator@example.com"/></div>
-            <div class="inline-form-field"><label>Role</label><select id="cmd-role" class="select select-bordered select-sm"><option value="viewer">Viewer</option><option value="commenter">Commenter</option><option value="reviewer" selected>Reviewer</option><option value="manager">Manager</option></select></div>
+            <div class="inline-form-field" style="flex:1"><label for="cmd-email">Email</label><input type="email"  id="cmd-email" class="input input-bordered input-sm w-full" placeholder="collaborator@example.com"/></div>
+            <div class="inline-form-field"><label for="cmd-role">Role</label><select id="cmd-role" class="select select-bordered select-sm"><option value="viewer">Viewer</option><option value="commenter">Commenter</option><option value="reviewer" selected>Reviewer</option><option value="manager">Manager</option></select></div>
             <div class="inline-form-field"><label>&nbsp;</label><button class="btn btn-primary btn-sm" onclick="cmdAdd()">Add</button></div>
           </div>
         </div>

@@ -1,7 +1,10 @@
-const path = require('path');
-const { DirectoryWatcher } = require('@/lib/hot-reload/directory-watcher.js');
+import path from 'path';
+import { createRequire } from 'module';
+import { DirectoryWatcher } from './directory-watcher.js';
 
-class CacheInvalidator {
+const _require = createRequire(import.meta.url);
+
+export class CacheInvalidator {
   constructor() {
     this.invalidated = new Set();
     this.watcher = null;
@@ -10,7 +13,6 @@ class CacheInvalidator {
 
   startWatching(rootDir) {
     if (this.watcher) return this;
-
     this.watcher = new DirectoryWatcher({ rootDir });
     this.watcher.on('change', (event) => {
       const count = this.invalidateByFilePath(event.path);
@@ -33,22 +35,21 @@ class CacheInvalidator {
   invalidateByFilePath(filePath) {
     const normalized = path.resolve(filePath);
     let count = 0;
-
-    for (const modulePath of Object.keys(require.cache)) {
+    if (typeof _require.cache === 'undefined') return count;
+    for (const modulePath of Object.keys(_require.cache)) {
       if (modulePath === normalized || modulePath.startsWith(normalized)) {
         this._invalidateModule(modulePath);
         this.invalidated.add(modulePath);
         count++;
       }
     }
-
     return count;
   }
 
   invalidate(modulePath) {
     try {
-      const resolved = require.resolve(modulePath);
-      if (require.cache[resolved]) {
+      const resolved = _require.resolve(modulePath);
+      if (_require.cache[resolved]) {
         this._invalidateModule(resolved);
         this.invalidated.add(resolved);
         return true;
@@ -60,55 +61,46 @@ class CacheInvalidator {
   invalidatePattern(pattern) {
     const regex = new RegExp(pattern);
     let count = 0;
-
-    for (const modulePath of Object.keys(require.cache)) {
+    if (typeof _require.cache === 'undefined') return count;
+    for (const modulePath of Object.keys(_require.cache)) {
       if (regex.test(modulePath)) {
         this._invalidateModule(modulePath);
         this.invalidated.add(modulePath);
         count++;
       }
     }
-
     return count;
   }
 
   invalidateAll(excludePattern = /node_modules/) {
     let count = 0;
-
-    for (const modulePath of Object.keys(require.cache)) {
+    if (typeof _require.cache === 'undefined') return count;
+    for (const modulePath of Object.keys(_require.cache)) {
       if (excludePattern && excludePattern.test(modulePath)) continue;
       this._invalidateModule(modulePath);
       this.invalidated.add(modulePath);
       count++;
     }
-
     return count;
   }
 
   _invalidateModule(modulePath) {
-    const mod = require.cache[modulePath];
+    if (typeof _require.cache === 'undefined') return;
+    const mod = _require.cache[modulePath];
     if (!mod) return;
-
     if (mod.parent) {
       const index = mod.parent.children.indexOf(mod);
       if (index !== -1) mod.parent.children.splice(index, 1);
     }
-
     for (const child of mod.children || []) {
       this._invalidateModule(child.id);
     }
-
-    delete require.cache[modulePath];
-  }
-
-  reload(modulePath) {
-    this.invalidate(modulePath);
-    return require(modulePath);
+    delete _require.cache[modulePath];
   }
 
   getStats() {
     return {
-      totalCached: Object.keys(require.cache).length,
+      totalCached: typeof _require.cache !== 'undefined' ? Object.keys(_require.cache).length : 0,
       invalidated: this.invalidated.size,
       watching: !!this.watcher,
       watcherStats: this.watcher ? this.watcher.getStats() : null
@@ -120,6 +112,4 @@ class CacheInvalidator {
   }
 }
 
-const globalInvalidator = new CacheInvalidator();
-
-module.exports = { CacheInvalidator, globalInvalidator };
+export const globalInvalidator = new CacheInvalidator();

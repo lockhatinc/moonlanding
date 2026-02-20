@@ -6,13 +6,13 @@ export function dataGridAdvanced(config) {
   const gridId = 'dg-' + Math.random().toString(36).slice(2, 8)
   const colHeaders = columns.map((col, i) => {
     const sortAttr = sortable ? ` data-dg-sort="${col.field}" onclick="dgSort('${gridId}','${col.field}',${i},event)"` : ''
-    const filterHtml = filterable ? `<div class="dg-filter"><input type="text" data-dg-filter="${col.field}" placeholder="Filter..." class="dg-filter-input" oninput="dgFilter('${gridId}')"/></div>` : ''
+    const filterHtml = filterable ? `<div class="dg-filter"><input type="text" data-dg-filter="${col.field}" placeholder="Filter..." class="dg-filter-input" aria-label="Filter ${col.label || col.field}" oninput="dgFilter('${gridId}')"/></div>` : ''
     return `<th${sortAttr} class="${sortable ? 'dg-sortable' : ''}">${col.label || col.field}<span class="dg-sort-indicator" data-dg-indicator="${col.field}"></span>${filterHtml}</th>`
   }).join('')
   const expandCol = expandable ? '<th class="dg-expand-col"></th>' : ''
   const renderRow = (item, rowId, groupId) => {
     const memberAttr = groupId ? ` data-dg-member="${groupId}"` : ''
-    const expandBtn = expandable ? `<td class="dg-expand-col"><button class="dg-expand-btn" data-dg-row="${rowId}" onclick="dgToggleDetail('${gridId}',this)">&#9654;</button></td>` : ''
+    const expandBtn = expandable ? `<td class="dg-expand-col"><button class="dg-expand-btn" data-dg-row="${rowId}" onclick="dgToggleDetail('${gridId}',this)" aria-label="Expand row details" aria-expanded="false">&#9654;</button></td>` : ''
     const cells = columns.map(col => `<td>${item[col.field] ?? '-'}</td>`).join('')
     const detailRow = expandable ? `<tr class="dg-detail-row"${memberAttr} data-dg-detail="${rowId}" style="display:none"><td colspan="${columns.length + 1}"><div class="dg-detail-panel">${detailRenderer ? detailRenderer(item) : ''}</div></td></tr>` : ''
     return `<tr class="dg-data-row"${memberAttr} data-dg-values='${JSON.stringify(columns.map(c => String(item[c.field] ?? '')))}'>${expandBtn}${cells}</tr>${detailRow}`

@@ -11,7 +11,7 @@ function breadcrumb(items) {
   return `<nav class="breadcrumb" aria-label="Breadcrumb">${items.map((item, i) => i === items.length - 1 ? `<span>${item.label}</span>` : `<a href="${item.href}">${item.label}</a><span class="breadcrumb-separator">/</span>`).join('')}</nav>`;
 }
 function page(user, title, bc, content, scripts = []) {
-  const body = `<div class="min-h-screen">${nav(user)}<div class="p-6">${breadcrumb(bc)}${content}</div></div>`;
+  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" role="main"><div class="p-6">${breadcrumb(bc)}${content}</div></main></div>`;
   return generateHtml(title, body, scripts);
 }
 
@@ -24,8 +24,8 @@ export function checklistTemplatesUI(user, templates = []) {
   return page(user, 'Checklist Templates', bc, content, [script]);
 }
 export function checklistDialog(checklistId) {
-  return `<div id="checklist-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
-    <div class="dialog-panel" style="max-width:640px"><div class="dialog-header"><span class="dialog-title">Checklist</span><button class="dialog-close" onclick="document.getElementById('checklist-dialog').style.display='none'">&times;</button></div>
+  return `<div id="checklist-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="checklist-dialog-title" aria-hidden="true">
+    <div class="dialog-panel" style="max-width:640px"><div class="dialog-header"><span class="dialog-title" id="checklist-dialog-title">Checklist</span><button class="dialog-close" onclick="document.getElementById('checklist-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body"><div id="ckd-items" class="flex flex-col gap-2"></div><div class="flex gap-2 mt-3"><input id="ckd-new" class="input input-bordered input-sm flex-1" placeholder="New item..."/><button class="btn btn-primary btn-sm" onclick="ckdAdd()">Add</button></div></div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('checklist-dialog').style.display='none'">Close</button></div>
     </div></div>

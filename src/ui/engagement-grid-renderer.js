@@ -9,7 +9,7 @@ const STAGE_KEYS = ['info_gathering', 'commencement', 'team_execution', 'partner
 function nav(user) {
   const links = getNavItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
   const admin = getAdminItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
-  return `<nav class="navbar bg-white shadow-sm px-4" role="navigation" aria-label="Main navigation"><div class="navbar-start"><a href="/" class="font-bold text-lg">Platform</a><div class="hidden md:flex gap-1 ml-6">${links}${admin}</div></div><div class="navbar-end"><div id="user-dropdown" class="dropdown dropdown-end"><button type="button" onclick="toggleUserMenu(event)" class="btn btn-ghost btn-circle avatar placeholder" style="cursor:pointer"><div class="bg-primary text-white rounded-full w-10" style="display:flex;align-items:center;justify-content:center;height:2.5rem"><span>${user?.name?.charAt(0) || 'U'}</span></div></button></div></div></nav>`;
+  return `<nav class="navbar bg-white shadow-sm px-4" role="navigation" aria-label="Main navigation"><div class="navbar-start"><a href="/" class="font-bold text-lg" aria-label="Home">Platform</a><div class="hidden md:flex gap-1 ml-6">${links}${admin}</div></div><div class="navbar-end"><div id="user-dropdown" class="dropdown dropdown-end"><button type="button" onclick="toggleUserMenu(event)" class="btn btn-ghost btn-circle avatar placeholder" style="cursor:pointer" aria-label="User menu for ${user?.name || 'User'}" aria-haspopup="menu" aria-expanded="false"><div class="bg-primary text-white rounded-full w-10" style="display:flex;align-items:center;justify-content:center;height:2.5rem"><span aria-hidden="true">${user?.name?.charAt(0) || 'U'}</span></div></button></div></div></nav>`;
 }
 
 function bc(items) {
@@ -17,7 +17,7 @@ function bc(items) {
 }
 
 function page(user, title, crumbs, content, scripts = []) {
-  const body = `<div class="min-h-screen">${nav(user)}<div class="p-6">${bc(crumbs)}${content}</div></div>`;
+  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" role="main"><div class="p-6">${bc(crumbs)}${content}</div></main></div>`;
   return generateHtml(title, body, scripts);
 }
 
@@ -68,7 +68,7 @@ export function renderEngagementGrid(user, engagements, options = {}) {
 
   const teamFilter = teams.length > 0 ? `<select id="filter-team" class="select select-bordered select-sm" onchange="filterGrid()"><option value="">All Teams</option>${teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}</select>` : '';
   const yearFilter = years.length > 0 ? `<select id="filter-year" class="select select-bordered select-sm" onchange="filterGrid()"><option value="">All Years</option>${years.map(y => `<option value="${y}">${y}</option>`).join('')}</select>` : '';
-  const filters = `<div class="flex gap-2 mb-4 flex-wrap"><input type="text" id="grid-search" placeholder="Search engagements..." class="input input-bordered input-sm" style="width:250px"/>${teamFilter}${yearFilter}<label class="flex items-center gap-1 text-sm"><input type="checkbox" id="current-year-toggle" class="checkbox checkbox-sm"/>Current Year</label></div>`;
+  const filters = `<div class="flex gap-2 mb-4 flex-wrap"><label for="grid-search" class="sr-only">Search engagements</label><input type="text" id="grid-search" placeholder="Search engagements..." class="input input-bordered input-sm" style="width:250px" aria-label="Search engagements"/>${teamFilter}${yearFilter}<label class="flex items-center gap-1 text-sm"><input type="checkbox" id="current-year-toggle" class="checkbox checkbox-sm"/>Current Year</label></div>`;
 
   const headers = '<th>Name</th><th>Client</th><th>Status</th><th>Stage</th><th>Progress</th><th>Team</th><th>Created</th>';
   const initialRows = engagements.slice(0, 100).map(e => engagementRow(e, userCanEdit)).join('');

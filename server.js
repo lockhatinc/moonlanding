@@ -48,22 +48,29 @@ const watchedDirs = [
 
 watchedDirs.forEach((dir) => {
   if (!fs.existsSync(dir)) return;
-  fs.watch(dir, { recursive: true }, async (eventType, filename) => {
-    if (filename && (filename.endsWith('.js') || filename.endsWith('.jsx') || filename.endsWith('.yml'))) {
-      moduleCache.clear();
-      console.log(`[Hot] Invalidated: ${filename}`);
+  try {
+    const watcher = fs.watch(dir, { recursive: true }, async (eventType, filename) => {
+      if (filename && (filename.endsWith('.js') || filename.endsWith('.jsx') || filename.endsWith('.yml'))) {
+        moduleCache.clear();
+        console.log(`[Hot] Invalidated: ${filename}`);
 
-      if (filename.endsWith('master-config.yml') || filename.includes('master-config')) {
-        try {
-          const { resetConfigEngine } = await import('./src/lib/config-generator-engine.js');
-          resetConfigEngine();
-          console.log('[Hot] Reset ConfigGeneratorEngine for re-init');
-        } catch (e) {
-          console.log('[Hot] Could not reset config engine:', e.message);
+        if (filename.endsWith('master-config.yml') || filename.includes('master-config')) {
+          try {
+            const { resetConfigEngine } = await import('./src/lib/config-generator-engine.js');
+            resetConfigEngine();
+            console.log('[Hot] Reset ConfigGeneratorEngine for re-init');
+          } catch (e) {
+            console.log('[Hot] Could not reset config engine:', e.message);
+          }
         }
       }
-    }
-  });
+    });
+    watcher.on('error', (err) => {
+      console.error(`[Hot] Watcher error on ${dir}:`, err.message);
+    });
+  } catch (err) {
+    console.error(`[Hot] Failed to watch ${dir}:`, err.message);
+  }
 });
 
 async function loadModule(filePath) {
@@ -524,10 +531,17 @@ function buildNestedRoutePath(baseDir, domain, parentEntity, childParts) {
 globalThis.NextRequest = NextRequest;
 globalThis.NextResponse = NextResponse;
 
-server.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', async () => {
   console.log(`\n▲ Zero-Build Runtime Server`);
   console.log(`- Local:        http://localhost:${PORT}`);
   console.log(`- Network:      http://0.0.0.0:${PORT}`);
   console.log(`- Environments: .env.local, .env`);
   console.log(`✓ Ready in 0.1s\n`);
+
+  try {
+    const { startLifecycle } = await import('./src/lib/dr-lifecycle.js');
+    startLifecycle(server);
+  } catch (err) {
+    console.error('[Server] DR lifecycle init failed:', err.message);
+  }
 });

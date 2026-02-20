@@ -12,7 +12,7 @@ function bc(items) {
 }
 
 function page(user, title, crumbs, content, scripts = []) {
-  const body = `<div class="min-h-screen">${nav(user)}<div class="p-6">${bc(crumbs)}${content}</div></div>`;
+  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" role="main"><div class="p-6">${bc(crumbs)}${content}</div></main></div>`;
   return generateHtml(title, body, scripts);
 }
 
@@ -66,7 +66,7 @@ export function renderLetterWorkflow(user, engagement) {
     ? `<div class="card bg-white shadow mb-6"><div class="card-body"><h3 class="font-semibold mb-3">Send to Client</h3><p class="text-sm text-gray-500 mb-4">Send the engagement letter to the client along with team CVs and engagement details.</p><div class="flex gap-2"><button class="btn btn-primary btn-sm" onclick="sendLetter('${engagement.id}')">Send to Client</button></div></div></div>` : '';
 
   const signAction = currentStep === 'sign'
-    ? `<div class="card bg-white shadow mb-6"><div class="card-body"><h3 class="font-semibold mb-3">Awaiting Client Signature</h3><p class="text-sm text-gray-500 mb-4">The engagement letter has been sent. Waiting for the client to upload the signed version.</p>${canEditEng ? `<div class="mt-3"><label class="text-sm font-medium block mb-2">Upload Signed Letter</label><input type="file" id="signed-letter" accept=".pdf,.doc,.docx" class="file-input file-input-bordered file-input-sm w-full max-w-xs"/><button class="btn btn-primary btn-sm mt-2" onclick="uploadSigned('${engagement.id}')">Upload</button></div>` : '<div class="text-sm text-gray-400">Waiting for signed letter upload...</div>'}</div></div>` : '';
+    ? `<div class="card bg-white shadow mb-6"><div class="card-body"><h3 class="font-semibold mb-3">Awaiting Client Signature</h3><p class="text-sm text-gray-500 mb-4">The engagement letter has been sent. Waiting for the client to upload the signed version.</p>${canEditEng ? `<div class="mt-3"><label class="text-sm font-medium block mb-2" for="signed-letter">Upload Signed Letter</label><input type="file"  id="signed-letter" accept=".pdf,.doc,.docx" class="file-input file-input-bordered file-input-sm w-full max-w-xs"/><button class="btn btn-primary btn-sm mt-2" onclick="uploadSigned('${engagement.id}')">Upload</button></div>` : '<div class="text-sm text-gray-400">Waiting for signed letter upload...</div>'}</div></div>` : '';
 
   const completeSection = currentStep === 'complete'
     ? `<div class="card bg-white shadow mb-6 border-l-4 border-green-500"><div class="card-body"><div class="flex items-center gap-3"><span class="text-2xl">&#10003;</span><div><h3 class="font-semibold text-green-700">Letter Workflow Complete</h3><p class="text-sm text-gray-500">The engagement letter has been signed and filed.</p></div></div></div></div>` : '';

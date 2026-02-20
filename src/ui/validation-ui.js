@@ -21,21 +21,28 @@ export const ClientValidator = {
   
   showFieldError(input, errors) {
     ClientValidator.clearFieldError(input);
-    
+
     if (errors.length === 0) {
       input.classList.remove('input-error', 'select-error', 'textarea-error');
       input.classList.add('input-success');
+      input.removeAttribute('aria-invalid');
+      input.removeAttribute('aria-describedby');
       return;
     }
-    
+
     input.classList.remove('input-success');
     input.classList.add('input-error');
-    
+    input.setAttribute('aria-invalid', 'true');
+
+    const errorId = 'err-' + (input.id || input.name);
     const errorDiv = document.createElement('div');
     errorDiv.className = 'field-error text-error text-xs mt-1';
+    errorDiv.id = errorId;
+    errorDiv.setAttribute('role', 'alert');
     errorDiv.textContent = errors[0];
     errorDiv.dataset.fieldError = input.id || input.name;
-    
+
+    input.setAttribute('aria-describedby', errorId);
     input.parentNode.insertBefore(errorDiv, input.nextSibling);
   },
   

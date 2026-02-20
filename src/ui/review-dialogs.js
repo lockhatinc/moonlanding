@@ -1,14 +1,14 @@
 const TOAST_SCRIPT_INLINE = `if(!window.showToast)window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
 
 export function reviewCreateDialog() {
-  return `<div id="review-create-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="review-create-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="review-create-dialog-title" aria-hidden="true">
     <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title">Create Review</span><button class="dialog-close" onclick="document.getElementById('review-create-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="review-create-dialog-title">Create Review</span><button class="dialog-close" onclick="document.getElementById('review-create-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
-        <div class="modal-form-group"><label>Review Name</label><input type="text" id="rcd-name" class="input input-bordered w-full" placeholder="Enter review name" required/></div>
-        <div class="modal-form-group"><label>Engagement</label><select id="rcd-engagement" class="select select-bordered w-full"><option value="">Select engagement...</option></select></div>
-        <div class="modal-form-group"><label>Template</label><select id="rcd-template" class="select select-bordered w-full"><option value="">No template</option></select></div>
-        <div class="modal-form-group"><label>Description</label><textarea id="rcd-desc" class="textarea textarea-bordered w-full" rows="3" placeholder="Optional description"></textarea></div>
+        <div class="modal-form-group"><label for="rcd-name">Review Name</label><input type="text" id="rcd-name" class="input input-bordered w-full" placeholder="Enter review name" required aria-required="true"/></div>
+        <div class="modal-form-group"><label for="rcd-engagement">Engagement</label><select id="rcd-engagement" class="select select-bordered w-full"><option value="">Select engagement...</option></select></div>
+        <div class="modal-form-group"><label for="rcd-template">Template</label><select id="rcd-template" class="select select-bordered w-full"><option value="">No template</option></select></div>
+        <div class="modal-form-group"><label for="rcd-desc">Description</label><textarea id="rcd-desc" class="textarea textarea-bordered w-full" rows="3" placeholder="Optional description"></textarea></div>
       </div>
       <div class="dialog-footer">
         <button class="btn btn-ghost btn-sm" onclick="document.getElementById('review-create-dialog').style.display='none'">Cancel</button>
@@ -26,9 +26,9 @@ export function reviewCreateDialog() {
 }
 
 export function reviewTemplateChoiceDialog() {
-  return `<div id="review-template-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="review-template-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="review-template-dialog-title" aria-hidden="true">
     <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title">Choose Template</span><button class="dialog-close" onclick="document.getElementById('review-template-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="review-template-dialog-title">Choose Template</span><button class="dialog-close" onclick="document.getElementById('review-template-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div id="rtd-list" class="flex flex-col gap-2"><div class="text-gray-500 text-sm text-center py-4">Loading templates...</div></div>
       </div>
@@ -44,27 +44,27 @@ export function reviewTemplateChoiceDialog() {
 }
 
 export function reviewContextMenu() {
-  return `<div id="review-ctx-menu" class="review-ctx-menu" style="display:none">
-    <div class="ctx-item" onclick="ctxAction('view')">View</div>
-    <div class="ctx-item" onclick="ctxAction('edit')">Edit</div>
-    <div class="ctx-item" onclick="ctxAction('duplicate')">Duplicate</div>
-    <div class="ctx-sep"></div>
-    <div class="ctx-item" onclick="ctxAction('archive')">Archive</div>
-    <div class="ctx-item" onclick="ctxAction('export')">Export PDF</div>
-    <div class="ctx-sep"></div>
-    <div class="ctx-item ctx-danger" onclick="ctxAction('delete')">Delete</div>
+  return `<div id="review-ctx-menu" class="review-ctx-menu" style="display:none" role="menu" aria-label="Review actions" onkeydown="if(event.key==='Escape'){this.style.display='none'}">
+    <div class="ctx-item" role="menuitem" tabindex="0" onclick="ctxAction('view')" onkeydown="if(event.key==='Enter')ctxAction('view')">View</div>
+    <div class="ctx-item" role="menuitem" tabindex="0" onclick="ctxAction('edit')" onkeydown="if(event.key==='Enter')ctxAction('edit')">Edit</div>
+    <div class="ctx-item" role="menuitem" tabindex="0" onclick="ctxAction('duplicate')" onkeydown="if(event.key==='Enter')ctxAction('duplicate')">Duplicate</div>
+    <div class="ctx-sep" role="separator"></div>
+    <div class="ctx-item" role="menuitem" tabindex="0" onclick="ctxAction('archive')" onkeydown="if(event.key==='Enter')ctxAction('archive')">Archive</div>
+    <div class="ctx-item" role="menuitem" tabindex="0" onclick="ctxAction('export')" onkeydown="if(event.key==='Enter')ctxAction('export')">Export PDF</div>
+    <div class="ctx-sep" role="separator"></div>
+    <div class="ctx-item ctx-danger" role="menuitem" tabindex="0" onclick="ctxAction('delete')" onkeydown="if(event.key==='Enter')ctxAction('delete')">Delete</div>
   </div>`;
 }
 
 export function reviewFlagsDialog() {
-  return `<div id="review-flags-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="review-flags-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="review-flags-dialog-title" aria-hidden="true">
     <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title">Review Flags</span><button class="dialog-close" onclick="document.getElementById('review-flags-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="review-flags-dialog-title">Review Flags</span><button class="dialog-close" onclick="document.getElementById('review-flags-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div id="rfd-flags" class="flex flex-col gap-2"></div>
         <div class="inline-form" style="margin-top:1rem">
           <div class="inline-form-row">
-            <div class="inline-form-field" style="flex:1"><label>Add Flag</label><input type="text" id="rfd-new" class="input input-bordered input-sm w-full" placeholder="Flag description"/></div>
+            <div class="inline-form-field" style="flex:1"><label for="rfd-new">Add Flag</label><input type="text"  id="rfd-new" class="input input-bordered input-sm w-full" placeholder="Flag description"/></div>
             <div class="inline-form-field"><label>&nbsp;</label><button class="btn btn-primary btn-sm" onclick="addReviewFlag()">Add</button></div>
           </div>
         </div>
@@ -81,14 +81,14 @@ export function reviewFlagsDialog() {
 }
 
 export function reviewTagsDialog() {
-  return `<div id="review-tags-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="review-tags-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="review-tags-dialog-title" aria-hidden="true">
     <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title">Review Tags</span><button class="dialog-close" onclick="document.getElementById('review-tags-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="review-tags-dialog-title">Review Tags</span><button class="dialog-close" onclick="document.getElementById('review-tags-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div id="rtags-list" class="ts-badges"></div>
         <div class="inline-form" style="margin-top:0.75rem">
           <div class="inline-form-row">
-            <div class="inline-form-field" style="flex:1"><label>Add Tag</label><input type="text" id="rtags-new" class="input input-bordered input-sm w-full" placeholder="Tag name"/></div>
+            <div class="inline-form-field" style="flex:1"><label for="rtags-new">Add Tag</label><input type="text"  id="rtags-new" class="input input-bordered input-sm w-full" placeholder="Tag name"/></div>
             <div class="inline-form-field"><label>&nbsp;</label><button class="btn btn-primary btn-sm" onclick="addReviewTag()">Add</button></div>
           </div>
         </div>
@@ -106,13 +106,13 @@ export function reviewTagsDialog() {
 }
 
 export function reviewValueDialog() {
-  return `<div id="review-value-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="review-value-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="review-value-dialog-title" aria-hidden="true">
     <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title">WIP Value</span><button class="dialog-close" onclick="document.getElementById('review-value-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="review-value-dialog-title">WIP Value</span><button class="dialog-close" onclick="document.getElementById('review-value-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
-        <div class="modal-form-group"><label>Current WIP Value</label><input type="number" id="rvd-value" class="input input-bordered w-full" step="0.01" min="0" placeholder="0.00"/></div>
-        <div class="modal-form-group"><label>Currency</label><select id="rvd-currency" class="select select-bordered w-full"><option value="ZAR">ZAR</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
-        <div class="modal-form-group"><label>Notes</label><textarea id="rvd-notes" class="textarea textarea-bordered w-full" rows="2" placeholder="Optional notes"></textarea></div>
+        <div class="modal-form-group"><label for="rvd-value">Current WIP Value</label><input type="number"  id="rvd-value" class="input input-bordered w-full" step="0.01" min="0" placeholder="0.00"/></div>
+        <div class="modal-form-group"><label for="rvd-currency">Currency</label><select id="rvd-currency" class="select select-bordered w-full"><option value="ZAR">ZAR</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
+        <div class="modal-form-group"><label for="rvd-notes">Notes</label><textarea id="rvd-notes" class="textarea textarea-bordered w-full" rows="2" placeholder="Optional notes"></textarea></div>
       </div>
       <div class="dialog-footer">
         <button class="btn btn-ghost btn-sm" onclick="document.getElementById('review-value-dialog').style.display='none'">Cancel</button>
@@ -128,18 +128,18 @@ export function reviewValueDialog() {
 }
 
 export function reviewDeadlineDialog() {
-  return `<div id="review-deadline-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="review-deadline-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="review-deadline-dialog-title" aria-hidden="true">
     <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title">Set Deadline</span><button class="dialog-close" onclick="document.getElementById('review-deadline-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="review-deadline-dialog-title">Set Deadline</span><button class="dialog-close" onclick="document.getElementById('review-deadline-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
-        <div class="modal-form-group"><label>Deadline Date</label><input type="date" id="rdd-date" class="input input-bordered w-full"/></div>
+        <div class="modal-form-group"><label for="rdd-date">Deadline Date</label><input type="date"  id="rdd-date" class="input input-bordered w-full"/></div>
         <div class="date-presets">
           <button class="date-preset-btn" onclick="setDeadlinePreset(7)">+1 Week</button>
           <button class="date-preset-btn" onclick="setDeadlinePreset(14)">+2 Weeks</button>
           <button class="date-preset-btn" onclick="setDeadlinePreset(30)">+1 Month</button>
           <button class="date-preset-btn" onclick="setDeadlinePreset(90)">+3 Months</button>
         </div>
-        <div class="modal-form-group" style="margin-top:1rem"><label>Reminder</label><select id="rdd-reminder" class="select select-bordered w-full"><option value="">No reminder</option><option value="1">1 day before</option><option value="3">3 days before</option><option value="7">1 week before</option></select></div>
+        <div class="modal-form-group" style="margin-top:1rem"><label for="rdd-reminder">Reminder</label><select id="rdd-reminder" class="select select-bordered w-full"><option value="">No reminder</option><option value="1">1 day before</option><option value="3">3 days before</option><option value="7">1 week before</option></select></div>
       </div>
       <div class="dialog-footer">
         <button class="btn btn-ghost btn-sm" onclick="document.getElementById('review-deadline-dialog').style.display='none'">Cancel</button>
@@ -158,15 +158,15 @@ export function reviewDeadlineDialog() {
 }
 
 export function reviewNotificationDialog() {
-  return `<div id="review-notif-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="review-notif-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="review-notif-dialog-title" aria-hidden="true">
     <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title">Notification Settings</span><button class="dialog-close" onclick="document.getElementById('review-notif-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="review-notif-dialog-title">Notification Settings</span><button class="dialog-close" onclick="document.getElementById('review-notif-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
-        <div class="toggle-wrap"><div><div class="toggle-label">Highlight Updates</div><div class="toggle-desc">Notify when highlights are added or resolved</div></div><label class="toggle-switch"><input type="checkbox" id="rnd-highlights" checked/><span class="toggle-slider"></span></label></div>
-        <div class="toggle-wrap"><div><div class="toggle-label">Comment Notifications</div><div class="toggle-desc">Notify on new comments</div></div><label class="toggle-switch"><input type="checkbox" id="rnd-comments" checked/><span class="toggle-slider"></span></label></div>
-        <div class="toggle-wrap"><div><div class="toggle-label">Status Changes</div><div class="toggle-desc">Notify when review status changes</div></div><label class="toggle-switch"><input type="checkbox" id="rnd-status" checked/><span class="toggle-slider"></span></label></div>
-        <div class="toggle-wrap"><div><div class="toggle-label">Deadline Reminders</div><div class="toggle-desc">Remind before deadline expires</div></div><label class="toggle-switch"><input type="checkbox" id="rnd-deadline" checked/><span class="toggle-slider"></span></label></div>
-        <div class="toggle-wrap"><div><div class="toggle-label">Collaborator Activity</div><div class="toggle-desc">Notify when collaborators make changes</div></div><label class="toggle-switch"><input type="checkbox" id="rnd-collab"/><span class="toggle-slider"></span></label></div>
+        <div class="toggle-wrap"><div><div class="toggle-label">Highlight Updates</div><div class="toggle-desc">Notify when highlights are added or resolved</div></div><label class="toggle-switch"><input type="checkbox" id="rnd-highlights" checked aria-label="Highlight Updates"/><span class="toggle-slider"></span></label></div>
+        <div class="toggle-wrap"><div><div class="toggle-label">Comment Notifications</div><div class="toggle-desc">Notify on new comments</div></div><label class="toggle-switch"><input type="checkbox" id="rnd-comments" checked aria-label="Comment Notifications"/><span class="toggle-slider"></span></label></div>
+        <div class="toggle-wrap"><div><div class="toggle-label">Status Changes</div><div class="toggle-desc">Notify when review status changes</div></div><label class="toggle-switch"><input type="checkbox" id="rnd-status" checked aria-label="Status Changes"/><span class="toggle-slider"></span></label></div>
+        <div class="toggle-wrap"><div><div class="toggle-label">Deadline Reminders</div><div class="toggle-desc">Remind before deadline expires</div></div><label class="toggle-switch"><input type="checkbox" id="rnd-deadline" checked aria-label="Deadline Reminders"/><span class="toggle-slider"></span></label></div>
+        <div class="toggle-wrap"><div><div class="toggle-label">Collaborator Activity</div><div class="toggle-desc">Notify when collaborators make changes</div></div><label class="toggle-switch"><input type="checkbox" id="rnd-collab" aria-label="Collaborator Activity"/><span class="toggle-slider"></span></label></div>
       </div>
       <div class="dialog-footer">
         <button class="btn btn-ghost btn-sm" onclick="document.getElementById('review-notif-dialog').style.display='none'">Cancel</button>

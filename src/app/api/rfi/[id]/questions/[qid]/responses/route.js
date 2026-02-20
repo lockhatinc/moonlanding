@@ -51,7 +51,7 @@ export const POST = withErrorHandler(async (request, { params }) => {
   const updStmt = db.prepare('UPDATE rfi_questions SET status = ?, updated_at = ? WHERE id = ?');
   updStmt.run('answered', timestamp, qid);
 
-  logAction(user.id, 'rfi_response', responseId, 'create', null, body);
+  logAction('rfi_response', responseId, 'create', user.id, null, body);
 
   const response = db.prepare('SELECT * FROM rfi_responses WHERE id = ?').get(responseId);
   return created(response);

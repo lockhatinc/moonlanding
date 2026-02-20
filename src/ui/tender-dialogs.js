@@ -1,9 +1,9 @@
 import { statusLabel } from '@/ui/renderer.js';
 
 export function tenderDetailsDialog(tenderId) {
-  return `<div id="tender-detail-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="tender-detail-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="tender-detail-dialog-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:640px">
-      <div class="dialog-header"><span class="dialog-title">Tender Details</span><button class="dialog-close" onclick="document.getElementById('tender-detail-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="tender-detail-dialog-title">Tender Details</span><button class="dialog-close" onclick="document.getElementById('tender-detail-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body" id="tdd-body"><div class="text-gray-500 text-center py-4">Loading...</div></div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('tender-detail-dialog').style.display='none'">Close</button><a id="tdd-edit-link" href="#" class="btn btn-outline btn-sm">Edit</a></div>
     </div></div>
@@ -21,9 +21,9 @@ export function tenderDetailsHolder(tenderId) {
 
 export function tenderTypeStatusPriorityUI(tenderId) {
   return `<div class="flex gap-3 flex-wrap">
-    <div class="modal-form-group"><label class="text-xs text-gray-500">Type</label><select id="tsp-type" class="select select-bordered select-sm" onchange="tspUpdate('${tenderId}')"><option value="open">Open</option><option value="closed">Closed</option><option value="selective">Selective</option><option value="negotiated">Negotiated</option></select></div>
-    <div class="modal-form-group"><label class="text-xs text-gray-500">Status</label><select id="tsp-status" class="select select-bordered select-sm" onchange="tspUpdate('${tenderId}')"><option value="draft">Draft</option><option value="published">Published</option><option value="evaluation">Evaluation</option><option value="awarded">Awarded</option><option value="cancelled">Cancelled</option></select></div>
-    <div class="modal-form-group"><label class="text-xs text-gray-500">Priority</label><select id="tsp-priority" class="select select-bordered select-sm" onchange="tspUpdate('${tenderId}')"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div>
+    <div class="modal-form-group"><label class="text-xs text-gray-500" for="tsp-type">Type</label><select id="tsp-type" class="select select-bordered select-sm" onchange="tspUpdate('${tenderId}')"><option value="open">Open</option><option value="closed">Closed</option><option value="selective">Selective</option><option value="negotiated">Negotiated</option></select></div>
+    <div class="modal-form-group"><label class="text-xs text-gray-500" for="tsp-status">Status</label><select id="tsp-status" class="select select-bordered select-sm" onchange="tspUpdate('${tenderId}')"><option value="draft">Draft</option><option value="published">Published</option><option value="evaluation">Evaluation</option><option value="awarded">Awarded</option><option value="cancelled">Cancelled</option></select></div>
+    <div class="modal-form-group"><label class="text-xs text-gray-500" for="tsp-priority">Priority</label><select id="tsp-priority" class="select select-bordered select-sm" onchange="tspUpdate('${tenderId}')"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select></div>
   </div>
   <script>
   (function(){fetch('/api/tender/${tenderId}').then(function(r){return r.json()}).then(function(d){var t=d.data||d;if(t.tender_type)document.getElementById('tsp-type').value=t.tender_type;if(t.status)document.getElementById('tsp-status').value=t.status;if(t.priority)document.getElementById('tsp-priority').value=t.priority}).catch(function(){})})();

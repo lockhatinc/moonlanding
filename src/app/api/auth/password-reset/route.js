@@ -22,7 +22,7 @@ export const POST = withErrorHandler(async (request) => {
     db.prepare('DELETE FROM password_reset_tokens WHERE user_id = ?').run(user.id);
     db.prepare('INSERT INTO password_reset_tokens (id, user_id, token, expires_at, used, created_at) VALUES (?, ?, ?, ?, 0, ?)').run(genId(), user.id, token, expiresAt, now());
 
-    console.log(`[PasswordReset] Token generated for ${email}: /password-reset/confirm?token=${token}`);
+    console.log(`[PasswordReset] Token generated for ${email}`);
   }
 
   return new Response(JSON.stringify({ status: 'success', message: 'If an account exists with that email, a reset link has been sent.' }), {

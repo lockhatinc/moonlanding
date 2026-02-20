@@ -1,12 +1,12 @@
 export function engagementLetterDialog(engagementId) {
-  return `<div id="eng-letter-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="eng-letter-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="eng-letter-dialog-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:640px">
-      <div class="dialog-header"><span class="dialog-title">Engagement Letter</span><button class="dialog-close" onclick="document.getElementById('eng-letter-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="eng-letter-dialog-title">Engagement Letter</span><button class="dialog-close" onclick="document.getElementById('eng-letter-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
-        <div class="modal-form-group"><label>Template</label><select id="eld-template" class="select select-bordered w-full" onchange="eldLoadTemplate()"><option value="">Select template...</option></select></div>
-        <div class="modal-form-group"><label>Letter Date</label><input type="date" id="eld-date" class="input input-bordered w-full"/></div>
-        <div class="modal-form-group"><label>Recipient Name</label><input id="eld-recipient" class="input input-bordered w-full" placeholder="Client contact name"/></div>
-        <div class="modal-form-group"><label>Content</label><textarea id="eld-content" class="textarea textarea-bordered w-full" rows="8" placeholder="Letter content..."></textarea></div>
+        <div class="modal-form-group"><label for="eld-template">Template</label><select id="eld-template" class="select select-bordered w-full" onchange="eldLoadTemplate()"><option value="">Select template...</option></select></div>
+        <div class="modal-form-group"><label for="eld-date">Letter Date</label><input type="date"  id="eld-date" class="input input-bordered w-full"/></div>
+        <div class="modal-form-group"><label for="eld-recipient">Recipient Name</label><input id="eld-recipient" class="input input-bordered w-full" placeholder="Client contact name"/></div>
+        <div class="modal-form-group"><label for="eld-content">Content</label><textarea id="eld-content" class="textarea textarea-bordered w-full" rows="8" placeholder="Letter content..."></textarea></div>
       </div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('eng-letter-dialog').style.display='none'">Cancel</button><button class="btn btn-outline btn-sm" onclick="eldPreview()">Preview</button><button class="btn btn-primary btn-sm" onclick="eldSave()">Save Letter</button></div>
     </div></div>
@@ -20,13 +20,13 @@ export function engagementLetterDialog(engagementId) {
 }
 
 export function engagementLetterTemplateUpload() {
-  return `<div id="letter-tpl-upload" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="letter-tpl-upload" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="letter-tpl-upload-title" aria-hidden="true">
     <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title">Upload Letter Template</span><button class="dialog-close" onclick="document.getElementById('letter-tpl-upload').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="letter-tpl-upload-title">Upload Letter Template</span><button class="dialog-close" onclick="document.getElementById('letter-tpl-upload').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
-        <div class="modal-form-group"><label>Template Name</label><input id="ltu-name" class="input input-bordered w-full" placeholder="Template name"/></div>
-        <div class="modal-form-group"><label>Template File</label><input type="file" id="ltu-file" class="file-input file-input-bordered w-full" accept=".docx,.doc,.html,.txt"/></div>
-        <div class="modal-form-group"><label>Or paste content</label><textarea id="ltu-content" class="textarea textarea-bordered w-full" rows="5" placeholder="Template content..."></textarea></div>
+        <div class="modal-form-group"><label for="ltu-name">Template Name</label><input id="ltu-name" class="input input-bordered w-full" placeholder="Template name"/></div>
+        <div class="modal-form-group"><label for="ltu-file">Template File</label><input type="file"  id="ltu-file" class="file-input file-input-bordered w-full" accept=".docx,.doc,.html,.txt"/></div>
+        <div class="modal-form-group"><label for="ltu-content">Or paste content</label><textarea id="ltu-content" class="textarea textarea-bordered w-full" rows="5" placeholder="Template content..."></textarea></div>
       </div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('letter-tpl-upload').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="ltuSave()">Save Template</button></div>
     </div></div>

@@ -5,12 +5,13 @@ export function linearProgress(value = 0, max = 100, label = '', variant = 'medi
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0
   const ht = variant === 'thin' ? '4px' : variant === 'thick' ? '16px' : '8px'
   const color = pct < 30 ? '#ef4444' : pct < 70 ? '#f59e0b' : '#22c55e'
+  const ariaLabel = label || 'Progress'
   return h('div', { className: 'linear-progress-wrap' },
     label ? h('span', { className: 'progress-label' }, label) : '',
-    h('div', { className: 'linear-progress', style: `height:${ht}` },
+    h('div', { className: 'linear-progress', style: `height:${ht}`, role: 'progressbar', 'aria-valuenow': String(pct), 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-label': ariaLabel },
       h('div', { className: 'linear-progress-bar', style: `width:${pct}%;height:100%;background:${color}` })
     ),
-    h('span', { className: 'progress-pct', style: `color:${color}` }, `${pct}%`)
+    h('span', { className: 'progress-pct', style: `color:${color}`, 'aria-hidden': 'true' }, `${pct}%`)
   )
 }
 
@@ -18,13 +19,14 @@ export function circularProgress(value = 0, max = 100, label = '') {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0
   const color = pct < 30 ? '#ef4444' : pct < 70 ? '#f59e0b' : '#22c55e'
   const r = 40, circ = 2 * Math.PI * r, offset = circ - (pct / 100) * circ
-  return `<div class="circular-progress" style="width:100px;height:100px">
+  const ariaLabel = label || 'Progress'
+  return `<div class="circular-progress" style="width:100px;height:100px" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="${ariaLabel}">
     <svg width="100" height="100" viewBox="0 0 100 100" aria-hidden="true">
       <circle cx="50" cy="50" r="${r}" fill="none" stroke="#e5e7eb" stroke-width="8"/>
       <circle cx="50" cy="50" r="${r}" fill="none" stroke="${color}" stroke-width="8"
         stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round"/>
     </svg>
-    <div class="circular-progress-text">
+    <div class="circular-progress-text" aria-hidden="true">
       <span class="circular-progress-pct">${pct}%</span>
       ${label ? `<span class="circular-progress-label">${label}</span>` : ''}
     </div>
@@ -67,7 +69,7 @@ export function userAvatar(user, size = 'md', showStatus = false) {
   const color = AVATAR_COLORS[nameHash(name) % AVATAR_COLORS.length]
   const fontSize = Math.round(px * 0.4)
   const statusDot = showStatus ? `<span class="avatar-status avatar-status-${user?.status === 'active' || user?.online ? 'online' : 'offline'}" style="width:${Math.round(px * 0.3)}px;height:${Math.round(px * 0.3)}px"></span>` : ''
-  return `<span class="user-avatar user-avatar-${size}" style="width:${px}px;height:${px}px;background:${color};font-size:${fontSize}px" title="${name}">${initials}${statusDot}</span>`
+  return `<span class="user-avatar user-avatar-${size}" style="width:${px}px;height:${px}px;background:${color};font-size:${fontSize}px" title="${name}" aria-label="${name}" role="img"><span aria-hidden="true">${initials}</span>${statusDot}</span>`
 }
 
 export function teamAvatarGroup(users = [], maxShow = 3) {

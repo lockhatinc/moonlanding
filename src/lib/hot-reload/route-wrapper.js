@@ -1,12 +1,8 @@
-const { safeError } = require('/config/workspace/moonlanding/src/lib/hot-reload/safe-error.js');
-const { contain } = require('/config/workspace/moonlanding/src/lib/hot-reload/promise-container.js');
+import { safeError } from './safe-error.js';
+import { contain } from './promise-container.js';
 
-function wrapRouteHandler(handler, options = {}) {
-  const {
-    logErrors = true,
-    sendErrorResponse = true,
-    context = 'route'
-  } = options;
+export function wrapRouteHandler(handler, options = {}) {
+  const { logErrors = true, sendErrorResponse = true, context = 'route' } = options;
 
   return async function wrappedHandler(req, res) {
     try {
@@ -19,32 +15,26 @@ function wrapRouteHandler(handler, options = {}) {
       if (logErrors) {
         console.error(`[RouteError:${context}] ${req.method} ${req.url}:`, err);
       }
-
       if (sendErrorResponse && !res.headersSent) {
         const safe = safeError(err);
         const statusCode = err.statusCode || err.status || 500;
-
         res.statusCode = statusCode;
         res.setHeader('Content-Type', 'application/json');
-
         const body = JSON.stringify({
           error: safe.message,
           type: safe.type,
           ...(process.env.NODE_ENV === 'development' && { stack: safe.stack })
         });
-
         res.setHeader('Content-Length', Buffer.byteLength(body, 'utf-8'));
         res.end(body);
       }
-
       throw err;
     }
   };
 }
 
-function wrapRouteHandlers(handlers) {
+export function wrapRouteHandlers(handlers) {
   const wrapped = {};
-
   for (const [method, handler] of Object.entries(handlers)) {
     if (typeof handler === 'function') {
       wrapped[method] = wrapRouteHandler(handler, { context: method });
@@ -52,11 +42,5 @@ function wrapRouteHandlers(handlers) {
       wrapped[method] = handler;
     }
   }
-
   return wrapped;
 }
-
-module.exports = {
-  wrapRouteHandler,
-  wrapRouteHandlers
-};

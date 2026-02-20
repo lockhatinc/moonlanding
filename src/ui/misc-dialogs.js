@@ -9,9 +9,9 @@ export function fridayGlobalsCrossApp() {
 }
 
 export function fridayTeamDialog() {
-  return `<div id="friday-team-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="friday-team-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="friday-team-dialog-title" aria-hidden="true">
     <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title">Assign Team</span><button class="dialog-close" onclick="document.getElementById('friday-team-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="friday-team-dialog-title">Assign Team</span><button class="dialog-close" onclick="document.getElementById('friday-team-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body"><div id="ftd-teams" class="flex flex-col gap-2"></div></div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('friday-team-dialog').style.display='none'">Close</button></div>
     </div></div>
@@ -23,11 +23,11 @@ export function fridayTeamDialog() {
 }
 
 export function fridayDueDateDialog() {
-  return `<div id="friday-due-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="friday-due-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="friday-due-dialog-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:380px">
-      <div class="dialog-header"><span class="dialog-title">Set Due Date</span><button class="dialog-close" onclick="document.getElementById('friday-due-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="friday-due-dialog-title">Set Due Date</span><button class="dialog-close" onclick="document.getElementById('friday-due-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
-        <div class="modal-form-group"><label>Due Date</label><input type="date" id="fdd-date" class="input input-bordered w-full"/></div>
+        <div class="modal-form-group"><label for="fdd-date">Due Date</label><input type="date"  id="fdd-date" class="input input-bordered w-full"/></div>
         <div class="date-presets">
           <button class="date-preset-btn" onclick="fddPreset(7)">+1 Week</button>
           <button class="date-preset-btn" onclick="fddPreset(14)">+2 Weeks</button>
@@ -47,9 +47,9 @@ export function fridayDueDateDialog() {
 }
 
 export function emailReceiveDialog() {
-  return `<div id="email-receive-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="email-receive-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="email-receive-dialog-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:640px">
-      <div class="dialog-header"><span class="dialog-title">Received Emails</span><button class="dialog-close" onclick="document.getElementById('email-receive-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="email-receive-dialog-title">Received Emails</span><button class="dialog-close" onclick="document.getElementById('email-receive-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body"><div id="erd-list" class="flex flex-col gap-2" style="max-height:400px;overflow:auto"><div class="text-gray-500 text-center py-4">Loading...</div></div></div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('email-receive-dialog').style.display='none'">Close</button><button class="btn btn-outline btn-sm" onclick="erdRefresh()">Refresh</button></div>
     </div></div>
@@ -60,15 +60,15 @@ export function emailReceiveDialog() {
 }
 
 export function feeSplitDialog(engagementId) {
-  return `<div id="fee-split-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-hidden="true">
+  return `<div id="fee-split-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="fee-split-dialog-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:560px">
-      <div class="dialog-header"><span class="dialog-title">Fee Split</span><button class="dialog-close" onclick="document.getElementById('fee-split-dialog').style.display='none'">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="fee-split-dialog-title">Fee Split</span><button class="dialog-close" onclick="document.getElementById('fee-split-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div id="fsd-splits" class="flex flex-col gap-2"></div>
         <div class="inline-form" style="margin-top:1rem">
           <div class="inline-form-row">
-            <div class="inline-form-field" style="flex:1"><label>User</label><select id="fsd-user" class="select select-bordered select-sm w-full"></select></div>
-            <div class="inline-form-field" style="width:80px"><label>%</label><input type="number" id="fsd-pct" class="input input-bordered input-sm" min="0" max="100" value="0"/></div>
+            <div class="inline-form-field" style="flex:1"><label for="fsd-user">User</label><select id="fsd-user" class="select select-bordered select-sm w-full"></select></div>
+            <div class="inline-form-field" style="width:80px"><label for="fsd-pct">%</label><input type="number"  id="fsd-pct" class="input input-bordered input-sm" min="0" max="100" value="0"/></div>
             <div class="inline-form-field"><label>&nbsp;</label><button class="btn btn-primary btn-sm" onclick="fsdAdd()">Add</button></div>
           </div>
         </div>

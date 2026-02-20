@@ -101,6 +101,246 @@ Test: `node test-audit-simple.js`
 
 ---
 
+## Environment Variables
+
+Required in `.env` (see `.env.example`):
+
+| Variable | Purpose | Default |
+|---|---|---|
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID | (required for Google auth) |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | (required for Google auth) |
+| `GOOGLE_REDIRECT_URI` | OAuth callback URL | `http://localhost:3000/api/auth/google/callback` |
+| `GOOGLE_SERVICE_ACCOUNT_PATH` | Path to service account JSON | `./config/service-account.json` |
+| `GOOGLE_DRIVE_FOLDER_ID` | Google Drive root folder ID | (required for Drive) |
+| `GMAIL_SENDER_EMAIL` | Gmail sender address | (required for email) |
+| `DATABASE_PATH` | SQLite database file path | `./data/app.db` |
+| `NODE_ENV` | Environment mode | `development` |
+| `GCP_PROJECT_ID` | Google Cloud project ID | (required for GCP services) |
+| `APP_URL` | Public app URL | `http://localhost:3000` |
+| `DEBUG` | Enable debug mode | `false` |
+| `EMAIL_HOST` | SMTP host | `smtp.gmail.com` |
+| `EMAIL_PORT` | SMTP port | `587` |
+| `EMAIL_USER` | SMTP username | (required for email) |
+| `EMAIL_PASSWORD` | SMTP password | (required for email) |
+| `EMAIL_FROM` | Default sender address | `noreply@example.com` |
+
+---
+
+## API Endpoint Catalog
+
+93 route files. Auth column: requires JWT token in cookie/header.
+
+### Generic CRUD (catch-all)
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET/POST/PUT/PATCH/DELETE | `/api/:entity/*` | No | Generic CRUD for any config-defined entity |
+
+### Auth
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/auth/login` | No | Email/password login, returns JWT |
+| GET/POST | `/api/auth/logout` | No | Clear session |
+| GET | `/api/auth/me` | No | Current user info from token |
+| GET | `/api/auth/google` | No | Initiate Google OAuth flow |
+| GET | `/api/auth/google/callback` | No | Google OAuth callback |
+| POST | `/api/auth/mwr-bridge` | No | MWR cross-auth bridge |
+| POST/PUT | `/api/auth/password-reset` | No | Request/execute password reset |
+
+### Friday (Engagement Management)
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/friday/client/add-user` | Yes | Add user to client |
+| POST | `/api/friday/client/delete-user` | Yes | Remove user from client |
+| POST | `/api/friday/client/inactive` | Yes | Set client inactive |
+| POST | `/api/friday/client/replace-user` | Yes | Replace user on client |
+| POST | `/api/friday/client/test-emails` | Yes | Send test emails |
+| POST | `/api/friday/engagement/delete` | Yes | Delete engagement |
+| GET | `/api/friday/engagement/:id/transition-status` | Yes | Check transition status |
+| POST | `/api/friday/engagement/files-zip` | Yes | Download engagement files as ZIP |
+| GET/POST/DELETE | `/api/friday/engagement/notifications` | Yes | Manage notifications |
+| GET/POST | `/api/friday/engagement/progress` | Yes | Track engagement progress |
+| GET | `/api/friday/engagement/stage-counts` | Yes | Stage count aggregation |
+| GET/POST | `/api/friday/engagement/transition` | Yes | Stage transitions |
+| GET | `/api/friday/features` | No | Feature flags |
+| GET | `/api/friday/rfi` | Yes | List RFIs |
+| POST | `/api/friday/rfi/:id/response` | Yes | Submit RFI response |
+| POST | `/api/friday/rfi/bulk-deadline` | Yes | Bulk update deadlines |
+| POST | `/api/friday/rfi/date-cascade` | Yes | Cascade date changes |
+| POST | `/api/friday/rfi/reminder` | Yes | Send RFI reminder |
+| POST | `/api/friday/team/user-removal` | Yes | Remove team member |
+| POST | `/api/friday/upload/*` | Yes | File uploads (engagement-letter, post-rfi, user-cv) |
+| GET/POST | `/api/friday/version` | No | App version info |
+
+### MWR (My Work Review)
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET/POST/PUT/PATCH/DELETE | `/api/mwr/review` | Yes | CRUD reviews |
+| GET | `/api/mwr/review/search` | Yes | Search reviews |
+| GET/POST | `/api/mwr/review/archive` | Yes | Archive management |
+| POST | `/api/mwr/review/batch` | Yes | Batch review operations |
+| GET | `/api/mwr/review/:id/analytics` | Yes | Review analytics |
+| GET/POST | `/api/mwr/review/:id/highlights` | Yes | Review highlights (PDF annotations) |
+| PATCH/DELETE | `/api/mwr/review/:id/highlights/:hid` | Yes | Manage single highlight |
+| GET/POST | `/api/mwr/review/:id/highlights/:hid/responses` | Yes | Highlight responses |
+| POST | `/api/mwr/review/:id/highlights/bulk-resolve` | Yes | Bulk resolve highlights |
+| GET/POST | `/api/mwr/review/:id/collaborators` | Yes | Review collaborators |
+| DELETE | `/api/mwr/review/:id/collaborators/:cid` | Yes | Remove collaborator |
+| GET/POST | `/api/mwr/review/:id/checklists` | Yes | Review checklists |
+| POST | `/api/mwr/review/:id/checklists/:cid/items` | Yes | Add checklist item |
+| PATCH | `/api/mwr/review/:id/checklists/:cid/items/:iid/toggle` | Yes | Toggle checklist item |
+| GET | `/api/mwr/review/:id/sections` | Yes | Review sections |
+| GET/POST | `/api/mwr/review/:id/tender` | Yes | Tender management |
+| POST | `/api/mwr/review/:id/export-pdf` | No | Export review as PDF |
+| GET/POST | `/api/mwr/template` | Yes | Review templates |
+| GET/PATCH/DELETE | `/api/mwr/template/:id` | Yes | Manage template |
+| GET/POST | `/api/mwr/permissions` | Yes | MWR permissions |
+| GET/POST | `/api/mwr/user/:uid/priority-reviews` | Yes | Priority review list |
+| GET | `/api/mwr/features` | No | MWR feature flags |
+| GET/POST/PATCH/DELETE | `/api/mwr/collaborator-role` | No | Collaborator roles |
+
+### RFI (Request for Information)
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET/POST | `/api/rfi` | Yes | List/create RFIs |
+| GET/PUT/DELETE | `/api/rfi/:id` | Yes | Manage single RFI |
+| GET/POST | `/api/rfi/:id/questions` | Yes | RFI questions |
+| GET/PUT/DELETE | `/api/rfi/:id/questions/:qid` | Yes | Manage question |
+| GET/POST | `/api/rfi/:id/questions/:qid/responses` | Yes | Question responses |
+| GET | `/api/rfi/_templates` | Yes | RFI templates |
+
+### Messaging
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET/POST | `/api/message` | Yes | List/send messages |
+| PUT/DELETE | `/api/message/:id` | Yes | Edit/delete message |
+| POST | `/api/message/:id/react` | Yes | React to message |
+| POST | `/api/highlight/:id/react` | Yes | React to highlight |
+
+### Email
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET/POST | `/api/email/send` | No | Send email |
+| GET/POST | `/api/email/receive` | No | Receive/process inbound email |
+| POST | `/api/email/allocate` | No | Allocate email address |
+| POST | `/api/email/allocate/batch` | No | Batch allocate emails |
+| GET | `/api/email/unallocated` | No | List unallocated emails |
+
+### Operations
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/api/health` | No | Health check (`?detailed=true` for full metrics) |
+| GET/DELETE | `/api/metrics` | No | System metrics (`?type=all\|metrics\|alerts\|database\|resources\|logs`) |
+| GET | `/api/monitoring/dashboard` | No | Monitoring dashboard data |
+| GET | `/api/csrf-token` | No | Get CSRF token |
+| GET/POST | `/api/cron/trigger` | No | Trigger cron jobs |
+| GET | `/api/files/:id` | No | File download by ID |
+| GET | `/api/domains` | No | List configured domains |
+
+### Audit
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/api/audit` | Yes | Audit overview |
+| GET/POST | `/api/audit/logs` | Yes | Query/rotate audit logs |
+| GET | `/api/audit/stats` | Yes | Audit statistics |
+| GET | `/api/audit/dashboard` | No | Audit dashboard |
+| GET/POST | `/api/audit/permissions` | No | Audit permission changes |
+
+---
+
+## Monitoring
+
+Monitoring initializes automatically on server start via `src/lib/monitoring-init.js`:
+- **Resource monitoring** polls every 5s (CPU, memory, DB size)
+- **Alert checking** runs every 10s against configurable thresholds
+- **Metrics collection** tracks request count, latency, error rates per endpoint
+- **Log aggregation** provides structured logging with levels
+
+Key endpoints:
+- `GET /api/health` - Basic health (DB connectivity, latency). Add `?detailed=true` for full system snapshot.
+- `GET /api/metrics?type=all` - All metrics, alerts, DB stats, resources, logs.
+- `GET /api/monitoring/dashboard` - Dashboard data.
+
+---
+
+## Hot Reload
+
+File watcher monitors `src/config/`, `src/app/api/`, `src/ui/` for `.js`, `.jsx`, `.yml` changes. On change:
+1. Module cache is cleared
+2. Next request loads fresh modules via timestamped dynamic `import()`
+3. Config engine resets if `master-config.yml` changes
+
+Hot reload infrastructure in `src/lib/hot-reload/`:
+- `promise-container.js` - Contained async operations
+- `checkpoint.js` - State checkpointing for recovery
+- `supervisor.js` - Component supervision tree
+- `mutex.js` - Concurrency locks
+- `route-wrapper.js` - Route handler wrapping with error boundaries
+- `debug-exposure.js` - Runtime debug hooks on `globalThis.__debug__`
+
+---
+
+## System Limits
+
+Defined in `src/config/system-limits-config.js`:
+- **Request body**: 10 MB (server.js hard limit), 50 MB (config limit)
+- **File upload**: 100 MB max
+- **Query results**: 10,000 max, page size 1-100 (default 20)
+- **API rate**: 100 req/s, 6000 req/min, 50 concurrent
+- **DB transactions**: 30s timeout, 5s query timeout
+- **Search**: 1-255 char query, 1000 max results
+
+---
+
+## Key Dependencies
+
+- `tsx` - Runtime TypeScript/JSX transpilation (zero-build)
+- `better-sqlite3` - SQLite database driver
+- `bcrypt` - Password hashing
+- `lucia` + `arctic` - Auth session management
+- `googleapis` - Google Drive/Gmail/Docs integration
+- `firebase-admin` - Firebase data source (migration)
+- `nodemailer` - Email sending
+- `puppeteer` - PDF generation
+- `webjsx` - Client-side JSX rendering
+- `js-yaml` - YAML config parsing
+- `@casl/ability` - Authorization rules
+
+---
+
+## Troubleshooting
+
+### Server won't start
+- Check Node.js version (requires ESM support, v18+)
+- Verify `data/` directory exists for SQLite
+- Check `.env` file exists with required variables
+
+### "database is locked" errors
+- SQLite allows one writer at a time. Reduce concurrent writes.
+- Clear WAL: `rm -f data/app.db-wal data/app.db-shm`
+
+### Stale module cache
+- Hot reload should handle this automatically
+- Manual clear: restart the server process
+
+### Google OAuth not working
+- Verify `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `.env`
+- Check redirect URI matches Google Console configuration
+- Service account needs Domain-Wide Delegation for Drive/Gmail
+
+### Incomplete HTML responses
+- Ensure `Content-Length` header is set (see Critical Caveats above)
+
+### API returns 405 Method Not Allowed
+- Route file must export named functions matching HTTP methods (`GET`, `POST`, etc.)
+- Check route file path matches URL pattern
+
+### Hot reload not picking up changes
+- Only watches `.js`, `.jsx`, `.yml` files
+- Only watches `src/config/`, `src/app/api/`, `src/ui/` directories
+- Changes outside these directories require server restart
+
+---
+
 ## Phase 3: Complete Data Migration (Phase 3.1-3.10)
 
 **Status:** Infrastructure complete. Ready for Phase 3.4 sample testing.
@@ -437,91 +677,3 @@ If migration fails:
 6. Retry migration
 
 See individual module documentation for detailed API and error handling.
-
----
-
-## EXECUTION STATUS - PHASES 3.5-3.10
-
-**Status:** FULLY PREPARED - AWAITING EXECUTION VIA dev ENVIRONMENT
-
-### Ready-to-Execute Command
-
-```bash
-node /home/user/lexco/moonlanding/execute-all-phases-real.js
-```
-
-### Execution Sequence
-
-The master orchestrator will execute in sequence:
-
-1. **Phase 3.5: Pilot Migration (10%)** ~30 min
-   - Load 10% sample (1,600-1,700 records)
-   - Execute complete migration pipeline
-   - Run all 8 validators
-   - Verify 100% pass rate
-   - Test rollback capability
-
-2. **Phase 3.6: Full Data Migration (100%)** ~2-4 hours
-   - Create production backup
-   - Load Friday-staging (80K-200K records)
-   - Load MyWorkReview-staging (15K-30K records)
-   - Apply user deduplication (10-15% overlap)
-   - Run all 8 validators on full dataset
-   - Generate comprehensive report
-
-3. **Phase 3.7: Data Integrity Verification** ~2-4 hours
-   - 12 comprehensive verification checks:
-     * User deduplication accuracy
-     * Engagement-client relationships
-     * RFI-engagement-question relationships
-     * Highlight coordinates (±0 pixels - CRITICAL)
-     * Timestamp UTC normalization
-     * File path updates
-     * Permission relationships
-     * Activity logs completeness
-     * Full system integration test
-     * Spot check 100 random records
-     * Orphaned record detection
-     * Performance baseline (p95 <500ms)
-
-4. **Phase 3.8: Parallel Operations Setup** ~1-2 hours
-   - Set old systems to read-only
-   - Create bidirectional sync (Friday ↔ Moonlanding)
-   - Create bidirectional sync (MWR ↔ Moonlanding)
-   - Set up dual-system routing with fallback
-   - Monitor data consistency
-   - Test rollback procedures
-
-5. **Phase 3.9: Production Cutover** ~1-2 hours
-   - Final read-only lock on old systems
-   - Verify no pending changes
-   - Execute final sync
-   - Switch production traffic to Moonlanding
-   - Verify system operation under load
-   - Archive old systems
-
-6. **Phase 3.10: Post-Migration Support** 4 hours + 24h monitoring
-   - Continuous error log monitoring (24h)
-   - Address user issues immediately
-   - Performance optimization if needed
-   - Migration documentation creation
-   - Old system data archival
-   - Operational runbook updates
-   - Support team training
-
-### Total Execution Time
-- ~11-18 hours active execution
-- +24 hours continuous monitoring
-- Automatic .prd updates as phases complete
-- Comprehensive logging to `phase-execution-logs/`
-
-### Output on Completion
-- ✓ 230K-250K records migrated with zero data loss
-- ✓ 100% validator pass rate (8/8) on all phases
-- ✓ All 12 verification checks passed
-- ✓ .prd file becomes empty
-- ✓ Execution logs saved with detailed metrics
-- ✓ Production backup preserved at `data/backups/`
-
-### Blocking Issue
-Execution requires `plugin:gm:dev` access for Node.js execution. The complete infrastructure is built and waiting for the dev execution environment to be available.
