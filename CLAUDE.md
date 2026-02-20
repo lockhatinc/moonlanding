@@ -99,6 +99,50 @@ Log structure: `{ id, timestamp, level, operation, entity_type, entity_id, user_
 
 Test: `node test-audit-simple.js`
 
+### Google OAuth Staging Configuration (NEW)
+Staging environment at https://app.acc.l-inc.co.za/ requires Google OAuth credentials.
+
+**Current Status:** OAuth route operational, but `client_id=undefined` because environment variables not configured.
+
+**To Enable Google OAuth on Staging:**
+
+1. **Create/Verify OAuth Credentials in Google Cloud Console:**
+   - Go to https://console.cloud.google.com/apis/credentials?project=moonlanding-platform
+   - If OAuth 2.0 Client ID doesn't exist for staging:
+     - Ensure OAuth consent screen is configured (type: External, app name: Moonlanding, contact: admin@coas.co.za)
+     - Click "Create Credentials" > "OAuth 2.0 Client ID"
+     - Select "Web application", name: "Moonlanding Staging Web Client"
+     - Add authorized JavaScript origins: `https://app.acc.l-inc.co.za`
+     - Add authorized redirect URIs: `https://app.acc.l-inc.co.za/api/auth/google/callback`
+     - Copy Client ID and Client Secret
+   - If already exists, retrieve Client ID and Client Secret from credentials page
+
+2. **Set Environment Variables on Staging Server:**
+   ```
+   GOOGLE_CLIENT_ID=<your_client_id>
+   GOOGLE_CLIENT_SECRET=<your_client_secret>
+   GOOGLE_REDIRECT_URI=https://app.acc.l-inc.co.za/api/auth/google/callback
+   ```
+
+3. **Restart Staging Server:**
+   - Restart the application to load new environment variables
+   - Wait 30 seconds for full startup
+
+4. **Test OAuth Flow:**
+   - Visit https://app.acc.l-inc.co.za/login
+   - "Sign in with Google" button should now be visible (not hidden)
+   - Click button and authenticate with Google account
+   - User should be created and logged in automatically
+
+**Routes:** `src/app/api/auth/google/route.js`, `src/app/api/auth/google/callback/route.js`
+
+**Config:** `src/config/env.js` (hasGoogleAuth checks both clientId AND clientSecret are non-empty)
+
+**Troubleshooting:**
+- If still seeing "invalid_client": verify redirect URI matches exactly in Google Console (HTTPS, no trailing slash)
+- If button not appearing: restart server and check that GOOGLE_CLIENT_ID environment variable is set
+- If user not created: check that user table exists and default role is configured
+
 ---
 
 ## Environment Variables
