@@ -99,49 +99,75 @@ Log structure: `{ id, timestamp, level, operation, entity_type, entity_id, user_
 
 Test: `node test-audit-simple.js`
 
-### Google OAuth Staging Configuration (NEW)
-Staging environment at https://app.acc.l-inc.co.za/ requires Google OAuth credentials.
+### Google OAuth Staging Configuration
 
-**Current Status:** OAuth route operational, but `client_id=undefined` because environment variables not configured.
+Staging environment at https://app.acc.l-inc.co.za/ uses dynamic redirect URI detection for Google OAuth.
 
-**To Enable Google OAuth on Staging:**
+**Current Configuration:**
+- Client ID: `4168395384-klbs8f4b0q194tvp3glphmo7p6424r8h.apps.googleusercontent.com`
+- Project: `moonlanding-platform`
+- Dynamic redirect URI: Built from request headers (supports Traefik reverse proxy)
 
-1. **Create/Verify OAuth Credentials in Google Cloud Console:**
-   - Go to https://console.cloud.google.com/apis/credentials?project=moonlanding-platform
-   - If OAuth 2.0 Client ID doesn't exist for staging:
-     - Ensure OAuth consent screen is configured (type: External, app name: Moonlanding, contact: admin@coas.co.za)
-     - Click "Create Credentials" > "OAuth 2.0 Client ID"
-     - Select "Web application", name: "Moonlanding Staging Web Client"
-     - Add authorized JavaScript origins: `https://app.acc.l-inc.co.za`
-     - Add authorized redirect URIs: `https://app.acc.l-inc.co.za/api/auth/google/callback`
-     - Copy Client ID and Client Secret
-   - If already exists, retrieve Client ID and Client Secret from credentials page
+**How Dynamic Redirect URI Works:**
 
-2. **Set Environment Variables on Staging Server:**
-   ```
-   GOOGLE_CLIENT_ID=<your_client_id>
-   GOOGLE_CLIENT_SECRET=<your_client_secret>
-   GOOGLE_REDIRECT_URI=https://app.acc.l-inc.co.za/api/auth/google/callback
-   ```
+The OAuth route (`src/app/api/auth/google/route.js`) builds the redirect URI dynamically from request headers:
 
-3. **Restart Staging Server:**
-   - Restart the application to load new environment variables
-   - Wait 30 seconds for full startup
+```js
+const protocol = request.headers['x-forwarded-proto'] || 'http';
+const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:3000';
+const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
+```
 
-4. **Test OAuth Flow:**
-   - Visit https://app.acc.l-inc.co.za/login
-   - "Sign in with Google" button should now be visible (not hidden)
-   - Click button and authenticate with Google account
-   - User should be created and logged in automatically
+This allows the same OAuth client to work across multiple environments (localhost, staging, production) without hardcoding redirect URIs in environment variables.
+
+**Required Redirect URIs in Google Cloud Console:**
+
+The OAuth 2.0 Client must have ALL redirect URIs registered that the application will use:
+
+1. **Local Development:** `http://localhost:3000/api/auth/google/callback`
+2. **Staging:** `https://app.acc.l-inc.co.za/api/auth/google/callback`
+3. **Production:** `https://your-production-domain/api/auth/google/callback` (when deployed)
+
+**To Add Staging Redirect URI (Fix redirect_uri_mismatch Error):**
+
+1. **Open Google Cloud Console:**
+   - Visit: https://console.cloud.google.com/apis/credentials/oauthclient/4168395384-klbs8f4b0q194tvp3glphmo7p6424r8h.apps.googleusercontent.com?project=moonlanding-platform
+   - Or navigate to: APIs & Services → Credentials → Click on the OAuth 2.0 Client ID
+
+2. **Add Redirect URI:**
+   - Scroll to "Authorized redirect URIs" section
+   - Click "ADD URI" button
+   - Enter exactly: `https://app.acc.l-inc.co.za/api/auth/google/callback`
+   - Click "SAVE" at the bottom of the page
+
+3. **Wait for Propagation:**
+   - Changes take 30-60 seconds to propagate through Google's systems
+
+4. **Verify on Staging Server:**
+   - Ensure environment variables are set:
+     ```
+     GOOGLE_CLIENT_ID=4168395384-klbs8f4b0q194tvp3glphmo7p6424r8h.apps.googleusercontent.com
+     GOOGLE_CLIENT_SECRET=<your_secret>
+     ```
+   - Note: `GOOGLE_REDIRECT_URI` is NOT needed (dynamic detection handles this)
+   - Restart the application if environment variables were just added
+
+5. **Test OAuth Flow:**
+   - Visit: https://app.acc.l-inc.co.za/login
+   - Click "Sign in with Google" button
+   - Complete Google authentication
+   - Verify successful login
 
 **Routes:** `src/app/api/auth/google/route.js`, `src/app/api/auth/google/callback/route.js`
 
 **Config:** `src/config/env.js` (hasGoogleAuth checks both clientId AND clientSecret are non-empty)
 
 **Troubleshooting:**
-- If still seeing "invalid_client": verify redirect URI matches exactly in Google Console (HTTPS, no trailing slash)
-- If button not appearing: restart server and check that GOOGLE_CLIENT_ID environment variable is set
-- If user not created: check that user table exists and default role is configured
+- **Error "redirect_uri_mismatch":** The redirect URI is not registered in Google Cloud Console. Follow steps above to add it.
+- **Error "invalid_client":** Client ID or secret is incorrect. Verify environment variables match Google Cloud Console.
+- **Button not appearing:** Environment variables not set. Check `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are both configured.
+- **User not created:** Check database user table exists and default role is configured.
+- **Check computed redirect URI:** Server logs show `[OAuth] Redirect URI:` with the computed values from headers.
 
 ---
 
