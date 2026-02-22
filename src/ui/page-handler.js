@@ -2,6 +2,7 @@ import { getUser, setCurrentRequest } from '@/engine.server.js';
 import { hasGoogleAuth } from '@/config/env.js';
 import { getSpec } from '@/config/spec-helpers.js';
 import { list, get, count } from '@/lib/query-engine.js';
+import { getDatabase } from '@/lib/database-core.js';
 import { getConfigEngineSync } from '@/lib/config-generator-engine.js';
 import {
   renderLogin,
@@ -49,6 +50,7 @@ import {
   isPartner, isManager, isClerk, isClientUser, isAuditor, canClientAccessEntity
 } from '@/ui/permissions-ui.js';
 import { renderEngagementGrid, renderEngagementDetail } from '@/ui/engagement-grid-renderer.js';
+import { renderRfiList } from '@/ui/rfi-list-renderer.js';
 import { renderPdfViewer, renderPdfEditorPlaceholder } from '@/ui/pdf-viewer-renderer.js';
 import { renderReviewAnalytics } from '@/ui/review-analytics-renderer.js';
 import { renderHighlightThreading } from '@/ui/highlight-threading-renderer.js';
@@ -544,6 +546,15 @@ export async function handlePage(pathname, req, res) {
     } catch {}
     let logs = []; try { logs = list('job_log', {}).slice(0, 20); } catch {}
     return renderJobManagement(user, jobs, logs);
+  }
+
+  // F-RFI-LIST: Friday-style RFI list
+  if (segments.length === 1 && segments[0] === 'rfi') {
+    if (!canList(user, 'rfi')) return renderAccessDenied(user, 'rfi', 'list');
+    let rfis = []; try { const db = getDatabase(); rfis = db.prepare('SELECT * FROM rfis ORDER BY created_at DESC').all(); } catch {}
+    let engagements = []; try { engagements = list('engagement', {}); } catch {}
+    if (isClerk(user)) rfis = rfis.filter(r => engagements.filter(e => e.assigned_to === user.id || e.team_id === user.team_id).some(e => e.id === r.engagement_id));
+    return renderRfiList(user, rfis, engagements);
   }
 
   // F-CLIENT-LIST: Friday-style client list
