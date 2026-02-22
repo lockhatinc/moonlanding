@@ -1,0 +1,24 @@
+# PRD: Feature Parity with Friday + MyWorkReview
+
+## WAVE 1: Engagement Detail Enhancements
+- [1.1] Engagement detail: tabbed layout (Details, RFIs, Chat, Checklist, Activity, Files)
+- [1.2] Engagement detail: Stage transition dialog with confirmation
+- [1.3] Engagement detail: Chat/messages panel
+- [1.4] Engagement detail: Checklist management tab
+- [1.5] Engagement detail: Activity timeline tab
+- [1.6] Engagement detail: File upload tab
+
+## WAVE 2: Settings + User/Team Management
+- [2.1] Settings Users: User create/edit form with role+team
+- [2.2] Settings Teams: Team create/edit form with members
+- [2.3] Settings User Detail page (/admin/settings/users/:id)
+- [2.4] Settings Team Detail page (/admin/settings/teams/:id)
+
+## WAVE 3: RFI + Client Enhancements
+- [3.1] RFI detail: full edit with questions/sections
+- [3.2] Client detail: tabbed layout with engagements, users, risk
+- [3.3] Engagement create: custom form matching Friday fields
+
+## WAVE 4: Review Features
+- [4.1] Review detail: tabbed view (PDF, Highlights, Checklists, Collaborators)
+- [4.2] Review create: template selection flow

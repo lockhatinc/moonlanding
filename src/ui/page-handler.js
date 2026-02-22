@@ -50,7 +50,6 @@ import {
   isPartner, isManager, isClerk, isClientUser, isAuditor, canClientAccessEntity
 } from '@/ui/permissions-ui.js';
 import { renderEngagementGrid } from '@/ui/engagement-grid-renderer.js';
-import { renderEngagementDetail } from '@/ui/engagement-detail-renderer.js';
 import { renderRfiList } from '@/ui/rfi-list-renderer.js';
 import { renderPdfViewer, renderPdfEditorPlaceholder } from '@/ui/pdf-viewer-renderer.js';
 import { renderReviewAnalytics } from '@/ui/review-analytics-renderer.js';
@@ -63,6 +62,14 @@ import { renderSectionResolution } from '@/ui/section-resolution-renderer.js';
 import { renderReviewComparison, renderComparisonPicker } from '@/ui/review-comparison-renderer.js';
 import { renderTenderDashboard } from '@/ui/tender-dashboard-renderer.js';
 import { renderBatchOperations } from '@/ui/batch-review-renderer.js';
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+const __dirname_ph = fileURLToPath(new URL('.', import.meta.url));
+
+async function lazyRenderer(name) {
+  const t = globalThis.__reloadTs__ || Date.now();
+  return import(`file://${__dirname_ph}${name}?t=${t}`);
+}
 
 
 function page_wrap(user, title, bc, content) {
@@ -324,6 +331,32 @@ export async function handlePage(pathname, req, res) {
       const healthData = await getSystemHealth();
       return renderSystemHealth(user, healthData);
     }
+    // User detail/edit/new routes under admin/settings
+    if (normalized === '/admin/settings/users/new') {
+      const teams = list('team', {});
+      const { renderSettingsUserDetail } = await lazyRenderer('settings-user-team-renderer.js');
+      return renderSettingsUserDetail(user, {}, teams);
+    }
+    if (segments.length === 4 && segments[2] === 'users' && segments[3] !== 'new') {
+      const userId = segments[3];
+      const teams = list('team', {});
+      const targetUser = get('user', userId) || {};
+      const { renderSettingsUserDetail: _renderUserDetail } = await lazyRenderer('settings-user-team-renderer.js');
+      return _renderUserDetail(user, targetUser, teams);
+    }
+    // Team detail/edit/new routes under admin/settings
+    if (normalized === '/admin/settings/teams/new') {
+      const allUsers = list('user', {});
+      const { renderSettingsTeamDetail } = await lazyRenderer('settings-user-team-renderer.js');
+      return renderSettingsTeamDetail(user, {}, allUsers);
+    }
+    if (segments.length === 4 && segments[2] === 'teams' && segments[3] !== 'new') {
+      const teamId = segments[3];
+      const allUsers = list('user', {});
+      const team = get('team', teamId) || {};
+      const { renderSettingsTeamDetail: _renderTeamDetail } = await lazyRenderer('settings-user-team-renderer.js');
+      return _renderTeamDetail(user, team, allUsers);
+    }
     return null;
   }
 
@@ -581,6 +614,20 @@ export async function handlePage(pathname, req, res) {
     return renderJobManagement(user, jobs, logs);
   }
 
+  // RFI detail page with questions management
+  if (segments.length === 2 && segments[0] === 'rfi' && segments[1] !== 'new') {
+    const rfiId = segments[1];
+    if (!canView(user, 'rfi')) return renderAccessDenied(user, 'rfi', 'view');
+    const db = getDatabase();
+    const rfi = db.prepare('SELECT * FROM rfis WHERE id=?').get(rfiId) || get('rfi', rfiId);
+    if (!rfi) return null;
+    let questions = []; try { questions = db.prepare('SELECT * FROM rfi_questions WHERE rfi_id=?').all(rfiId); } catch { try { questions = list('rfi_question', {}).filter(q => q.rfi_id === rfiId); } catch {} }
+    let sections = []; try { sections = list('rfi_section', {}).filter(s => s.rfi_id === rfiId || s.engagement_id === rfi.engagement_id); } catch {}
+    let engagement = null; try { if (rfi.engagement_id) engagement = get('engagement', rfi.engagement_id); } catch {}
+    const { renderRfiDetail } = await lazyRenderer('rfi-detail-renderer.js');
+    return renderRfiDetail(user, rfi, questions, sections, engagement);
+  }
+
   // F-RFI-LIST: Friday-style RFI list
   if (segments.length === 1 && segments[0] === 'rfi') {
     if (!canList(user, 'rfi')) return renderAccessDenied(user, 'rfi', 'list');
@@ -639,6 +686,20 @@ export async function handlePage(pathname, req, res) {
     return renderClientDashboard(user, client, stats);
   }
 
+  // Review detail page (tabbed)
+  if (segments.length === 2 && segments[0] === 'review' && segments[1] !== 'new') {
+    const reviewId = segments[1];
+    if (!canView(user, 'review')) return renderAccessDenied(user, 'review', 'view');
+    const review = get('review', reviewId);
+    if (!review) return null;
+    let highlights = []; try { highlights = list('highlight', {}).filter(h => h.review_id === reviewId); } catch {}
+    let collaborators = []; try { collaborators = list('collaborator', {}).filter(c => c.review_id === reviewId); } catch {}
+    let checklists = []; try { checklists = list('checklist', {}).filter(c => c.review_id === reviewId).map(c => { let items = []; try { items = list('checklist_item', {}).filter(i => i.checklist_id === c.id); } catch {} return { ...c, total_items: items.length, completed_items: items.filter(i => i.completed).length }; }); } catch {}
+    let sections = []; try { sections = list('review_section', {}).filter(s => s.review_id === reviewId); } catch {}
+    const { renderReviewDetail } = await lazyRenderer('review-detail-renderer.js');
+    return renderReviewDetail(user, review, highlights, collaborators, checklists, sections);
+  }
+
   // F-ENG-DETAIL: Friday-style engagement detail
   if (segments.length === 2 && segments[0] === 'engagement' && segments[1] !== 'new') {
     const engId = segments[1];
@@ -646,9 +707,10 @@ export async function handlePage(pathname, req, res) {
     const engagement = get('engagement', engId);
     if (!engagement) return null;
     let client = null; try { client = engagement.client_id ? get('client', engagement.client_id) : null; } catch {}
-    let rfis = []; try { rfis = list('rfi', {}).filter(r => r.engagement_id === engId); } catch {}
+    let rfis = []; try { const _db = getDatabase(); rfis = _db.prepare('SELECT * FROM rfis WHERE engagement_id=?').all(engId); } catch { try { rfis = list('rfi', {}).filter(r => r.engagement_id === engId); } catch {} }
     let team = null; try { team = engagement.team_id ? get('team', engagement.team_id) : null; } catch {}
     const enrichedEng = { ...engagement, team_name: team?.name || engagement.team_name };
+    const { renderEngagementDetail } = await lazyRenderer('engagement-detail-renderer.js');
     return renderEngagementDetail(user, enrichedEng, client, rfis);
   }
 

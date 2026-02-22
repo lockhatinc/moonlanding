@@ -57,6 +57,7 @@ process.on('unhandledRejection', (reason) => {
 
 let systemInitialized = false;
 const moduleCache = new Map();
+globalThis.__reloadTs__ = Date.now();
 
 const watchedDirs = [
   path.join(__dirname, 'src/config'),
@@ -70,6 +71,7 @@ watchedDirs.forEach((dir) => {
     const watcher = fs.watch(dir, { recursive: true }, async (eventType, filename) => {
       if (filename && (filename.endsWith('.js') || filename.endsWith('.jsx') || filename.endsWith('.yml'))) {
         moduleCache.clear();
+        globalThis.__reloadTs__ = Date.now();
         console.log(`[Hot] Invalidated: ${filename}`);
 
         if (filename.endsWith('master-config.yml') || filename.includes('master-config')) {

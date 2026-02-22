@@ -1,6 +1,6 @@
 import { generateHtml } from '@/ui/renderer.js';
 import { nav } from '@/ui/layout.js';
-import { canEdit } from '@/ui/permissions-ui.js';
+import { canEdit, isPartner, isManager } from '@/ui/permissions-ui.js';
 
 const STAGE_CONFIG = [
   { key: 'info_gathering',  label: 'Info Gathering',  color: '#e53935', bg: '#ffebee' },
@@ -14,7 +14,6 @@ const STAGE_CONFIG = [
 function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
 
 export function renderEngagementCardView(user, engagements) {
   const cards = engagements.map(e => {
@@ -32,22 +31,103 @@ export function renderEngagementCardView(user, engagements) {
   return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">${cards || '<div style="grid-column:1/-1;text-align:center;padding:48px;color:#aaa">No engagements found</div>'}</div>`;
 }
 
+function stagePipelineHtml(e) {
+  const currentIdx = STAGE_CONFIG.findIndex(s => s.key === e.stage);
+  return STAGE_CONFIG.map((s, i) => {
+    const isCurrent = i === currentIdx;
+    const isPast = i < currentIdx;
+    const bg = isCurrent ? s.color : isPast ? s.color + '88' : '#e0e0e0';
+    const textColor = isCurrent || isPast ? '#fff' : '#999';
+    const cursor = (!isCurrent && (isPartner || isManager)) ? 'pointer' : 'default';
+    return `<div onclick="openStageTransition('${esc(s.key)}')" style="flex:1;padding:8px 4px;text-align:center;background:${bg};color:${textColor};font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;cursor:${cursor};position:relative">
+      ${s.label}${isCurrent ? `<div style="position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:7px solid ${s.color}"></div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function stageTransitionDialog(engId, currentStage) {
+  const opts = STAGE_CONFIG.map(s =>
+    `<option value="${s.key}" ${s.key === currentStage ? 'selected' : ''}>${s.label}</option>`
+  ).join('');
+  return `<div id="stage-dialog" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:#fff;border-radius:8px;padding:24px;max-width:400px;width:90%">
+      <h3 style="margin:0 0 16px;font-size:1rem;font-weight:700">Move Engagement Stage</h3>
+      <select id="stage-select" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.9rem;margin-bottom:8px">${opts}</select>
+      <textarea id="stage-note" rows="3" placeholder="Reason for stage change (optional)" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem;resize:vertical;box-sizing:border-box;margin-bottom:16px"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="document.getElementById('stage-dialog').style.display='none'" style="padding:7px 16px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;font-size:0.85rem">Cancel</button>
+        <button onclick="confirmStageTransition('${esc(engId)}')" style="padding:7px 16px;background:#1976d2;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600">Confirm</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function chatPanel(engId) {
+  return `<div id="tab-chat" class="eng-tab-panel" style="display:none">
+    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
+      <h2 style="font-size:0.95rem;font-weight:700;margin:0 0 16px">Team Chat</h2>
+      <div id="chat-msgs" style="min-height:200px;max-height:400px;overflow-y:auto;border:1px solid #eee;border-radius:6px;padding:12px;margin-bottom:12px;background:#fafafa">
+        <div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">Loading messages...</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <input id="chat-input" type="text" placeholder="Type a message..." style="flex:1;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem" onkeydown="if(event.key==='Enter')sendChatMsg('${esc(engId)}')"/>
+        <button onclick="sendChatMsg('${esc(engId)}')" style="background:#1976d2;color:#fff;border:none;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:0.85rem">Send</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function checklistPanel(engId) {
+  return `<div id="tab-checklist" class="eng-tab-panel" style="display:none">
+    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 style="font-size:0.95rem;font-weight:700;margin:0">Checklists</h2>
+        <button onclick="addChecklistItem('${esc(engId)}')" style="background:#1976d2;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.82rem">+ Add Item</button>
+      </div>
+      <div id="checklist-items">
+        <div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">Loading checklist...</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function activityPanel(engId) {
+  return `<div id="tab-activity" class="eng-tab-panel" style="display:none">
+    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
+      <h2 style="font-size:0.95rem;font-weight:700;margin:0 0 16px">Activity Timeline</h2>
+      <div id="activity-log" style="display:flex;flex-direction:column;gap:12px">
+        <div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">Loading activity...</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function filesPanel(engId) {
+  return `<div id="tab-files" class="eng-tab-panel" style="display:none">
+    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 style="font-size:0.95rem;font-weight:700;margin:0">Files</h2>
+        <div style="display:flex;gap:8px">
+          <label style="background:#f5f5f5;border:1px solid #ddd;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.82rem">
+            Upload <input type="file" multiple style="display:none" onchange="uploadEngFiles(event,'${esc(engId)}')"/>
+          </label>
+          <button onclick="downloadFilesZip('${esc(engId)}')" style="background:#04141f;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.82rem">Download ZIP</button>
+        </div>
+      </div>
+      <div id="eng-files-list">
+        <div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">Loading files...</div>
+      </div>
+    </div>
+  </div>`;
+}
+
 export function renderEngagementDetail(user, engagement, client, rfis = []) {
   const e = engagement || {};
   const stageCfg = STAGE_CONFIG.find(s => s.key === e.stage);
   const stageLabel = stageCfg ? stageCfg.label : (e.stage || '-');
   const stageColor = stageCfg ? stageCfg.color : '#555';
   const stageBg = stageCfg ? stageCfg.bg : '#f5f5f5';
-
-  const stagePipeline = STAGE_CONFIG.map(s => {
-    const isCurrent = s.key === e.stage;
-    const isPast = STAGE_CONFIG.findIndex(x => x.key === e.stage) > STAGE_CONFIG.indexOf(s);
-    const bg = isCurrent ? s.color : isPast ? s.color + '66' : '#e0e0e0';
-    const textColor = isCurrent || isPast ? '#fff' : '#999';
-    return `<div style="flex:1;padding:8px 4px;text-align:center;background:${bg};color:${textColor};font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;position:relative;cursor:${isCurrent ? 'default' : 'pointer'}" onclick="if('${s.key}'!=='${esc(e.stage)}'){}">
-      ${s.label}${isCurrent ? '<div style="position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:6px solid '+s.color+'"></div>' : ''}
-    </div>`;
-  }).join('');
+  const canTransition = isPartner(user) || isManager(user);
 
   const infoItems = [
     ['Client', esc(client?.name || e.client_name || e.client_id_display || e.client_id || '-')],
@@ -57,6 +137,8 @@ export function renderEngagementDetail(user, engagement, client, rfis = []) {
     ['Team', esc(e.team_name || e.team_id_display || e.team_id || '-')],
     ['Deadline', e.deadline ? new Date(e.deadline).toLocaleDateString() : '-'],
     ['Status', e.status ? `<span style="background:${e.status==='active'?'#e8f5e9':'#fff3e0'};color:${e.status==='active'?'#2e7d32':'#e65100'};padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:700">${e.status}</span>` : '-'],
+    ['Commenced', e.commencement_date ? new Date(typeof e.commencement_date==='number'?e.commencement_date*1000:e.commencement_date).toLocaleDateString() : '-'],
+    ['Fees', e.fees ? `R${Number(e.fees).toLocaleString()}` : '-'],
     ['Created', e.created_at ? new Date(typeof e.created_at === 'number' ? e.created_at * 1000 : e.created_at).toLocaleDateString() : '-'],
   ];
 
@@ -65,51 +147,130 @@ export function renderEngagementDetail(user, engagement, client, rfis = []) {
     `</div>`;
 
   const pct = typeof e.progress === 'number' ? Math.min(100, Math.round(e.progress)) : 0;
-  const progressBar = `<div style="margin-top:16px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:0.78rem;font-weight:600;color:#555">Overall Progress</span><span style="font-size:0.78rem;color:#888">${pct}%</span></div><div style="background:#e0e0e0;border-radius:6px;height:8px"><div style="width:${pct}%;background:#1976d2;height:8px;border-radius:6px;transition:width 0.3s"></div></div></div>`;
+  const progressBar = `<div style="margin-top:16px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:0.78rem;font-weight:600;color:#555">Overall Progress</span><span style="font-size:0.78rem;color:#888">${pct}%</span></div><div style="background:#e0e0e0;border-radius:6px;height:8px"><div style="width:${pct}%;background:#1976d2;height:8px;border-radius:6px"></div></div></div>`;
 
   const rfiRows = rfis.map(r => {
-    const rStatus = r.status || 'pending';
-    const rc = rStatus === 'active' ? ['#2e7d32','#e8f5e9'] : rStatus === 'closed' ? ['#555','#f5f5f5'] : ['#e65100','#fff3e0'];
-    return `<tr style="border-bottom:1px solid #f0f0f0"><td style="padding:8px 12px;font-size:0.82rem">${esc(r.name || r.title || 'RFI')}</td><td style="padding:8px 12px"><span style="background:${rc[1]};color:${rc[0]};padding:2px 7px;border-radius:8px;font-size:0.7rem;font-weight:700">${rStatus}</span></td><td style="padding:8px 12px;font-size:0.8rem">${r.deadline ? new Date(r.deadline).toLocaleDateString() : '-'}</td></tr>`;
+    const rs = r.status || 'pending';
+    const rc = rs==='active'?['#2e7d32','#e8f5e9']:rs==='closed'?['#555','#f5f5f5']:['#e65100','#fff3e0'];
+    return `<tr onclick="location.href='/rfi/${esc(r.id)}'" style="cursor:pointer;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''"><td style="padding:8px 12px;font-size:0.82rem">${esc(r.name||r.title||'RFI')}</td><td style="padding:8px 12px"><span style="background:${rc[1]};color:${rc[0]};padding:2px 7px;border-radius:8px;font-size:0.7rem;font-weight:700">${rs}</span></td><td style="padding:8px 12px;font-size:0.8rem">${r.deadline?new Date(r.deadline).toLocaleDateString():'-'}</td></tr>`;
   }).join('') || `<tr><td colspan="3" style="padding:24px;text-align:center;color:#aaa;font-size:0.82rem">No RFIs</td></tr>`;
 
-  const editBtn = `<a href="/engagement/${esc(e.id)}/edit" style="background:#1976d2;color:#fff;padding:7px 14px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:600">Edit</a>`;
-  const backBtn = `<a href="/engagements" style="color:#1976d2;text-decoration:none;font-size:0.85rem;font-weight:500;display:flex;align-items:center;gap:4px">&#8592; Back to Engagements</a>`;
+  const stageBtn = canTransition ? `<button onclick="openStageTransition('${esc(e.stage)}')" style="background:#f5f5f5;border:1px solid #ddd;color:#333;padding:7px 14px;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer">Move Stage</button>` : '';
+  const editBtn = canEdit(user, 'engagement') ? `<a href="/engagement/${esc(e.id)}/edit" style="background:#1976d2;color:#fff;padding:7px 14px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:600">Edit</a>` : '';
+  const newRfiBtn = `<a href="/rfi/new?engagement_id=${esc(e.id)}" style="background:#04141f;color:#fff;padding:7px 14px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:600">+ RFI</a>`;
+
+  const TABS = ['Details','RFIs','Chat','Checklist','Activity','Files'];
+  const tabBar = `<div style="display:flex;gap:0;border-bottom:2px solid #e0e0e0;margin-bottom:16px;background:#fff;border-radius:8px 8px 0 0;padding:0 16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">` +
+    TABS.map((t,i) => `<button onclick="switchEngTab('${t.toLowerCase()}')" id="engtab-${t.toLowerCase()}" style="padding:12px 16px;font-size:0.82rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:${i===0?'2px solid #1976d2;color:#1976d2':'2px solid transparent;color:#666'};margin-bottom:-2px">${t}</button>`).join('') +
+    `</div>`;
+
+  const detailsPanel = `<div id="tab-details" class="eng-tab-panel">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
+        <h2 style="font-size:0.95rem;font-weight:700;margin:0 0 16px;color:#333">Engagement Details</h2>
+        ${infoGrid}${progressBar}
+      </div>
+      <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <h2 style="font-size:0.95rem;font-weight:700;margin:0">RFIs (${rfis.length})</h2>
+          ${newRfiBtn}
+        </div>
+        <table style="width:100%;border-collapse:collapse"><thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0"><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">NAME</th><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">STATUS</th><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">DEADLINE</th></tr></thead><tbody>${rfiRows}</tbody></table>
+      </div>
+    </div>
+  </div>`;
+
+  const rfisPanel = `<div id="tab-rfis" class="eng-tab-panel" style="display:none">
+    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <h2 style="font-size:0.95rem;font-weight:700;margin:0">All RFIs</h2>${newRfiBtn}
+      </div>
+      <table style="width:100%;border-collapse:collapse"><thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0"><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">NAME</th><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">STATUS</th><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">DEADLINE</th></tr></thead><tbody>${rfiRows}</tbody></table>
+    </div>
+  </div>`;
 
   const content = `
-    <div style="margin-bottom:16px">${backBtn}</div>
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+    <div style="margin-bottom:16px"><a href="/engagements" style="color:#1976d2;text-decoration:none;font-size:0.85rem;font-weight:500">&#8592; Back to Engagements</a></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:12px">
       <div>
         <h1 style="font-size:1.5rem;font-weight:700;margin:0 0 6px;color:#1a1a1a">${esc(e.name || e.client_name || 'Engagement')}</h1>
         <span style="background:${stageBg};color:${stageColor};padding:4px 12px;border-radius:12px;font-size:0.78rem;font-weight:700;border:1px solid ${stageColor}44">${stageLabel}</span>
       </div>
-      <div style="display:flex;gap:8px">${editBtn}</div>
+      <div style="display:flex;gap:8px">${stageBtn}${editBtn}</div>
     </div>
-
-    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);overflow:hidden;margin-bottom:16px">
-      <div style="display:flex;border-radius:8px 8px 0 0;overflow:hidden">${stagePipeline}</div>
+    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);overflow:hidden;margin-bottom:20px">
+      <div style="display:flex">${stagePipelineHtml(e)}</div>
     </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-      <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
-        <h2 style="font-size:0.95rem;font-weight:700;margin:0 0 16px;color:#333">Engagement Details</h2>
-        ${infoGrid}
-        ${progressBar}
-      </div>
-      <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
-        <h2 style="font-size:0.95rem;font-weight:700;margin:0 0 16px;color:#333">RFIs (${rfis.length})</h2>
-        <table style="width:100%;border-collapse:collapse">
-          <thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0">
-            <th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">NAME</th>
-            <th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">STATUS</th>
-            <th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">DEADLINE</th>
-          </tr></thead>
-          <tbody>${rfiRows}</tbody>
-        </table>
-      </div>
-    </div>
+    ${tabBar}
+    ${detailsPanel}
+    ${rfisPanel}
+    ${chatPanel(e.id)}
+    ${checklistPanel(e.id)}
+    ${activityPanel(e.id)}
+    ${filesPanel(e.id)}
+    ${stageTransitionDialog(e.id, e.stage)}
   `;
 
+  const script = `
+var activeEngTab='details';
+function switchEngTab(tab){
+  document.querySelectorAll('.eng-tab-panel').forEach(function(p){p.style.display='none'});
+  var panel=document.getElementById('tab-'+tab);
+  if(panel)panel.style.display='';
+  document.querySelectorAll('[id^="engtab-"]').forEach(function(b){b.style.borderBottomColor='transparent';b.style.color='#666'});
+  var btn=document.getElementById('engtab-'+tab);
+  if(btn){btn.style.borderBottomColor='#1976d2';btn.style.color='#1976d2'}
+  activeEngTab=tab;
+  if(tab==='chat')loadChat();
+  else if(tab==='checklist')loadChecklist();
+  else if(tab==='activity')loadActivity();
+  else if(tab==='files')loadFiles();
+}
+function openStageTransition(stage){document.getElementById('stage-dialog').style.display='flex';if(stage)document.getElementById('stage-select').value=stage}
+async function confirmStageTransition(engId){
+  var stage=document.getElementById('stage-select').value;
+  var note=document.getElementById('stage-note').value;
+  try{var r=await fetch('/api/friday/engagement/transition',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({engagement_id:engId,stage:stage,note:note})});
+  if(r.ok){showToast('Stage updated','success');setTimeout(function(){location.reload()},600)}else{var d=await r.json();showToast(d.error||'Failed','error')}}
+  catch(e){showToast('Error','error')}
+  document.getElementById('stage-dialog').style.display='none';
+}
+async function loadChat(){
+  var el=document.getElementById('chat-msgs');
+  try{var r=await fetch('/api/message?engagement_id=${esc(e.id)}');var d=await r.json();var msgs=d.data||d||[];
+  el.innerHTML=msgs.length?msgs.map(function(m){return'<div style="margin-bottom:12px"><div style="font-size:0.75rem;color:#888;margin-bottom:2px">'+(m.user_name||m.user_id||'User')+' &bull; '+(m.created_at?new Date(typeof m.created_at==='number'?m.created_at*1000:m.created_at).toLocaleString():'')+'</div><div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:8px 12px;font-size:0.85rem">'+(m.content||m.text||m.message||'')+'</div></div>'}).join(''):'<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No messages yet</div>';
+  el.scrollTop=el.scrollHeight}catch(err){el.innerHTML='<div style="color:#aaa;text-align:center;padding:16px">Could not load messages</div>'}
+}
+async function sendChatMsg(engId){
+  var inp=document.getElementById('chat-input');var txt=inp.value.trim();if(!txt)return;
+  try{var r=await fetch('/api/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({engagement_id:engId,content:txt})});
+  if(r.ok){inp.value='';loadChat();showToast('Sent','success')}else showToast('Failed','error')}catch(e){showToast('Error','error')}
+}
+async function loadChecklist(){
+  var el=document.getElementById('checklist-items');
+  try{var r=await fetch('/api/checklist?engagement_id=${esc(e.id)}');var d=await r.json();var items=d.data||d||[];
+  if(!items.length){el.innerHTML='<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No checklist items</div>';return}
+  el.innerHTML=items.map(function(item){return'<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0"><input type="checkbox"'+(item.completed?' checked':'')+'onchange="toggleCheckItem(\''+item.id+'\',this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:#1976d2"/><span style="font-size:0.85rem;'+(item.completed?'text-decoration:line-through;color:#aaa':'')+'">'+((item.title||item.name||item.text||'Item'))+'</span></div>'}).join('')}
+  catch(err){el.innerHTML='<div style="color:#aaa;text-align:center;padding:16px">Could not load checklist</div>'}
+}
+async function toggleCheckItem(id,checked){try{await fetch('/api/checklist_item/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({completed:checked})});showToast(checked?'Completed':'Unchecked','success')}catch(e){showToast('Error','error')}}
+async function addChecklistItem(engId){var name=prompt('Item name:');if(!name)return;try{var r=await fetch('/api/checklist_item',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({engagement_id:engId,title:name,completed:false})});if(r.ok){loadChecklist();showToast('Added','success')}else showToast('Failed','error')}catch(e){showToast('Error','error')}}
+async function loadActivity(){
+  var el=document.getElementById('activity-log');
+  try{var r=await fetch('/api/activity_log?engagement_id=${esc(e.id)}&limit=30');var d=await r.json();var items=d.data||d||[];
+  el.innerHTML=items.length?items.map(function(a){var ts=a.timestamp||a.created_at;var date=ts?(typeof ts==='number'&&ts>1e9?new Date(ts*1000).toLocaleString():new Date(ts).toLocaleString()):'-';return'<div style="display:flex;gap:12px;align-items:flex-start"><div style="width:32px;height:32px;border-radius:50%;background:#e3f2fd;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#1976d2;flex-shrink:0">'+(a.user_name||'?').charAt(0)+'</div><div><div style="font-size:0.75rem;color:#888">'+(a.user_name||a.user_id||'System')+' &bull; '+date+'</div><div style="font-size:0.85rem;margin-top:2px">'+(a.description||a.action||a.type||'Activity')+'</div></div></div>'}).join(''):'<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No activity yet</div>'}
+  catch(err){el.innerHTML='<div style="color:#aaa;text-align:center;padding:16px">Could not load activity</div>'}
+}
+async function loadFiles(){
+  var el=document.getElementById('eng-files-list');
+  try{var r=await fetch('/api/file?engagement_id=${esc(e.id)}');var d=await r.json();var files=d.data||d||[];
+  el.innerHTML=files.length?'<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0"><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">NAME</th><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">TYPE</th><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">SIZE</th><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">DATE</th></tr></thead><tbody>'+files.map(function(f){var ts=f.created_at;var date=ts?(typeof ts==='number'&&ts>1e9?new Date(ts*1000).toLocaleDateString():new Date(ts).toLocaleDateString()):'-';return'<tr style="border-bottom:1px solid #f0f0f0"><td style="padding:8px 12px;font-size:0.82rem"><a href="/api/files/'+f.id+'" target="_blank" style="color:#1976d2">'+((f.name||f.filename||'File'))+'</a></td><td style="padding:8px 12px;font-size:0.82rem">'+(f.type||'-')+'</td><td style="padding:8px 12px;font-size:0.82rem">'+(f.size?Math.round(f.size/1024)+'KB':'-')+'</td><td style="padding:8px 12px;font-size:0.8rem">'+date+'</td></tr>'}).join('')+'</tbody></table>':'<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No files uploaded</div>'}
+  catch(err){el.innerHTML='<div style="color:#aaa;text-align:center;padding:16px">Could not load files</div>'}
+}
+async function uploadEngFiles(event,engId){var files=event.target.files;if(!files.length)return;showToast('Uploading '+files.length+' file(s)...','info');var ok=0;for(var i=0;i<files.length;i++){var fd=new FormData();fd.append('file',files[i]);fd.append('engagement_id',engId);try{var r=await fetch('/api/friday/upload/post-rfi',{method:'POST',body:fd});if(r.ok)ok++}catch(err){}}showToast(ok+' file(s) uploaded','success');if(ok>0)loadFiles()}
+async function downloadFilesZip(engId){try{var r=await fetch('/api/friday/engagement/files-zip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({engagement_id:engId})});if(r.ok){var b=await r.blob();var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='engagement-files.zip';a.click()}else showToast('No files to download','error')}catch(e){showToast('Error','error')}}
+`;
+
   const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main style="padding:24px 32px" id="main-content">${content}</main></div>`;
-  return generateHtml(`${esc(e.name || 'Engagement')} | MY FRIDAY`, body, []);
+  return generateHtml(`${esc(e.name || 'Engagement')} | MY FRIDAY`, body, [script]);
 }
