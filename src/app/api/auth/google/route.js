@@ -60,6 +60,12 @@ export async function GET(request) {
 }
 
 export async function HEAD(request) {
-  const { valid } = validateOAuthProvider(google);
-  return new Response(null, { status: valid ? 200 : 503 });
+  try {
+    const { valid } = validateOAuthProvider(google);
+    console.log('[OAuth HEAD] Google configured:', valid);
+    return new Response(null, { status: valid ? 200 : 503 });
+  } catch (error) {
+    console.error('[OAuth HEAD] Error:', error);
+    return new Response(null, { status: 500 });
+  }
 }

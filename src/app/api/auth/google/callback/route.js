@@ -90,10 +90,14 @@ export async function GET(request) {
     await deleteOAuthCookie('google_oauth_state');
     await deleteOAuthCookie('google_code_verifier');
 
-    // Create redirect response and explicitly set the session cookie on it
+    // Create redirect response with session cookie in Set-Cookie header
     const redirectUrl = new URL('/', request.url);
     const response = NextResponse.redirect(redirectUrl);
-    response.cookies.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+
+    // Manually add Set-Cookie header for session
+    const cookieHeader = `${sessionCookie.name}=${sessionCookie.value}; Path=${sessionCookie.attributes.path || '/'}; HttpOnly${sessionCookie.attributes.secure ? '; Secure' : ''}; SameSite=${sessionCookie.attributes.sameSite || 'Lax'}`;
+    response.headers.append('Set-Cookie', cookieHeader);
+
     return response;
   } catch (error) {
     console.error('Google OAuth error:', error);
