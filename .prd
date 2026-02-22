@@ -1,0 +1,9 @@
+# Ripple UI Styling Pass - COMPLETE
+
+All fixes applied and verified:
+- entity-renderer.js: fixed input-bordered→input-solid, bg-white→bg-base-100 shadow-md, text-gray-500→text-base-content/50
+- layout.js: dataTable uses table-hover + bg-base-100 shadow-md; statCards uses stats shadow component
+- review-renderer.js: hideEmptyReviewsToggle text-gray-500→text-base-content/60
+
+All pages return HTTP 200. All source files clean of old Tailwind classes.
+Note: live server cache retains old ESM module for review page until restart (disk files correct).

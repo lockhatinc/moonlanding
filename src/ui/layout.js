@@ -165,17 +165,9 @@ export function page(user, title, bc, content, scripts = []) {
 }
 
 export function statCards(cards) {
-  return h('div', { className: 'grid grid-cols-1 md:grid-cols-4 gap-4 mb-8' },
-    cards.map(c =>
-      h('div', { className: `card bg-white shadow${c.border || ''}` },
-        h('div', { className: 'card-body' },
-          h('h3', { className: 'text-gray-500 text-sm' }, c.label),
-          h('p', { className: `text-2xl font-bold${c.textClass || ''}` }, c.value),
-          c.sub ? h('p', { className: 'text-xs text-gray-500 mt-2' }, c.sub) : ''
-        )
-      )
-    )
-  )
+  return `<div class="stats shadow w-full mb-6 flex-wrap">` +
+    cards.map(c => `<div class="stat"><div class="stat-title">${c.label}</div><div class="stat-value text-2xl${c.textClass || ''}">${c.value}</div>${c.sub ? `<div class="stat-desc">${c.sub}</div>` : ''}</div>`).join('') +
+    `</div>`
 }
 
 export function confirmDialog(entityName) {
@@ -187,5 +179,5 @@ export function confirmDialog(entityName) {
 }
 
 export function dataTable(headers, rows, emptyMsg) {
-  return `<div class="card bg-white shadow" style="overflow-x:auto" ${role.region} ${aria.label('Data table')}><table class="table table-zebra w-full"><thead><tr>${headers}</tr></thead><tbody id="table-body">${rows || `<tr><td colspan="100" class="text-center py-8 text-gray-500">${emptyMsg}</td></tr>`}</tbody></table></div>`
+  return `<div class="card bg-base-100 shadow-md"><div class="table-container" ${role.region} ${aria.label('Data table')}><table class="table table-hover w-full"><thead><tr>${headers}</tr></thead><tbody id="table-body">${rows || `<tr><td colspan="100" class="text-center py-8 text-base-content/50">${emptyMsg}</td></tr>`}</tbody></table></div></div>`
 }
