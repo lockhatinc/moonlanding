@@ -1,19 +1,63 @@
-import { canCreate, canEdit, canDelete } from '@/ui/permissions-ui.js';
+import { canCreate, canEdit, canDelete, getNavItems, getAdminItems } from '@/ui/permissions-ui.js';
 import { generateHtml, statusLabel, linearProgress, userAvatar, teamAvatarGroup } from '@/ui/renderer.js';
+import { nav } from '@/ui/layout.js';
 
-const TOAST_SCRIPT = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';c.setAttribute('role','status');c.setAttribute('aria-live','polite');c.setAttribute('aria-atomic','true');document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function nav(user) {
-  const { getNavItems, getAdminItems } = require_perms();
-  const navLinks = getNavItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
-  const adminLinks = getAdminItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
-  return `<nav class="navbar bg-white shadow-sm px-4" role="navigation" aria-label="Main navigation"><div class="navbar-start"><a href="/" class="font-bold text-lg" aria-label="Home">Platform</a><div class="hidden md:flex gap-1 ml-6">${navLinks}${adminLinks}</div></div><div class="navbar-end"><div id="user-dropdown" class="dropdown dropdown-end"><button type="button" onclick="toggleUserMenu(event)" class="btn btn-ghost btn-circle avatar placeholder" aria-label="User menu for ${user?.name || 'user'}" aria-haspopup="menu" aria-expanded="false" style="cursor:pointer"><div class="bg-primary text-white rounded-full w-10" style="display:flex;align-items:center;justify-content:center;height:2.5rem"><span aria-hidden="true">${user?.name?.charAt(0) || 'U'}</span></div></button><ul class="dropdown-menu mt-2 w-52" role="menu"><li class="dropdown-header" role="presentation">${user?.email || ''}<br/><small class="text-gray-500">${user?.role || ''}</small></li><li role="menuitem"><a href="/api/auth/logout">Logout</a></li></ul></div></div></nav><script>function toggleUserMenu(e){e.stopPropagation();var d=document.getElementById('user-dropdown');var isOpen=d.classList.toggle('open');e.currentTarget.setAttribute('aria-expanded',isOpen)}document.addEventListener('click',function(e){var d=document.getElementById('user-dropdown');if(d&&!d.contains(e.target)){d.classList.remove('open');var btn=d.querySelector('button');if(btn)btn.setAttribute('aria-expanded','false')}})</script>`;
+export function renderClientList(user, clients) {
+  const addBtn = canCreate(user, 'client') ? `<a href="/client/new" style="background:#04141f;color:#fff;padding:7px 16px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:600">+ New Client</a>` : '';
+  const rows = (clients || []).map(c => {
+    const code = esc(c.client_code || c.code || '-');
+    const name = esc(c.name || '-');
+    const entityType = esc(c.entity_type || c.industry || '-');
+    const email = esc(Array.isArray(c.master_emails) ? c.master_emails[0] : (c.email || '-'));
+    const contact = esc(c.contact || c.phone || '-');
+    const taxNo = esc(c.tax_number || c.tax_no || '-');
+    const regNo = esc(c.reg_number || c.reg_no || '-');
+    const status = c.status || 'active';
+    const sc = status === 'active' ? ['#2e7d32','#e8f5e9'] : status === 'inactive' ? ['#c62828','#fdecea'] : ['#555','#f5f5f5'];
+    const statusLbl = status.charAt(0).toUpperCase() + status.slice(1);
+    return `<tr onclick="location.href='/client/${esc(c.id)}'" style="cursor:pointer;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">
+      <td style="padding:10px 12px;font-weight:600;font-size:0.82rem;color:#1976d2">${code}</td>
+      <td style="padding:10px 12px;font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${name}">${name}</td>
+      <td style="padding:10px 12px;font-size:0.8rem">${entityType}</td>
+      <td style="padding:10px 12px;font-size:0.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${email}">${email}</td>
+      <td style="padding:10px 12px;font-size:0.8rem">${contact}</td>
+      <td style="padding:10px 12px;font-size:0.8rem">${taxNo}</td>
+      <td style="padding:10px 12px;font-size:0.8rem">${regNo}</td>
+      <td style="padding:10px 12px"><span style="background:${sc[1]};color:${sc[0]};padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;border:1px solid ${sc[0]}44">${statusLbl}</span></td>
+    </tr>`;
+  }).join('');
+  const table = `<div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.1);overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:0.82rem">
+      <thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0">
+        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444;white-space:nowrap">CODE</th>
+        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">NAME</th>
+        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">ENTITY TYPE</th>
+        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">EMAIL</th>
+        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">CONTACT</th>
+        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">TAX NO</th>
+        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">REG NO</th>
+        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">STATUS</th>
+      </tr></thead>
+      <tbody id="client-tbody">${rows || `<tr><td colspan="8" style="text-align:center;padding:48px;color:#aaa">No clients found</td></tr>`}</tbody>
+    </table>
+  </div>`;
+  const content = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h1 style="font-size:1.4rem;font-weight:700;margin:0;color:#1a1a1a">Clients <span style="font-size:1rem;font-weight:400;color:#888">(${(clients||[]).length})</span></h1>
+      ${addBtn}
+    </div>
+    <div style="margin-bottom:12px">
+      <input type="text" id="client-search" placeholder="Search clients..." oninput="filterClients()" style="padding:6px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.82rem;width:260px;outline:none" onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#ddd'">
+    </div>
+    ${table}`;
+  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main style="padding:24px 32px" id="main-content">${content}</main></div>`;
+  const script = `function filterClients(){var q=(document.getElementById('client-search').value||'').toLowerCase();document.querySelectorAll('#client-tbody tr').forEach(function(r){r.style.display=q&&!r.textContent.toLowerCase().includes(q)?'none':''});}`;
+  return generateHtml('Clients | MY FRIDAY', body, [script]);
 }
 
-let _permsCache = null;
-import { getNavItems, getAdminItems } from '@/ui/permissions-ui.js';
-_permsCache = { getNavItems, getAdminItems };
-function require_perms() { return _permsCache; }
+const TOAST_SCRIPT = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';c.setAttribute('role','status');c.setAttribute('aria-live','polite');c.setAttribute('aria-atomic','true');document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
 
 function breadcrumb(items) {
   if (!items?.length) return '';

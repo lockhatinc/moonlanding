@@ -1,133 +1,97 @@
-// Completely standalone login page - no external dependencies
 export function renderStandaloneLogin() {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
+  <title>Sign In | MY FRIDAY</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
-    .center-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-    .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 100%; max-width: 384px; }
-    .text-center { text-align: center; margin-bottom: 1.5rem; }
-    .avatar { width: 48px; height: 48px; border-radius: 8px; background: #007bff; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 1rem; }
-    h2 { color: #333; margin-bottom: 0.5rem; }
-    .text-gray { color: #666; font-size: 0.875rem; }
-    form { margin: 1.5rem 0; }
-    .form-group { margin-bottom: 1rem; }
-    label { display: block; color: #333; font-weight: 500; margin-bottom: 0.5rem; font-size: 0.875rem; }
-    input { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
-    input:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 2px rgba(0,123,255,0.1); }
-    button { width: 100%; padding: 0.75rem; background: #007bff; color: white; border: none; border-radius: 4px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 1rem; }
-    button:hover { background: #0056b3; }
-    button.loading { opacity: 0.6; cursor: not-allowed; }
-    .oauth-button { background: white; border: 1px solid #ddd; color: #333; margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-    .oauth-button:hover { background: #f8f8f8; border-color: #999; }
-    .oauth-button svg { width: 18px; height: 18px; }
-    .divider { text-align: center; margin: 1.5rem 0; color: #999; font-size: 0.875rem; }
-    .divider::before { content: ''; display: inline-block; width: 45%; height: 1px; background: #ddd; vertical-align: middle; margin-right: 0.5rem; }
-    .divider::after { content: ''; display: inline-block; width: 45%; height: 1px; background: #ddd; vertical-align: middle; margin-left: 0.5rem; }
-    .demo-text { text-align: center; margin-top: 1rem; color: #666; font-size: 0.875rem; }
-    .demo-code { background: #f5f5f5; padding: 0.5rem; border-radius: 4px; font-family: monospace; font-size: 0.75rem; }
-    .alert { padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-    .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .wrap{width:100%;max-width:420px}
+    .logo{text-align:center;margin-bottom:28px}
+    .logo-row{display:inline-flex;align-items:center;gap:10px;margin-bottom:8px}
+    .logo-text{font-size:1.4rem;font-weight:800;color:#04141f;letter-spacing:1px}
+    .logo-sub{color:#666;font-size:0.9rem}
+    .card{background:#fff;border-radius:12px;box-shadow:0 2px 16px rgba(0,0,0,0.1);padding:32px}
+    .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;background:#fff;color:#333;font-size:0.88rem;font-weight:500;text-decoration:none;margin-bottom:16px;transition:background 0.15s;cursor:pointer}
+    .google-btn:hover{background:#f5f5f5}
+    .divider{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+    .divider-line{flex:1;height:1px;background:#e0e0e0}
+    .divider-text{font-size:0.78rem;color:#aaa}
+    label{display:block;font-size:0.82rem;font-weight:600;color:#333;margin-bottom:6px}
+    .field{margin-bottom:16px}
+    input[type=email],input[type=password]{width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.88rem;outline:none;transition:border-color 0.15s}
+    input:focus{border-color:#1976d2}
+    .forgot{text-align:right;margin-bottom:20px}
+    .forgot a{font-size:0.8rem;color:#1976d2;text-decoration:none}
+    .submit-btn{width:100%;padding:11px;background:#04141f;color:#fff;border:none;border-radius:6px;font-size:0.92rem;font-weight:600;cursor:pointer;transition:background 0.15s}
+    .submit-btn:hover{background:#1976d2}
+    .submit-btn:disabled{opacity:0.6;cursor:not-allowed}
+    .err{background:#fdecea;border:1px solid #f5c6cb;color:#c62828;padding:10px 14px;border-radius:6px;margin-bottom:16px;font-size:0.85rem}
   </style>
 </head>
 <body>
-  <div class="center-screen">
+  <div class="wrap">
+    <div class="logo">
+      <div class="logo-row">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#04141f" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m4.24-4.24l4.24-4.24"/></svg>
+        <span class="logo-text">MY FRIDAY</span>
+      </div>
+      <div class="logo-sub">Sign in to your account</div>
+    </div>
     <div class="card">
-      <div class="text-center">
-        <div class="avatar">P</div>
-        <h2>Welcome back</h2>
-        <p class="text-gray">Sign in to your account</p>
-      </div>
-
-      <div id="googleAlert" class="alert warning" style="display: none;">
-        Google Sign-in not configured. See admin for setup.
-      </div>
-
-      <form id="loginForm" aria-label="Sign in">
-        <div class="form-group">
-          <label for="email">Email</label>
-          <input type="email" name="email" id="email" placeholder="Enter your email" required>
-        </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" name="password" id="password" placeholder="Enter your password" required>
-        </div>
-        <button type="submit" id="submitBtn">Sign in</button>
-      </form>
-
-      <div id="oauthContainer" style="display: none;">
-        <div class="divider">or</div>
-        <a href="/api/auth/google" class="oauth-button" id="googleBtn">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M23.745 12.27c0-.79-.07-1.54-.187-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.85c2.27-2.09 3.575-5.17 3.575-8.81z" fill="#4285F4"/>
-            <path d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.85-3c-1.08.72-2.45 1.13-4.08 1.13-3.13 0-5.78-2.11-6.73-4.96h-3.98v3.09C3.05 21.3 7.31 24 12 24z" fill="#34A853"/>
-            <path d="M5.27 14.27C5.02 13.45 4.9 12.58 4.9 11.5s.12-1.95.37-2.77V5.64h-3.98A11.93 11.93 0 000 11.5c0 1.92.44 3.75 1.22 5.36l3.98-3.09z" fill="#FBBC05"/>
-            <path d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.46-3.46C17.95 1.27 15.24 0 12 0 7.31 0 3.05 2.7 1.22 6.64l3.98 3.09c.95-2.85 3.6-4.98 6.8-4.98z" fill="#EA4335"/>
-          </svg>
+      <div id="err-area"></div>
+      <div id="google-area" style="display:none">
+        <a href="/api/auth/google" class="google-btn">
+          <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.706c-.18-.54-.282-1.117-.282-1.706s.102-1.166.282-1.706V4.962H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.962L3.964 7.294C4.672 5.167 6.656 3.58 9 3.58z"/></svg>
           Sign in with Google
         </a>
+        <div class="divider"><div class="divider-line"></div><span class="divider-text">or</span><div class="divider-line"></div></div>
       </div>
-
-      <div class="demo-text">
-        Demo: <span class="demo-code">admin@example.com / password</span>
-      </div>
+      <form id="loginForm">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email" required autocomplete="email">
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+        </div>
+        <div class="forgot"><a href="/password-reset">Forgot password?</a></div>
+        <button type="submit" id="submitBtn" class="submit-btn">Sign In</button>
+      </form>
     </div>
   </div>
-
   <script>
-    const form = document.getElementById('loginForm');
-    const submitBtn = document.getElementById('submitBtn');
-    const googleBtn = document.getElementById('googleBtn');
-    const oauthContainer = document.getElementById('oauthContainer');
-    const googleAlert = document.getElementById('googleAlert');
+    fetch('/api/friday/features').then(r => r.json()).then(d => {
+      if (d && d.googleAuth) document.getElementById('google-area').style.display = 'block';
+    }).catch(() => {});
 
-    // Check if Google auth is configured
-    fetch('/api/auth/google', { method: 'HEAD' })
-      .then(() => {
-        oauthContainer.style.display = 'block';
-        googleAlert.style.display = 'none';
-      })
-      .catch(() => {
-        googleAlert.style.display = 'block';
-      });
-
-    form.addEventListener('submit', async (e) => {
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-
-      submitBtn.classList.add('loading');
-      submitBtn.disabled = true;
-
+      var btn = document.getElementById('submitBtn');
+      btn.textContent = 'Signing in...';
+      btn.disabled = true;
+      var errArea = document.getElementById('err-area');
+      errArea.innerHTML = '';
       try {
-        const res = await fetch('/api/auth/login', {
+        var res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: form.email.value,
-            password: form.password.value
-          })
+          body: JSON.stringify({ email: e.target.email.value, password: e.target.password.value })
         });
-
-        const data = await res.json();
-
+        var data = await res.json().catch(function() { return {}; });
         if (res.ok) {
           window.location.href = data.redirect || '/';
         } else {
-          // Show error
-          const errDiv = document.createElement('div');
-          errDiv.className = 'alert';
-          errDiv.textContent = data.error || 'Login failed';
-          form.parentElement.insertBefore(errDiv, form);
+          errArea.innerHTML = '<div class="err">' + (data.error || 'Login failed') + '</div>';
         }
-      } catch (err) {
-        alert('Network error: ' + err.message);
+      } catch(err) {
+        errArea.innerHTML = '<div class="err">Network error: ' + err.message + '</div>';
       } finally {
-        submitBtn.classList.remove('loading');
-        submitBtn.disabled = false;
+        btn.textContent = 'Sign In';
+        btn.disabled = false;
       }
     });
   </script>

@@ -1,4 +1,5 @@
 import { getUser, setCurrentRequest } from '@/engine.server.js';
+import { hasGoogleAuth } from '@/config/env.js';
 import { getSpec } from '@/config/spec-helpers.js';
 import { list, get, count } from '@/lib/query-engine.js';
 import { getConfigEngineSync } from '@/lib/config-generator-engine.js';
@@ -33,7 +34,7 @@ import {
   renderSettingsTemplateManage,
 } from '@/ui/settings-renderer.js';
 import {
-  renderClientDashboard, clientUserManagementDialog, clientUserReplaceDialog,
+  renderClientDashboard, renderClientList, clientUserManagementDialog, clientUserReplaceDialog,
   clientTestEmailDialog, clientRiskAssessmentDialog, clientInfoCard
 } from '@/ui/client-renderer.js';
 import { renderSectionReport, renderReviewListTabbed, renderMwrHome } from '@/ui/review-renderer.js';
@@ -45,7 +46,7 @@ import {
   canList, canView, canCreate, canEdit,
   isPartner, isManager, isClerk, isClientUser, isAuditor, canClientAccessEntity
 } from '@/ui/permissions-ui.js';
-import { renderEngagementGrid } from '@/ui/engagement-grid-renderer.js';
+import { renderEngagementGrid, renderEngagementDetail } from '@/ui/engagement-grid-renderer.js';
 import { renderPdfViewer, renderPdfEditorPlaceholder } from '@/ui/pdf-viewer-renderer.js';
 import { renderReviewAnalytics } from '@/ui/review-analytics-renderer.js';
 import { renderHighlightThreading } from '@/ui/highlight-threading-renderer.js';
@@ -161,7 +162,7 @@ export async function handlePage(pathname, req, res) {
       res.end();
       return REDIRECT;
     }
-    return renderLogin();
+    return renderLogin(null, hasGoogleAuth());
   }
 
   if (normalized === '/password-reset') {
@@ -543,6 +544,14 @@ export async function handlePage(pathname, req, res) {
     return renderJobManagement(user, jobs, logs);
   }
 
+  // F-CLIENT-LIST: Friday-style client list
+  if (segments.length === 1 && segments[0] === 'client') {
+    if (!canList(user, 'client')) return renderAccessDenied(user, 'client', 'list');
+    let clients = list('client', {});
+    if (isClientUser(user) && user.client_id) clients = clients.filter(c => c.id === user.client_id);
+    return renderClientList(user, clients);
+  }
+
   if (segments.length === 1) {
     const entityName = segments[0];
     const spec = getSpec(entityName);
@@ -570,6 +579,17 @@ export async function handlePage(pathname, req, res) {
 
     const resolvedItems = resolveRefFields(items, spec);
     return renderEntityList(entityName, resolvedItems, spec, user);
+  }
+
+  // F-ENG-DETAIL: Friday-style engagement detail
+  if (segments.length === 2 && segments[0] === 'engagement' && segments[1] !== 'new') {
+    const engId = segments[1];
+    if (!canView(user, 'engagement')) return renderAccessDenied(user, 'engagement', 'view');
+    const engagement = get('engagement', engId);
+    if (!engagement) return null;
+    let client = null; try { client = engagement.client_id ? get('client', engagement.client_id) : null; } catch {}
+    let rfis = []; try { rfis = list('rfi', {}).filter(r => r.engagement_id === engId); } catch {}
+    return renderEngagementDetail(user, engagement, client, rfis);
   }
 
   if (segments.length === 2) {

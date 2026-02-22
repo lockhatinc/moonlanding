@@ -4,27 +4,59 @@ import { getNavItems, getQuickActions } from '@/ui/permissions-ui.js'
 
 export function renderDashboard(user, stats = {}) {
   const isClerk = user?.role === 'clerk'
-  const welcomeMsg = isClerk ? 'Here are your assigned tasks' : (user?.role === 'manager' ? 'Team overview' : 'System overview')
 
-  const myRfis = (stats.myRfis?.length > 0) ? `<div class="card bg-white shadow"><div class="card-body"><h2 class="card-title">My Assigned RFIs</h2><div class="mt-4">${dataTable('<th>Title</th><th>Status</th><th>Due Date</th><th>Action</th>',
-    stats.myRfis.map(r => `<tr><td>${r.title || 'Untitled'}</td><td><span class="badge badge-sm">${r.status || 'open'}</span></td><td>${r.due_date ? new Date(r.due_date * 1000).toLocaleDateString() : '-'}</td><td><a href="/rfi/${r.id}" class="btn btn-xs btn-primary">View</a></td></tr>`).join(''), '')}</div></div>` : ''
+  const statDefs = isClerk
+    ? [
+        { label: 'My RFIs', value: stats.myRfis?.length || 0, color: '#1976d2', icon: '&#128203;', href: '/rfi' },
+        { label: 'Overdue', value: stats.overdueRfis?.length || 0, color: '#c62828', icon: '&#9888;', href: '/rfi' },
+        { label: 'Reviews', value: stats.reviews || 0, color: '#2e7d32', icon: '&#128196;', href: '/review' },
+        { label: 'Clients', value: stats.clients || 0, color: '#555', icon: '&#127968;', href: '/client' },
+      ]
+    : [
+        { label: 'Engagements', value: stats.engagements || 0, color: '#1565c0', icon: '&#128203;', href: '/engagements' },
+        { label: 'Clients', value: stats.clients || 0, color: '#04141f', icon: '&#127968;', href: '/client' },
+        { label: 'Open RFIs', value: stats.rfis || 0, color: stats.overdueRfis?.length > 0 ? '#c62828' : '#e65100', icon: '&#128193;', href: '/rfi' },
+        { label: 'Reviews', value: stats.reviews || 0, color: '#2e7d32', icon: '&#128196;', href: '/review' },
+      ]
 
-  const overdue = (stats.overdueRfis?.length > 0) ? `<div class="card bg-white shadow border-l-4 border-red-500"><div class="card-body"><h2 class="card-title text-red-600">Overdue Items</h2><div class="mt-4">${dataTable('<th>Title</th><th>Days Overdue</th><th>Action</th>',
-    stats.overdueRfis.map(r => `<tr class="text-red-600"><td>${r.title || 'Untitled RFI'}</td><td>${r.daysOverdue || 0} days</td><td><a href="/rfi/${r.id}" class="btn btn-xs btn-error">View</a></td></tr>`).join(''), '')}</div></div>` : ''
+  const cards = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px">` +
+    statDefs.map(s => `<a href="${s.href}" style="background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px;text-decoration:none;display:block;border-left:4px solid ${s.color};transition:box-shadow 0.15s" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)'" onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.08)'">
+      <div style="font-size:1.4rem;margin-bottom:6px">${s.icon}</div>
+      <div style="font-size:2rem;font-weight:700;color:${s.color};line-height:1">${s.value}</div>
+      <div style="font-size:0.78rem;color:#666;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">${s.label}</div>
+    </a>`).join('') + `</div>`
 
-  const cards = statCards([
-    { label: isClerk ? 'My RFIs' : 'Engagements', value: isClerk ? (stats.myRfis?.length || 0) : (stats.engagements || 0) },
-    { label: 'Clients', value: stats.clients || 0 },
-    { label: (stats.overdueRfis?.length > 0) ? 'Overdue RFIs' : 'Open RFIs', value: (stats.overdueRfis?.length > 0) ? stats.overdueRfis.length : (stats.rfis || 0), border: (stats.overdueRfis?.length > 0) ? ' border-l-4 border-red-500' : '', textClass: (stats.overdueRfis?.length > 0) ? ' text-red-600' : '' },
-    { label: 'Reviews', value: stats.reviews || 0 },
-  ])
+  const overdueAlert = stats.overdueRfis?.length > 0
+    ? `<div style="background:#fdecea;border:1px solid #f5c6cb;border-radius:8px;padding:14px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+        <span style="color:#c62828;font-weight:600;font-size:0.88rem">&#9888; ${stats.overdueRfis.length} overdue RFI${stats.overdueRfis.length !== 1 ? 's' : ''} require attention</span>
+        <a href="/rfi" style="background:#c62828;color:#fff;padding:5px 12px;border-radius:6px;text-decoration:none;font-size:0.8rem;font-weight:600">View RFIs</a>
+      </div>` : ''
 
-  const actions = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-    <div class="card bg-white shadow"><div class="card-body"><h2 class="card-title">Quick Actions</h2><div class="flex flex-wrap gap-2 mt-4">${getQuickActions(user).map(a => `<a href="${a.href}" class="btn ${a.primary ? 'btn-primary' : 'btn-outline'} btn-sm">${a.label}</a>`).join('')}</div></div></div>
-    <div class="card bg-white shadow"><div class="card-body"><h2 class="card-title">Navigation</h2><div class="flex flex-wrap gap-2 mt-4">${getNavItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('')}</div></div></div></div>`
+  const quickActions = getQuickActions(user)
+  const actionsHtml = quickActions.length > 0
+    ? `<div style="background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px;margin-bottom:16px">
+        <div style="font-size:0.9rem;font-weight:700;color:#333;margin-bottom:12px">Quick Actions</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">${quickActions.map(a => `<a href="${a.href}" style="background:${a.primary ? '#04141f' : '#f5f5f5'};color:${a.primary ? '#fff' : '#333'};padding:7px 14px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:600;transition:opacity 0.15s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">${a.label}</a>`).join('')}</div>
+      </div>` : ''
 
-  const content = `<div class="mb-6"><h1 class="text-2xl font-bold">Dashboard</h1><p class="text-gray-500">Welcome back, ${user?.name || 'User'}. ${welcomeMsg}</p></div>${cards}${overdue}${myRfis}${actions}`
-  return page(user, 'Dashboard', [{ href: '/', label: 'Dashboard' }], content)
+  const navLinks = getNavItems(user)
+  const navHtml = navLinks.length > 0
+    ? `<div style="background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
+        <div style="font-size:0.9rem;font-weight:700;color:#333;margin-bottom:12px">Navigate</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">${navLinks.map(n => `<a href="${n.href}" style="background:#f7f8fa;border:1px solid #e0e0e0;color:#333;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:500" onmouseover="this.style.background='#e3f2fd'" onmouseout="this.style.background='#f7f8fa'">${n.label}</a>`).join('')}</div>
+      </div>` : ''
+
+  const content = `
+    <div style="margin-bottom:24px">
+      <h1 style="font-size:1.5rem;font-weight:700;color:#1a1a1a;margin:0 0 4px">Welcome back, ${user?.name || 'User'}</h1>
+      <p style="color:#888;font-size:0.88rem;margin:0">${new Date().toLocaleDateString('en-ZA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+    </div>
+    ${cards}
+    ${overdueAlert}
+    ${actionsHtml}
+    ${navHtml}
+  `
+  return page(user, 'Dashboard | MY FRIDAY', [], content)
 }
 
 export function renderAuditDashboard(user, auditData = {}) {

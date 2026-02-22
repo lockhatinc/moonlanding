@@ -66,13 +66,15 @@ export function nav(user) {
   // Build right-side nav links with Friday's pipe-separated format
   const logoutLink = `<a href="/api/auth/logout" style="color:#ced4da;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none;cursor:pointer">LOGOUT</a>`
 
+  const engagementsLink = !isClerk(user) ? `<span style="color:#0d4d6d">|</span><a href="/engagements" style="color:#ced4da;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none">ENGAGEMENTS</a>` : ''
+
   const clientsLink = !isClerk(user) ? `<span style="color:#0d4d6d">|</span><a href="/client" style="color:#ced4da;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none">CLIENTS</a>` : ''
 
   const settingsLink = isPartner(user) ? `<span style="color:#0d4d6d">|</span><a href="/admin/settings" style="color:#ced4da;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none">SETTINGS</a>` : ''
 
   const reviewLink = isClerk(user) || !isClerk(user) ? `<span style="color:#0d4d6d">|</span><a href="/review" style="color:#ced4da;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none">MY REVIEW</a>` : ''
 
-  const navLinksHtml = `${logoutLink}${clientsLink}${settingsLink}${reviewLink}`
+  const navLinksHtml = `${logoutLink}${engagementsLink}${clientsLink}${settingsLink}${reviewLink}`
 
   // Avatar with first letter
   const avatarInitial = user?.name?.charAt(0) || 'U'

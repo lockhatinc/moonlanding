@@ -1,41 +1,8 @@
 import { canCreate, canEdit, canDelete } from '@/ui/permissions-ui.js';
 import { generateHtml } from '@/ui/renderer.js';
+import { nav } from '@/ui/layout.js';
 
 const TOAST_SCRIPT = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';c.setAttribute('role','status');c.setAttribute('aria-live','polite');c.setAttribute('aria-atomic','true');document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
-
-function nav(user) {
-  const { getNavItems, getAdminItems } = require_perms();
-  const navLinks = getNavItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
-  const adminLinks = getAdminItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
-  return `<nav class="navbar bg-white shadow-sm px-4" role="navigation" aria-label="Main navigation">
-  <div class="navbar-start">
-    <a href="/" class="font-bold text-lg" aria-label="Home">Platform</a>
-    <div class="hidden md:flex gap-1 ml-6">${navLinks}${adminLinks}</div>
-  </div>
-  <div class="navbar-end">
-    <div id="user-dropdown" class="dropdown dropdown-end">
-      <button type="button" onclick="toggleUserMenu(event)" class="btn btn-ghost btn-circle avatar placeholder" aria-label="User menu for ${user?.name || 'user'}" aria-haspopup="menu" aria-expanded="false" style="cursor:pointer">
-        <div class="bg-primary text-white rounded-full w-10 flex items-center justify-content-center" style="display:flex;align-items:center;justify-content:center;height:2.5rem">
-          <span aria-hidden="true">${user?.name?.charAt(0) || 'U'}</span>
-        </div>
-      </button>
-      <ul class="dropdown-menu mt-2 w-52" role="menu">
-        <li class="dropdown-header" role="presentation">${user?.email || ''}<br/><small class="text-gray-500">${user?.role || ''}</small></li>
-        <li role="menuitem"><a href="/api/auth/logout">Logout</a></li>
-      </ul>
-    </div>
-  </div>
-</nav>
-<script>function toggleUserMenu(e){e.stopPropagation();var d=document.getElementById('user-dropdown');var isOpen=d.classList.toggle('open');e.currentTarget.setAttribute('aria-expanded',isOpen)}document.addEventListener('click',function(e){var d=document.getElementById('user-dropdown');if(d&&!d.contains(e.target)){d.classList.remove('open');var btn=d.querySelector('button');if(btn)btn.setAttribute('aria-expanded','false')}})</script>`;
-}
-
-function require_perms() {
-  return { getNavItems: (await_import_cache || {}).getNavItems, getAdminItems: (await_import_cache || {}).getAdminItems };
-}
-
-let await_import_cache = null;
-import { getNavItems, getAdminItems } from '@/ui/permissions-ui.js';
-await_import_cache = { getNavItems, getAdminItems };
 
 function breadcrumb(items) {
   if (!items?.length) return '';
@@ -45,7 +12,7 @@ function breadcrumb(items) {
 }
 
 function page(user, title, bc, content, scripts = []) {
-  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" role="main"><div class="p-6">${breadcrumb(bc)}${content}</div></main></div>`;
+  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main id="main-content" style="padding:24px 32px">${breadcrumb(bc)}${content}</main></div>`;
   return generateHtml(title, body, scripts);
 }
 
