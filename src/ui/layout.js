@@ -5,7 +5,7 @@ import { aria, role, skipLink, liveRegion } from '@/lib/accessibility'
 
 export function generateHtml(title, bodyContent, scripts = [], pathname = '/') {
   const scriptTags = scripts.map(s =>
-    typeof s === 'string' ? `<script type="module">${s}</script>` : `<script type="module" src="${s.src}"></script>`
+    typeof s === 'string' ? `<script>${s.replace(/<\//g, '<\\/')}</script>` : `<script type="module" src="${s.src}"></script>`
   ).join('\n')
 
   const swRegistration = `

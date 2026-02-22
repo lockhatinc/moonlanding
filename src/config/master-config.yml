@@ -1156,17 +1156,45 @@ entities:
             color: red
         default: medium
         label: Priority
+      response_count:
+        type: number
+        auto: true
+        readOnly: true
+        auto_generate: true
+        label: Response Count
+      last_response_date:
+        type: timestamp
+        auto: true
+        readOnly: true
+        auto_generate: true
+        label: Last Response Date
+      primary_response_id:
+        type: ref
+        ref: rfi_response
+        auto: true
+        readOnly: true
+        auto_generate: true
+        label: Primary Response Id
     field_overrides:
       response_count:
         type: number
         default: 0
+        auto: true
+        readOnly: true
+        auto_generate: true
         description: Auto-incrementing when new responses created
       last_response_date:
         type: timestamp
+        auto: true
+        readOnly: true
+        auto_generate: true
         description: Timestamp of most recent response
       primary_response_id:
         type: ref
         ref: rfi_response
+        auto: true
+        readOnly: true
+        auto_generate: true
         description: Currently active response
   review:
     label: Review
