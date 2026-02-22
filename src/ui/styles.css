@@ -528,3 +528,102 @@ details[open] .accordion-summary::after { transform: rotate(180deg); }
 [aria-invalid="true"], .input-error { border-color: #ef4444 !important; box-shadow: 0 0 0 1px #ef4444; }
 .error-message { color: #dc2626; font-size: 0.75rem; margin-top: 0.25rem; }
 .error-message::before { content: ''; display: inline; }
+
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 767px) {
+  .nav-links-desktop { display: none !important; }
+  .nav-hamburger { display: flex !important; }
+  main { padding: 16px !important; }
+  .p-6 { padding: 1rem !important; }
+  h1 { font-size: 1.2rem !important; }
+  .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { min-width: 480px; }
+  .card-body { padding: 0.75rem; }
+  .grid-cols-2, .grid-cols-4 { grid-template-columns: 1fr !important; }
+  .md\:grid-cols-3, .md\:grid-cols-4 { grid-template-columns: 1fr !important; }
+  .confirm-dialog { width: 95vw; max-width: 95vw; margin: 0 auto; }
+  .dialog-panel { width: 95vw !important; max-width: 95vw !important; }
+  .flex-mobile-col { flex-direction: column !important; }
+  .hide-mobile { display: none !important; }
+}
+@media (max-width: 640px) {
+  .lg\:grid-cols-2 { grid-template-columns: 1fr !important; }
+  .page-header { flex-direction: column; gap: 12px; align-items: flex-start !important; }
+  .page-header > * { width: 100%; }
+  .page-header a, .page-header button { width: auto; }
+  input[type="text"], input[type="email"], input[type="number"], select, textarea {
+    width: 100% !important; max-width: 100% !important;
+  }
+}
+@media (min-width: 768px) {
+  .nav-hamburger { display: none !important; }
+  .nav-links-desktop { display: flex !important; }
+}
+
+/* ===== GLOBAL POLISH ===== */
+:root {
+  --color-primary: #04141f;
+  --color-accent: #1976d2;
+  --color-bg: #f7f8fa;
+  --color-surface: #fff;
+  --color-border: #e0e0e0;
+  --color-text: #1a1a1a;
+  --color-muted: #888;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.1);
+  --transition-fast: 0.15s ease;
+}
+body { font-size: 15px; color: var(--color-text); background: var(--color-bg); }
+@media (max-width: 767px) { body { font-size: 14px; } }
+
+/* Button hover transitions */
+a[style*="background:#1976d2"], a[style*="background:#04141f"],
+button[style*="background:#1976d2"], button[style*="background:#04141f"] {
+  transition: opacity var(--transition-fast), box-shadow var(--transition-fast) !important;
+}
+a[style*="background:#1976d2"]:hover, a[style*="background:#04141f"]:hover,
+button[style*="background:#1976d2"]:hover, button[style*="background:#04141f"]:hover {
+  opacity: 0.9; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* Table hover and sticky header */
+#eng-table thead tr, #client-tbody ~ thead tr, table thead tr {
+  position: sticky; top: 0; z-index: 1;
+}
+tbody tr { transition: background var(--transition-fast); }
+
+/* Input focus polish */
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: #04141f !important;
+  box-shadow: 0 0 0 2px rgba(4,20,31,0.12) !important;
+}
+
+/* Card shadow consistency */
+div[style*="box-shadow:0 1px 4px"] {
+  box-shadow: var(--shadow-card) !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #aaa; }
+
+/* Loading skeleton */
+.skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: skeleton-wave 1.5s infinite; border-radius: 4px; }
+@keyframes skeleton-wave { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* Spinner for button loading states */
+.btn-spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: btn-spin 0.7s linear infinite; margin-right: 6px; vertical-align: middle; }
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+
+/* Empty state polish */
+.empty-state-icon { opacity: 0.4; }
+
+/* Page title consistency */
+h1[style*="font-size:1.4rem"] { font-size: 1.25rem !important; font-weight: 700 !important; color: #04141f !important; }
+
+/* Badge/pill consistency */
+span[style*="border-radius:10px"] { border-radius: 4px !important; }
+span[style*="border-radius:4px"] { padding: 2px 8px !important; font-size: 0.72rem !important; }

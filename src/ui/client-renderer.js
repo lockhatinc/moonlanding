@@ -28,32 +28,36 @@ export function renderClientList(user, clients) {
       <td style="padding:10px 12px"><span style="background:${sc[1]};color:${sc[0]};padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;border:1px solid ${sc[0]}44">${statusLbl}</span></td>
     </tr>`;
   }).join('');
-  const table = `<div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.1);overflow-x:auto">
+  const emptyState = `<tr><td colspan="8" style="text-align:center;padding:60px 20px">
+    <div style="font-size:2.5rem;opacity:0.2;margin-bottom:12px">🏢</div>
+    <div style="font-weight:600;color:#333;margin-bottom:6px">No clients yet</div>
+    <div style="color:#aaa;font-size:0.82rem">Add your first client to get started.</div>
+  </td></tr>`;
+  const th = (l) => `<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444;white-space:nowrap">${l}</th>`;
+  const table = `<div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.1)">
+    <div style="padding:10px 12px;border-bottom:1px solid #f0f0f0">
+      <span id="client-count" style="font-size:0.78rem;color:#888">Showing <strong>${(clients||[]).length}</strong> clients</span>
+    </div>
+    <div style="overflow-x:auto">
     <table style="width:100%;border-collapse:collapse;font-size:0.82rem">
       <thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0">
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444;white-space:nowrap">CODE</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">NAME</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">INDUSTRY</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">EMAIL</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">CONTACT</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">TAX NO</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">REG NO</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">STATUS</th>
+        ${th('CODE')}${th('NAME')}${th('INDUSTRY')}${th('EMAIL')}${th('CONTACT')}${th('TAX NO')}${th('REG NO')}${th('STATUS')}
       </tr></thead>
-      <tbody id="client-tbody">${rows || `<tr><td colspan="8" style="text-align:center;padding:48px;color:#aaa">No clients found</td></tr>`}</tbody>
+      <tbody id="client-tbody">${rows || emptyState}</tbody>
     </table>
+    </div>
   </div>`;
   const content = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <h1 style="font-size:1.4rem;font-weight:700;margin:0;color:#1a1a1a">Clients <span style="font-size:1rem;font-weight:400;color:#888">(${(clients||[]).length})</span></h1>
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h1 style="font-size:1.25rem;font-weight:700;margin:0;color:#04141f">Clients</h1>
       ${addBtn}
     </div>
     <div style="margin-bottom:12px">
       <input type="text" id="client-search" placeholder="Search clients..." oninput="filterClients()" style="padding:6px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.82rem;width:260px;outline:none" onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#ddd'">
     </div>
     ${table}`;
-  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main style="padding:24px 32px" id="main-content">${content}</main></div>`;
-  const script = `function filterClients(){var q=(document.getElementById('client-search').value||'').toLowerCase();document.querySelectorAll('#client-tbody tr').forEach(function(r){r.style.display=q&&!r.textContent.toLowerCase().includes(q)?'none':''});}`;
+  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main style="padding:clamp(16px,3vw,32px)" id="main-content">${content}</main></div>`;
+  const script = `function filterClients(){var q=(document.getElementById('client-search').value||'').toLowerCase(),vis=0,tot=0;document.querySelectorAll('#client-tbody tr').forEach(function(r){if(!r.cells||r.cells.length<2)return;tot++;var show=!q||r.textContent.toLowerCase().includes(q);r.style.display=show?'':'none';if(show)vis++});var c=document.getElementById('client-count');if(c)c.innerHTML='Showing <strong>'+vis+'</strong> of '+tot+' clients'}`;
   return generateHtml('Clients | MY FRIDAY', body, [script]);
 }
 

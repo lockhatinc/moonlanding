@@ -104,28 +104,29 @@ export function renderEngagementGrid(user, engagements, options = {}) {
   </div>`;
 
   const rows = engagements.map(e => engRow(e)).join('');
-  const table = `<div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.1);overflow-x:auto">
+  const th = (label, extra = '') => `<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444;white-space:nowrap${extra}">${label}</th>`;
+  const emptyState = `<tr><td colspan="11" style="text-align:center;padding:60px 20px">
+    <div style="font-size:2.5rem;opacity:0.2;margin-bottom:12px">📋</div>
+    <div style="font-weight:600;color:#333;margin-bottom:6px">No engagements found</div>
+    <div style="color:#aaa;font-size:0.82rem">Try adjusting your filters or add a new engagement.</div>
+  </td></tr>`;
+  const table = `<div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.1)">
+    <div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+      <span id="eng-count" style="font-size:0.78rem;color:#888">Showing <strong>${engagements.length}</strong> engagements</span>
+    </div>
+    <div style="overflow-x:auto">
     <table style="width:100%;border-collapse:collapse;font-size:0.82rem" id="eng-table">
       <thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0">
-        <th style="padding:10px 12px;text-align:left;font-weight:600;white-space:nowrap;font-size:0.78rem;color:#444">NAME</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">CLIENT</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">TYPE</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">YEAR</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">MONTH</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">TEAM</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">STAGE</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">STATUS</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">DEADLINE</th>
-        <th style="padding:10px 12px;text-align:center;font-weight:600;font-size:0.78rem;color:#444">RFI</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444;min-width:120px">PROGRESS</th>
+        ${th('NAME')}${th('CLIENT')}${th('TYPE')}${th('YEAR')}${th('MONTH')}${th('TEAM')}${th('STAGE')}${th('STATUS')}${th('DEADLINE')}${th('RFI',';text-align:center')}${th('PROGRESS',';min-width:120px')}
       </tr></thead>
-      <tbody id="eng-tbody">${rows || `<tr><td colspan="11" style="text-align:center;padding:48px;color:#aaa">No engagements found</td></tr>`}</tbody>
+      <tbody id="eng-tbody">${rows || emptyState}</tbody>
     </table>
+    </div>
   </div>`;
 
   const content = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <h1 style="font-size:1.4rem;font-weight:700;margin:0;color:#1a1a1a">Engagements</h1>
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h1 style="font-size:1.25rem;font-weight:700;margin:0;color:#04141f">Engagements</h1>
       ${addBtn}
     </div>
     ${stageCards(engagements)}
@@ -134,7 +135,7 @@ export function renderEngagementGrid(user, engagements, options = {}) {
     ${table}
   `;
 
-  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main style="padding:24px 32px" id="main-content">${content}</main></div>`;
+  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main style="padding:24px 32px;padding:clamp(16px,3vw,32px)" id="main-content">${content}</main></div>`;
 
   const script = `
 var activeStage = '';
@@ -154,7 +155,10 @@ function filterRows() {
   var q = (document.getElementById('eng-search')?.value || '').toLowerCase();
   var yr = document.getElementById('filter-year')?.value || '';
   var tm = document.getElementById('filter-team')?.value || '';
+  var visible = 0, total = 0;
   document.querySelectorAll('#eng-tbody tr').forEach(function(r) {
+    if (!r.dataset.text && !r.dataset.stage) return;
+    total++;
     var txt = r.dataset.text || '';
     var stage = r.dataset.stage || '';
     var rowYear = r.dataset.year || '';
@@ -165,7 +169,10 @@ function filterRows() {
     if (tm && rowTeam !== tm) show = false;
     if (activeStage && stage !== activeStage) show = false;
     r.style.display = show ? '' : 'none';
+    if (show) visible++;
   });
+  var c = document.getElementById('eng-count');
+  if (c) c.innerHTML = 'Showing <strong>' + visible + '</strong> of ' + total + ' engagements';
 }
 `;
 

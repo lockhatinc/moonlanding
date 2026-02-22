@@ -52,26 +52,29 @@ export function renderRfiList(user, rfis = [], engagements = []) {
     </tr>`;
   }).join('');
 
-  const empty = `<tr><td colspan="5" style="padding:40px;text-align:center;color:#aaa;font-size:0.85rem">No RFIs found</td></tr>`;
-
-  const table = `<div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);overflow-x:auto">
+  const empty = `<tr><td colspan="5" style="text-align:center;padding:60px 20px">
+    <div style="font-size:2.5rem;opacity:0.2;margin-bottom:12px">📄</div>
+    <div style="font-weight:600;color:#333;margin-bottom:6px">No RFIs found</div>
+    <div style="color:#aaa;font-size:0.82rem">Create an RFI from an engagement to get started.</div>
+  </td></tr>`;
+  const th = (l) => `<th style="padding:10px 12px;text-align:left;font-size:0.72rem;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e0e0e0;white-space:nowrap">${l}</th>`;
+  const table = `<div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">
+    <div style="padding:10px 12px;border-bottom:1px solid #f0f0f0">
+      <span id="rfi-count" style="font-size:0.78rem;color:#888">Showing <strong>${rfis.length}</strong> RFIs</span>
+    </div>
+    <div style="overflow-x:auto">
     <table style="width:100%;border-collapse:collapse">
-      <thead><tr style="background:#fafafa">
-        <th style="padding:10px 12px;text-align:left;font-size:0.72rem;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e0e0e0">Name</th>
-        <th style="padding:10px 12px;text-align:left;font-size:0.72rem;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e0e0e0">Engagement</th>
-        <th style="padding:10px 12px;text-align:left;font-size:0.72rem;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e0e0e0">Status</th>
-        <th style="padding:10px 12px;text-align:left;font-size:0.72rem;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e0e0e0">Deadline</th>
-        <th style="padding:10px 12px;text-align:left;font-size:0.72rem;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e0e0e0">Created</th>
-      </tr></thead>
+      <thead><tr style="background:#fafafa">${th('Name')}${th('Engagement')}${th('Status')}${th('Deadline')}${th('Created')}</tr></thead>
       <tbody id="rfi-tbody">${rows || empty}</tbody>
     </table>
+    </div>
   </div>`;
 
   const overdueCount = rfis.filter(r => r.deadline && new Date(typeof r.deadline==='number'?r.deadline*1000:r.deadline) < new Date()).length;
   const alert = overdueCount > 0 ? `<div style="background:#ffebee;border:1px solid #ffcdd2;border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center"><span style="color:#c62828;font-weight:600;font-size:0.85rem">&#9888; ${overdueCount} overdue RFI${overdueCount!==1?'s':''} require attention</span></div>` : '';
 
-  const content = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-    <h1 style="font-size:1.4rem;font-weight:700;margin:0">RFIs <span style="font-size:0.9rem;color:#888;font-weight:400">(${rfis.length})</span></h1>
+  const content = `<div class="page-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <h1 style="font-size:1.25rem;font-weight:700;margin:0;color:#04141f">RFIs</h1>
     <a href="/rfi/new" style="background:#04141f;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:600">New RFI</a>
   </div>${alert}${tabBar}${table}`;
 
@@ -81,12 +84,19 @@ export function renderRfiList(user, rfis = [], engagements = []) {
       document.querySelectorAll('[id^=tab-]').forEach(b=>{b.style.color='#888';b.style.borderBottomColor='transparent'});
       var btn=document.getElementById('tab-'+t);
       if(btn){btn.style.color='#1a1a1a';btn.style.borderBottomColor='#1565c0'}
+      var vis=0,tot=0;
       document.querySelectorAll('.rfi-row').forEach(row=>{
-        row.style.display=(t==='all'||row.dataset.status===t)?'':'none'
+        if(!row.dataset.status&&!row.dataset)return;
+        tot++;
+        var show=(t==='all'||row.dataset.status===t);
+        row.style.display=show?'':'none';
+        if(show)vis++;
       });
+      var c=document.getElementById('rfi-count');
+      if(c)c.innerHTML='Showing <strong>'+vis+'</strong> of '+tot+' RFIs';
     }
     filterTab('all');`;
 
-  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main style="padding:24px 32px">${content}</main></div>`;
+  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main style="padding:clamp(16px,3vw,32px)">${content}</main></div>`;
   return generateHtml('RFIs | MY FRIDAY', body, [script]);
 }
