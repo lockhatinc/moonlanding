@@ -66,7 +66,7 @@ export async function GET(request) {
   }
 
   try {
-    const tokens = await dynamicGoogle.validateAuthorizationCode(code, storedCodeVerifier);
+    const tokens = await dynamicGoogle.validateAuthorizationCode(code, codeVerifier);
     const accessToken = tokens.accessToken();
 
     const googleResponse = await fetch(GOOGLE_APIS.oauth2, {
