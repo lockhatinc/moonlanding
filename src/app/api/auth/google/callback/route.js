@@ -97,15 +97,17 @@ export async function GET(request) {
       });
     });
 
-    await createSession(user.id);
+    const { sessionCookie } = await createSession(user.id);
     console.log('[OAuth Callback] Session created for user');
 
     // Clean up the OAuth state from memory
     await deleteOAuthCookie(stateKey);
 
-    // Redirect to home (session cookie already set via createSession -> cookies().set())
+    // Redirect to home with session cookie in response
     const redirectUrl = new URL('/', request.url);
-    return NextResponse.redirect(redirectUrl);
+    const response = NextResponse.redirect(redirectUrl);
+    response.cookies.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+    return response;
   } catch (error) {
     console.error('Google OAuth error:', error);
     return buildOAuthErrorResponse('oauth_failed', request);
