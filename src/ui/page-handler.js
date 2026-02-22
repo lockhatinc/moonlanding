@@ -49,7 +49,8 @@ import {
   canList, canView, canCreate, canEdit,
   isPartner, isManager, isClerk, isClientUser, isAuditor, canClientAccessEntity
 } from '@/ui/permissions-ui.js';
-import { renderEngagementGrid, renderEngagementDetail } from '@/ui/engagement-grid-renderer.js';
+import { renderEngagementGrid } from '@/ui/engagement-grid-renderer.js';
+import { renderEngagementDetail } from '@/ui/engagement-detail-renderer.js';
 import { renderRfiList } from '@/ui/rfi-list-renderer.js';
 import { renderPdfViewer, renderPdfEditorPlaceholder } from '@/ui/pdf-viewer-renderer.js';
 import { renderReviewAnalytics } from '@/ui/review-analytics-renderer.js';
@@ -63,6 +64,7 @@ import { renderReviewComparison, renderComparisonPicker } from '@/ui/review-comp
 import { renderTenderDashboard } from '@/ui/tender-dashboard-renderer.js';
 import { renderBatchOperations } from '@/ui/batch-review-renderer.js';
 
+
 function page_wrap(user, title, bc, content) {
   return renderDashboard.__page_wrap
     ? renderDashboard.__page_wrap(user, title, bc, content)
@@ -71,32 +73,21 @@ function page_wrap(user, title, bc, content) {
 
 function renderBuildLogsContent(logs) {
   const rows = (logs || []).map(l => {
-    const sts = l.status === 'success'
-      ? '<span style="color:#22c55e">Success</span>'
-      : l.status === 'failed'
-        ? '<span style="color:#ef4444">Failed</span>'
-        : `<span style="color:#f59e0b">${l.status || 'pending'}</span>`;
+    const sts = l.status === 'success' ? '<span style="color:#22c55e">Success</span>' : l.status === 'failed' ? '<span style="color:#ef4444">Failed</span>' : `<span style="color:#f59e0b">${l.status || 'pending'}</span>`;
     const ts = l.created_at ? new Date(l.created_at * 1000).toLocaleString() : '-';
-    return `<tr><td class="text-sm">${l.version || '-'}</td><td>${sts}</td><td class="text-xs text-gray-500">${ts}</td><td class="text-xs">${l.duration ? l.duration + 's' : '-'}</td><td class="text-xs text-gray-500">${l.message || '-'}</td></tr>`;
+    return `<tr><td style="padding:8px 12px">${l.version||'-'}</td><td style="padding:8px 12px">${sts}</td><td style="padding:8px 12px;font-size:0.78rem;color:#888">${ts}</td><td style="padding:8px 12px">${l.duration?l.duration+'s':'-'}</td><td style="padding:8px 12px;font-size:0.78rem">${l.message||'-'}</td></tr>`;
   }).join('');
-  return `<div class="mb-6"><h1 class="text-2xl font-bold">Build & Deployment Logs</h1></div><div class="card bg-white shadow"><div class="card-body"><table class="table table-zebra w-full"><thead><tr><th>Version</th><th>Status</th><th>Time</th><th>Duration</th><th>Message</th></tr></thead><tbody>${rows || '<tr><td colspan="5" class="text-center py-4 text-gray-500">No build logs</td></tr>'}</tbody></table></div></div>`;
+  return `<div style="margin-bottom:24px"><h1 style="font-size:1.4rem;font-weight:700">Build Logs</h1></div><div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0"><th style="padding:10px 12px;text-align:left;font-size:0.78rem;color:#444">Version</th><th style="padding:10px 12px;text-align:left;font-size:0.78rem;color:#444">Status</th><th style="padding:10px 12px;text-align:left;font-size:0.78rem;color:#444">Time</th><th style="padding:10px 12px;text-align:left;font-size:0.78rem;color:#444">Duration</th><th style="padding:10px 12px;text-align:left;font-size:0.78rem;color:#444">Message</th></tr></thead><tbody>${rows||'<tr><td colspan="5" style="padding:32px;text-align:center;color:#aaa">No build logs</td></tr>'}</tbody></table></div>`;
 }
 
 function resolveEnumOptions(spec) {
   const resolvedSpec = { ...spec, fields: { ...spec.fields } };
   const engine = getConfigEngineSync();
   const config = engine.getConfig();
-
   for (const [fieldKey, field] of Object.entries(spec.fields || {})) {
-    if (field.type === 'enum' && typeof field.options === 'string') {
-      const optPath = field.options;
-      if (optPath.includes('engagement_lifecycle.stages')) {
-        const stages = config.workflows?.engagement_lifecycle?.stages || [];
-        resolvedSpec.fields[fieldKey] = {
-          ...field,
-          options: stages.map(s => ({ value: s.name, label: s.label || s.name }))
-        };
-      }
+    if (field.type === 'enum' && typeof field.options === 'string' && field.options.includes('engagement_lifecycle.stages')) {
+      const stages = config.workflows?.engagement_lifecycle?.stages || [];
+      resolvedSpec.fields[fieldKey] = { ...field, options: stages.map(s => ({ value: s.name, label: s.label || s.name })) };
     }
   }
   return resolvedSpec;
@@ -104,18 +95,9 @@ function resolveEnumOptions(spec) {
 
 function getRefOptions(spec) {
   const refOptions = {};
-  const refFields = Object.entries(spec.fields || {}).filter(([k, f]) => f.type === 'ref' && f.ref);
-  for (const [fieldKey, field] of refFields) {
-    try {
-      const refItems = list(field.ref, {});
-      refOptions[fieldKey] = refItems.map(r => ({
-        value: r.id,
-        label: r.name || r.title || r.label || r.email || r.id
-      }));
-    } catch (e) {
-      console.error(`[getRefOptions] Failed to load ${field.ref}:`, e.message);
-      refOptions[fieldKey] = [];
-    }
+  for (const [fieldKey, field] of Object.entries(spec.fields || {}).filter(([k, f]) => f.type === 'ref' && f.ref)) {
+    try { refOptions[fieldKey] = list(field.ref, {}).map(r => ({ value: r.id, label: r.name || r.title || r.label || r.email || r.id })); }
+    catch { refOptions[fieldKey] = []; }
   }
   return refOptions;
 }
@@ -124,34 +106,78 @@ function resolveRefFields(items, spec) {
   try {
     const refFields = Object.entries(spec.fields || {}).filter(([k, f]) => f.type === 'ref' && f.ref);
     if (!refFields.length) return items;
-
     const refCaches = {};
     for (const [fieldKey, field] of refFields) {
-      const refIds = [...new Set(items.map(item => item[fieldKey]).filter(Boolean))];
-      if (refIds.length) {
-        try {
-          const refItems = list(field.ref, {});
-          refCaches[fieldKey] = Object.fromEntries(refItems.map(r => [r.id, r.name || r.title || r.label || r.id]));
-        } catch (e) {
-          console.error(`[resolveRefFields] Failed to load ${field.ref}:`, e.message);
-        }
-      }
+      const refIds = [...new Set(items.map(i => i[fieldKey]).filter(Boolean))];
+      if (refIds.length) try { refCaches[fieldKey] = Object.fromEntries(list(field.ref, {}).map(r => [r.id, r.name || r.title || r.label || r.id])); } catch {}
     }
-
     return items.map(item => {
       const resolved = { ...item };
       for (const [fieldKey] of refFields) {
-        if (item[fieldKey] && refCaches[fieldKey]) {
-          resolved[`${fieldKey}_display`] = refCaches[fieldKey][item[fieldKey]] || item[fieldKey];
-        }
+        if (item[fieldKey] && refCaches[fieldKey]) resolved[`${fieldKey}_display`] = refCaches[fieldKey][item[fieldKey]] || item[fieldKey];
       }
       return resolved;
     });
-  } catch (e) {
-    console.error('[resolveRefFields] Error:', e.message);
-    return items;
-  }
+  } catch { return items; }
 }
+
+async function getDashboardStats(user) {
+  try {
+    const engagements = list('engagement', {});
+    const clients = list('client', {});
+    const rfis = list('rfi', {});
+    const reviews = list('review', {});
+    const myRfis = user ? rfis.filter(r => r.assigned_to === user.id) : [];
+    const now = Math.floor(Date.now() / 1000);
+    const overdueRfis = rfis.filter(r => r.status !== 'closed' && r.due_date && r.due_date < now).map(r => ({ ...r, daysOverdue: Math.floor((now - r.due_date) / 86400) }));
+    return { engagements: engagements.length, clients: clients.length, rfis: rfis.length, reviews: reviews.length, myRfis, overdueRfis };
+  } catch { return { engagements: 0, clients: 0, rfis: 0, reviews: 0, myRfis: [], overdueRfis: [] }; }
+}
+
+async function getSettingsCounts() {
+  const counts = {};
+  const entities = { users: 'user', teams: 'team', rfiSections: 'rfi_section', templates: 'review_template', checklists: 'checklist', recreation: 'permission_audit' };
+  for (const [key, entity] of Object.entries(entities)) { try { counts[key] = count(entity); } catch { counts[key] = 0; } }
+  return counts;
+}
+
+async function getSystemConfig() {
+  try {
+    const { getConfigEngineSync: gce } = await import('@/lib/config-generator-engine.js');
+    const engine = gce();
+    const config = engine.getConfig();
+    return { database: config.system?.database || {}, server: config.system?.server || {}, thresholds: config.thresholds || {} };
+  } catch { return {}; }
+}
+
+async function getAuditData() {
+  try {
+    const audits = list('permission_audit', {});
+    const cutoff = Math.floor(Date.now() / 1000) - 30 * 86400;
+    const recent = audits.filter(a => (a.timestamp || a.created_at) > cutoff);
+    return { summary: { total_actions: recent.length, grants: recent.filter(a => a.action === 'grant').length, revokes: recent.filter(a => a.action === 'revoke').length, role_changes: recent.filter(a => a.action === 'role_change').length }, recentActivity: audits.slice(0, 50) };
+  } catch { return { summary: {}, recentActivity: [] }; }
+}
+
+function getClientDashboardStats(clientId) {
+  try {
+    const engagements = list('engagement', {}).filter(e => e.client_id === clientId);
+    const rfis = list('rfi', {}).filter(r => engagements.some(e => e.id === r.engagement_id));
+    const reviews = list('review', {}).filter(r => engagements.some(e => e.id === r.engagement_id));
+    const users = list('user', {}).filter(u => u.client_id === clientId);
+    return { engagements: engagements.length, activeRfis: rfis.filter(r => r.status !== 'closed' && r.status !== 'completed').length, users: users.length, reviews: reviews.length, engagementList: engagements.slice(0, 10) };
+  } catch { return { engagements: 0, activeRfis: 0, users: 0, reviews: 0, engagementList: [] }; }
+}
+
+async function getSystemHealth() {
+  try {
+    const entityCounts = {};
+    for (const e of ['user','client','engagement','rfi','review','team']) { try { entityCounts[e] = count(e); } catch { entityCounts[e] = 0; } }
+    const u = process.uptime();
+    return { database: { status: 'Connected', type: 'SQLite' }, server: { port: 3004, uptime: `${Math.floor(u/3600)}h ${Math.floor((u%3600)/60)}m` }, entities: entityCounts };
+  } catch { return {}; }
+}
+
 
 export async function handlePage(pathname, req, res) {
   setCurrentRequest(req);
@@ -390,7 +416,11 @@ export async function handlePage(pathname, req, res) {
     const spec = getSpec('engagement');
     if (spec) engagements = resolveRefFields(engagements, spec);
     let teams = []; try { teams = list('team', {}); } catch {}
-    const years = [...new Set(engagements.map(e => e.year).filter(Boolean))].sort();
+    const years = [...new Set(engagements.map(e => {
+      if (!e.year) return null;
+      const m = String(e.year).match(/\b(20\d{2}|19\d{2})\b/);
+      return m ? m[1] : null;
+    }).filter(Boolean))].sort().reverse();
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const filter = url.searchParams.get('filter') || 'all';
     return renderEngagementGrid(user, engagements, { filter, teams, years });
@@ -551,9 +581,10 @@ export async function handlePage(pathname, req, res) {
   // F-RFI-LIST: Friday-style RFI list
   if (segments.length === 1 && segments[0] === 'rfi') {
     if (!canList(user, 'rfi')) return renderAccessDenied(user, 'rfi', 'list');
-    let rfis = []; try { const db = getDatabase(); rfis = db.prepare('SELECT * FROM rfis ORDER BY created_at DESC').all(); } catch {}
+    let rfis = []; try { const db = getDatabase(); rfis = db.prepare('SELECT * FROM rfis ORDER BY created_at ASC').all(); } catch {}
     let engagements = []; try { engagements = list('engagement', {}); } catch {}
     if (isClerk(user)) rfis = rfis.filter(r => engagements.filter(e => e.assigned_to === user.id || e.team_id === user.team_id).some(e => e.id === r.engagement_id));
+    rfis = rfis.map((r, i) => ({ ...r, display_name: 'RFI #' + (i + 1) }));
     return renderRfiList(user, rfis, engagements);
   }
 
@@ -602,7 +633,9 @@ export async function handlePage(pathname, req, res) {
     if (!engagement) return null;
     let client = null; try { client = engagement.client_id ? get('client', engagement.client_id) : null; } catch {}
     let rfis = []; try { rfis = list('rfi', {}).filter(r => r.engagement_id === engId); } catch {}
-    return renderEngagementDetail(user, engagement, client, rfis);
+    let team = null; try { team = engagement.team_id ? get('team', engagement.team_id) : null; } catch {}
+    const enrichedEng = { ...engagement, team_name: team?.name || engagement.team_name };
+    return renderEngagementDetail(user, enrichedEng, client, rfis);
   }
 
   if (segments.length === 2) {
@@ -671,151 +704,13 @@ export async function handlePage(pathname, req, res) {
 }
 
 function handleFilteredReviewList(user, filter, title) {
-  if (!canList(user, 'review')) {
-    return renderAccessDenied(user, 'review', 'list');
-  }
-
+  if (!canList(user, 'review')) return renderAccessDenied(user, 'review', 'list');
   const spec = getSpec('review');
   if (!spec) return null;
-
   let items = list('review', {});
-
-  if (filter === 'active') {
-    items = items.filter(r => r.status === 'active' || r.status === 'open');
-  } else if (filter === 'priority') {
-    const priorityIds = user.priority_reviews || [];
-    items = items.filter(r => priorityIds.includes(r.id));
-  } else if (filter === 'history') {
-    items = items.filter(r => r.status === 'closed' || r.status === 'completed');
-  } else if (filter === 'archive') {
-    items = items.filter(r => r.status === 'archived');
-  }
-
-  const resolvedItems = resolveRefFields(items, spec);
-  return renderEntityList('review', resolvedItems, spec, user);
-}
-
-async function getDashboardStats(user) {
-  try {
-    const engagements = list('engagement', {});
-    const clients = list('client', {});
-    const rfis = list('rfi', {});
-    const reviews = list('review', {});
-
-    const myRfis = user ? rfis.filter(r => r.assigned_to === user.id) : [];
-    const now = Math.floor(Date.now() / 1000);
-    const overdueRfis = rfis.filter(r => {
-      if (r.status === 'closed') return false;
-      if (!r.due_date) return false;
-      return r.due_date < now;
-    }).map(r => ({
-      ...r,
-      daysOverdue: Math.floor((now - r.due_date) / 86400)
-    }));
-
-    return {
-      engagements: engagements.length,
-      clients: clients.length,
-      rfis: rfis.length,
-      reviews: reviews.length,
-      myRfis,
-      overdueRfis
-    };
-  } catch (e) {
-    console.error('[Dashboard Stats]', e.message);
-    return { engagements: 0, clients: 0, rfis: 0, reviews: 0, myRfis: [], overdueRfis: [] };
-  }
-}
-
-async function getSettingsCounts() {
-  const counts = {};
-  const entities = { users: 'user', teams: 'team', rfiSections: 'rfi_section', templates: 'review_template', checklists: 'checklist', recreation: 'permission_audit' };
-  for (const [key, entity] of Object.entries(entities)) {
-    try { counts[key] = count(entity); } catch { counts[key] = 0; }
-  }
-  return counts;
-}
-
-async function getSystemConfig() {
-  try {
-    const { getConfigEngineSync } = await import('@/lib/config-generator-engine.js');
-    const engine = getConfigEngineSync();
-    const config = engine.getConfig();
-    return {
-      database: config.system?.database || {},
-      server: config.system?.server || {},
-      thresholds: config.thresholds || {}
-    };
-  } catch (e) {
-    console.error('[getSystemConfig]', e.message);
-    return {};
-  }
-}
-
-async function getAuditData() {
-  try {
-    const audits = list('permission_audit', {});
-    const thirtyDaysAgo = Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60);
-    const recentAudits = audits.filter(a => (a.timestamp || a.created_at) > thirtyDaysAgo);
-
-    const summary = {
-      total_actions: recentAudits.length,
-      grants: recentAudits.filter(a => a.action === 'grant').length,
-      revokes: recentAudits.filter(a => a.action === 'revoke').length,
-      role_changes: recentAudits.filter(a => a.action === 'role_change').length
-    };
-
-    return {
-      summary,
-      recentActivity: audits.slice(0, 50)
-    };
-  } catch (e) {
-    console.error('[getAuditData]', e.message);
-    return { summary: {}, recentActivity: [] };
-  }
-}
-
-function getClientDashboardStats(clientId) {
-  try {
-    const engagements = list('engagement', {}).filter(e => e.client_id === clientId);
-    const rfis = list('rfi', {}).filter(r => engagements.some(e => e.id === r.engagement_id));
-    const reviews = list('review', {}).filter(r => engagements.some(e => e.id === r.engagement_id));
-    const users = list('user', {}).filter(u => u.client_id === clientId);
-    return {
-      engagements: engagements.length,
-      activeRfis: rfis.filter(r => r.status !== 'closed' && r.status !== 'completed').length,
-      users: users.length,
-      reviews: reviews.length,
-      engagementList: engagements.slice(0, 10),
-    };
-  } catch (e) {
-    return { engagements: 0, activeRfis: 0, users: 0, reviews: 0, engagementList: [] };
-  }
-}
-
-async function getSystemHealth() {
-  try {
-    const entityCounts = {};
-    const entities = ['user', 'client', 'engagement', 'rfi', 'review', 'team'];
-    for (const e of entities) {
-      try {
-        entityCounts[e] = count(e);
-      } catch (err) {
-        entityCounts[e] = 0;
-      }
-    }
-
-    const uptimeSeconds = process.uptime();
-    const hours = Math.floor(uptimeSeconds / 3600);
-    const minutes = Math.floor((uptimeSeconds % 3600) / 60);
-
-    return {
-      database: { status: 'Connected', type: 'SQLite' },
-      server: { port: 3004, uptime: `${hours}h ${minutes}m` },
-      entities: entityCounts
-    };
-  } catch (e) {
-    console.error('[getSystemHealth]', e.message);
-    return {};
-  }
+  if (filter === 'active') items = items.filter(r => r.status === 'active' || r.status === 'open');
+  else if (filter === 'priority') { const pids = user.priority_reviews || []; items = items.filter(r => pids.includes(r.id)); }
+  else if (filter === 'history') items = items.filter(r => r.status === 'closed' || r.status === 'completed');
+  else if (filter === 'archive') items = items.filter(r => r.status === 'archived');
+  return renderEntityList('review', resolveRefFields(items, spec), spec, user);
 }

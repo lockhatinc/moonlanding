@@ -25,8 +25,12 @@ export function inlineTable(headers, rows, emptyMsg) {
   return `<div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);overflow-x:auto"><table style="width:100%;border-collapse:collapse"><thead><tr>${ths}</tr></thead><tbody>${rows || empty}</tbody></table></div>`;
 }
 
+const KNOWN_ROLES = { admin: ['#6a1b9a','#f3e5f5'], partner: ['#1565c0','#e3f2fd'], manager: ['#2e7d32','#e8f5e9'], clerk: ['#e65100','#fff3e0'], user: ['#555','#f5f5f5'], auditor: ['#283593','#e8eaf6'] };
 function roleBadge(role) {
-  return `<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:600">${role}</span>`;
+  const r = (role || '').toLowerCase();
+  const [color, bg] = KNOWN_ROLES[r] || ['#c62828', '#fdecea'];
+  const label = KNOWN_ROLES[r] ? r.charAt(0).toUpperCase() + r.slice(1) : 'Unknown';
+  return `<span style="background:${bg};color:${color};padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:600" title="${role}">${label}</span>`;
 }
 
 function statusBadge(status) {

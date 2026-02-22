@@ -1,0 +1,74 @@
+# PRD: UX Polish + Codebase Consolidation
+
+## Wave 1 - Parallel (foundation + biggest UX fixes)
+
+### 1A: Create format-helpers.js consolidation module
+- Create src/ui/format-helpers.js with: formatDate, formatCurrency, formatPercent, stagePill, statusBadge, formatName, truncate, emptyState, timeAgo
+- Must be under 200 lines
+- All other files import from here (do NOT update all imports now - just create the module)
+- Blocks: nothing. Blocked by: nothing.
+
+### 1B: Fix RFI list - raw IDs showing as Name and Engagement
+- rfis table has no name field - display "RFI #N" or short ID nicely formatted
+- engagement_id in rfis table uses Firebase-style IDs that don't match engagement table UUIDs - show engagement_id truncated with ... nicely or resolve via page-handler joining
+- Fix page-handler.js RFI section: join rfis with engagement table by engagement_id (may need fallback)
+- Display "RFI #1", "RFI #2" etc as ordinal names based on created_at order
+- Blocks: nothing. Blocked by: nothing.
+
+### 1C: Fix Users settings page - corrupted role display
+- Some users have role = xNexLKjl1m3kPTG8BBaF (looks like a team ID accidentally stored as role)
+- In settings-renderer.js renderSettingsUsers: show known roles (admin, partner, manager, clerk, user, auditor) with colored badges; unknown roles show as "Unknown" badge in red
+- Also: role column shows raw strings - add colored role badges
+- Blocks: nothing. Blocked by: nothing.
+
+## Wave 2 - Parallel (file splitting + more UX)
+
+### 2A: Split page-handler.js (822 lines) into logical units
+- Extract dashboard handler -> src/ui/handlers/dashboard-handler.js
+- Extract engagement handlers -> src/ui/handlers/engagement-handler.js
+- Extract client handlers -> src/ui/handlers/client-handler.js
+- Extract rfi handlers -> src/ui/handlers/rfi-handler.js
+- Extract review/checklist/settings handlers -> src/ui/handlers/misc-handler.js
+- Keep page-handler.js as thin router (<100 lines) that imports from handlers
+- Each handler file must be under 200 lines
+- Blocks: nothing. Blocked by: nothing.
+
+### 2B: Split engagement-grid-renderer.js (262 lines)
+- Extract renderEngagementDetail -> src/ui/engagement-detail-renderer.js
+- Extract renderEngagementCardView -> keep in engagement-grid-renderer.js
+- engagement-grid-renderer.js should be under 200 lines after split
+- Blocks: nothing. Blocked by: nothing.
+
+### 2C: Fix engagements page - year filter shows raw date strings
+- Year dropdown in engagement filter shows "01 April 2024", "01 Jan 2023 to 31 Dec 2023" etc - these are raw period strings from the DB, not clean years
+- Fix: extract just the year number from these strings for the year filter dropdown
+- Also: team filter - show team names not IDs
+- Also: add search to engagements that works on client name
+- Blocks: nothing. Blocked by: nothing.
+
+## Wave 3 - Parallel (polish pass)
+
+### 3A: Dashboard polish
+- Dashboard shows emoji + number stat cards - looks OK but needs: add "Welcome back" greeting with proper date formatting
+- Quick actions section exists but could use better layout
+- Recent activity section missing - add a simple recent engagements list
+- Blocks: nothing. Blocked by: 2A.
+
+### 3B: Client list polish
+- Client list shows mostly dashes for contact/tax/reg fields (data is sparse - that's OK)
+- Fix: client_code field shows as "code" column - make CODE header clickable for sort
+- Client detail page: needs back button, formatted dates, better layout
+- Blocks: nothing. Blocked by: nothing.
+
+### 3C: Remove dead files + cleanup
+- Remove src/ui/test-page.js (15 lines, test file)
+- Remove any test scripts from root (execute-phase-*.js, phase-3.*.js, test-*.js)
+- Check for duplicate formatDate/statusBadge patterns across files - document findings
+- Blocks: nothing. Blocked by: 2A, 2B.
+
+## Wave 4 - Final
+
+### 4A: Commit and push all changes
+- git add, commit with descriptive message, push
+- Verify server still starts and pages load
+- Blocked by: all previous waves complete.
