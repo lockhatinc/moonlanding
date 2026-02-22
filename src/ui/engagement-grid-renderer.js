@@ -55,9 +55,9 @@ function extractYear(y) {
 
 function engRow(e) {
   const client = esc(e.client_name || e.client_id_display || e.client_id || '-');
-  const type = esc(e.type || e.engagement_type || e.title || '-');
+  const type = esc(e.type || e.engagement_type || e.repeat_interval || '-');
   const year = esc(e.year || '-');
-  const month = esc(e.month || '-');
+  const month = esc(e.month || e.period || '-');
   const team = esc(e.team_name || e.team_id_display || e.team_id || '-');
   const deadline = e.deadline ? new Date(e.deadline).toLocaleDateString() : '-';
   const rfi = e.rfi_count != null ? e.rfi_count : '-';
@@ -70,7 +70,7 @@ function engRow(e) {
     <td style="padding:10px 12px;font-size:0.8rem">${type}</td>
     <td style="padding:10px 12px;font-size:0.8rem">${year}</td>
     <td style="padding:10px 12px;font-size:0.8rem">${month}</td>
-    <td style="padding:10px 12px;font-size:0.8rem">${team}</td>
+    <td style="padding:10px 12px;font-size:0.8rem;white-space:nowrap">${team}</td>
     <td style="padding:10px 12px">${stageBadge(e.stage)}</td>
     <td style="padding:10px 12px">${statusBadge(e.status)}</td>
     <td style="padding:10px 12px;font-size:0.8rem;white-space:nowrap">${deadline}</td>

@@ -33,7 +33,7 @@ export function renderClientList(user, clients) {
       <thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0">
         <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444;white-space:nowrap">CODE</th>
         <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">NAME</th>
-        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">ENTITY TYPE</th>
+        <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">INDUSTRY</th>
         <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">EMAIL</th>
         <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">CONTACT</th>
         <th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444">TAX NO</th>

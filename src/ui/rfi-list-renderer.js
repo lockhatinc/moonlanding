@@ -45,7 +45,7 @@ export function renderRfiList(user, rfis = [], engagements = []) {
     const s = (r.status || 'draft').toLowerCase();
     return `<tr class="rfi-row" data-status="${s}" style="border-bottom:1px solid #f0f0f0;cursor:pointer" onclick="window.location='/rfi/${r.id}'" onmouseover="this.style.background='#f9f9f9'" onmouseout="this.style.background=''">
       <td style="padding:10px 12px;font-size:0.82rem;font-weight:500">${r.display_name || r.name || r.title || 'RFI ' + r.id.slice(0,6)}</td>
-      <td style="padding:10px 12px"><a href="/engagement/${r.engagement_id}" onclick="event.stopPropagation()" style="color:#1565c0;text-decoration:none;font-size:0.82rem">${eng.name || eng.client_name || (r.engagement_id ? r.engagement_id.slice(0,12)+'…' : '—')}</a></td>
+      <td style="padding:10px 12px">${eng.name ? `<a href="/engagements/${eng.id}" onclick="event.stopPropagation()" style="color:#1565c0;text-decoration:none;font-size:0.82rem">${eng.name}</a>` : `<span style="color:#aaa;font-size:0.82rem">—</span>`}</td>
       <td style="padding:10px 12px">${statusBadge(r.status)}</td>
       <td style="padding:10px 12px;font-size:0.82rem">${deadlineDisplay(r.deadline)}</td>
       <td style="padding:10px 12px;font-size:0.78rem;color:#888">${r.created_at ? new Date(typeof r.created_at==='number'?r.created_at*1000:r.created_at).toLocaleDateString('en-ZA') : '—'}</td>

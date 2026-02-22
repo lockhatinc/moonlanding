@@ -129,17 +129,29 @@ export function renderEngagementDetail(user, engagement, client, rfis = []) {
   const stageBg = stageCfg ? stageCfg.bg : '#f5f5f5';
   const canTransition = isPartner(user) || isManager(user);
 
+  function fmtDate(v) {
+    if (!v) return '-';
+    const n = typeof v === 'number' ? (v > 1e10 ? v : v * 1000) : new Date(v).getTime();
+    return new Date(n).toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  function fmtCurrency(v) {
+    if (!v && v !== 0) return '-';
+    return 'R ' + Number(v).toLocaleString('en-ZA', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+  const assignedUsersHtml = (e.assigned_users_resolved || []).length
+    ? (e.assigned_users_resolved || []).map(u => `<span style="background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:600;margin-right:4px">${esc(u.name)}</span>`).join('')
+    : '<span style="color:#aaa;font-style:italic;font-size:0.82rem">Not assigned</span>';
   const infoItems = [
     ['Client', esc(client?.name || e.client_name || e.client_id_display || e.client_id || '-')],
-    ['Type', esc(e.type || e.engagement_type || e.title || '-')],
+    ['Type', esc(e.type || e.engagement_type || e.repeat_interval || '-')],
     ['Year', esc(e.year || '-')],
-    ['Month', esc(e.month || '-')],
     ['Team', esc(e.team_name || e.team_id_display || e.team_id || '-')],
-    ['Deadline', e.deadline ? new Date(e.deadline).toLocaleDateString() : '-'],
     ['Status', e.status ? `<span style="background:${e.status==='active'?'#e8f5e9':'#fff3e0'};color:${e.status==='active'?'#2e7d32':'#e65100'};padding:2px 8px;border-radius:10px;font-size:0.75rem;font-weight:700">${e.status}</span>` : '-'],
-    ['Commenced', e.commencement_date ? new Date(typeof e.commencement_date==='number'?e.commencement_date*1000:e.commencement_date).toLocaleDateString() : '-'],
-    ['Fees', e.fees ? `R${Number(e.fees).toLocaleString()}` : '-'],
-    ['Created', e.created_at ? new Date(typeof e.created_at === 'number' ? e.created_at * 1000 : e.created_at).toLocaleDateString() : '-'],
+    ['Fee', fmtCurrency(e.fee || e.fees)],
+    ['Commenced', fmtDate(e.commencement_date)],
+    ['Deadline', fmtDate(e.deadline_date || e.deadline)],
+    ['Created', fmtDate(e.created_at)],
+    ['Assigned Users', assignedUsersHtml],
   ];
 
   const infoGrid = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px">` +

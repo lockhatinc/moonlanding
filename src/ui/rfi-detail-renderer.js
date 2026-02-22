@@ -87,14 +87,14 @@ export function renderRfiDetail(user, rfi = {}, questions = [], sections = [], e
     </div>` : '';
 
   const infoGrid = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px 24px;margin-bottom:20px">
-    ${[['Engagement', esc(engagement?.name||rfi.engagement_id||'-')],['Status',statusBadge(rfi.status)],['Deadline',rfi.deadline?new Date(typeof rfi.deadline==='number'?rfi.deadline*1000:rfi.deadline).toLocaleDateString():'-'],['Questions',questions.length],['Sections',sections.length],['Mandatory',rfi.mandatory!==false?'Yes':'No']].map(([l,v])=>`<div><div style="font-size:0.72rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">${l}</div><div style="font-size:0.88rem;color:#222">${v}</div></div>`).join('')}
+    ${[['Engagement', engagement?.name ? esc(engagement.name) : '<span style="color:#aaa">—</span>'],['Status',statusBadge(rfi.status)],['Deadline',rfi.deadline?new Date(typeof rfi.deadline==='number'?rfi.deadline*1000:rfi.deadline).toLocaleDateString():'-'],['Questions',questions.length],['Sections',sections.length],['Mandatory',rfi.mandatory!==false?'Yes':'No']].map(([l,v])=>`<div><div style="font-size:0.72rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">${l}</div><div style="font-size:0.88rem;color:#222">${v}</div></div>`).join('')}
   </div>`;
 
   const content = `
     <div style="margin-bottom:16px">${engLink}</div>
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px">
       <div>
-        <h1 style="font-size:1.4rem;font-weight:700;margin:0 0 6px">${esc(rfi.name||rfi.title||'RFI')}</h1>
+        <h1 style="font-size:1.4rem;font-weight:700;margin:0 0 6px">${esc(rfi.display_name||rfi.name||rfi.title||(engagement ? 'RFI – ' + (engagement.name||'') : 'RFI'))}</h1>
         ${rfi.description ? `<p style="color:#666;font-size:0.85rem;margin:0">${esc(rfi.description)}</p>` : ''}
       </div>
       ${headerBtns}

@@ -9,7 +9,7 @@ function esc(s) {
 }
 
 function statusBadge(status) {
-  const map = { active: ['#2e7d32','#e8f5e9'], open: ['#2e7d32','#e8f5e9'], closed: ['#555','#f5f5f5'], archived: ['#6d4c41','#efebe9'], pending: ['#e65100','#fff3e0'] };
+  const map = { active: ['#2e7d32','#e8f5e9'], open: ['#2e7d32','#e8f5e9'], closed: ['#555','#f5f5f5'], archived: ['#6d4c41','#efebe9'], pending: ['#e65100','#fff3e0'], inactive: ['#888','#f5f5f5'] };
   const [color, bg] = map[status] || ['#555','#f5f5f5'];
   return `<span style="background:${bg};color:${color};padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:700;border:1px solid ${color}44">${status||'-'}</span>`;
 }

@@ -132,12 +132,14 @@ async function getDashboardStats(user) {
   try {
     const engagements = list('engagement', {});
     const clients = list('client', {});
+    const clientMap = Object.fromEntries(clients.map(c => [c.id, c.name]));
     const rfis = list('rfi', {});
     const reviews = list('review', {});
     const myRfis = user ? rfis.filter(r => r.assigned_to === user.id) : [];
     const now = Math.floor(Date.now() / 1000);
     const overdueRfis = rfis.filter(r => r.status !== 'closed' && r.due_date && r.due_date < now).map(r => ({ ...r, daysOverdue: Math.floor((now - r.due_date) / 86400) }));
-    const recentEngagements = [...engagements].sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0)).slice(0, 8);
+    const recentEngagements = [...engagements].sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0)).slice(0, 8)
+      .map(e => ({ ...e, client_name: clientMap[e.client_id] || e.client_name || '-' }));
     return { engagements: engagements.length, clients: clients.length, rfis: rfis.length, reviews: reviews.length, myRfis, overdueRfis, recentEngagements };
   } catch { return { engagements: 0, clients: 0, rfis: 0, reviews: 0, myRfis: [], overdueRfis: [], recentEngagements: [] }; }
 }
@@ -257,7 +259,9 @@ export async function handlePage(pathname, req, res) {
     }
     if (normalized === '/admin/settings/teams') {
       const teams = list('team', {});
-      return renderSettingsTeams(user, teams);
+      const allUsers = list('user', {});
+      const { renderSettingsTeams: _renderTeams } = await lazyRenderer('settings-renderer.js');
+      return _renderTeams(user, teams, allUsers);
     }
     if (normalized === '/admin/settings/rfi-sections') {
       let sections = [];
@@ -403,7 +407,14 @@ export async function handlePage(pathname, req, res) {
   }
   if (normalized === '/reviews' || normalized === '/review') {
     if (!canList(user, 'review')) return renderAccessDenied(user, 'review', 'list');
-    let reviews = []; try { reviews = list('review', {}); } catch {}
+    let reviews = [];
+    try {
+      const _rdb = getDatabase();
+      reviews = _rdb.prepare('SELECT * FROM review ORDER BY updated_at DESC').all();
+    } catch { try { reviews = list('review', {}); } catch {} }
+    const engMap = {};
+    try { list('engagement', {}).forEach(e => { engMap[e.id] = e.name; }); } catch {}
+    reviews = reviews.map(r => ({ ...r, engagement_name: engMap[r.engagement_id] || r.engagement_name || null }));
     return renderReviewListTabbed(user, reviews);
   }
 
@@ -449,9 +460,14 @@ export async function handlePage(pathname, req, res) {
   if (normalized === '/engagements') {
     if (!canList(user, 'engagement')) return renderAccessDenied(user, 'engagement', 'list');
     let engagements = list('engagement', {});
+    const clients = list('client', {});
+    const clientMap = Object.fromEntries(clients.map(c => [c.id, c.name]));
+    engagements = engagements.map(e => ({ ...e, client_name: clientMap[e.client_id] || e.client_name || '-' }));
     const spec = getSpec('engagement');
     if (spec) engagements = resolveRefFields(engagements, spec);
     let teams = []; try { teams = list('team', {}); } catch {}
+    const teamMap = Object.fromEntries(teams.map(t => [t.id, t.name]));
+    engagements = engagements.map(e => ({ ...e, team_name: teamMap[e.team_id] || e.team_name || '-' }));
     const years = [...new Set(engagements.map(e => {
       if (!e.year) return null;
       const m = String(e.year).match(/\b(20\d{2}|19\d{2})\b/);
@@ -460,6 +476,27 @@ export async function handlePage(pathname, req, res) {
     const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const filter = url.searchParams.get('filter') || 'all';
     return renderEngagementGrid(user, engagements, { filter, teams, years });
+  }
+
+  if (segments.length === 2 && segments[0] === 'engagements' && segments[1] !== 'new') {
+    const engId = segments[1];
+    if (!canView(user, 'engagement')) return renderAccessDenied(user, 'engagement', 'view');
+    const _edb = getDatabase();
+    const engagement = get('engagement', engId) || _edb.prepare('SELECT * FROM engagement WHERE id=?').get(engId);
+    if (!engagement) return null;
+    let client = null; try { client = engagement.client_id ? get('client', engagement.client_id) : null; } catch {}
+    let rfis = []; try { rfis = _edb.prepare('SELECT * FROM rfis WHERE engagement_id=?').all(engId); } catch { try { rfis = list('rfi', {}).filter(r => r.engagement_id === engId); } catch {} }
+    let team = null; try { team = engagement.team_id ? get('team', engagement.team_id) : null; } catch {}
+    let assignedUsers = [];
+    try {
+      const userIds = JSON.parse(engagement.users || '[]');
+      const dbUsers = _edb.prepare('SELECT id, name, email FROM users').all();
+      const userMap = Object.fromEntries(dbUsers.map(u => [u.id, u.name || u.email]));
+      assignedUsers = userIds.map(id => ({ id, name: userMap[id] || null })).filter(u => u.name);
+    } catch {}
+    const enrichedEng = { ...engagement, team_name: team?.name || engagement.team_name, client_name: client?.name || engagement.client_name, assigned_users_resolved: assignedUsers };
+    const { renderEngagementDetail } = await lazyRenderer('engagement-detail-renderer.js');
+    return renderEngagementDetail(user, enrichedEng, client, rfis);
   }
 
   if (normalized === '/search') {
@@ -690,7 +727,8 @@ export async function handlePage(pathname, req, res) {
   if (segments.length === 2 && segments[0] === 'review' && segments[1] !== 'new') {
     const reviewId = segments[1];
     if (!canView(user, 'review')) return renderAccessDenied(user, 'review', 'view');
-    const review = get('review', reviewId);
+    const _rdb = getDatabase();
+    const review = get('review', reviewId) || _rdb.prepare('SELECT * FROM review WHERE id=?').get(reviewId);
     if (!review) return null;
     let highlights = []; try { highlights = list('highlight', {}).filter(h => h.review_id === reviewId); } catch {}
     let collaborators = []; try { collaborators = list('collaborator', {}).filter(c => c.review_id === reviewId); } catch {}

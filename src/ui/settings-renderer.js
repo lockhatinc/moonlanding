@@ -28,8 +28,8 @@ export function inlineTable(headers, rows, emptyMsg) {
 const KNOWN_ROLES = { admin: ['#6a1b9a','#f3e5f5'], partner: ['#1565c0','#e3f2fd'], manager: ['#2e7d32','#e8f5e9'], clerk: ['#e65100','#fff3e0'], user: ['#555','#f5f5f5'], auditor: ['#283593','#e8eaf6'] };
 function roleBadge(role) {
   const r = (role || '').toLowerCase();
-  const [color, bg] = KNOWN_ROLES[r] || ['#c62828', '#fdecea'];
-  const label = KNOWN_ROLES[r] ? r.charAt(0).toUpperCase() + r.slice(1) : 'Unknown';
+  const [color, bg] = KNOWN_ROLES[r] || ['#555', '#f0f0f0'];
+  const label = KNOWN_ROLES[r] ? r.charAt(0).toUpperCase() + r.slice(1) : 'Staff';
   return `<span style="background:${bg};color:${color};padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:600" title="${role}">${label}</span>`;
 }
 
@@ -90,17 +90,92 @@ export function renderSettingsUsers(user, users = []) {
   return settingsPage(user, 'Users - Settings', [{ href: '/', label: 'Dashboard' }, { href: '/admin/settings', label: 'Settings' }, { label: 'Users' }], content);
 }
 
-export function renderSettingsTeams(user, teams = []) {
-  const rows = teams.map(t => `<tr style="cursor:pointer" onclick="window.location='/team/${t.id}'" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">
-    <td style="padding:10px 12px;font-size:0.82rem">${t.name || '-'}</td>
-    <td style="padding:10px 12px;font-size:0.82rem;color:#555">${t.member_count || 0}</td>
-    <td style="padding:10px 12px"><a href="/team/${t.id}/edit" onclick="event.stopPropagation()" style="background:#f5f5f5;border:1px solid #ddd;color:#333;padding:4px 10px;border-radius:4px;text-decoration:none;font-size:0.75rem;font-weight:600">Edit</a></td>
-  </tr>`).join('');
-  const content = `${settingsBack()}<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-    <h1 style="font-size:1.4rem;font-weight:700;margin:0">Teams</h1>
-    <a href="/team/new" style="background:#04141f;color:#fff;padding:8px 16px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:600">Add Team</a>
-  </div>${inlineTable(['Name', 'Members', 'Actions'], rows, 'No teams found')}`;
-  return settingsPage(user, 'Teams - Settings', [{ href: '/', label: 'Dashboard' }, { href: '/admin/settings', label: 'Settings' }, { label: 'Teams' }], content);
+export function renderSettingsTeams(user, teams = [], allUsers = []) {
+  function parseMembers(t) {
+    try {
+      const u = t.users;
+      if (!u) return [];
+      const arr = Array.isArray(u) ? u : JSON.parse(u);
+      if (!Array.isArray(arr)) return [];
+      return arr.map(m => typeof m === 'object' ? (m.email || m.name || m.cloud_id || '') : String(m));
+    } catch { return []; }
+  }
+
+  const editDialog = `<div id="team-dialog" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center" onclick="if(event.target===this)closeTeamDialog()">
+    <div style="background:#fff;border-radius:8px;padding:24px;max-width:480px;width:90%;max-height:90vh;overflow-y:auto">
+      <h3 id="team-dialog-title" style="margin:0 0 16px;font-size:1rem;font-weight:700">Edit Team</h3>
+      <input type="hidden" id="team-edit-id"/>
+      <div style="margin-bottom:12px"><label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:4px">Team Name</label>
+        <input id="team-name-input" type="text" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem;box-sizing:border-box" placeholder="Team name"/>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button onclick="closeTeamDialog()" style="padding:7px 16px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;font-size:0.85rem">Cancel</button>
+        <button onclick="saveTeam()" style="padding:7px 16px;background:#04141f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600">Save</button>
+      </div>
+    </div>
+  </div>`;
+
+  const rows = teams.map(t => {
+    const members = parseMembers(t);
+    const memberCount = members.length;
+    const memberNames = members.slice(0, 3).map(m => String(m).split('@')[0]).join(', ');
+    const moreCount = memberCount > 3 ? ` +${memberCount - 3} more` : '';
+    const membersDisplay = memberCount > 0
+      ? `<span style="font-size:0.78rem;color:#555">${memberNames}${moreCount}</span>`
+      : '<span style="color:#aaa;font-size:0.78rem">No members</span>';
+    return `<tr onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">
+      <td style="padding:10px 12px;font-size:0.85rem;font-weight:500">${t.name || '-'}</td>
+      <td style="padding:10px 12px">
+        <span style="background:#e3f2fd;color:#1565c0;padding:2px 8px;border-radius:10px;font-size:0.72rem;font-weight:700;margin-right:8px">${memberCount} member${memberCount !== 1 ? 's' : ''}</span>
+        ${membersDisplay}
+      </td>
+      <td style="padding:10px 12px;white-space:nowrap">
+        <button onclick="openEditTeam('${t.id}','${(t.name||'').replace(/'/g,"\\'")}')" style="background:#f5f5f5;border:1px solid #ddd;color:#333;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:0.75rem;font-weight:600;margin-right:4px">Edit</button>
+        <button onclick="deleteTeam('${t.id}')" style="background:#fff0f0;border:1px solid #fca5a5;color:#c62828;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:0.75rem;font-weight:600">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const script = `${TOAST_SCRIPT}
+    function openEditTeam(id,name){
+      document.getElementById('team-edit-id').value=id;
+      document.getElementById('team-name-input').value=name;
+      document.getElementById('team-dialog-title').textContent='Edit Team';
+      document.getElementById('team-dialog').style.display='flex';
+    }
+    function openAddTeam(){
+      document.getElementById('team-edit-id').value='';
+      document.getElementById('team-name-input').value='';
+      document.getElementById('team-dialog-title').textContent='Add Team';
+      document.getElementById('team-dialog').style.display='flex';
+    }
+    function closeTeamDialog(){document.getElementById('team-dialog').style.display='none'}
+    async function saveTeam(){
+      const id=document.getElementById('team-edit-id').value;
+      const name=document.getElementById('team-name-input').value.trim();
+      if(!name){showToast('Name is required','error');return}
+      const url=id?'/api/team/'+id:'/api/team';
+      const method=id?'PUT':'POST';
+      try{const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+        if(r.ok){showToast(id?'Team updated':'Team created','success');setTimeout(()=>location.reload(),500)}
+        else{const d=await r.json();showToast(d.error||'Failed','error')}}
+      catch(e){showToast('Error: '+e.message,'error')}
+    }
+    async function deleteTeam(id){
+      if(!confirm('Delete this team? This cannot be undone.'))return;
+      try{const r=await fetch('/api/team/'+id,{method:'DELETE'});
+        if(r.ok){showToast('Team deleted','success');setTimeout(()=>location.reload(),500)}
+        else showToast('Delete failed','error')}
+      catch(e){showToast('Error','error')}
+    }
+  `;
+
+  const content = `${settingsBack()}${editDialog}
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h1 style="font-size:1.4rem;font-weight:700;margin:0">Teams</h1>
+      <button onclick="openAddTeam()" style="background:#04141f;color:#fff;padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-size:0.82rem;font-weight:600">Add Team</button>
+    </div>${inlineTable(['Name', 'Members', 'Actions'], rows, 'No teams found')}`;
+  return settingsPage(user, 'Teams - Settings', [{ href: '/', label: 'Dashboard' }, { href: '/admin/settings', label: 'Settings' }, { label: 'Teams' }], content, [script]);
 }
 
 const RFI_PALETTE = ['#B0B0B0', '#44BBA4', '#FF4141', '#7F7EFF', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6'];
