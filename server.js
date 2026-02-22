@@ -346,7 +346,16 @@ const server = http.createServer(async (req, res) => {
         }
       }
 
-      if (!routeFile) {
+      if (!routeFile && firstPart) {
+        // Try parameterized route matching for non-domain routes (e.g. /api/rfi/[id]/questions)
+        const paramRouteFile = resolveParamRoute(path.join(__dirname, 'src/app/api', firstPart), pathParts.slice(1));
+        if (paramRouteFile) {
+          routeFile = paramRouteFile;
+          params = resolveSpecificParams(paramRouteFile, pathParts);
+        }
+      }
+
+            if (!routeFile) {
         routeFile = path.join(__dirname, 'src/app/api/[entity]/[[...path]]/route.js');
         params = { entity: firstPart, path: pathParts.slice(1) };
       }
@@ -495,6 +504,24 @@ async function readBody(req) {
     });
     req.on('error', (err) => reject(err));
   });
+}
+
+function resolveParamRoute(baseDir, segments) {
+  if (!fs.existsSync(baseDir)) return null;
+  if (segments.length === 0) {
+    const r = path.join(baseDir, 'route.js');
+    return fs.existsSync(r) ? r : null;
+  }
+  const [seg, ...rest] = segments;
+  const entries = fs.readdirSync(baseDir, { withFileTypes: true }).filter(e => e.isDirectory());
+  for (const entry of entries) {
+    const name = entry.name;
+    if (name === seg || name.startsWith('[')) {
+      const found = resolveParamRoute(path.join(baseDir, name), rest);
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
 function resolveSpecificParams(routeFile, pathParts) {
