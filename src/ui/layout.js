@@ -70,7 +70,7 @@ export function nav(user) {
 
   const settingsLink = isPartner(user) ? `<span style="color:#0d4d6d">|</span><a href="/admin/settings" style="color:#ced4da;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none">SETTINGS</a>` : ''
 
-  const reviewLink = isClerk(user) || !isClerk(user) ? `<span style="color:#0d4d6d">|</span><a href="https://myworkreview.netlify.app" target="_blank" style="color:#ced4da;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none">MY REVIEW</a>` : ''
+  const reviewLink = isClerk(user) || !isClerk(user) ? `<span style="color:#0d4d6d">|</span><a href="/review" style="color:#ced4da;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none">MY REVIEW</a>` : ''
 
   const navLinksHtml = `${logoutLink}${clientsLink}${settingsLink}${reviewLink}`
 
