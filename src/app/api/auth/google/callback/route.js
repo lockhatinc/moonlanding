@@ -106,7 +106,11 @@ export async function GET(request) {
     // Redirect to home with session cookie in response
     const redirectUrl = new URL('/', request.url);
     const response = NextResponse.redirect(redirectUrl);
-    response.cookies.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+
+    // Set session cookie header manually
+    const cookieValue = `${sessionCookie.value}; Path=${sessionCookie.attributes.path || '/'}; HttpOnly${sessionCookie.attributes.secure ? '; Secure' : ''}; SameSite=${sessionCookie.attributes.sameSite || 'Lax'}`;
+    response.headers.set('Set-Cookie', `${sessionCookie.name}=${cookieValue}`);
+
     return response;
   } catch (error) {
     console.error('Google OAuth error:', error);
