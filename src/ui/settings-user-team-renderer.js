@@ -20,9 +20,9 @@ function roleBadge(role) {
 }
 
 function field(label, id, type = 'text', value = '', extra = '') {
-  return `<div style="margin-bottom:14px">
-    <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:4px">${label}</label>
-    <input type="${type}" id="${id}" value="${esc(value)}" ${extra} style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem;box-sizing:border-box"/>
+  return `<div class="form-group">
+    <label class="label" for="${id}"><span class="label-text font-semibold">${label}</span></label>
+    <input type="${type}" id="${id}" value="${esc(value)}" ${extra} class="input input-solid max-w-full" placeholder="Enter ${label.toLowerCase()}"/>
   </div>`;
 }
 
@@ -32,9 +32,9 @@ function selectField(label, id, options, selected = '') {
     const lbl = typeof o === 'string' ? o.charAt(0).toUpperCase() + o.slice(1) : o.label;
     return `<option value="${esc(val)}" ${val === selected ? 'selected' : ''}>${lbl}</option>`;
   }).join('');
-  return `<div style="margin-bottom:14px">
-    <label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:4px">${label}</label>
-    <select id="${id}" style="width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem;box-sizing:border-box">${opts}</select>
+  return `<div class="form-group">
+    <label class="label" for="${id}"><span class="label-text font-semibold">${label}</span></label>
+    <select id="${id}" class="select select-solid max-w-full">${opts}</select>
   </div>`;
 }
 
@@ -43,26 +43,26 @@ export function renderSettingsUserDetail(user, targetUser = {}, teams = []) {
   const title = isNew ? 'Add User' : `User: ${targetUser.name || targetUser.email || '-'}`;
   const teamOpts = [{ value: '', label: 'No team' }, ...teams.map(t => ({ value: t.id, label: t.name || t.id }))];
 
-  const form = `<form id="user-form" style="max-width:520px">
+  const form = `<form id="user-form" class="space-y-4">
     ${field('Full Name', 'u-name', 'text', targetUser.name || '')}
-    ${field('Email', 'u-email', 'email', targetUser.email || '', isNew ? '' : 'readonly style="background:#f5f5f5"')}
+    ${field('Email', 'u-email', 'email', targetUser.email || '', isNew ? '' : 'readonly')}
     ${selectField('Role', 'u-role', ROLES, targetUser.role || 'clerk')}
     ${selectField('Team', 'u-team', teamOpts, targetUser.team_id || '')}
     ${selectField('Status', 'u-status', ['active','inactive','deleted'], targetUser.status || 'active')}
     ${isNew ? field('Password', 'u-password', 'password', '') : ''}
-    <div style="display:flex;gap:8px;margin-top:20px">
-      <button type="button" onclick="saveUser('${esc(targetUser.id || '')}')" style="background:#04141f;color:#fff;padding:8px 20px;border-radius:6px;border:none;cursor:pointer;font-size:0.85rem;font-weight:600">${isNew ? 'Create User' : 'Save Changes'}</button>
-      ${!isNew ? `<button type="button" onclick="resetPassword('${esc(targetUser.id)}')" style="background:#f5f5f5;border:1px solid #ddd;color:#333;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:0.85rem">Reset Password</button>` : ''}
-      ${!isNew && targetUser.status !== 'deleted' ? `<button type="button" onclick="deactivateUser('${esc(targetUser.id)}')" style="background:#fff0f0;border:1px solid #fca5a5;color:#c62828;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:0.85rem">Deactivate</button>` : ''}
+    <div class="flex gap-3 pt-4 border-t border-base-200">
+      <button type="button" onclick="saveUser('${esc(targetUser.id || '')}')" class="btn btn-primary">${isNew ? 'Create User' : 'Save Changes'}</button>
+      ${!isNew ? `<button type="button" onclick="resetPassword('${esc(targetUser.id)}')" class="btn btn-ghost">Reset Password</button>` : ''}
+      ${!isNew && targetUser.status !== 'deleted' ? `<button type="button" onclick="deactivateUser('${esc(targetUser.id)}')" class="btn btn-error btn-outline">Deactivate</button>` : ''}
     </div>
   </form>`;
 
-  const content = `${settingsBack()}<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
-    <a href="/admin/settings/users" style="color:#1565c0;text-decoration:none;font-size:0.85rem">&#8592; Users</a>
-    <h1 style="font-size:1.3rem;font-weight:700;margin:0">${esc(title)}</h1>
+  const content = `${settingsBack()}<div class="flex items-center gap-3 mb-6">
+    <a href="/admin/settings/users" class="btn btn-ghost btn-sm">&#8592; Users</a>
+    <h1 class="text-2xl font-bold">${esc(title)}</h1>
     ${targetUser.role ? roleBadge(targetUser.role) : ''}
   </div>
-  <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:24px">${form}</div>`;
+  <div class="card bg-base-100 shadow-md max-w-2xl"><div class="card-body">${form}</div></div>`;
 
   const script = `${TOAST_SCRIPT}
 async function saveUser(id){
@@ -90,25 +90,27 @@ export function renderSettingsTeamDetail(user, team = {}, allUsers = []) {
 
   const availOpts = available.map(u => `<option value="${esc(u.id)}">${esc(u.name||u.email||u.id)}</option>`).join('');
 
-  const form = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
-      <h2 style="font-size:0.95rem;font-weight:700;margin:0 0 16px">Team Details</h2>
-      ${field('Team Name', 't-name', 'text', team.name || '')}
-      ${selectField('Context', 't-context', ['general','engagement_team','review_team'], team.context || 'general')}
-      <button onclick="saveTeam('${esc(team.id||'')}')" style="background:#04141f;color:#fff;padding:8px 20px;border-radius:6px;border:none;cursor:pointer;font-size:0.85rem;font-weight:600">${isNew ? 'Create Team' : 'Save Changes'}</button>
-    </div>
-    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h2 style="font-size:0.95rem;font-weight:700;margin:0">Members (${members.length})</h2>
-        ${!isNew ? `<div style="display:flex;gap:8px"><select id="add-member-select" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:0.82rem"><option value="">Select user...</option>${availOpts}</select><button onclick="addMember('${esc(team.id||'')}')" style="background:#1976d2;color:#fff;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:0.82rem">Add</button></div>` : '<span style="font-size:0.78rem;color:#aaa">Save team first to add members</span>'}
+  const form = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card bg-base-100 shadow-md"><div class="card-body">
+      <h2 class="card-title text-base">Team Details</h2>
+      <div class="space-y-4">
+        ${field('Team Name', 't-name', 'text', team.name || '')}
+        ${selectField('Context', 't-context', ['general','engagement_team','review_team'], team.context || 'general')}
+        <button onclick="saveTeam('${esc(team.id||'')}')" class="btn btn-primary">${isNew ? 'Create Team' : 'Save Changes'}</button>
+      </div>
+    </div></div>
+    <div class="card bg-base-100 shadow-md"><div class="card-body">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="card-title text-base">Members (${members.length})</h2>
+        ${!isNew ? `<div class="flex gap-2"><select id="add-member-select" class="select select-solid select-sm"><option value="">Select user...</option>${availOpts}</select><button onclick="addMember('${esc(team.id||'')}')" class="btn btn-primary btn-sm">Add</button></div>` : '<span class="text-sm text-gray-400">Save team first to add members</span>'}
       </div>
       ${inlineTable(['Name','Email','Role',''], memberRows, 'No members')}
-    </div>
+    </div></div>
   </div>`;
 
-  const content = `${settingsBack()}<div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
-    <a href="/admin/settings/teams" style="color:#1565c0;text-decoration:none;font-size:0.85rem">&#8592; Teams</a>
-    <h1 style="font-size:1.3rem;font-weight:700;margin:0">${esc(title)}</h1>
+  const content = `${settingsBack()}<div class="flex items-center gap-3 mb-6">
+    <a href="/admin/settings/teams" class="btn btn-ghost btn-sm">&#8592; Teams</a>
+    <h1 class="text-2xl font-bold">${esc(title)}</h1>
   </div>${form}`;
 
   const script = `${TOAST_SCRIPT}

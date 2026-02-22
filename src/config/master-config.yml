@@ -2794,6 +2794,8 @@ domains:
     - letter
     - client
     - client_user
+    - checklist
+    - checklist_item
   mwr:
     label: MyWorkReview
     description: Review and collaboration platform

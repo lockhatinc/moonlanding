@@ -435,7 +435,10 @@ export async function handlePage(pathname, req, res) {
     const checklist = get('checklist', checklistId);
     if (!checklist) return null;
     let items = [];
-    try { items = list('checklist_item', {}).filter(i => i.checklist_id === checklistId); } catch {}
+    try {
+      const _cdb = getDatabase();
+      items = _cdb.prepare('SELECT * FROM checklist_item WHERE checklist_id=? ORDER BY "order" ASC, created_at ASC').all(checklistId);
+    } catch {}
     return renderChecklistDetails(user, checklist, items);
   }
 
@@ -444,15 +447,14 @@ export async function handlePage(pathname, req, res) {
     if (!canList(user, 'checklist')) return renderAccessDenied(user, 'checklist', 'list');
     let checklists = [];
     try {
-      checklists = list('checklist', {}).map(c => {
-        let items = [];
-        try { items = list('checklist_item', {}).filter(i => i.checklist_id === c.id); } catch {}
-        return {
-          ...c,
-          total_items: items.length,
-          completed_items: items.filter(i => i.completed).length,
-        };
-      });
+      const _cdb = getDatabase();
+      const stats = _cdb.prepare(`SELECT checklist_id, COUNT(*) as total, SUM(CASE WHEN is_done=1 THEN 1 ELSE 0 END) as done FROM checklist_item GROUP BY checklist_id`).all();
+      const statsMap = Object.fromEntries(stats.map(s => [s.checklist_id, s]));
+      checklists = list('checklist', {}).map(c => ({
+        ...c,
+        total_items: statsMap[c.id]?.total || 0,
+        completed_items: statsMap[c.id]?.done || 0,
+      }));
     } catch {}
     return renderChecklistsHome(user, checklists);
   }
