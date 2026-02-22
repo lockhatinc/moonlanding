@@ -60,7 +60,7 @@ export function breadcrumb(items) {
 }
 
 export function nav(user) {
-  // Gear icon SVG for MY FRIDAY logo
+  // Gear icon SVG for MOONLANDING logo
   const gearSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m4.24-4.24l4.24-4.24"/></svg>`
 
   // Build right-side nav links with Friday's pipe-separated format
@@ -83,7 +83,7 @@ export function nav(user) {
   <div style="display:flex;align-items:center;flex:1">
     <a href="/" style="display:flex;align-items:center;gap:0.5rem;text-decoration:none" ${aria.label('Home')}>
       ${gearSvg}
-      <span style="color:#f8f9fa;font-size:0.8rem;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;margin-left:0.25rem">MY FRIDAY</span>
+      <span style="color:#f8f9fa;font-size:0.8rem;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;margin-left:0.25rem">MOONLANDING</span>
     </a>
   </div>
   <div style="display:flex;align-items:center;gap:1rem;font-size:0.7rem">

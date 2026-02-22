@@ -1,10 +1,10 @@
-export function renderStandaloneLogin() {
+export function renderStandaloneLogin(showGoogleAuth = false) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sign In | MY FRIDAY</title>
+  <title>Sign In | MOONLANDING</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
@@ -36,19 +36,19 @@ export function renderStandaloneLogin() {
     <div class="logo">
       <div class="logo-row">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#04141f" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m4.24-4.24l4.24-4.24"/></svg>
-        <span class="logo-text">MY FRIDAY</span>
+        <span class="logo-text">MOONLANDING</span>
       </div>
       <div class="logo-sub">Sign in to your account</div>
     </div>
     <div class="card">
       <div id="err-area"></div>
-      <div id="google-area" style="display:none">
+      ${showGoogleAuth ? `<div id="google-area">
         <a href="/api/auth/google" class="google-btn">
           <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.706c-.18-.54-.282-1.117-.282-1.706s.102-1.166.282-1.706V4.962H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.962L3.964 7.294C4.672 5.167 6.656 3.58 9 3.58z"/></svg>
           Sign in with Google
         </a>
         <div class="divider"><div class="divider-line"></div><span class="divider-text">or</span><div class="divider-line"></div></div>
-      </div>
+      </div>` : ''}
       <form id="loginForm">
         <div class="field">
           <label for="email">Email</label>
@@ -64,10 +64,6 @@ export function renderStandaloneLogin() {
     </div>
   </div>
   <script>
-    fetch('/api/friday/features').then(r => r.json()).then(d => {
-      if (d && d.googleAuth) document.getElementById('google-area').style.display = 'block';
-    }).catch(() => {});
-
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       var btn = document.getElementById('submitBtn');

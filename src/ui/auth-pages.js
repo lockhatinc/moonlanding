@@ -17,7 +17,7 @@ export function renderLogin(error = null, hasGoogleAuth = false) {
       <div style="text-align:center;margin-bottom:28px">
         <div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:12px">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#04141f" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m4.24-4.24l4.24-4.24"/></svg>
-          <span style="font-size:1.4rem;font-weight:800;color:#04141f;letter-spacing:1px">MY FRIDAY</span>
+          <span style="font-size:1.4rem;font-weight:800;color:#04141f;letter-spacing:1px">MOONLANDING</span>
         </div>
         <p style="color:#666;font-size:0.9rem;margin:0">Sign in to your account</p>
       </div>
@@ -82,7 +82,7 @@ form.addEventListener('submit', async function(e) {
   }
 });`
 
-  return generateHtml('Sign In | MY FRIDAY', body, [script])
+  return generateHtml('Sign In | MOONLANDING', body, [script])
 }
 
 export function renderPasswordReset() {

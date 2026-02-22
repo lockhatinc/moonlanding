@@ -248,7 +248,8 @@ const server = http.createServer(async (req, res) => {
 
         if (pathname === '/login') {
           const { renderStandaloneLogin } = await loadModule(path.join(__dirname, 'src/ui/standalone-login.js'));
-          const html = renderStandaloneLogin();
+          const { hasGoogleAuth } = await loadModule(path.join(__dirname, 'src/config/env.js'));
+          const html = renderStandaloneLogin(hasGoogleAuth());
           if (html) {
             res.setHeader('Content-Type', 'text/html; charset=utf-8');
             res.setHeader('Content-Length', Buffer.byteLength(html, 'utf-8'));
