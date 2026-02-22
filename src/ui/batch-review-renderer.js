@@ -1,18 +1,15 @@
 import { statusLabel, generateHtml } from '@/ui/renderer.js';
+import { nav } from '@/ui/layout.js';
 import { canEdit, getNavItems, getAdminItems } from '@/ui/permissions-ui.js';
 
-function nav(user) {
-  const links = getNavItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
-  const admin = getAdminItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
-  return `<nav class="navbar bg-white shadow-sm px-4" role="navigation" aria-label="Main navigation"><div class="navbar-start"><a href="/" class="font-bold text-lg">Platform</a><div class="hidden md:flex gap-1 ml-6">${links}${admin}</div></div><div class="navbar-end"></div></nav>`;
-}
+
 
 function bc(items) {
   return `<nav class="breadcrumb" aria-label="Breadcrumb">${items.map((item, i) => i === items.length - 1 ? `<span>${item.label}</span>` : `<a href="${item.href}">${item.label}</a><span class="breadcrumb-separator">/</span>`).join('')}</nav>`;
 }
 
 function page(user, title, crumbs, content, scripts = []) {
-  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" role="main"><div class="p-6">${bc(crumbs)}${content}</div></main></div>`;
+  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main id="main-content" style="padding:24px 32px">${bc(crumbs)}${content}</main></div>`;
   return generateHtml(title, body, scripts);
 }
 
@@ -32,7 +29,7 @@ function reviewCheckRow(review) {
 export function renderBatchOperations(user, reviews) {
   const canEditReview = canEdit(user, 'review');
   if (!canEditReview) {
-    const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" role="main"><div class="p-6"><div class="text-center py-12"><h1 class="text-xl font-bold mb-2">Access Denied</h1><p class="text-gray-500">You need edit permissions for batch operations.</p><a href="/reviews" class="btn btn-primary btn-sm mt-4">Back to Reviews</a></div></div></main></div>`;
+    const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main id="main-content" style="padding:24px 32px"><div class="text-center py-12"><h1 class="text-xl font-bold mb-2">Access Denied</h1><p class="text-gray-500">You need edit permissions for batch operations.</p><a href="/reviews" class="btn btn-primary btn-sm mt-4">Back to Reviews</a></div></main></div>`;
     return generateHtml('Batch Operations', body, []);
   }
 

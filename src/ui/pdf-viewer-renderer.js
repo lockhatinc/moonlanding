@@ -1,11 +1,8 @@
 import { statusLabel, generateHtml, userAvatar, teamAvatarGroup } from '@/ui/renderer.js';
+import { nav } from '@/ui/layout.js';
 import { canEdit, getNavItems, getAdminItems } from '@/ui/permissions-ui.js';
 
-function nav(user) {
-  const links = getNavItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
-  const admin = getAdminItems(user).map(n => `<a href="${n.href}" class="btn btn-ghost btn-sm">${n.label}</a>`).join('');
-  return `<nav class="navbar bg-white shadow-sm px-4" role="navigation" aria-label="Main navigation"><div class="navbar-start"><a href="/" class="font-bold text-lg">Platform</a><div class="hidden md:flex gap-1 ml-6">${links}${admin}</div></div><div class="navbar-end"></div></nav>`;
-}
+
 
 function highlightSidebarItem(h, idx) {
   const resolved = h.status === 'resolved';
@@ -50,6 +47,6 @@ export function renderPdfViewer(user, review, highlights = [], sections = []) {
 }
 
 export function renderPdfEditorPlaceholder(user, review) {
-  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" role="main"><div class="p-6"><div class="flex items-center justify-between mb-6"><h1 class="text-2xl font-bold">PDF Editor</h1><a href="/review/${review.id}" class="btn btn-ghost btn-sm">Back to Review</a></div><div class="card bg-white shadow"><div class="card-body text-center py-16"><div class="text-5xl mb-4">&#9999;&#65039;</div><h3 class="text-lg font-semibold mb-2">PDF Annotation Editor</h3><p class="text-sm text-gray-500 mb-6 max-w-md mx-auto">Canvas-based PDF annotation with brush tools, text overlay, and save functionality. Select brush size, draw directly on PDF pages, and save annotated versions.</p><div class="flex gap-2 justify-center"><button class="btn btn-outline btn-sm" disabled>Brush Tool</button><button class="btn btn-outline btn-sm" disabled>Text Tool</button><button class="btn btn-outline btn-sm" disabled>Eraser</button><button class="btn btn-primary btn-sm" disabled>Save</button></div></div></div></div></main></div>`;
+  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main id="main-content" style="padding:24px 32px"><div class="flex items-center justify-between mb-6"><h1 class="text-2xl font-bold">PDF Editor</h1><a href="/review/${review.id}" class="btn btn-ghost btn-sm">Back to Review</a></div><div class="card bg-white shadow"><div class="card-body text-center py-16"><div class="text-5xl mb-4">&#9999;&#65039;</div><h3 class="text-lg font-semibold mb-2">PDF Annotation Editor</h3><p class="text-sm text-gray-500 mb-6 max-w-md mx-auto">Canvas-based PDF annotation with brush tools, text overlay, and save functionality. Select brush size, draw directly on PDF pages, and save annotated versions.</p><div class="flex gap-2 justify-center"><button class="btn btn-outline btn-sm" disabled>Brush Tool</button><button class="btn btn-outline btn-sm" disabled>Text Tool</button><button class="btn btn-outline btn-sm" disabled>Eraser</button><button class="btn btn-primary btn-sm" disabled>Save</button></div></div></div></main></div>`;
   return generateHtml('PDF Editor', body, []);
 }
