@@ -124,7 +124,7 @@ export function canClientAccessEntity(user, entityName) {
 export function getNavItems(user, domain) {
   const items = [];
   if (domain === 'mwr') return getMwrNavItems(user);
-  if (canList(user, 'engagement')) items.push({ href: '/engagement', label: 'Engagements' });
+  if (canList(user, 'engagement')) items.push({ href: '/engagements', label: 'Engagements' });
   if (canList(user, 'client')) items.push({ href: '/client', label: 'Clients' });
   if (canList(user, 'rfi')) items.push({ href: '/rfi', label: 'RFIs' });
   if (canList(user, 'review')) items.push({ href: '/review', label: 'Reviews' });
@@ -159,12 +159,12 @@ export function getQuickActions(user) {
   const actions = [];
   if (isClerk(user)) {
     actions.push({ href: '/rfi', label: 'View My RFIs', primary: true });
-    actions.push({ href: '/engagement', label: 'View Engagements', outline: true });
+    actions.push({ href: '/engagements', label: 'View Engagements', outline: true });
   } else if (isClientUser(user)) {
     actions.push({ href: '/rfi', label: 'View My RFIs', primary: true });
-    actions.push({ href: '/engagement', label: 'My Engagements', outline: true });
+    actions.push({ href: '/engagements', label: 'My Engagements', outline: true });
   } else {
-    if (canCreate(user, 'engagement')) actions.push({ href: '/engagement/new', label: 'New Engagement', primary: true });
+    if (canCreate(user, 'engagement')) actions.push({ href: '/engagements/new', label: 'New Engagement', primary: true });
     if (canCreate(user, 'client')) actions.push({ href: '/client/new', label: 'New Client', outline: true });
     if (canCreate(user, 'review')) actions.push({ href: '/review/new', label: 'New Review', outline: true });
   }
