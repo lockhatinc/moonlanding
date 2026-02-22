@@ -48,12 +48,16 @@ export async function GET(request) {
     const state = generateState();
     const codeVerifier = generateCodeVerifier();
 
-    const url = await dynamicGoogle.createAuthorizationURL(state, codeVerifier, {
+    // Store both state and codeVerifier in memory with a single key
+    // The key will be sent to Google and returned unchanged
+    const stateKey = await setOAuthCookie('google_oauth_state', { state, codeVerifier });
+
+    console.log('[OAuth] Generated state key:', stateKey.substring(0, 20));
+
+    // Use the key as the state parameter - Google returns it unchanged
+    const url = await dynamicGoogle.createAuthorizationURL(stateKey, codeVerifier, {
       scopes: ['profile', 'email'],
     });
-
-    await setOAuthCookie('google_oauth_state', state);
-    await setOAuthCookie('google_code_verifier', codeVerifier);
 
     return NextResponse.redirect(url);
   });

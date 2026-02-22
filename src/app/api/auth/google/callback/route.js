@@ -42,22 +42,24 @@ export async function GET(request) {
 
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
-  const state = url.searchParams.get('state');
+  const stateKey = url.searchParams.get('state');  // Google returns the key we sent
 
-  const storedState = await getOAuthCookie('google_oauth_state');
-  const storedCodeVerifier = await getOAuthCookie('google_code_verifier');
+  // Retrieve the state object (contains both state and codeVerifier) from memory
+  const storedData = await getOAuthCookie(stateKey);
+  const state = storedData?.state;
+  const codeVerifier = storedData?.codeVerifier;
 
   console.log('[OAuth Callback] State validation:', {
     hasCode: !!code,
+    hasStateKey: !!stateKey,
+    hasStoredData: !!storedData,
     hasState: !!state,
-    hasStoredState: !!storedState,
-    hasStoredCodeVerifier: !!storedCodeVerifier,
-    stateMatch: state === storedState,
-    stateLength: state?.length,
-    storedStateLength: storedState?.length,
+    hasCodeVerifier: !!codeVerifier,
+    stateKeyPrefix: stateKey?.substring(0, 20),
   });
 
-  const stateValidation = validateOAuthState(code, state, storedState, storedCodeVerifier);
+  // Validate: code, stateKey (sent to Google and returned), state (retrieved from memory), codeVerifier (retrieved from memory)
+  const stateValidation = validateOAuthState(code, stateKey, state, codeVerifier);
   if (!stateValidation.valid) {
     console.error('[OAuth Callback] State validation failed:', stateValidation.error);
     return buildOAuthErrorResponse(stateValidation.error, request);
@@ -98,8 +100,8 @@ export async function GET(request) {
     const { session, sessionCookie } = await createSession(user.id);
     console.log('[OAuth Callback] Session created:', { userId: user.id, sessionId: session.id });
 
-    await deleteOAuthCookie('google_oauth_state');
-    await deleteOAuthCookie('google_code_verifier');
+    // Clean up the OAuth state from memory
+    await deleteOAuthCookie(stateKey);
 
     // Create redirect response with session cookie in Set-Cookie header
     const redirectUrl = new URL('/', request.url);
