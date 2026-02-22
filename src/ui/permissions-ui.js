@@ -20,26 +20,17 @@ function getEntityPermissions() {
     if (!name) continue;
     try {
       const spec = config.generateEntitySpec(name);
-      const templateName = spec.permission_template;
-      const template = config.getPermissionTemplate(templateName);
 
-      // Template is role-based: {partner: [...], manager: [...], ...}
-      // Convert to action-based: {list: [...roles...], view: [...roles...], ...}
-      const actionBased = {};
-      for (const [role, actions] of Object.entries(template)) {
-        if (role === 'description' || !Array.isArray(actions)) continue;
-        actions.forEach(action => {
-          if (!actionBased[action]) actionBased[action] = [];
-          actionBased[action].push(role);
-        });
-      }
+      // generateEntitySpec already transforms permission_template to access field
+      // access is role-based: {list: [...roles...], view: [...roles...], ...}
+      const access = spec.access || {};
 
       permissions[name] = {
-        list: actionBased.list || [],
-        view: actionBased.view || [],
-        create: actionBased.create || [],
-        edit: actionBased.edit || [],
-        delete: actionBased.delete || [],
+        list: access.list || [],
+        view: access.view || [],
+        create: access.create || [],
+        edit: access.edit || [],
+        delete: access.delete || [],
       };
     } catch (e) {
       console.error(`[Permissions] Error loading permissions for ${name}:`, e.message);
@@ -52,7 +43,16 @@ function getEntityPermissions() {
 export function canAccess(user, entity, action) {
   if (!user?.role) return false;
   const config = getConfigEngineSync();
-  const permissions = getEntityPermissions()[entity];
+  const allPermissions = getEntityPermissions();
+  const permissions = allPermissions[entity];
+
+  // Debug logging
+  if (entity === 'client' && action === 'list') {
+    console.log(`[Permission Check] user.role=${user.role}, entity=${entity}, action=${action}`);
+    console.log(`[Permission Check] allPermissions['client']=`, allPermissions['client']);
+    console.log(`[Permission Check] allowed roles=`, permissions?.[action] || []);
+  }
+
   if (!permissions) return isPartner(user);
   const allowed = permissions[action] || [];
   if (allowed.includes(user.role)) return true;
