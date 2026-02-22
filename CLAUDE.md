@@ -392,95 +392,50 @@ Defined in `src/config/system-limits-config.js`:
 - Hot reload should handle this automatically
 - Manual clear: restart the server process
 
-### Authentication - Staging Environment (NEW)
+### Authentication
 
-**Status:** Email/password authentication FULLY WORKING. Google OAuth not yet configured (optional).
+**Email/Password Login:**
+- Fully working with bcrypt-hashed passwords
+- Rate-limited (5 attempts/15 min per IP)
+- Routes: `src/app/api/auth/login/route.js`, `src/app/api/auth/password-reset/route.js`
+- Session management via Lucia with HttpOnly cookies (SameSite=Lax)
 
-**Test Credentials (for staging at https://app.acc.l-inc.co.za/):**
-```
-Email: admin@example.com
-Password: Test123456!
-Role: admin
-```
+**Google OAuth:**
+- Fully implemented and working with dynamic redirect URI detection
+- Supports both localhost (development) and staging/production environments
+- OAuth state stored server-side in memory (not cookies) for security
+- PKCE flow enabled for enhanced security
+- Auto-creates users from Google profile (email, name, avatar)
+- Uses email matching to prevent duplicate accounts
 
-Also available: `user@example.com / User123456!` and `reviewer@example.com / Reviewer123!`
-
-**Authentication Flow:**
-1. Email/password login: `POST /api/auth/login` - bcrypt-hashed passwords, rate-limited (5 attempts/15 min per IP)
-2. Session management: `GET /api/auth/me` - HttpOnly cookies with SameSite=Lax
-3. Password reset: `POST/PUT /api/auth/password-reset` - Time-limited tokens (1 hour expiry)
-4. Google OAuth: `GET /api/auth/google` - Optional, requires GOOGLE_CLIENT_ID/SECRET
-
-**Database Stats:**
-- 385 total users (381 migrated from Firebase, 4 with passwords created for testing)
-- Users without passwords can use password reset or Google OAuth
-- 59 active sessions
-
-**Issues Found and Fixed:**
-1. ✅ Demo login (admin@example.com) - FIXED by creating test user with bcrypt password hash
-2. ⚠️ Google OAuth - NOT CONFIGURED (optional, can be set up later)
-3. ℹ️ Migrated users (381 users) - No password hashes (expected - were Firebase OAuth users)
-
-**To Enable Google OAuth (Optional):**
-
-1. Get OAuth credentials: https://console.cloud.google.com/apis/credentials?project=moonlanding-platform
-2. Add redirect URI for staging: `https://app.acc.l-inc.co.za/api/auth/google/callback`
+**OAuth Setup (Staging/Production):**
+1. Get real OAuth credentials from Google Cloud Console: https://console.cloud.google.com/apis/credentials/oauthclient/4168395384-klbs8f4b0q194tvp3glphmo7p6424r8h.apps.googleusercontent.com?project=moonlanding-platform
+2. Create a new client secret (Google Cloud Console does not display existing secrets after creation)
 3. Update environment variables:
    ```
-   GOOGLE_CLIENT_ID=<your_client_id>
-   GOOGLE_CLIENT_SECRET=<your_client_secret>
-   GOOGLE_REDIRECT_URI=https://app.acc.l-inc.co.za/api/auth/google/callback
+   GOOGLE_CLIENT_ID=4168395384-klbs8f4b0q194tvp3glphmo7p6424r8h.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=<real_secret_from_google_cloud_console>
+   GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback (for local development)
    ```
 4. Restart server
-
-**For Local Development:**
-- Test email/password with provided credentials
-- Google OAuth requires redirect URI: `http://localhost:3000/api/auth/google/callback`
+5. For staging, the redirect URI is automatically detected from `x-forwarded-proto` and `x-forwarded-host` headers
 
 **Key Files:**
-- Routes: `src/app/api/auth/login/route.js`, `src/app/api/auth/google/route.js`, `src/app/api/auth/password-reset/route.js`
-- UI: `src/ui/standalone-login.js`
+- Routes: `src/app/api/auth/google/route.js`, `src/app/api/auth/google/callback/route.js`
+- Helpers: `src/lib/auth-route-helpers.js` (OAuth state management, validation)
+- UI: `src/ui/standalone-login.js` (Login form with Google Sign-in button)
 - Config: `src/config/env.js`, `src/engine.server.js`
 
-### Google OAuth Setup (NEW)
-Google Sign-In button has been added to the login page. To enable it:
-
-**Configuration:**
-1. Get OAuth 2.0 credentials from Google Cloud Console: https://console.cloud.google.com/apis/credentials?project=moonlanding-platform
-   - Click "Create Credentials" → "OAuth 2.0 Client ID"
-   - Select "Web application"
-   - Add authorized redirect URI: `http://localhost:3000/api/auth/google/callback`
-   - Copy Client ID and Client Secret
-
-2. Update `.env`:
-   ```env
-   GOOGLE_CLIENT_ID=YOUR_CLIENT_ID.apps.googleusercontent.com
-   GOOGLE_CLIENT_SECRET=YOUR_CLIENT_SECRET
-   GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
-   ```
-
-3. Restart server: `npm run dev`
-
-**Features:**
-- Login page shows "Sign in with Google" button when configured
-- Auto-creates users from Google profile (email, name, avatar)
-- Uses email matching for existing users (no duplicates)
-- Session managed by Lucia with secure cookies
-- PKCE flow for security
-
-**Workspace Users (can login via Google):**
-- admin@coas.co.za, zahra3014@gmail.com, kerishnie@l-inc.co.za, ks@l-inc.co.za, and 16+ others
-
-**Key Files:**
-- Routes: `/src/app/api/auth/google/route.js`, `/src/app/api/auth/google/callback/route.js`
-- UI: `/src/ui/standalone-login.js` (Google button + state detection)
-- Config: `/src/config/env.js`, `/src/engine.server.js`
+**Important Implementation Details:**
+- OAuth state is stored in memory with a unique key that's sent to Google and returned unchanged
+- State validation happens implicitly through key retrieval from memory
+- Dynamic redirect URI handling supports reverse proxies (Traefik) via request headers
+- Session cookies are created via Lucia after successful authentication
 
 **Troubleshooting:**
-- "Google Sign-in not configured" warning → Set GOOGLE_CLIENT_ID/SECRET
-- "Invalid authorization code" error → Check redirect URI matches Cloud Console
-- OAuth consent screen not configured → Set up screen in Cloud Console (External type for workspace)
-- For production: Change GOOGLE_REDIRECT_URI to your domain and update Cloud Console
+- "invalid_client" error → Verify GOOGLE_CLIENT_SECRET matches Google Cloud Console (must be the REAL secret, not a test value)
+- "redirect_uri_mismatch" error → Ensure redirect URI is registered in Google Cloud Console
+- "Google Sign-in not configured" → Verify both GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are set in environment
 
 ### Incomplete HTML responses
 - Ensure `Content-Length` header is set (see Critical Caveats above)
