@@ -31,8 +31,10 @@ export const PUT = withErrorHandler(async (request, { params }) => {
   const question = db.prepare('SELECT * FROM rfi_questions WHERE id = ? AND rfi_id = ?').get(qid, id);
   if (!question) return notFound('Question not found');
 
-  const ALLOWED_FIELDS = new Set(['status', 'assigned_to', 'due_date']);
+  const ALLOWED_FIELDS = new Set(['question', 'category', 'status', 'assigned_to', 'due_date']);
   const updates = {};
+  if (body.question !== undefined) updates.question = body.question;
+  if (body.category !== undefined) updates.category = body.category;
   if (body.status !== undefined) updates.status = body.status;
   if (body.assigned_to !== undefined) updates.assigned_to = body.assigned_to;
   if (body.due_date !== undefined) updates.due_date = body.due_date;

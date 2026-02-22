@@ -82,10 +82,10 @@ function checklistPanel(engId) {
     <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <h2 style="font-size:0.95rem;font-weight:700;margin:0">Checklists</h2>
-        <button onclick="addChecklistItem('${esc(engId)}')" style="background:#1976d2;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.82rem">+ Add Item</button>
+        <a href="/review?engagement_id=${esc(engId)}" style="background:#f5f5f5;border:1px solid #ddd;color:#333;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:600">Manage in Review</a>
       </div>
       <div id="checklist-items">
-        <div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">Loading checklist...</div>
+        <div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">Loading...</div>
       </div>
     </div>
   </div>`;
@@ -242,44 +242,82 @@ function openStageTransition(stage){document.getElementById('stage-dialog').styl
 async function confirmStageTransition(engId){
   var stage=document.getElementById('stage-select').value;
   var note=document.getElementById('stage-note').value;
-  try{var r=await fetch('/api/friday/engagement/transition',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({engagement_id:engId,stage:stage,note:note})});
-  if(r.ok){showToast('Stage updated','success');setTimeout(function(){location.reload()},600)}else{var d=await r.json();showToast(d.error||'Failed','error')}}
-  catch(e){showToast('Error','error')}
-  document.getElementById('stage-dialog').style.display='none';
+  var btn=document.querySelector('#stage-dialog button[onclick*=confirmStage]');
+  if(btn){btn.disabled=true;btn.textContent='Moving...'}
+  try{var r=await fetch('/api/friday/engagement/transition',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({engagementId:engId,toStage:stage,reason:note})});
+  var d=await r.json();
+  if(r.ok||d.success){document.getElementById('stage-dialog').style.display='none';showToast('Stage updated to '+stage,'success');setTimeout(function(){location.reload()},800)}else{showToast(d.error||d.message||'Transition failed','error');if(btn){btn.disabled=false;btn.textContent='Confirm'}}}
+  catch(e){showToast('Error: '+e.message,'error');if(btn){btn.disabled=false;btn.textContent='Confirm'}}
 }
+var _chatRfiId=null;
 async function loadChat(){
   var el=document.getElementById('chat-msgs');
-  try{var r=await fetch('/api/message?engagement_id=${esc(e.id)}');var d=await r.json();var msgs=d.data||d||[];
-  el.innerHTML=msgs.length?msgs.map(function(m){return'<div style="margin-bottom:12px"><div style="font-size:0.75rem;color:#888;margin-bottom:2px">'+(m.user_name||m.user_id||'User')+' &bull; '+(m.created_at?new Date(typeof m.created_at==='number'?m.created_at*1000:m.created_at).toLocaleString():'')+'</div><div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:8px 12px;font-size:0.85rem">'+(m.content||m.text||m.message||'')+'</div></div>'}).join(''):'<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No messages yet</div>';
-  el.scrollTop=el.scrollHeight}catch(err){el.innerHTML='<div style="color:#aaa;text-align:center;padding:16px">Could not load messages</div>'}
+  try{
+    if(!_chatRfiId){
+      var re=await fetch('/api/rfi?engagement_id=${esc(e.id)}&limit=1');var rd=await re.json();
+      var rfis=rd.data?.items||rd.data||rd||[];
+      _chatRfiId=rfis[0]?.id||null;
+    }
+    if(!_chatRfiId){el.innerHTML='<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No RFIs yet. Create an RFI to enable team chat.</div>';return}
+    var r=await fetch('/api/message?rfi_id='+_chatRfiId);var d=await r.json();var msgs=d.data||d||[];
+    el.innerHTML=msgs.length?msgs.map(function(m){return'<div style="margin-bottom:12px"><div style="font-size:0.75rem;color:#888;margin-bottom:2px">'+(m.created_by_display?.name||m.user_id||'User')+' &bull; '+(m.created_at?new Date(typeof m.created_at==='number'?m.created_at*1000:m.created_at).toLocaleString():'')+'</div><div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:8px 12px;font-size:0.85rem">'+(m.content||'')+'</div></div>'}).join(''):'<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No messages yet</div>';
+    el.scrollTop=el.scrollHeight}catch(err){el.innerHTML='<div style="color:#aaa;text-align:center;padding:16px">Could not load messages</div>'}
 }
 async function sendChatMsg(engId){
   var inp=document.getElementById('chat-input');var txt=inp.value.trim();if(!txt)return;
-  try{var r=await fetch('/api/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({engagement_id:engId,content:txt})});
-  if(r.ok){inp.value='';loadChat();showToast('Sent','success')}else showToast('Failed','error')}catch(e){showToast('Error','error')}
+  if(!_chatRfiId){showToast('No RFI found for chat','error');return}
+  var btn=inp.nextElementSibling;if(btn){btn.disabled=true}
+  try{var r=await fetch('/api/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rfi_id:_chatRfiId,content:txt})});
+  if(r.ok){inp.value='';loadChat();showToast('Sent','success')}else{var d=await r.json();showToast(d.message||'Failed','error')}}catch(e){showToast('Error: '+e.message,'error')}
+  finally{if(btn){btn.disabled=false}}
 }
 async function loadChecklist(){
   var el=document.getElementById('checklist-items');
-  try{var r=await fetch('/api/checklist?engagement_id=${esc(e.id)}');var d=await r.json();var items=d.data||d||[];
-  if(!items.length){el.innerHTML='<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No checklist items</div>';return}
-  el.innerHTML=items.map(function(item){return'<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0"><input type="checkbox"'+(item.completed?' checked':'')+'onchange="toggleCheckItem(\''+item.id+'\',this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:#1976d2"/><span style="font-size:0.85rem;'+(item.completed?'text-decoration:line-through;color:#aaa':'')+'">'+((item.title||item.name||item.text||'Item'))+'</span></div>'}).join('')}
-  catch(err){el.innerHTML='<div style="color:#aaa;text-align:center;padding:16px">Could not load checklist</div>'}
+  try{
+    var re=await fetch('/api/review?engagement_id=${esc(e.id)}&limit=1');var rd=await re.json();
+    var reviews=rd.data?.items||rd.data||[];
+    if(!reviews.length){el.innerHTML='<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No reviews yet. <a href="/review/new" style="color:#1976d2">Create a review</a> to add checklists.</div>';return}
+    var reviewId=reviews[0].id;
+    var r=await fetch('/api/checklist?review_id='+reviewId);var d=await r.json();var checklists=d.data||d||[];
+    if(!checklists.length){el.innerHTML='<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No checklists. <a href="/review/'+reviewId+'" style="color:#1976d2">Open the review</a> to manage checklists.</div>';return}
+    var items=[];
+    for(var i=0;i<checklists.length;i++){var ci=checklists[i];if(ci.section_items){try{var arr=JSON.parse(ci.section_items);items=items.concat(arr.map(function(it){return{id:it.id||ci.id,name:ci.name+': '+(it.name||it.label||it),completed:it.is_done||it.completed||false}}))}catch(e){items.push({id:ci.id,name:ci.name,completed:false})}}}
+    el.innerHTML=items.length?items.map(function(item){return'<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0"><input type="checkbox"'+(item.completed?' checked':'')+' onchange="toggleCheckItem(\''+item.id+'\',this.checked)" style="width:18px;height:18px;cursor:pointer;accent-color:#1976d2"/><span style="font-size:0.85rem;'+(item.completed?'text-decoration:line-through;color:#aaa':'')+'">'+(item.name||'Item')+'</span></div>'}).join(''):'<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No checklist items yet</div>'}
+  catch(err){el.innerHTML='<div style="color:#aaa;text-align:center;padding:16px">Could not load checklists</div>'}
 }
-async function toggleCheckItem(id,checked){try{await fetch('/api/checklist_item/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({completed:checked})});showToast(checked?'Completed':'Unchecked','success')}catch(e){showToast('Error','error')}}
-async function addChecklistItem(engId){var name=prompt('Item name:');if(!name)return;try{var r=await fetch('/api/checklist_item',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({engagement_id:engId,title:name,completed:false})});if(r.ok){loadChecklist();showToast('Added','success')}else showToast('Failed','error')}catch(e){showToast('Error','error')}}
+async function toggleCheckItem(id,checked){try{await fetch('/api/checklist_item/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({is_done:checked})});showToast(checked?'Completed':'Unchecked','success')}catch(e){showToast('Error','error')}}
 async function loadActivity(){
   var el=document.getElementById('activity-log');
-  try{var r=await fetch('/api/activity_log?engagement_id=${esc(e.id)}&limit=30');var d=await r.json();var items=d.data||d||[];
-  el.innerHTML=items.length?items.map(function(a){var ts=a.timestamp||a.created_at;var date=ts?(typeof ts==='number'&&ts>1e9?new Date(ts*1000).toLocaleString():new Date(ts).toLocaleString()):'-';return'<div style="display:flex;gap:12px;align-items:flex-start"><div style="width:32px;height:32px;border-radius:50%;background:#e3f2fd;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#1976d2;flex-shrink:0">'+(a.user_name||'?').charAt(0)+'</div><div><div style="font-size:0.75rem;color:#888">'+(a.user_name||a.user_id||'System')+' &bull; '+date+'</div><div style="font-size:0.85rem;margin-top:2px">'+(a.description||a.action||a.type||'Activity')+'</div></div></div>'}).join(''):'<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No activity yet</div>'}
-  catch(err){el.innerHTML='<div style="color:#aaa;text-align:center;padding:16px">Could not load activity</div>'}
+  try{
+    var r=await fetch('/api/audit/logs?entityType=engagement&entityId=${esc(e.id)}&limit=30');
+    var d=await r.json();var items=d.data||d||[];
+    if(!Array.isArray(items))items=[];
+    el.innerHTML=items.length?items.map(function(a){var ts=a.timestamp||a.created_at;var date=ts?(typeof ts==='number'&&ts>1e9?new Date(ts*1000).toLocaleString():new Date(ts).toLocaleString()):'-';return'<div style="display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #f5f5f5"><div style="width:32px;height:32px;border-radius:50%;background:#e3f2fd;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;color:#1976d2;flex-shrink:0">'+(a.user_id||'S').charAt(0).toUpperCase()+'</div><div><div style="font-size:0.75rem;color:#888">'+(a.user_id||'System')+' &bull; '+date+'</div><div style="font-size:0.85rem;margin-top:2px;color:#333">'+(a.action||a.operation||a.type||'Activity')+(a.details?' &mdash; <span style="color:#888;font-size:0.78rem">'+JSON.stringify(a.details).substring(0,80)+'</span>':'')+'</div></div></div>'}).join(''):'<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No activity recorded yet</div>'}
+  catch(err){el.innerHTML='<div style="color:#aaa;text-align:center;padding:16px">Activity log unavailable</div>'}
 }
 async function loadFiles(){
   var el=document.getElementById('eng-files-list');
-  try{var r=await fetch('/api/file?engagement_id=${esc(e.id)}');var d=await r.json();var files=d.data||d||[];
-  el.innerHTML=files.length?'<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0"><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">NAME</th><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">TYPE</th><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">SIZE</th><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">DATE</th></tr></thead><tbody>'+files.map(function(f){var ts=f.created_at;var date=ts?(typeof ts==='number'&&ts>1e9?new Date(ts*1000).toLocaleDateString():new Date(ts).toLocaleDateString()):'-';return'<tr style="border-bottom:1px solid #f0f0f0"><td style="padding:8px 12px;font-size:0.82rem"><a href="/api/files/'+f.id+'" target="_blank" style="color:#1976d2">'+((f.name||f.filename||'File'))+'</a></td><td style="padding:8px 12px;font-size:0.82rem">'+(f.type||'-')+'</td><td style="padding:8px 12px;font-size:0.82rem">'+(f.size?Math.round(f.size/1024)+'KB':'-')+'</td><td style="padding:8px 12px;font-size:0.8rem">'+date+'</td></tr>'}).join('')+'</tbody></table>':'<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No files uploaded</div>'}
+  try{
+    var re=await fetch('/api/rfi?engagement_id=${esc(e.id)}&limit=100');var rd=await re.json();
+    var rfis=rd.data?.items||rd.data||[];
+    if(!rfis.length){el.innerHTML='<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No RFIs yet. Files are attached to RFIs.</div>';return}
+    var allFiles=[];
+    for(var i=0;i<Math.min(rfis.length,5);i++){
+      try{var fr=await fetch('/api/file?rfi_id='+rfis[i].id);var fd=await fr.json();var ff=fd.data||fd||[];if(Array.isArray(ff))allFiles=allFiles.concat(ff.map(function(f){return{...f,_rfi:rfis[i].title||rfis[i].name||'RFI'}}))}catch(e){}
+    }
+    el.innerHTML=allFiles.length?'<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0"><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">FILE</th><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">RFI</th><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">SIZE</th><th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#666;font-weight:600">DATE</th></tr></thead><tbody>'+allFiles.map(function(f){var ts=f.created_at;var date=ts?(typeof ts==='number'&&ts>1e9?new Date(ts*1000).toLocaleDateString():new Date(ts).toLocaleDateString()):'-';return'<tr style="border-bottom:1px solid #f0f0f0"><td style="padding:8px 12px;font-size:0.82rem"><a href="/api/files/'+f.id+'" target="_blank" style="color:#1976d2">'+(f.path?.split('/').pop()||f.id)+'</a></td><td style="padding:8px 12px;font-size:0.78rem;color:#888">'+(f._rfi||'-')+'</td><td style="padding:8px 12px;font-size:0.82rem">'+(f.size?Math.round(f.size/1024)+'KB':'-')+'</td><td style="padding:8px 12px;font-size:0.8rem">'+date+'</td></tr>'}).join('')+'</tbody></table>':'<div style="text-align:center;color:#aaa;font-size:0.82rem;padding:32px">No files uploaded yet</div>'}
   catch(err){el.innerHTML='<div style="color:#aaa;text-align:center;padding:16px">Could not load files</div>'}
 }
-async function uploadEngFiles(event,engId){var files=event.target.files;if(!files.length)return;showToast('Uploading '+files.length+' file(s)...','info');var ok=0;for(var i=0;i<files.length;i++){var fd=new FormData();fd.append('file',files[i]);fd.append('engagement_id',engId);try{var r=await fetch('/api/friday/upload/post-rfi',{method:'POST',body:fd});if(r.ok)ok++}catch(err){}}showToast(ok+' file(s) uploaded','success');if(ok>0)loadFiles()}
+async function uploadEngFiles(event,engId){
+  var files=event.target.files;if(!files.length)return;
+  var re=await fetch('/api/rfi?engagement_id='+engId+'&limit=1');var rd=await re.json();
+  var rfis=rd.data?.items||rd.data||[];
+  if(!rfis.length){showToast('Create an RFI first to upload files','error');return}
+  showToast('Uploading '+files.length+' file(s)...','info');
+  var ok=0;
+  for(var i=0;i<files.length;i++){var fd=new FormData();fd.append('file',files[i]);fd.append('rfi_id',rfis[0].id);try{var r=await fetch('/api/friday/upload/post-rfi',{method:'POST',body:fd});if(r.ok)ok++}catch(err){}}
+  showToast(ok+' file(s) uploaded','success');if(ok>0)loadFiles()
+}
 async function downloadFilesZip(engId){try{var r=await fetch('/api/friday/engagement/files-zip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({engagement_id:engId})});if(r.ok){var b=await r.blob();var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='engagement-files.zip';a.click()}else showToast('No files to download','error')}catch(e){showToast('Error','error')}}
 `;
 

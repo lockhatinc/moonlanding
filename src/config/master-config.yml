@@ -889,7 +889,12 @@ entities:
         list: true
         label: Year
       status:
-        type: text
+        type: enum
+        options:
+        - active
+        - inactive
+        - completed
+        - on_hold
         default: active
         label: Status
       commencement_date:
@@ -906,6 +911,8 @@ entities:
         type: number
         default: 0
         label: Progress
+        readOnly: true
+        auto_generate: true
       created_at:
         type: timestamp
         required: true
@@ -954,6 +961,8 @@ entities:
         type: number
         default: 0
         label: Client Progress
+        readOnly: true
+        auto_generate: true
       team_id:
         type: ref
         ref: team
@@ -963,6 +972,7 @@ entities:
         default: '[]'
         label: Assigned Users
         description: Array of user IDs assigned to engagement
+        readOnly: true
     field_overrides:
       stage:
         type: enum
@@ -970,28 +980,70 @@ entities:
         validator: lifecycle_stage_transition
       client_status:
         type: enum
-        options: engagement_client_status
+        options:
+        - not_started
+        - in_progress
+        - complete
+        - signed
+        label: Client Status
       letter_client_status:
         type: enum
-        options: engagement_letter_client_status
+        options:
+        - not_started
+        - sent
+        - signed
+        - declined
+        label: Letter Client Status
+        readOnly: true
       letter_auditor_status:
         type: enum
-        options: engagement_letter_auditor_status
+        options:
+        - not_started
+        - drafted
+        - sent
+        - complete
+        label: Letter Auditor Status
+        readOnly: true
       post_rfi_client_status:
         type: enum
-        options: engagement_post_rfi_client_status
+        options:
+        - not_started
+        - in_progress
+        - complete
+        label: Post-RFI Client Status
+        readOnly: true
       post_rfi_auditor_status:
         type: enum
-        options: engagement_post_rfi_auditor_status
+        options:
+        - not_started
+        - in_progress
+        - complete
+        label: Post-RFI Auditor Status
+        readOnly: true
       post_rfi_journal_auditor_status:
         type: enum
-        options: engagement_post_rfi_journal_auditor_status
+        options:
+        - not_started
+        - in_progress
+        - complete
+        label: Post-RFI Journal Auditor Status
+        readOnly: true
       post_rfi_journal_client_status:
         type: enum
-        options: engagement_post_rfi_journal_client_status
+        options:
+        - not_started
+        - in_progress
+        - complete
+        label: Post-RFI Journal Client Status
+        readOnly: true
       auditor_status:
         type: enum
-        options: engagement_auditor_status
+        options:
+        - not_started
+        - in_progress
+        - complete
+        - signed
+        label: Auditor Status
       year:
         min: $thresholds.engagement.min_year
         max: $thresholds.engagement.max_year
@@ -999,12 +1051,18 @@ entities:
         type: number
         default: 0
         description: Counter for auto-transition attempts
+        readOnly: true
+        auto_generate: true
       last_transition_check:
         type: timestamp
         description: Last time auto-transition was checked for this engagement
+        readOnly: true
+        auto_generate: true
       last_transition_at:
         type: timestamp
         description: Timestamp of last manual stage transition (for lockout enforcement)
+        readOnly: true
+        auto_generate: true
       client_rating:
         type: number
         min: 0

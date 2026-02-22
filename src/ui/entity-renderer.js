@@ -68,11 +68,11 @@ export function renderEntityDetail(entityName, item, spec, user) {
 export function renderEntityForm(entityName, item, spec, user, isNew = false, refOptions = {}) {
   const label = spec?.label || entityName
   const fields = spec?.fields || {}
-  const formFields = Object.entries(fields).filter(([k, f]) => k !== 'id' && !f.auto && !f.readOnly && k !== 'password_hash').map(([k, f]) => {
+  const formFields = Object.entries(fields).filter(([k, f]) => k !== 'id' && !f.auto && !f.readOnly && !f.auto_generate && k !== 'password_hash').map(([k, f]) => {
     const val = item?.[k] ?? f.default ?? ''
     const req = f.required ? 'required' : ''
     const reqM = f.required ? '<span class="required-marker">*</span>' : ''
-    const type = f.type === 'number' || f.type === 'int' ? 'number' : f.type === 'email' ? 'email' : f.type === 'timestamp' || f.type === 'date' ? 'date' : f.type === 'bool' ? 'checkbox' : 'text'
+    const type = f.type === 'number' || f.type === 'int' || f.type === 'decimal' ? 'number' : f.type === 'email' ? 'email' : f.type === 'timestamp' || f.type === 'date' ? 'date' : f.type === 'bool' ? 'checkbox' : 'text'
     if (entityName === 'user' && k === 'role') {
       const opts = ['partner','manager','clerk','client_admin','client_user'].map(o => `<option value="${o}" ${val===o?'selected':''}>${o.charAt(0).toUpperCase()+o.slice(1).replace('_',' ')}</option>`).join('')
       return `<div class="form-group"><label class="form-label" for="field-role">Role${reqM}</label><select id="field-role" name="role" class="select select-bordered w-full" ${req}>${opts}</select></div>`

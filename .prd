@@ -1,0 +1,29 @@
+# PRD: Zero-Friction UX Audit and Fix
+
+## Objective
+Walk every user flow end-to-end, identify friction, fix it. Goal: zero friction, maximum clarity.
+
+## Wave 1 (Parallel): Auth + Engagement List + Engagement Create
+- [ ] 1A: Auth flows (login/logout/forgot password)
+- [ ] 1B: Engagement list (tabs/search/sort/filters)
+- [ ] 1C: Engagement create form (all dropdowns populated)
+
+## Wave 2 (Parallel): Engagement Detail + Clients + Stage Transitions
+- [ ] 2A: Engagement detail all tabs, wire all buttons
+- [ ] 2B: Client list + create + detail + edit + add user
+- [ ] 2C: Stage transitions (button, confirm, API call, refresh)
+
+## Wave 3 (Parallel): RFI + Review + Files/Messages/Checklists
+- [ ] 3A: RFI list + create + detail + questions (add/edit/delete)
+- [ ] 3B: Review list + create + detail + collaborators + export PDF
+- [ ] 3C: File upload + message send + checklist operations
+
+## Wave 4 (Parallel): Settings + Admin + Search
+- [ ] 4A: User management (list/create/edit)
+- [ ] 4B: Team management (list/create/edit/members)
+- [ ] 4C: Settings pages + global search
+
+## Wave 5 (Parallel): End-to-End Verification
+- [ ] 5A: Complete engagement lifecycle
+- [ ] 5B: Complete review lifecycle
+- [ ] 5C: Final screenshot audit of every page
