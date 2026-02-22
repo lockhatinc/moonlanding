@@ -1,5 +1,5 @@
 import { h } from '@/ui/webjsx.js'
-import { getNavItems, getAdminItems } from '@/ui/permissions-ui.js'
+import { getNavItems, getAdminItems, isPartner, isClerk } from '@/ui/permissions-ui.js'
 import { TOAST_SCRIPT } from '@/ui/render-helpers.js'
 import { aria, role, skipLink, liveRegion } from '@/lib/accessibility'
 
@@ -60,47 +60,46 @@ export function breadcrumb(items) {
 }
 
 export function nav(user) {
-  const navItemsList = getNavItems(user)
-  const adminItemsList = getAdminItems(user)
-  const navLinks = navItemsList.map(n => h('a', { href: n.href, className: 'btn btn-ghost btn-sm' }, n.label)).join('')
-  const adminLinks = adminItemsList.map(n => h('a', { href: n.href, className: 'btn btn-ghost btn-sm' }, n.label)).join('')
-  const mobileItems = [...navItemsList, ...adminItemsList].map(n => h('a', { href: n.href, className: 'mobile-nav-item' }, n.label)).join('')
-  return `<nav id="main-nav" class="navbar bg-white shadow-sm px-4" ${role.navigation} ${aria.label('Main navigation')}>
-  <div class="navbar-start">
-    <button id="mobile-menu-btn" type="button" class="btn btn-ghost btn-sm mobile-menu-toggle" ${aria.label('Open mobile menu')} ${aria.expanded('false')} ${aria.controls('mobile-nav-drawer')} onclick="toggleMobileMenu()">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-    </button>
-    <a href="/" class="font-bold text-lg" ${aria.label('Home')}>Platform</a>
-    <div class="hidden md:flex gap-1 ml-6">${navLinks}${adminLinks}</div>
+  // Gear icon SVG for MY FRIDAY logo
+  const gearSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m4.24-4.24l4.24-4.24"/></svg>`
+
+  // Build right-side nav links with Friday's pipe-separated format
+  const logoutLink = `<a href="/api/auth/logout" style="color:#ced4da;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none;cursor:pointer">LOGOUT</a>`
+
+  const clientsLink = !isClerk(user) ? `<span style="color:#0d4d6d">|</span><a href="/client" style="color:#ced4da;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none">CLIENTS</a>` : ''
+
+  const settingsLink = isPartner(user) ? `<span style="color:#0d4d6d">|</span><a href="/admin/settings" style="color:#ced4da;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none">SETTINGS</a>` : ''
+
+  const reviewLink = isClerk(user) || !isClerk(user) ? `<span style="color:#0d4d6d">|</span><a href="https://myworkreview.netlify.app" target="_blank" style="color:#ced4da;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none">MY REVIEW</a>` : ''
+
+  const navLinksHtml = `${logoutLink}${clientsLink}${settingsLink}${reviewLink}`
+
+  // Avatar with first letter
+  const avatarInitial = user?.name?.charAt(0) || 'U'
+
+  return `<nav id="main-nav" style="background:#04141f;height:50px;display:flex;align-items:center;padding:0 1rem" ${role.navigation} ${aria.label('Main navigation')}>
+  <div style="display:flex;align-items:center;flex:1">
+    <a href="/" style="display:flex;align-items:center;gap:0.5rem;text-decoration:none" ${aria.label('Home')}>
+      ${gearSvg}
+      <span style="color:#f8f9fa;font-size:0.8rem;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;margin-left:0.25rem">MY FRIDAY</span>
+    </a>
   </div>
-  <div class="navbar-end">
-    <div id="user-dropdown" class="dropdown dropdown-end">
-      <button type="button" onclick="toggleUserMenu(event)" class="btn btn-ghost btn-circle avatar placeholder" ${aria.label('User menu for ' + (user?.name || 'user'))} ${aria.haspopup('menu')} ${aria.expanded('false')} style="cursor:pointer">
-        <div class="bg-primary text-white rounded-full w-10 flex items-center justify-content-center" style="display:flex;align-items:center;justify-content:center;height:2.5rem">
-          <span aria-hidden="true">${user?.name?.charAt(0) || 'U'}</span>
-        </div>
-      </button>
-      <ul class="dropdown-menu mt-2 w-52" ${role.menu}>
-        <li class="dropdown-header" ${role.presentation}>${user?.email || ''}<br/><small class="text-gray-500">${user?.role || ''}</small></li>
-        <li ${role.menuitem}><a href="/api/auth/logout">Logout</a></li>
-      </ul>
+  <div style="display:flex;align-items:center;gap:1rem;font-size:0.7rem">
+    <div style="display:flex;align-items:center;gap:0.5rem">
+      ${navLinksHtml}
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border:2px solid #f8f9fa;border-radius:50%;background:#04141f;color:#f8f9fa;font-weight:600;cursor:pointer" id="user-avatar" onclick="toggleUserMenu(event)" title="${user?.name || 'User'}">
+      ${avatarInitial}
     </div>
   </div>
+  <div id="user-dropdown" style="position:absolute;top:50px;right:1rem;background:white;border:1px solid #e5e7eb;border-radius:0.375rem;box-shadow:0 4px 6px rgba(0,0,0,0.1);min-width:200px;z-index:1000;display:none" ${role.menu}>
+    <div style="padding:0.75rem;border-bottom:1px solid #e5e7eb;font-size:0.875rem">
+      <div style="font-weight:600">${user?.email || ''}</div>
+      <div style="color:#6b7280;font-size:0.75rem">${user?.role || ''}</div>
+    </div>
+    <a href="/api/auth/logout" style="display:block;padding:0.75rem;color:#374151;text-decoration:none;font-size:0.875rem">Logout</a>
+  </div>
 </nav>
-<div id="mobile-nav-overlay" class="mobile-nav-overlay" onclick="closeMobileMenu()" ${aria.hidden('true')}></div>
-<div id="mobile-nav-drawer" class="mobile-nav-drawer" ${role.dialog} ${aria.label('Mobile navigation')} ${aria.hidden('true')}>
-  <div class="mobile-nav-header">
-    <span class="font-bold text-lg">Platform</span>
-    <button type="button" class="btn btn-ghost btn-sm" ${aria.label('Close mobile menu')} onclick="closeMobileMenu()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-  </div>
-  <div class="mobile-nav-items" ${role.navigation}>${mobileItems}</div>
-  <div class="mobile-nav-footer">
-    <div class="text-sm text-gray-500">${user?.email || ''}</div>
-    <a href="/api/auth/logout" class="btn btn-ghost btn-sm w-full mt-2">Logout</a>
-  </div>
-</div>
 <div id="idle-warning-dialog" class="confirm-overlay" style="display:none" ${role.alertdialog} ${aria.labelledBy('idle-dialog-title')} ${aria.describedBy('idle-dialog-msg')} ${aria.hidden('true')}>
   <div class="confirm-dialog">
     <h2 id="idle-dialog-title" class="confirm-title">Session Expiring</h2>
@@ -109,10 +108,8 @@ export function nav(user) {
   </div>
 </div>
 <script>
-function toggleUserMenu(e){e.stopPropagation();var d=document.getElementById('user-dropdown');var isOpen=d.classList.toggle('open');e.currentTarget.setAttribute('aria-expanded',isOpen)}
-document.addEventListener('click',function(e){var d=document.getElementById('user-dropdown');if(d&&!d.contains(e.target)){d.classList.remove('open');var btn=d.querySelector('button');if(btn)btn.setAttribute('aria-expanded','false')}});
-function toggleMobileMenu(){var drawer=document.getElementById('mobile-nav-drawer');var overlay=document.getElementById('mobile-nav-overlay');var btn=document.getElementById('mobile-menu-btn');var isOpen=drawer.classList.toggle('open');overlay.classList.toggle('open');btn.setAttribute('aria-expanded',isOpen);drawer.setAttribute('aria-hidden',!isOpen);overlay.setAttribute('aria-hidden',!isOpen);if(isOpen){var firstLink=drawer.querySelector('a');if(firstLink)firstLink.focus()}}
-function closeMobileMenu(){var drawer=document.getElementById('mobile-nav-drawer');var overlay=document.getElementById('mobile-nav-overlay');var btn=document.getElementById('mobile-menu-btn');drawer.classList.remove('open');overlay.classList.remove('open');btn.setAttribute('aria-expanded','false');drawer.setAttribute('aria-hidden','true');overlay.setAttribute('aria-hidden','true');btn.focus()}
+function toggleUserMenu(e){e.stopPropagation();var d=document.getElementById('user-dropdown');d.style.display=d.style.display==='none'?'block':'none'}
+document.addEventListener('click',function(e){var d=document.getElementById('user-dropdown');if(d&&!d.contains(e.target)&&e.target.id!=='user-avatar'){d.style.display='none'}})
 (function(){var WARN_MS=25*60*1000,LOGOUT_MS=30*60*1000,last=Date.now(),warnTimer=null,logoutTimer=null,countdownId=null;
 function reset(){last=Date.now();hideWarning();clearTimers();schedule()}
 function schedule(){warnTimer=setTimeout(showWarning,WARN_MS);logoutTimer=setTimeout(doLogout,LOGOUT_MS)}
