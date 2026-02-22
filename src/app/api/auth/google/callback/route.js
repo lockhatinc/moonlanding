@@ -56,15 +56,15 @@ export async function GET(request) {
     const tokens = await dynamicGoogle.validateAuthorizationCode(code, storedCodeVerifier);
     const accessToken = tokens.accessToken();
 
-    const response = await fetch(GOOGLE_APIS.oauth2, {
+    const googleResponse = await fetch(GOOGLE_APIS.oauth2, {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
 
-    if (!response.ok) {
+    if (!googleResponse.ok) {
       throw new Error('Failed to fetch user info');
     }
 
-    const googleUser = await response.json();
+    const googleUser = await googleResponse.json();
 
     const user = await globalManager.lock('oauth-user-create', async () => {
       let existing = getBy('user', 'email', googleUser.email);
