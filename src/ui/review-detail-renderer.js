@@ -2,49 +2,59 @@ import { generateHtml } from '@/ui/renderer.js';
 import { nav } from '@/ui/layout.js';
 import { canEdit, canCreate, isPartner, isManager } from '@/ui/permissions-ui.js';
 
-const TOAST = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.style.cssText='position:fixed;bottom:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem';document.body.appendChild(c)}const d=document.createElement('div');d.style.cssText='padding:10px 16px;border-radius:6px;font-size:0.82rem;font-weight:500;color:#fff;background:'+(t==='error'?'#c62828':t==='success'?'#2e7d32':'#1565c0');d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
+const TOAST = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';c.setAttribute('role','status');c.setAttribute('aria-live','polite');document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
 
 function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function statusBadge(status) {
-  const map = { active: ['#2e7d32','#e8f5e9'], open: ['#2e7d32','#e8f5e9'], closed: ['#555','#f5f5f5'], archived: ['#6d4c41','#efebe9'], pending: ['#e65100','#fff3e0'], inactive: ['#888','#f5f5f5'] };
-  const [color, bg] = map[status] || ['#555','#f5f5f5'];
-  return `<span style="background:${bg};color:${color};padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:700;border:1px solid ${color}44">${status||'-'}</span>`;
+  const s = status || 'open';
+  const map = { active:'badge-flat-primary', open:'badge-flat-primary', in_progress:'badge-flat-primary', completed:'badge-success badge-flat-success', closed:'badge-success badge-flat-success', archived:'badge-flat-secondary' };
+  const cls = map[s] || 'badge-warning badge-flat-warning';
+  return `<span class="badge ${cls} text-xs">${s||'-'}</span>`;
 }
 
 function highlightRow(h) {
   const resolved = h.resolved || h.status === 'resolved';
-  return `<tr style="border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
-    <td style="padding:10px 12px;font-size:0.82rem;max-width:300px">${esc(h.text||h.content||h.comment||'Highlight')}</td>
-    <td style="padding:10px 12px;font-size:0.8rem;color:#888">p.${h.page||h.page_number||'-'}</td>
-    <td style="padding:10px 12px"><span style="background:${resolved?'#e8f5e9':'#fff3e0'};color:${resolved?'#2e7d32':'#e65100'};padding:2px 7px;border-radius:6px;font-size:0.7rem;font-weight:700">${resolved?'Resolved':'Open'}</span></td>
-    <td style="padding:10px 12px;font-size:0.78rem;color:#888">${h.created_by_name||h.user_id||'-'}</td>
-    <td style="padding:10px 12px">
-      ${!resolved ? `<button onclick="resolveHighlight('${esc(h.id)}')" style="background:#e8f5e9;border:1px solid #a5d6a7;color:#2e7d32;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:0.75rem">Resolve</button>` : ''}
-    </td>
+  return `<tr class="hover">
+    <td class="text-sm max-w-xs">${esc(h.text||h.content||h.comment||'Highlight')}</td>
+    <td class="text-sm text-base-content/50">p.${h.page||h.page_number||'-'}</td>
+    <td><span class="badge ${resolved?'badge-success badge-flat-success':'badge-warning badge-flat-warning'} text-xs">${resolved?'Resolved':'Open'}</span></td>
+    <td class="text-sm text-base-content/50">${h.created_by_name||h.user_id||'-'}</td>
+    <td>${!resolved ? `<button onclick="resolveHighlight('${esc(h.id)}')" class="btn btn-success btn-xs">Resolve</button>` : ''}</td>
   </tr>`;
 }
 
 function collaboratorRow(c) {
-  return `<tr style="border-bottom:1px solid #f0f0f0">
-    <td style="padding:10px 12px;font-size:0.82rem">${esc(c.user_name||c.email||c.user_id||'-')}</td>
-    <td style="padding:10px 12px"><span style="background:#e3f2fd;color:#1565c0;padding:2px 7px;border-radius:4px;font-size:0.72rem;font-weight:600">${esc(c.role||'viewer')}</span></td>
-    <td style="padding:10px 12px;font-size:0.78rem;color:#888">${c.expires_at?new Date(typeof c.expires_at==='number'?c.expires_at*1000:c.expires_at).toLocaleDateString():'-'}</td>
-    <td style="padding:10px 12px"><button onclick="removeCollaborator('${esc(c.id)}')" style="background:#fff0f0;border:1px solid #fca5a5;color:#c62828;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:0.75rem">Remove</button></td>
+  return `<tr class="hover">
+    <td class="text-sm">${esc(c.user_name||c.email||c.user_id||'-')}</td>
+    <td><span class="badge badge-flat-primary text-xs">${esc(c.role||'viewer')}</span></td>
+    <td class="text-sm text-base-content/50">${c.expires_at?new Date(typeof c.expires_at==='number'?c.expires_at*1000:c.expires_at).toLocaleDateString():'-'}</td>
+    <td><button onclick="removeCollaborator('${esc(c.id)}')" class="btn btn-error btn-xs">Remove</button></td>
   </tr>`;
 }
 
 function addCollaboratorDialog(reviewId) {
-  return `<div id="collab-dialog" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
-    <div style="background:#fff;border-radius:8px;padding:24px;max-width:400px;width:90%">
-      <h3 style="margin:0 0 16px;font-size:1rem;font-weight:700">Add Collaborator</h3>
-      <div style="margin-bottom:12px"><label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:4px">Email</label><input type="email" id="collab-email" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem;box-sizing:border-box"/></div>
-      <div style="margin-bottom:16px"><label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:4px">Role</label><select id="collab-role" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem"><option value="viewer">Viewer</option><option value="commenter">Commenter</option><option value="editor">Editor</option></select></div>
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button onclick="document.getElementById('collab-dialog').style.display='none'" style="padding:7px 16px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;font-size:0.85rem">Cancel</button>
-        <button onclick="addCollaborator('${esc(reviewId)}')" style="padding:7px 16px;background:#1976d2;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600">Add</button>
+  return `<div id="collab-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-overlay" onclick="document.getElementById('collab-dialog').style.display='none'"></div>
+    <div class="modal-content rounded-box max-w-sm p-6">
+      <h3 class="text-lg font-semibold mb-4">Add Collaborator</h3>
+      <div class="form-group mb-3">
+        <label class="label"><span class="label-text font-medium">Email</span></label>
+        <input type="email" id="collab-email" class="input input-solid max-w-full" placeholder="collaborator@example.com"/>
+      </div>
+      <div class="form-group mb-4">
+        <label class="label"><span class="label-text font-medium">Role</span></label>
+        <select id="collab-role" class="select select-solid max-w-full">
+          <option value="viewer">Viewer</option>
+          <option value="commenter">Commenter</option>
+          <option value="editor">Editor</option>
+        </select>
+      </div>
+      <div class="modal-action">
+        <button onclick="addCollaborator('${esc(reviewId)}')" class="btn btn-primary">Add</button>
+        <button onclick="document.getElementById('collab-dialog').style.display='none'" class="btn btn-ghost">Cancel</button>
       </div>
     </div>
   </div>`;
@@ -65,8 +75,8 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
     { id: 'sections', label: `Sections (${sections.length})` },
   ];
 
-  const tabBar = `<div style="display:flex;gap:0;border-bottom:2px solid #e0e0e0;margin-bottom:16px;background:#fff;border-radius:8px 8px 0 0;padding:0 16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)">` +
-    TABS.map((t, i) => `<button onclick="switchTab('${t.id}')" id="rvtab-${t.id}" style="padding:12px 16px;font-size:0.82rem;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:${i===0?'2px solid #1976d2;color:#1976d2':'2px solid transparent;color:#666'};margin-bottom:-2px;white-space:nowrap">${t.label}</button>`).join('') +
+  const tabBar = `<div class="tabs tabs-boxed bg-base-200 mb-4 flex-wrap gap-1">` +
+    TABS.map((t, i) => `<button onclick="switchTab('${t.id}')" id="rvtab-${t.id}" class="tab ${i===0?'tab-active':''}">${t.label}</button>`).join('') +
     `</div>`;
 
   const infoItems = [
@@ -79,132 +89,125 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
   ];
 
   const overviewPanel = `<div id="rvpanel-overview" class="rv-panel">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
-        <h2 style="font-size:0.95rem;font-weight:700;margin:0 0 16px">Review Details</h2>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 24px">
-          ${infoItems.map(([l,v]) => `<div><div style="font-size:0.72rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">${l}</div><div style="font-size:0.88rem;color:#222">${v}</div></div>`).join('')}
-        </div>
-        <div style="margin-top:20px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:0.78rem;font-weight:600;color:#555">Resolution Progress</span><span style="font-size:0.78rem;color:#888">${pct}%</span></div>
-          <div style="background:#e0e0e0;border-radius:6px;height:8px"><div style="width:${pct}%;background:#2e7d32;height:8px;border-radius:6px"></div></div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="card bg-base-100 shadow-md">
+        <div class="card-body">
+          <h2 class="card-title text-sm mb-4">Review Details</h2>
+          <div class="grid grid-cols-2 gap-3">
+            ${infoItems.map(([l,v]) => `<div><div class="text-xs text-base-content/50 font-semibold uppercase tracking-wider mb-1">${l}</div><div class="text-sm text-base-content">${v}</div></div>`).join('')}
+          </div>
+          <div class="mt-4">
+            <div class="flex justify-between mb-1"><span class="text-sm font-semibold text-base-content/60">Resolution Progress</span><span class="text-sm text-base-content/50">${pct}%</span></div>
+            <progress class="progress progress-success w-full" value="${pct}" max="100"></progress>
+          </div>
         </div>
       </div>
-      <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
-        <h2 style="font-size:0.95rem;font-weight:700;margin:0 0 16px">Quick Actions</h2>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <a href="/review/${esc(r.id)}/pdf" style="display:block;padding:10px 14px;background:#e3f2fd;color:#1565c0;border-radius:6px;text-decoration:none;font-size:0.85rem;font-weight:600">&#128196; View PDF &amp; Highlights</a>
-          <a href="/review/${esc(r.id)}/highlights" style="display:block;padding:10px 14px;background:#f3e5f5;color:#6a1b9a;border-radius:6px;text-decoration:none;font-size:0.85rem;font-weight:600">&#128172; Highlight Threads</a>
-          <a href="/review/${esc(r.id)}/sections" style="display:block;padding:10px 14px;background:#e8f5e9;color:#2e7d32;border-radius:6px;text-decoration:none;font-size:0.85rem;font-weight:600">&#128203; Section Report</a>
-          <button onclick="exportPdf('${esc(r.id)}')" style="padding:10px 14px;background:#fff3e0;color:#e65100;border:none;border-radius:6px;font-size:0.85rem;font-weight:600;cursor:pointer;text-align:left">&#128229; Export PDF</button>
-          ${resolvedH < totalH && canEditReview ? `<button onclick="bulkResolve('${esc(r.id)}')" style="padding:10px 14px;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;border-radius:6px;font-size:0.85rem;font-weight:600;cursor:pointer;text-align:left">&#10003; Bulk Resolve All</button>` : ''}
+      <div class="card bg-base-100 shadow-md">
+        <div class="card-body">
+          <h2 class="card-title text-sm mb-4">Quick Actions</h2>
+          <div class="flex flex-col gap-2">
+            <a href="/review/${esc(r.id)}/pdf" class="btn btn-ghost btn-sm justify-start">&#128196; View PDF &amp; Highlights</a>
+            <a href="/review/${esc(r.id)}/highlights" class="btn btn-ghost btn-sm justify-start">&#128172; Highlight Threads</a>
+            <a href="/review/${esc(r.id)}/sections" class="btn btn-ghost btn-sm justify-start">&#128203; Section Report</a>
+            <button onclick="exportPdf('${esc(r.id)}')" class="btn btn-ghost btn-sm justify-start">&#128229; Export PDF</button>
+            ${resolvedH < totalH && canEditReview ? `<button onclick="bulkResolve('${esc(r.id)}')" class="btn btn-success btn-sm justify-start">&#10003; Bulk Resolve All</button>` : ''}
+          </div>
         </div>
       </div>
     </div>
   </div>`;
 
   const hRows = highlights.map(h => highlightRow(h)).join('') ||
-    `<tr><td colspan="5" style="padding:32px;text-align:center;color:#aaa;font-size:0.85rem">No highlights yet</td></tr>`;
+    `<tr><td colspan="5" class="text-center py-8 text-base-content/40 text-sm">No highlights yet</td></tr>`;
   const highlightsPanel = `<div id="rvpanel-highlights" class="rv-panel" style="display:none">
-    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h2 style="font-size:0.95rem;font-weight:700;margin:0">Highlights (${totalH})</h2>
-        <div style="display:flex;gap:8px">
-          <span style="font-size:0.82rem;color:#888">${resolvedH} resolved, ${totalH-resolvedH} open</span>
-          <a href="/review/${esc(r.id)}/pdf" style="background:#1976d2;color:#fff;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:600">Open PDF</a>
+    <div class="card bg-base-100 shadow-md">
+      <div class="card-body">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="card-title text-sm">Highlights (${totalH})</h2>
+          <div class="flex gap-3 items-center">
+            <span class="text-sm text-base-content/50">${resolvedH} resolved, ${totalH-resolvedH} open</span>
+            <a href="/review/${esc(r.id)}/pdf" class="btn btn-primary btn-sm">Open PDF</a>
+          </div>
+        </div>
+        <div class="table-container">
+          <table class="table table-hover"><thead><tr><th>Highlight</th><th>Page</th><th>Status</th><th>By</th><th>Actions</th></tr></thead><tbody>${hRows}</tbody></table>
         </div>
       </div>
-      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
-        <thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0">
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">HIGHLIGHT</th>
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">PAGE</th>
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">STATUS</th>
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">BY</th>
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">ACTIONS</th>
-        </tr></thead>
-        <tbody>${hRows}</tbody>
-      </table></div>
     </div>
   </div>`;
 
   const collabRows = collaborators.map(c => collaboratorRow(c)).join('') ||
-    `<tr><td colspan="4" style="padding:32px;text-align:center;color:#aaa;font-size:0.85rem">No collaborators</td></tr>`;
+    `<tr><td colspan="4" class="text-center py-8 text-base-content/40 text-sm">No collaborators</td></tr>`;
   const collabPanel = `<div id="rvpanel-collaborators" class="rv-panel" style="display:none">
-    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h2 style="font-size:0.95rem;font-weight:700;margin:0">Collaborators</h2>
-        ${canEditReview ? `<button onclick="document.getElementById('collab-dialog').style.display='flex'" style="background:#1976d2;color:#fff;border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.82rem;font-weight:600">+ Add</button>` : ''}
+    <div class="card bg-base-100 shadow-md">
+      <div class="card-body">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="card-title text-sm">Collaborators</h2>
+          ${canEditReview ? `<button onclick="document.getElementById('collab-dialog').style.display='flex'" class="btn btn-primary btn-sm">+ Add</button>` : ''}
+        </div>
+        <div class="table-container">
+          <table class="table table-hover"><thead><tr><th>User</th><th>Role</th><th>Expires</th><th>Actions</th></tr></thead><tbody>${collabRows}</tbody></table>
+        </div>
       </div>
-      <table style="width:100%;border-collapse:collapse">
-        <thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0">
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">USER</th>
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">ROLE</th>
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">EXPIRES</th>
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">ACTIONS</th>
-        </tr></thead>
-        <tbody>${collabRows}</tbody>
-      </table>
     </div>
   </div>`;
 
-  const clRows = checklists.map(cl => `<tr style="border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
-    <td style="padding:10px 12px;font-size:0.82rem">${esc(cl.name||'-')}</td>
-    <td style="padding:10px 12px;font-size:0.82rem;color:#888">${cl.total_items||0} items</td>
-    <td style="padding:10px 12px;font-size:0.82rem">${cl.completed_items||0} / ${cl.total_items||0}</td>
-    <td style="padding:10px 12px"><a href="/checklist/${esc(cl.id)}" style="color:#1976d2;font-size:0.82rem;text-decoration:none">View</a></td>
-  </tr>`).join('') || `<tr><td colspan="4" style="padding:32px;text-align:center;color:#aaa;font-size:0.85rem">No checklists attached</td></tr>`;
+  const clRows = checklists.map(cl => `<tr class="hover">
+    <td class="text-sm">${esc(cl.name||'-')}</td>
+    <td class="text-sm text-base-content/50">${cl.total_items||0} items</td>
+    <td>
+      <div class="flex items-center gap-2">
+        <progress class="progress progress-primary w-16" value="${cl.total_items>0?Math.round((cl.completed_items||0)/cl.total_items*100):0}" max="100"></progress>
+        <span class="text-xs text-base-content/50">${cl.completed_items||0}/${cl.total_items||0}</span>
+      </div>
+    </td>
+    <td><a href="/checklist/${esc(cl.id)}" class="btn btn-ghost btn-xs">View</a></td>
+  </tr>`).join('') || `<tr><td colspan="4" class="text-center py-8 text-base-content/40 text-sm">No checklists attached</td></tr>`;
 
   const checklistPanel = `<div id="rvpanel-checklists" class="rv-panel" style="display:none">
-    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
-      <h2 style="font-size:0.95rem;font-weight:700;margin:0 0 16px">Checklists</h2>
-      <table style="width:100%;border-collapse:collapse">
-        <thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0">
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">NAME</th>
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">ITEMS</th>
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">PROGRESS</th>
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600"></th>
-        </tr></thead>
-        <tbody>${clRows}</tbody>
-      </table>
+    <div class="card bg-base-100 shadow-md">
+      <div class="card-body">
+        <h2 class="card-title text-sm mb-4">Checklists</h2>
+        <div class="table-container">
+          <table class="table table-hover"><thead><tr><th>Name</th><th>Items</th><th>Progress</th><th></th></tr></thead><tbody>${clRows}</tbody></table>
+        </div>
+      </div>
     </div>
   </div>`;
 
-  const secRows = sections.map(s => `<tr style="border-bottom:1px solid #f0f0f0">
-    <td style="padding:10px 12px;font-size:0.82rem">${esc(s.name||s.title||'-')}</td>
-    <td style="padding:10px 12px;font-size:0.82rem;color:#888">${s.highlight_count||0}</td>
-    <td style="padding:10px 12px;font-size:0.82rem;color:#888">${s.resolved_count||0}</td>
-  </tr>`).join('') || `<tr><td colspan="3" style="padding:32px;text-align:center;color:#aaa;font-size:0.85rem">No sections</td></tr>`;
+  const secRows = sections.map(s => `<tr class="hover">
+    <td class="text-sm">${esc(s.name||s.title||'-')}</td>
+    <td class="text-sm text-base-content/50">${s.highlight_count||0}</td>
+    <td class="text-sm text-base-content/50">${s.resolved_count||0}</td>
+  </tr>`).join('') || `<tr><td colspan="3" class="text-center py-8 text-base-content/40 text-sm">No sections</td></tr>`;
 
   const sectionsPanel = `<div id="rvpanel-sections" class="rv-panel" style="display:none">
-    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <h2 style="font-size:0.95rem;font-weight:700;margin:0">Sections</h2>
-        <a href="/review/${esc(r.id)}/sections" style="color:#1976d2;font-size:0.82rem;text-decoration:none;font-weight:600">Full Report &#8594;</a>
+    <div class="card bg-base-100 shadow-md">
+      <div class="card-body">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="card-title text-sm">Sections</h2>
+          <a href="/review/${esc(r.id)}/sections" class="btn btn-ghost btn-sm">Full Report &#8594;</a>
+        </div>
+        <div class="table-container">
+          <table class="table table-hover"><thead><tr><th>Section</th><th>Highlights</th><th>Resolved</th></tr></thead><tbody>${secRows}</tbody></table>
+        </div>
       </div>
-      <table style="width:100%;border-collapse:collapse">
-        <thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0">
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">SECTION</th>
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">HIGHLIGHTS</th>
-          <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">RESOLVED</th>
-        </tr></thead>
-        <tbody>${secRows}</tbody>
-      </table>
     </div>
-  </div>`;
-
-  const actionBtns = `<div style="display:flex;gap:8px">
-    ${canEditReview ? `<a href="/review/${esc(r.id)}/edit" style="background:#f5f5f5;border:1px solid #ddd;color:#333;padding:7px 14px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:600">Edit</a>` : ''}
-    <a href="/review/${esc(r.id)}/pdf" style="background:#1976d2;color:#fff;padding:7px 14px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:600">View PDF</a>
   </div>`;
 
   const content = `
-    <div style="margin-bottom:16px"><a href="/reviews" style="color:#1976d2;text-decoration:none;font-size:0.85rem;font-weight:500">&#8592; Reviews</a></div>
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+    <nav class="breadcrumbs text-sm mb-4">
+      <ul><li><a href="/">Home</a></li><li><a href="/review">Reviews</a></li><li>${esc(r.name||'Review')}</li></ul>
+    </nav>
+    <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
       <div>
-        <h1 style="font-size:1.4rem;font-weight:700;margin:0 0 6px">${esc(r.name||r.title||'Review')}</h1>
+        <h1 class="text-2xl font-bold text-base-content mb-1">${esc(r.name||r.title||'Review')}</h1>
         ${statusBadge(r.status)}
       </div>
-      ${actionBtns}
+      <div class="flex gap-2">
+        ${canEditReview ? `<a href="/review/${esc(r.id)}/edit" class="btn btn-ghost btn-sm">Edit</a>` : ''}
+        <a href="/review/${esc(r.id)}/pdf" class="btn btn-primary btn-sm">View PDF</a>
+      </div>
     </div>
     ${tabBar}
     ${overviewPanel}
@@ -219,8 +222,8 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
 function switchTab(tab){
   document.querySelectorAll('.rv-panel').forEach(function(p){p.style.display='none'});
   var panel=document.getElementById('rvpanel-'+tab);if(panel)panel.style.display='';
-  document.querySelectorAll('[id^="rvtab-"]').forEach(function(b){b.style.borderBottomColor='transparent';b.style.color='#666'});
-  var btn=document.getElementById('rvtab-'+tab);if(btn){btn.style.borderBottomColor='#1976d2';btn.style.color='#1976d2'}
+  document.querySelectorAll('[id^="rvtab-"]').forEach(function(b){b.classList.remove('tab-active')});
+  var btn=document.getElementById('rvtab-'+tab);if(btn)btn.classList.add('tab-active');
 }
 async function resolveHighlight(id){if(!confirm('Mark this highlight as resolved?'))return;try{var r=await fetch('/api/mwr/review/${esc(r.id)}/highlights/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({resolved:true,status:'resolved'})});if(r.ok){showToast('Resolved','success');setTimeout(function(){location.reload()},500)}else showToast('Failed','error')}catch(e){showToast('Error','error')}}
 async function bulkResolve(reviewId){if(!confirm('Resolve all highlights?'))return;try{var r=await fetch('/api/mwr/review/'+reviewId+'/highlights/bulk-resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({resolve_all:true})});if(r.ok){showToast('All resolved','success');setTimeout(function(){location.reload()},500)}else showToast('Failed','error')}catch(e){showToast('Error','error')}}
@@ -228,6 +231,6 @@ async function exportPdf(reviewId){showToast('Generating PDF...','info');try{var
 async function addCollaborator(reviewId){var email=document.getElementById('collab-email').value.trim();var role=document.getElementById('collab-role').value;if(!email){showToast('Email required','error');return}try{var r=await fetch('/api/mwr/review/'+reviewId+'/collaborators',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,role:role})});if(r.ok){showToast('Collaborator added','success');document.getElementById('collab-dialog').style.display='none';setTimeout(function(){location.reload()},500)}else showToast('Failed','error')}catch(e){showToast('Error','error')}}
 async function removeCollaborator(collabId){if(!confirm('Remove this collaborator?'))return;try{var r=await fetch('/api/mwr/review/${esc(r.id)}/collaborators/'+collabId,{method:'DELETE'});if(r.ok){showToast('Removed','success');setTimeout(function(){location.reload()},500)}else showToast('Failed','error')}catch(e){showToast('Error','error')}}`;
 
-  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main style="padding:24px 32px" id="main-content">${content}</main></div>`;
+  const body = `<div class="min-h-screen bg-base-200">${nav(user)}<main class="p-4 md:p-6" id="main-content">${content}</main></div>`;
   return generateHtml(`${esc(r.name||'Review')} | MY FRIDAY`, body, [script]);
 }

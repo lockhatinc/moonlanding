@@ -32,10 +32,12 @@ import {
   renderSettingsIntegrations,
   renderSettingsChecklists,
   renderSettingsRecreation,
+} from '@/ui/settings-renderer-advanced.js';
+import {
   renderSettingsReviewSettings,
   renderSettingsFileReview,
   renderSettingsTemplateManage,
-} from '@/ui/settings-renderer-advanced.js';
+} from '@/ui/settings-renderer-advanced2.js';
 import {
   renderClientDashboard, renderClientList, clientUserManagementDialog, clientUserReplaceDialog,
   clientTestEmailDialog, clientRiskAssessmentDialog, clientInfoCard

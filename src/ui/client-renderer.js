@@ -4,8 +4,34 @@ import { nav } from '@/ui/layout.js';
 
 function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+const TOAST_SCRIPT = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';c.setAttribute('role','status');c.setAttribute('aria-live','polite');document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
+
+function statusBadge(status) {
+  const map = { active: 'badge-success badge-flat-success', inactive: 'badge-error badge-flat-error' };
+  const cls = map[status] || 'badge-flat-secondary';
+  const lbl = status ? status.charAt(0).toUpperCase() + status.slice(1) : '-';
+  return `<span class="badge ${cls} text-xs">${lbl}</span>`;
+}
+
+function breadcrumb(items) {
+  if (!items?.length) return '';
+  return `<nav class="breadcrumbs text-sm mb-4" aria-label="Breadcrumb"><ul>${items.map((item, i) => i === items.length - 1 ? `<li>${item.label}</li>` : `<li><a href="${item.href}">${item.label}</a></li>`).join('')}</ul></nav>`;
+}
+
+function page(user, title, bc, content, scripts = []) {
+  const body = `<div class="min-h-screen bg-base-200">${nav(user)}<main id="main-content" role="main" class="p-4 md:p-6">${breadcrumb(bc)}${content}</main></div>`;
+  return generateHtml(title, body, scripts);
+}
+
+const RISK_LEVELS = [
+  { value: 'low', label: 'Low', cls: 'badge-success badge-flat-success' },
+  { value: 'medium', label: 'Medium', cls: 'badge-warning badge-flat-warning' },
+  { value: 'high', label: 'High', cls: 'badge-error badge-flat-error' },
+  { value: 'critical', label: 'Critical', cls: 'badge-error' },
+];
+
 export function renderClientList(user, clients) {
-  const addBtn = canCreate(user, 'client') ? `<a href="/client/new" style="background:#04141f;color:#fff;padding:7px 16px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:600">+ New Client</a>` : '';
+  const addBtn = canCreate(user, 'client') ? `<a href="/client/new" class="btn btn-primary btn-sm gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Client</a>` : '';
   const rows = (clients || []).map(c => {
     const code = esc(c.client_code || c.code || '-');
     const name = esc(c.name || '-');
@@ -15,136 +41,174 @@ export function renderClientList(user, clients) {
     const taxNo = esc(c.tax_number || c.tax_no || '-');
     const regNo = esc(c.reg_number || c.reg_no || '-');
     const status = c.status || 'active';
-    const sc = status === 'active' ? ['#2e7d32','#e8f5e9'] : status === 'inactive' ? ['#c62828','#fdecea'] : ['#555','#f5f5f5'];
-    const statusLbl = status.charAt(0).toUpperCase() + status.slice(1);
-    return `<tr onclick="location.href='/client/${esc(c.id)}'" style="cursor:pointer;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">
-      <td style="padding:10px 12px;font-weight:600;font-size:0.82rem;color:#1976d2">${code}</td>
-      <td style="padding:10px 12px;font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${name}">${name}</td>
-      <td style="padding:10px 12px;font-size:0.8rem">${entityType}</td>
-      <td style="padding:10px 12px;font-size:0.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${email}">${email}</td>
-      <td style="padding:10px 12px;font-size:0.8rem">${contact}</td>
-      <td style="padding:10px 12px;font-size:0.8rem">${taxNo}</td>
-      <td style="padding:10px 12px;font-size:0.8rem">${regNo}</td>
-      <td style="padding:10px 12px"><span style="background:${sc[1]};color:${sc[0]};padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;border:1px solid ${sc[0]}44">${statusLbl}</span></td>
+    return `<tr class="hover cursor-pointer" onclick="location.href='/client/${esc(c.id)}'">
+      <td class="font-semibold text-sm text-primary">${code}</td>
+      <td class="font-medium max-w-48 truncate" title="${name}">${name}</td>
+      <td class="text-sm">${entityType}</td>
+      <td class="text-sm max-w-40 truncate" title="${email}">${email}</td>
+      <td class="text-sm">${contact}</td>
+      <td class="text-sm">${taxNo}</td>
+      <td class="text-sm">${regNo}</td>
+      <td>${statusBadge(status)}</td>
     </tr>`;
   }).join('');
-  const emptyState = `<tr><td colspan="8" style="text-align:center;padding:60px 20px">
-    <div style="font-size:2.5rem;opacity:0.2;margin-bottom:12px">🏢</div>
-    <div style="font-weight:600;color:#333;margin-bottom:6px">No clients yet</div>
-    <div style="color:#aaa;font-size:0.82rem">Add your first client to get started.</div>
+
+  const emptyState = `<tr><td colspan="8" class="text-center py-16 text-base-content/40">
+    <div class="text-4xl mb-3">&#127968;</div>
+    <div class="font-semibold mb-1">No clients yet</div>
+    <div class="text-sm">Add your first client to get started.</div>
   </td></tr>`;
-  const th = (l) => `<th style="padding:10px 12px;text-align:left;font-weight:600;font-size:0.78rem;color:#444;white-space:nowrap">${l}</th>`;
-  const table = `<div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.1)">
-    <div style="padding:10px 12px;border-bottom:1px solid #f0f0f0">
-      <span id="client-count" style="font-size:0.78rem;color:#888">Showing <strong>${(clients||[]).length}</strong> clients</span>
-    </div>
-    <div style="overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse;font-size:0.82rem">
-      <thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0">
-        ${th('CODE')}${th('NAME')}${th('INDUSTRY')}${th('EMAIL')}${th('CONTACT')}${th('TAX NO')}${th('REG NO')}${th('STATUS')}
-      </tr></thead>
-      <tbody id="client-tbody">${rows || emptyState}</tbody>
-    </table>
-    </div>
-  </div>`;
+
   const content = `
-    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <h1 style="font-size:1.25rem;font-weight:700;margin:0;color:#04141f">Clients</h1>
+    <div class="flex justify-between items-center mb-4">
+      <h1 class="text-2xl font-bold text-base-content">Clients</h1>
       ${addBtn}
     </div>
-    <div style="margin-bottom:12px">
-      <input type="text" id="client-search" placeholder="Search clients..." oninput="filterClients()" style="padding:6px 12px;border:1px solid #ddd;border-radius:6px;font-size:0.82rem;width:260px;outline:none" onfocus="this.style.borderColor='#1976d2'" onblur="this.style.borderColor='#ddd'">
+    <div class="mb-3">
+      <input type="text" id="client-search" placeholder="Search clients..." oninput="filterClients()" class="input input-solid" style="max-width:280px">
     </div>
-    ${table}`;
-  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main style="padding:clamp(16px,3vw,32px)" id="main-content">${content}</main></div>`;
+    <div class="card bg-base-100 shadow-md">
+      <div class="card-body p-0">
+        <div class="flex items-center px-4 py-3 border-b border-base-200">
+          <span id="client-count" class="text-sm text-base-content/60">Showing <strong>${(clients||[]).length}</strong> clients</span>
+        </div>
+        <div class="table-container">
+          <table class="table table-hover">
+            <thead><tr>
+              <th>Code</th><th>Name</th><th>Industry</th><th>Email</th><th>Contact</th><th>Tax No</th><th>Reg No</th><th>Status</th>
+            </tr></thead>
+            <tbody id="client-tbody">${rows || emptyState}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+
+  const body = `<div class="min-h-screen bg-base-200">${nav(user)}<main class="p-4 md:p-6" id="main-content">${content}</main></div>`;
   const script = `function filterClients(){var q=(document.getElementById('client-search').value||'').toLowerCase(),vis=0,tot=0;document.querySelectorAll('#client-tbody tr').forEach(function(r){if(!r.cells||r.cells.length<2)return;tot++;var show=!q||r.textContent.toLowerCase().includes(q);r.style.display=show?'':'none';if(show)vis++});var c=document.getElementById('client-count');if(c)c.innerHTML='Showing <strong>'+vis+'</strong> of '+tot+' clients'}`;
   return generateHtml('Clients | MY FRIDAY', body, [script]);
 }
 
-const TOAST_SCRIPT = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';c.setAttribute('role','status');c.setAttribute('aria-live','polite');c.setAttribute('aria-atomic','true');document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
-
-function breadcrumb(items) {
-  if (!items?.length) return '';
-  return `<nav class="breadcrumb" aria-label="Breadcrumb">${items.map((item, i) => i === items.length - 1 ? `<span>${item.label}</span>` : `<a href="${item.href}">${item.label}</a><span class="breadcrumb-separator">/</span>`).join('')}</nav>`;
-}
-
-function page(user, title, bc, content, scripts = []) {
-  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" role="main"><div class="p-6">${breadcrumb(bc)}${content}</div></main></div>`;
-  return generateHtml(title, body, scripts);
-}
-
-const RISK_LEVELS = [
-  { value: 'low', label: 'Low', class: 'risk-low' },
-  { value: 'medium', label: 'Medium', class: 'risk-medium' },
-  { value: 'high', label: 'High', class: 'risk-high' },
-  { value: 'critical', label: 'Critical', class: 'risk-critical' },
-];
-
 export function renderClientDashboard(user, client, stats = {}) {
   const c = client || {};
-  const riskBadge = c.risk_level ? `<span class="risk-badge risk-${c.risk_level}">${(c.risk_level || '').charAt(0).toUpperCase() + (c.risk_level || '').slice(1)} Risk</span>` : '';
+  const riskCls = RISK_LEVELS.find(r => r.value === c.risk_level)?.cls || 'badge-flat-secondary';
+  const riskBadge = c.risk_level ? `<span class="badge ${riskCls} ml-2">${(c.risk_level || '').charAt(0).toUpperCase() + (c.risk_level || '').slice(1)} Risk</span>` : '';
+
   const infoRows = [
     ['Name', c.name || '-'],
     ['Email', c.email || '-'],
     ['Phone', c.phone || '-'],
     ['Address', c.address || '-'],
-    ['Status', c.status ? statusLabel(c.status) : '-'],
+    ['Status', statusBadge(c.status || 'active')],
     ['Created', c.created_at ? new Date(typeof c.created_at === 'number' ? c.created_at * 1000 : c.created_at).toLocaleDateString() : '-'],
-  ].map(([l, v]) => `<div class="client-info-row"><span class="client-info-label">${l}</span><span class="client-info-value">${v}</span></div>`).join('');
-  const statCards = `<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-    <div class="card bg-white shadow"><div class="card-body"><h3 class="text-gray-500 text-sm">Engagements</h3><p class="text-2xl font-bold">${stats.engagements || 0}</p></div></div>
-    <div class="card bg-white shadow"><div class="card-body"><h3 class="text-gray-500 text-sm">Active RFIs</h3><p class="text-2xl font-bold text-blue-600">${stats.activeRfis || 0}</p></div></div>
-    <div class="card bg-white shadow"><div class="card-body"><h3 class="text-gray-500 text-sm">Users</h3><p class="text-2xl font-bold">${stats.users || 0}</p></div></div>
-    <div class="card bg-white shadow"><div class="card-body"><h3 class="text-gray-500 text-sm">Reviews</h3><p class="text-2xl font-bold">${stats.reviews || 0}</p></div></div></div>`;
-  const engRows = (stats.engagementList || []).map(e => `<tr class="hover cursor-pointer" tabindex="0" role="link" onclick="window.location='/engagement/${e.id}'" onkeydown="if(event.key==='Enter'){window.location='/engagement/${e.id}'}"><td>${e.name || '-'}</td><td>${e.stage ? statusLabel(e.stage) : '-'}</td><td>${e.status ? statusLabel(e.status) : '-'}</td></tr>`).join('') || '<tr><td colspan="3" class="text-center py-4 text-gray-500">No engagements</td></tr>';
-  const actions = canEdit(user, 'client') ? `<div class="flex gap-2"><a href="/client/${c.id}/edit" class="btn btn-outline btn-sm">Edit</a><button onclick="document.getElementById('risk-dialog').style.display='flex'" class="btn btn-outline btn-sm">Risk Assessment</button><button onclick="document.getElementById('test-email-dialog').style.display='flex'" class="btn btn-outline btn-sm">Test Email</button></div>` : '';
-  const content = `<div class="flex justify-between items-center mb-6"><div><h1 class="text-2xl font-bold">${c.name || 'Client'}</h1>${riskBadge}</div>${actions}</div>
-    ${statCards}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="card bg-white shadow"><div class="card-body"><h2 class="card-title">Client Info</h2><div class="mt-4">${infoRows}</div></div></div>
-      <div class="card bg-white shadow"><div class="card-body"><h2 class="card-title">Engagements</h2><div class="mt-4" style="overflow-x:auto"><table class="table table-zebra w-full"><thead><tr><th>Name</th><th>Stage</th><th>Status</th></tr></thead><tbody>${engRows}</tbody></table></div></div></div>
+  ].map(([l, v]) => `<div class="flex flex-col gap-1 py-2 border-b border-base-200 last:border-0">
+    <span class="text-xs font-semibold uppercase tracking-wider text-base-content/50">${l}</span>
+    <span class="text-sm text-base-content">${v}</span>
+  </div>`).join('');
+
+  const statsHtml = `<div class="stats shadow w-full mb-6 flex-wrap">
+    <div class="stat"><div class="stat-title">Engagements</div><div class="stat-value text-2xl">${stats.engagements || 0}</div></div>
+    <div class="stat"><div class="stat-title">Active RFIs</div><div class="stat-value text-2xl text-primary">${stats.activeRfis || 0}</div></div>
+    <div class="stat"><div class="stat-title">Users</div><div class="stat-value text-2xl">${stats.users || 0}</div></div>
+    <div class="stat"><div class="stat-title">Reviews</div><div class="stat-value text-2xl">${stats.reviews || 0}</div></div>
+  </div>`;
+
+  const engRows = (stats.engagementList || []).map(e => `<tr class="hover cursor-pointer" onclick="window.location='/engagement/${e.id}'"><td class="text-sm">${e.name || '-'}</td><td>${statusBadge(e.stage)}</td><td>${statusBadge(e.status)}</td></tr>`).join('') || '<tr><td colspan="3" class="text-center py-6 text-base-content/40 text-sm">No engagements</td></tr>';
+
+  const actions = canEdit(user, 'client') ? `<div class="flex gap-2 flex-wrap">
+    <a href="/client/${c.id}/edit" class="btn btn-outline-primary btn-sm">Edit</a>
+    <button onclick="document.getElementById('risk-dialog').style.display='flex'" class="btn btn-ghost btn-sm">Risk Assessment</button>
+    <button onclick="document.getElementById('test-email-dialog').style.display='flex'" class="btn btn-ghost btn-sm">Test Email</button>
+  </div>` : '';
+
+  const content = `
+    <div class="flex justify-between items-start mb-6 flex-wrap gap-3">
+      <div>
+        <h1 class="text-2xl font-bold text-base-content">${esc(c.name || 'Client')}</h1>
+        <div class="mt-1">${riskBadge}</div>
+      </div>
+      ${actions}
+    </div>
+    ${statsHtml}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="card bg-base-100 shadow-md">
+        <div class="card-body">
+          <h2 class="card-title text-sm mb-3">Client Info</h2>
+          <div>${infoRows}</div>
+        </div>
+      </div>
+      <div class="card bg-base-100 shadow-md">
+        <div class="card-body">
+          <h2 class="card-title text-sm mb-3">Engagements</h2>
+          <div class="table-container">
+            <table class="table table-hover"><thead><tr><th>Name</th><th>Stage</th><th>Status</th></tr></thead><tbody>${engRows}</tbody></table>
+          </div>
+        </div>
+      </div>
     </div>
     ${clientUserManagementDialog(c.id)}${clientRiskAssessmentDialog(c.id, c.risk_level)}${clientTestEmailDialog(c.id)}`;
-  const bc = [{ href: '/', label: 'Dashboard' }, { href: '/client', label: 'Clients' }, { label: c.name || 'Client' }];
+
+  const bc = [{ href: '/', label: 'Home' }, { href: '/client', label: 'Clients' }, { label: c.name || 'Client' }];
   return page(user, `${c.name || 'Client'} - Dashboard`, bc, content, [TOAST_SCRIPT]);
 }
 
 export function clientUserManagementDialog(clientId) {
-  return `<div id="client-user-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="client-user-dialog-title" aria-hidden="true">
-    <div class="dialog-panel" style="max-width:560px">
-      <div class="dialog-header"><span class="dialog-title" id="client-user-dialog-title">Manage Client Users</span><button class="dialog-close" onclick="document.getElementById('client-user-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
-      <div class="dialog-body">
-        <div id="cud-list" class="flex flex-col gap-2"></div>
-        <div class="inline-form" style="margin-top:1rem">
-          <div class="inline-form-row">
-            <div class="inline-form-field" style="flex:1"><label for="cud-email">Email</label><input type="email"  id="cud-email" class="input input-bordered input-sm w-full" placeholder="user@example.com"/></div>
-            <div class="inline-form-field"><label for="cud-role">Role</label><select id="cud-role" class="select select-bordered select-sm"><option value="client_user">User</option><option value="client_admin">Admin</option></select></div>
-            <div class="inline-form-field"><label>&nbsp;</label><button class="btn btn-primary btn-sm" onclick="cudAdd()">Add</button></div>
+  return `<div id="client-user-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="client-user-dialog-title" aria-hidden="true">
+    <div class="modal-overlay" onclick="document.getElementById('client-user-dialog').style.display='none'"></div>
+    <div class="modal-content rounded-box max-w-lg p-6">
+      <h3 class="text-lg font-semibold mb-4" id="client-user-dialog-title">Manage Client Users</h3>
+      <div id="cud-list" class="flex flex-col gap-2 mb-4"></div>
+      <div class="form-group">
+        <div class="flex gap-2 items-end">
+          <div class="flex-1">
+            <label class="label"><span class="label-text font-medium">Email</span></label>
+            <input type="email" id="cud-email" class="input input-solid max-w-full" placeholder="user@example.com"/>
           </div>
+          <div>
+            <label class="label"><span class="label-text font-medium">Role</span></label>
+            <select id="cud-role" class="select select-solid"><option value="client_user">User</option><option value="client_admin">Admin</option></select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="cudAdd()">Add</button>
         </div>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('client-user-dialog').style.display='none'">Close</button></div>
-    </div></div>
+      <div class="modal-action mt-4">
+        <button class="btn btn-ghost" onclick="document.getElementById('client-user-dialog').style.display='none'">Close</button>
+      </div>
+    </div>
+  </div>
   <script>
   window.showClientUsers=function(){document.getElementById('client-user-dialog').style.display='flex';cudLoad()};
-  async function cudLoad(){var c=document.getElementById('cud-list');c.innerHTML='<div class="text-center text-gray-500 text-sm py-2">Loading...</div>';try{var res=await fetch('/api/user?client_id=${clientId}');var d=await res.json();var users=d.data||d||[];c.innerHTML='';if(!users.length){c.innerHTML='<div class="text-center text-gray-500 text-sm py-2">No client users</div>';return}users.forEach(function(u){var div=document.createElement('div');div.className='flex items-center justify-between gap-2';div.style.padding='0.5rem 0';div.style.borderBottom='1px solid #f3f4f6';div.innerHTML='<div><div class="text-sm font-medium">'+(u.name||'Unknown')+'</div><div class="text-xs text-gray-500">'+(u.email||'')+'</div></div><div class="flex gap-1"><span class="badge-status" style="background:#dbeafe;color:#1e40af">'+(u.role||'-')+'</span><button class="btn btn-xs btn-error btn-outline" onclick="cudRemove(\\''+u.id+'\\')">Remove</button></div>';c.appendChild(div)})}catch(e){c.innerHTML='<div class="text-center text-red-500 text-sm">Error loading users</div>'}}
+  async function cudLoad(){var c=document.getElementById('cud-list');c.innerHTML='<div class="text-center text-base-content/50 text-sm py-2">Loading...</div>';try{var res=await fetch('/api/user?client_id=${clientId}');var d=await res.json();var users=d.data||d||[];c.innerHTML='';if(!users.length){c.innerHTML='<div class="text-center text-base-content/50 text-sm py-2">No client users</div>';return}users.forEach(function(u){var div=document.createElement('div');div.className='flex items-center justify-between gap-2 py-2 border-b border-base-200';div.innerHTML='<div><div class="text-sm font-medium">'+(u.name||'Unknown')+'</div><div class="text-xs text-base-content/50">'+(u.email||'')+'</div></div><div class="flex gap-2"><span class="badge badge-flat-primary text-xs">'+(u.role||'-')+'</span><button class="btn btn-xs btn-error" onclick="cudRemove(\\''+u.id+'\\')">Remove</button></div>';c.appendChild(div)})}catch(e){c.innerHTML='<div class="text-center text-error text-sm">Error loading users</div>'}}
   window.cudAdd=async function(){var email=document.getElementById('cud-email').value.trim();var role=document.getElementById('cud-role').value;if(!email){showToast('Email required','error');return}try{var res=await fetch('/api/user',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,role:role,client_id:'${clientId}',name:email.split('@')[0],status:'active'})});if(res.ok){showToast('User added','success');document.getElementById('cud-email').value='';cudLoad()}else{var d=await res.json().catch(function(){return{}});showToast(d.error||'Failed','error')}}catch(e){showToast('Error','error')}};
   window.cudRemove=async function(uid){if(!confirm('Remove this user?'))return;try{var res=await fetch('/api/user/'+uid,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:null,role:'client_user'})});if(res.ok){showToast('User removed','success');cudLoad()}else{showToast('Failed','error')}}catch(e){showToast('Error','error')}};
   </script>`;
 }
 
 export function clientUserReplaceDialog(clientId) {
-  return `<div id="client-replace-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="client-replace-dialog-title" aria-hidden="true">
-    <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title" id="client-replace-dialog-title">Replace Client User</span><button class="dialog-close" onclick="document.getElementById('client-replace-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
-      <div class="dialog-body">
-        <div class="modal-form-group"><label for="crd-from">Current User</label><select id="crd-from" class="select select-bordered w-full"><option value="">Select user to replace...</option></select></div>
-        <div style="text-align:center;padding:0.5rem;color:#9ca3af">&#8595; Replace with &#8595;</div>
-        <div class="modal-form-group"><label for="crd-to">New User</label><select id="crd-to" class="select select-bordered w-full"><option value="">Select replacement user...</option></select></div>
-        <div class="modal-form-group"><label class="flex items-center gap-2"><input type="checkbox" id="crd-transfer" class="checkbox" checked/><span class="text-sm">Transfer all assignments</span></label></div>
+  return `<div id="client-replace-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-overlay" onclick="document.getElementById('client-replace-dialog').style.display='none'"></div>
+    <div class="modal-content rounded-box max-w-md p-6">
+      <h3 class="text-lg font-semibold mb-4">Replace Client User</h3>
+      <div class="form-group mb-3">
+        <label class="label"><span class="label-text font-medium">Current User</span></label>
+        <select id="crd-from" class="select select-solid max-w-full"><option value="">Select user to replace...</option></select>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('client-replace-dialog').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="crdConfirm()">Replace</button></div>
-    </div></div>
+      <div class="divider text-xs text-base-content/40">Replace with</div>
+      <div class="form-group mb-3">
+        <label class="label"><span class="label-text font-medium">New User</span></label>
+        <select id="crd-to" class="select select-solid max-w-full"><option value="">Select replacement user...</option></select>
+      </div>
+      <div class="form-group mb-4">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" id="crd-transfer" class="checkbox" checked/>
+          <span class="label-text">Transfer all assignments</span>
+        </label>
+      </div>
+      <div class="modal-action">
+        <button class="btn btn-primary" onclick="crdConfirm()">Replace</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('client-replace-dialog').style.display='none'">Cancel</button>
+      </div>
+    </div>
+  </div>
   <script>
   window.showClientReplace=function(){document.getElementById('client-replace-dialog').style.display='flex';fetch('/api/user?client_id=${clientId}').then(function(r){return r.json()}).then(function(d){var users=d.data||d||[];['crd-from','crd-to'].forEach(function(id){var sel=document.getElementById(id);while(sel.options.length>1)sel.remove(1);users.forEach(function(u){var o=document.createElement('option');o.value=u.id;o.textContent=(u.name||u.email||u.id);sel.appendChild(o)})})}).catch(function(){})};
   window.crdConfirm=async function(){var from=document.getElementById('crd-from').value;var to=document.getElementById('crd-to').value;if(!from||!to){showToast('Select both users','error');return}if(from===to){showToast('Cannot replace with same user','error');return}try{var res=await fetch('/api/user/'+from,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({replaced_by:to,status:'inactive'})});if(res.ok){showToast('User replaced','success');document.getElementById('client-replace-dialog').style.display='none';setTimeout(function(){location.reload()},500)}else{showToast('Failed','error')}}catch(e){showToast('Error','error')}};
@@ -152,34 +216,54 @@ export function clientUserReplaceDialog(clientId) {
 }
 
 export function clientTestEmailDialog(clientId) {
-  return `<div id="test-email-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="test-email-dialog-title" aria-hidden="true">
-    <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title" id="test-email-dialog-title">Send Test Email</span><button class="dialog-close" onclick="document.getElementById('test-email-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
-      <div class="dialog-body">
-        <div class="modal-form-group"><label for="ted-to">To (email)</label><input type="email"  id="ted-to" class="input input-bordered w-full" placeholder="recipient@example.com"/></div>
-        <div class="modal-form-group"><label for="ted-subject">Subject</label><input type="text"  id="ted-subject" class="input input-bordered w-full" value="Test Email - Platform Notification"/></div>
-        <div class="modal-form-group"><label for="ted-body">Message</label><textarea id="ted-body" class="textarea textarea-bordered w-full" rows="4">This is a test email from the Platform to verify email delivery to client users.</textarea></div>
+  return `<div id="test-email-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-overlay" onclick="document.getElementById('test-email-dialog').style.display='none'"></div>
+    <div class="modal-content rounded-box max-w-md p-6">
+      <h3 class="text-lg font-semibold mb-4">Send Test Email</h3>
+      <div class="form-group mb-3">
+        <label class="label"><span class="label-text font-medium">To</span></label>
+        <input type="email" id="ted-to" class="input input-solid max-w-full" placeholder="recipient@example.com"/>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('test-email-dialog').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="tedSend()">Send Test</button></div>
-    </div></div>
+      <div class="form-group mb-3">
+        <label class="label"><span class="label-text font-medium">Subject</span></label>
+        <input type="text" id="ted-subject" class="input input-solid max-w-full" value="Test Email - Platform Notification"/>
+      </div>
+      <div class="form-group mb-4">
+        <label class="label"><span class="label-text font-medium">Message</span></label>
+        <textarea id="ted-body" class="textarea textarea-solid max-w-full" rows="4">This is a test email from the Platform to verify email delivery to client users.</textarea>
+      </div>
+      <div class="modal-action">
+        <button class="btn btn-primary" onclick="tedSend()">Send Test</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('test-email-dialog').style.display='none'">Cancel</button>
+      </div>
+    </div>
+  </div>
   <script>
   window.tedSend=async function(){var to=document.getElementById('ted-to').value.trim();if(!to){showToast('Email required','error');return}try{var res=await fetch('/api/email/send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to:to,subject:document.getElementById('ted-subject').value,body:document.getElementById('ted-body').value,client_id:'${clientId}'})});if(res.ok){showToast('Test email sent','success');document.getElementById('test-email-dialog').style.display='none'}else{showToast('Send failed (email service may not be configured)','info');document.getElementById('test-email-dialog').style.display='none'}}catch(e){showToast('Email service not available','info');document.getElementById('test-email-dialog').style.display='none'}};
   </script>`;
 }
 
 export function clientRiskAssessmentDialog(clientId, currentRisk) {
-  const options = RISK_LEVELS.map(r => `<label class="choice-option"><input type="radio" name="crad-risk" value="${r.value}" ${currentRisk === r.value ? 'checked' : ''} onclick="cradSelect('${r.value}')"/><span class="choice-label"><span class="risk-badge ${r.class}">${r.label}</span></span></label>`).join('');
-  return `<div id="risk-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="risk-dialog-title" aria-hidden="true">
-    <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title" id="risk-dialog-title">Risk Assessment</span><button class="dialog-close" onclick="document.getElementById('risk-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
-      <div class="dialog-body">
-        <div class="choice-group">${options}</div>
-        <div class="modal-form-group" style="margin-top:1rem"><label for="crad-notes">Notes</label><textarea id="crad-notes" class="textarea textarea-bordered w-full" rows="2" placeholder="Risk assessment notes..."></textarea></div>
+  const options = RISK_LEVELS.map(r => `<label class="flex items-center gap-3 p-3 rounded-box border border-base-200 cursor-pointer hover:bg-base-200 transition-colors">
+    <input type="radio" name="crad-risk" value="${r.value}" ${currentRisk === r.value ? 'checked' : ''} class="radio radio-primary"/>
+    <span class="badge ${r.cls}">${r.label}</span>
+  </label>`).join('');
+  return `<div id="risk-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-overlay" onclick="document.getElementById('risk-dialog').style.display='none'"></div>
+    <div class="modal-content rounded-box max-w-md p-6">
+      <h3 class="text-lg font-semibold mb-4">Risk Assessment</h3>
+      <div class="flex flex-col gap-2 mb-4">${options}</div>
+      <div class="form-group mb-4">
+        <label class="label"><span class="label-text font-medium">Notes</span></label>
+        <textarea id="crad-notes" class="textarea textarea-solid max-w-full" rows="2" placeholder="Risk assessment notes..."></textarea>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('risk-dialog').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="cradSave()">Save</button></div>
-    </div></div>
+      <div class="modal-action">
+        <button class="btn btn-primary" onclick="cradSave()">Save</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('risk-dialog').style.display='none'">Cancel</button>
+      </div>
+    </div>
+  </div>
   <script>
-  window.cradSelect=function(v){document.querySelectorAll('input[name="crad-risk"]').forEach(function(r){r.checked=r.value===v})};
   window.cradSave=async function(){var sel=document.querySelector('input[name="crad-risk"]:checked');if(!sel){showToast('Select a risk level','error');return}try{var res=await fetch('/api/client/${clientId}',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({risk_level:sel.value,risk_notes:document.getElementById('crad-notes').value})});if(res.ok){showToast('Risk assessment saved','success');document.getElementById('risk-dialog').style.display='none';setTimeout(function(){location.reload()},500)}else{showToast('Failed','error')}}catch(e){showToast('Error','error')}};
   </script>`;
 }
@@ -188,8 +272,11 @@ export function clientInfoCard(client) {
   const c = client || {};
   const infoRows = [
     ['Name', c.name], ['Email', c.email], ['Phone', c.phone],
-    ['Industry', c.industry], ['Status', c.status ? statusLabel(c.status) : null],
-    ['Risk', c.risk_level ? `<span class="risk-badge risk-${c.risk_level}">${c.risk_level}</span>` : null],
-  ].filter(([, v]) => v).map(([l, v]) => `<div class="client-info-row"><span class="client-info-label">${l}</span><span class="client-info-value">${v}</span></div>`).join('');
-  return `<div class="card bg-white shadow"><div class="card-body"><h2 class="card-title">Client Details</h2><div class="mt-4">${infoRows || '<div class="text-gray-500 text-sm">No details available</div>'}</div></div></div>`;
+    ['Industry', c.industry], ['Status', c.status ? statusBadge(c.status) : null],
+    ['Risk', c.risk_level ? `<span class="badge badge-flat-secondary text-xs">${c.risk_level}</span>` : null],
+  ].filter(([, v]) => v).map(([l, v]) => `<div class="flex flex-col gap-1 py-2 border-b border-base-200 last:border-0">
+    <span class="text-xs font-semibold uppercase tracking-wider text-base-content/50">${l}</span>
+    <span class="text-sm">${v}</span>
+  </div>`).join('');
+  return `<div class="card bg-base-100 shadow-md"><div class="card-body"><h2 class="card-title text-sm">Client Details</h2><div class="mt-3">${infoRows || '<div class="text-base-content/50 text-sm">No details available</div>'}</div></div></div>`;
 }

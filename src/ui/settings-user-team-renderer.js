@@ -12,11 +12,11 @@ function esc(s) {
 }
 
 const ROLES = ['partner','manager','clerk','client_admin','client_user','admin','user'];
-const ROLE_COLORS = { partner:'#1565c0', manager:'#2e7d32', clerk:'#e65100', client_admin:'#6a1b9a', client_user:'#455a64', admin:'#c62828', user:'#555' };
+const ROLE_BADGE = { partner:'badge-flat-primary', manager:'badge-flat-success', clerk:'badge-warning badge-flat-warning', client_admin:'badge-flat-secondary', client_user:'badge-flat-secondary', admin:'badge-error badge-flat-error', user:'badge-flat-secondary' };
 
 function roleBadge(role) {
-  const color = ROLE_COLORS[role] || '#555';
-  return role ? `<span style="background:${color}22;color:${color};padding:2px 8px;border-radius:4px;font-size:0.72rem;font-weight:600">${role}</span>` : '-';
+  const cls = ROLE_BADGE[role] || 'badge-flat-secondary';
+  return role ? `<span class="badge ${cls} text-xs">${role}</span>` : '-';
 }
 
 function field(label, id, type = 'text', value = '', extra = '') {
@@ -86,7 +86,12 @@ export function renderSettingsTeamDetail(user, team = {}, allUsers = []) {
   const members = allUsers.filter(u => memberIds.includes(u.id));
   const available = allUsers.filter(u => !memberIds.includes(u.id) && u.status !== 'deleted');
 
-  const memberRows = members.map(m => `<tr><td style="padding:8px 12px;font-size:0.82rem">${esc(m.name||'-')}</td><td style="padding:8px 12px;font-size:0.82rem;color:#555">${esc(m.email||'-')}</td><td style="padding:8px 12px;font-size:0.8rem;color:#888">${esc(m.role||'-')}</td><td style="padding:8px 12px"><button onclick="removeMember('${esc(team.id||'')}','${esc(m.id)}')" style="background:#fff0f0;border:1px solid #fca5a5;color:#c62828;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:0.75rem">Remove</button></td></tr>`).join('') || `<tr><td colspan="4" style="padding:24px;text-align:center;color:#aaa;font-size:0.82rem">No members yet</td></tr>`;
+  const memberRows = members.map(m => `<tr>
+    <td class="text-sm">${esc(m.name||'-')}</td>
+    <td class="text-sm text-base-content/60">${esc(m.email||'-')}</td>
+    <td>${roleBadge(m.role)}</td>
+    <td><button onclick="removeMember('${esc(team.id||'')}','${esc(m.id)}')" class="btn btn-error btn-xs btn-outline">Remove</button></td>
+  </tr>`).join('') || `<tr><td colspan="4" class="text-center py-6 text-base-content/40 text-sm">No members yet</td></tr>`;
 
   const availOpts = available.map(u => `<option value="${esc(u.id)}">${esc(u.name||u.email||u.id)}</option>`).join('');
 
@@ -102,7 +107,7 @@ export function renderSettingsTeamDetail(user, team = {}, allUsers = []) {
     <div class="card bg-base-100 shadow-md"><div class="card-body">
       <div class="flex justify-between items-center mb-4">
         <h2 class="card-title text-base">Members (${members.length})</h2>
-        ${!isNew ? `<div class="flex gap-2"><select id="add-member-select" class="select select-solid select-sm"><option value="">Select user...</option>${availOpts}</select><button onclick="addMember('${esc(team.id||'')}')" class="btn btn-primary btn-sm">Add</button></div>` : '<span class="text-sm text-gray-400">Save team first to add members</span>'}
+        ${!isNew ? `<div class="flex gap-2"><select id="add-member-select" class="select select-solid select-sm"><option value="">Select user...</option>${availOpts}</select><button onclick="addMember('${esc(team.id||'')}')" class="btn btn-primary btn-sm">Add</button></div>` : '<span class="text-sm text-base-content/40">Save team first to add members</span>'}
       </div>
       ${inlineTable(['Name','Email','Role',''], memberRows, 'No members')}
     </div></div>

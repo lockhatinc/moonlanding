@@ -2,33 +2,33 @@ import { generateHtml } from '@/ui/renderer.js';
 import { nav } from '@/ui/layout.js';
 import { canEdit, isPartner, isManager } from '@/ui/permissions-ui.js';
 
-const TOAST = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.style.cssText='position:fixed;bottom:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem';document.body.appendChild(c)}const d=document.createElement('div');d.style.cssText='padding:10px 16px;border-radius:6px;font-size:0.82rem;font-weight:500;color:#fff;background:'+(t==='error'?'#c62828':t==='success'?'#2e7d32':'#1565c0');d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
+const TOAST = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';c.setAttribute('role','status');c.setAttribute('aria-live','polite');document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
 
 function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function statusBadge(status) {
-  const map = { active: ['#2e7d32','#e8f5e9'], closed: ['#555','#f5f5f5'], responded: ['#1565c0','#e3f2fd'], pending: ['#e65100','#fff3e0'] };
-  const [color, bg] = map[status] || ['#555','#f5f5f5'];
-  return `<span style="background:${bg};color:${color};padding:3px 10px;border-radius:10px;font-size:0.75rem;font-weight:700;border:1px solid ${color}44">${status||'-'}</span>`;
+  const map = { active:'badge-success badge-flat-success', closed:'badge-flat-secondary', responded:'badge-flat-primary', pending:'badge-warning badge-flat-warning' };
+  const cls = map[status] || 'badge-flat-secondary';
+  return `<span class="badge ${cls} text-xs">${status||'-'}</span>`;
 }
 
 function questionRow(q, i, sections = []) {
   const section = sections.find(s => s.id === q.section_id || s.id === q.rfi_section_id);
-  const sLabel = section ? `<span style="background:#e3f2fd;color:#1565c0;padding:1px 6px;border-radius:4px;font-size:0.68rem;font-weight:600">${esc(section.name)}</span>` : '';
+  const sLabel = section ? `<span class="badge badge-flat-primary text-xs">${esc(section.name)}</span>` : '';
   const hasResp = q.responses > 0 || q.response_count > 0;
-  const respBadge = hasResp ? `<span style="background:#e8f5e9;color:#2e7d32;padding:1px 6px;border-radius:4px;font-size:0.68rem;font-weight:600">Responded</span>` : '';
-  return `<tr style="border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
-    <td style="padding:10px 12px;width:36px;text-align:center;color:#aaa;font-size:0.78rem">${i+1}</td>
-    <td style="padding:10px 12px;font-size:0.85rem;max-width:400px">${esc(q.question_text||q.question||q.title||'Question')}</td>
-    <td style="padding:10px 12px">${sLabel}</td>
-    <td style="padding:10px 12px;font-size:0.8rem;color:#888">${q.deadline?new Date(typeof q.deadline==='number'?q.deadline*1000:q.deadline).toLocaleDateString():'-'}</td>
-    <td style="padding:10px 12px">${respBadge}</td>
-    <td style="padding:10px 12px">
-      <div style="display:flex;gap:6px">
-        <button onclick="openEditQuestion('${esc(q.id)}')" style="background:#f5f5f5;border:1px solid #ddd;color:#333;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:0.75rem">Edit</button>
-        <button onclick="deleteQuestion('${esc(q.id)}')" style="background:#fff0f0;border:1px solid #fca5a5;color:#c62828;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:0.75rem">Del</button>
+  const respBadge = hasResp ? `<span class="badge badge-success badge-flat-success text-xs">Responded</span>` : '';
+  return `<tr class="hover">
+    <td class="text-center text-sm text-base-content/40 w-8">${i+1}</td>
+    <td class="text-sm max-w-sm">${esc(q.question_text||q.question||q.title||'Question')}</td>
+    <td>${sLabel}</td>
+    <td class="text-sm text-base-content/50">${q.deadline?new Date(typeof q.deadline==='number'?q.deadline*1000:q.deadline).toLocaleDateString():'-'}</td>
+    <td>${respBadge}</td>
+    <td>
+      <div class="flex gap-2">
+        <button onclick="openEditQuestion('${esc(q.id)}')" class="btn btn-ghost btn-xs">Edit</button>
+        <button onclick="deleteQuestion('${esc(q.id)}')" class="btn btn-error btn-xs">Del</button>
       </div>
     </td>
   </tr>`;
@@ -36,32 +36,49 @@ function questionRow(q, i, sections = []) {
 
 function editQuestionDialog(rfiId, sections) {
   const sectionOpts = sections.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
-  return `<div id="q-dialog" data-rfi-id="${esc(rfiId)}" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
-    <div style="background:#fff;border-radius:8px;padding:24px;max-width:520px;width:90%;max-height:90vh;overflow-y:auto">
-      <h3 style="margin:0 0 16px;font-size:1rem;font-weight:700" id="q-dialog-title">Edit Question</h3>
-      <div style="margin-bottom:12px"><label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:4px">Question Text</label><textarea id="q-text" rows="4" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem;resize:vertical;box-sizing:border-box"></textarea></div>
-      <div style="margin-bottom:12px"><label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:4px">Section</label><select id="q-section" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem"><option value="">No section</option>${sectionOpts}</select></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-        <div><label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:4px">Deadline</label><input type="date" id="q-deadline" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem;box-sizing:border-box"/></div>
-        <div><label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:4px">Category</label><input type="text" id="q-category" placeholder="Category" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem;box-sizing:border-box"/></div>
+  return `<div id="q-dialog" data-rfi-id="${esc(rfiId)}" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-overlay" onclick="document.getElementById('q-dialog').style.display='none'"></div>
+    <div class="modal-content rounded-box max-w-lg p-6">
+      <h3 class="text-lg font-semibold mb-4" id="q-dialog-title">Edit Question</h3>
+      <div class="form-group mb-3">
+        <label class="label"><span class="label-text font-medium">Question Text</span></label>
+        <textarea id="q-text" rows="4" class="textarea textarea-solid max-w-full"></textarea>
+      </div>
+      <div class="form-group mb-3">
+        <label class="label"><span class="label-text font-medium">Section</span></label>
+        <select id="q-section" class="select select-solid max-w-full"><option value="">No section</option>${sectionOpts}</select>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="form-group">
+          <label class="label"><span class="label-text font-medium">Deadline</span></label>
+          <input type="date" id="q-deadline" class="input input-solid max-w-full"/>
+        </div>
+        <div class="form-group">
+          <label class="label"><span class="label-text font-medium">Category</span></label>
+          <input type="text" id="q-category" placeholder="Category" class="input input-solid max-w-full"/>
+        </div>
       </div>
       <input type="hidden" id="q-edit-id"/>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
-        <button onclick="document.getElementById('q-dialog').style.display='none'" style="padding:7px 16px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;font-size:0.85rem">Cancel</button>
-        <button onclick="saveQuestion('${esc(rfiId)}')" style="padding:7px 16px;background:#1976d2;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600">Save</button>
+      <div class="modal-action">
+        <button onclick="saveQuestion('${esc(rfiId)}')" class="btn btn-primary">Save</button>
+        <button onclick="document.getElementById('q-dialog').style.display='none'" class="btn btn-ghost">Cancel</button>
       </div>
     </div>
   </div>`;
 }
 
 function addSectionDialog(rfiId) {
-  return `<div id="sec-dialog" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
-    <div style="background:#fff;border-radius:8px;padding:24px;max-width:400px;width:90%">
-      <h3 style="margin:0 0 16px;font-size:1rem;font-weight:700">Add Section</h3>
-      <div style="margin-bottom:16px"><label style="font-size:0.78rem;font-weight:600;color:#555;display:block;margin-bottom:4px">Section Name</label><input type="text" id="sec-name" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;font-size:0.85rem;box-sizing:border-box"/></div>
-      <div style="display:flex;gap:8px;justify-content:flex-end">
-        <button onclick="document.getElementById('sec-dialog').style.display='none'" style="padding:7px 16px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;font-size:0.85rem">Cancel</button>
-        <button onclick="saveSection('${esc(rfiId)}')" style="padding:7px 16px;background:#04141f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:600">Add</button>
+  return `<div id="sec-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-overlay" onclick="document.getElementById('sec-dialog').style.display='none'"></div>
+    <div class="modal-content rounded-box max-w-sm p-6">
+      <h3 class="text-lg font-semibold mb-4">Add Section</h3>
+      <div class="form-group mb-4">
+        <label class="label"><span class="label-text font-medium">Section Name</span></label>
+        <input type="text" id="sec-name" class="input input-solid max-w-full"/>
+      </div>
+      <div class="modal-action">
+        <button onclick="saveSection('${esc(rfiId)}')" class="btn btn-primary">Add</button>
+        <button onclick="document.getElementById('sec-dialog').style.display='none'" class="btn btn-ghost">Cancel</button>
       </div>
     </div>
   </div>`;
@@ -70,59 +87,67 @@ function addSectionDialog(rfiId) {
 export function renderRfiDetail(user, rfi = {}, questions = [], sections = [], engagement = null) {
   const canEditRfi = canEdit(user, 'rfi');
   const qRows = questions.map((q, i) => questionRow(q, i, sections)).join('') ||
-    `<tr><td colspan="6" style="padding:32px;text-align:center;color:#aaa;font-size:0.85rem">No questions yet. Add one above.</td></tr>`;
+    `<tr><td colspan="6" class="text-center py-8 text-base-content/40 text-sm">No questions yet. Add one using the button above.</td></tr>`;
 
-  const sectionTabs = sections.length ? sections.map(s =>
-    `<button onclick="filterBySection('${esc(s.id)}')" id="stab-${esc(s.id)}" style="padding:6px 14px;border:1px solid #ddd;border-radius:20px;background:#fff;cursor:pointer;font-size:0.78rem;font-weight:600">${esc(s.name)}</button>`
-  ).join('') : '';
+  const sectionTabs = sections.length ? `<div class="tabs tabs-boxed bg-base-200 flex-wrap gap-1">
+    <button onclick="filterBySection('')" id="stab-all" class="tab tab-active">All</button>
+    ${sections.map(s => `<button onclick="filterBySection('${esc(s.id)}')" id="stab-${esc(s.id)}" class="tab">${esc(s.name)}</button>`).join('')}
+  </div>` : '';
 
-  const engLink = engagement ? `<a href="/engagement/${esc(engagement.id)}" style="color:#1976d2;text-decoration:none;font-size:0.82rem">&#8592; ${esc(engagement.name||'Engagement')}</a>` : `<a href="/rfi" style="color:#1976d2;text-decoration:none;font-size:0.82rem">&#8592; RFI List</a>`;
+  const engLink = engagement
+    ? `<a href="/engagement/${esc(engagement.id)}" class="text-primary text-sm">&#8592; ${esc(engagement.name||'Engagement')}</a>`
+    : `<a href="/rfi" class="text-primary text-sm">&#8592; RFI List</a>`;
 
   const headerBtns = canEditRfi ? `
-    <div style="display:flex;gap:8px">
-      <button onclick="openAddQuestion()" style="background:#1976d2;color:#fff;border:none;border-radius:6px;padding:7px 14px;cursor:pointer;font-size:0.82rem;font-weight:600">+ Question</button>
-      <button onclick="document.getElementById('sec-dialog').style.display='flex'" style="background:#f5f5f5;border:1px solid #ddd;color:#333;border-radius:6px;padding:7px 14px;cursor:pointer;font-size:0.82rem">+ Section</button>
-      <button onclick="sendReminder('${esc(rfi.id)}')" style="background:#f5f5f5;border:1px solid #ddd;color:#333;border-radius:6px;padding:7px 14px;cursor:pointer;font-size:0.82rem">Send Reminder</button>
-      <a href="/rfi/${esc(rfi.id)}/edit" style="background:#04141f;color:#fff;padding:7px 14px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:600">Edit RFI</a>
+    <div class="flex gap-2 flex-wrap">
+      <button onclick="openAddQuestion()" class="btn btn-primary btn-sm">+ Question</button>
+      <button onclick="document.getElementById('sec-dialog').style.display='flex'" class="btn btn-ghost btn-sm">+ Section</button>
+      <button onclick="sendReminder('${esc(rfi.id)}')" class="btn btn-ghost btn-sm">Send Reminder</button>
+      <a href="/rfi/${esc(rfi.id)}/edit" class="btn btn-outline-primary btn-sm">Edit RFI</a>
     </div>` : '';
 
-  const infoGrid = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px 24px;margin-bottom:20px">
-    ${[['Engagement', engagement?.name ? esc(engagement.name) : '<span style="color:#aaa">—</span>'],['Status',statusBadge(rfi.status)],['Deadline',rfi.deadline?new Date(typeof rfi.deadline==='number'?rfi.deadline*1000:rfi.deadline).toLocaleDateString():'-'],['Questions',questions.length],['Sections',sections.length],['Mandatory',rfi.mandatory!==false?'Yes':'No']].map(([l,v])=>`<div><div style="font-size:0.72rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">${l}</div><div style="font-size:0.88rem;color:#222">${v}</div></div>`).join('')}
-  </div>`;
+  const infoItems = [
+    ['Engagement', engagement?.name ? esc(engagement.name) : '<span class="text-base-content/30">—</span>'],
+    ['Status', statusBadge(rfi.status)],
+    ['Deadline', rfi.deadline?new Date(typeof rfi.deadline==='number'?rfi.deadline*1000:rfi.deadline).toLocaleDateString():'-'],
+    ['Questions', questions.length],
+    ['Sections', sections.length],
+    ['Mandatory', rfi.mandatory!==false?'Yes':'No'],
+  ];
+
+  const infoGrid = `<div class="grid grid-cols-2 md:grid-cols-3 gap-4">` +
+    infoItems.map(([l,v]) => `<div><div class="text-xs text-base-content/50 font-semibold uppercase tracking-wider mb-1">${l}</div><div class="text-sm text-base-content">${v}</div></div>`).join('') +
+    `</div>`;
 
   const content = `
-    <div style="margin-bottom:16px">${engLink}</div>
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+    <nav class="breadcrumbs text-sm mb-4">
+      <ul><li>${engLink}</li></ul>
+    </nav>
+    <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
       <div>
-        <h1 style="font-size:1.4rem;font-weight:700;margin:0 0 6px">${esc(rfi.display_name||rfi.name||rfi.title||(engagement ? 'RFI – ' + (engagement.name||'') : 'RFI'))}</h1>
-        ${rfi.description ? `<p style="color:#666;font-size:0.85rem;margin:0">${esc(rfi.description)}</p>` : ''}
+        <h1 class="text-2xl font-bold text-base-content mb-1">${esc(rfi.display_name||rfi.name||rfi.title||(engagement?'RFI – '+(engagement.name||''):'RFI'))}</h1>
+        ${rfi.description ? `<p class="text-base-content/60 text-sm">${esc(rfi.description)}</p>` : ''}
       </div>
       ${headerBtns}
     </div>
-    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px;margin-bottom:16px">
-      ${infoGrid}
+    <div class="card bg-base-100 shadow-md mb-4">
+      <div class="card-body">${infoGrid}</div>
     </div>
-    <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-        <h2 style="font-size:0.95rem;font-weight:700;margin:0">Questions (${questions.length})</h2>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button onclick="filterBySection('')" id="stab-all" style="padding:6px 14px;border:1px solid #1976d2;border-radius:20px;background:#1976d2;color:#fff;cursor:pointer;font-size:0.78rem;font-weight:600">All</button>
-          ${sectionTabs}
-          <input type="text" placeholder="Search..." oninput="filterQuestions(this.value)" style="padding:5px 10px;border:1px solid #ddd;border-radius:20px;font-size:0.78rem;outline:none"/>
+    <div class="card bg-base-100 shadow-md">
+      <div class="card-body">
+        <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
+          <h2 class="card-title text-sm">Questions (${questions.length})</h2>
+          <div class="flex gap-2 items-center flex-wrap">
+            ${sectionTabs}
+            <input type="text" placeholder="Search..." oninput="filterQuestions(this.value)" class="input input-solid" style="max-width:160px"/>
+          </div>
         </div>
-      </div>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse" id="q-table">
-          <thead><tr style="background:#fafafa;border-bottom:2px solid #e0e0e0">
-            <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">#</th>
-            <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">QUESTION</th>
-            <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">SECTION</th>
-            <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">DEADLINE</th>
-            <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">STATUS</th>
-            <th style="padding:8px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600">ACTIONS</th>
-          </tr></thead>
-          <tbody id="q-tbody">${qRows}</tbody>
-        </table>
+        <div class="table-container">
+          <table class="table table-hover" id="q-table">
+            <thead><tr><th>#</th><th>Question</th><th>Section</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="q-tbody">${qRows}</tbody>
+          </table>
+        </div>
       </div>
     </div>
     ${editQuestionDialog(rfi.id, sections)}
@@ -131,16 +156,20 @@ export function renderRfiDetail(user, rfi = {}, questions = [], sections = [], e
 
   const script = `${TOAST}
 var activeSection='';
-function filterBySection(sid){activeSection=sid;document.querySelectorAll('[id^="stab-"]').forEach(function(b){b.style.background=b.id==='stab-'+(sid||'all')?'#1976d2':'#fff';b.style.color=b.id==='stab-'+(sid||'all')?'#fff':'#333';b.style.borderColor=b.id==='stab-'+(sid||'all')?'#1976d2':'#ddd'});filterRows()}
+function filterBySection(sid){
+  activeSection=sid;
+  document.querySelectorAll('[id^="stab-"]').forEach(b=>b.classList.toggle('tab-active',b.id==='stab-'+(sid||'all')));
+  filterRows()
+}
 function filterRows(){var q=(document.querySelector('#q-table input')?.value||'').toLowerCase();document.querySelectorAll('#q-tbody tr').forEach(function(r){var text=(r.textContent||'').toLowerCase();var secSpan=r.querySelector('td:nth-child(3) span');var rowSec=secSpan?secSpan.textContent:'';var showSec=!activeSection||rowSec===document.getElementById('stab-'+activeSection)?.textContent;r.style.display=(!q||text.includes(q))&&showSec?'':'none'})}
 function filterQuestions(q){filterRows()}
 function openAddQuestion(){document.getElementById('q-dialog').style.display='flex';document.getElementById('q-dialog-title').textContent='Add Question';document.getElementById('q-edit-id').value='';document.getElementById('q-text').value='';document.getElementById('q-section').value='';document.getElementById('q-deadline').value='';document.getElementById('q-category').value=''}
 async function openEditQuestion(id){document.getElementById('q-dialog').style.display='flex';document.getElementById('q-dialog-title').textContent='Edit Question';document.getElementById('q-edit-id').value=id;try{var rfiId=document.getElementById('q-dialog').dataset.rfiId;var r=await fetch('/api/rfi/'+rfiId+'/questions/'+id);var d=await r.json();var q=d.data||d;document.getElementById('q-text').value=q.question_text||q.question||q.title||'';document.getElementById('q-section').value=q.section_id||q.rfi_section_id||'';document.getElementById('q-deadline').value=q.deadline?(new Date(typeof q.deadline==='number'?q.deadline*1000:q.deadline)).toISOString().split('T')[0]:'';document.getElementById('q-category').value=q.category||''}catch(e){showToast('Error loading','error')}}
 async function saveQuestion(rfiId){var id=document.getElementById('q-edit-id').value;var questionText=document.getElementById('q-text').value.trim();if(!questionText){showToast('Question text required','error');return}var data={question:questionText,category:document.getElementById('q-category').value.trim()||null,section_id:document.getElementById('q-section').value||null};var dl=document.getElementById('q-deadline').value;if(dl)data.due_date=Math.floor(new Date(dl).getTime()/1000);var btn=event?.target;if(btn){btn.disabled=true;btn.textContent='Saving...'}try{var url=id?'/api/rfi/'+rfiId+'/questions/'+id:'/api/rfi/'+rfiId+'/questions';var r=await fetch(url,{method:id?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});var result=await r.json();if(r.ok){showToast(id?'Question updated':'Question added','success');document.getElementById('q-dialog').style.display='none';setTimeout(function(){location.reload()},500)}else{showToast(result.message||result.error||'Failed','error')}}catch(e){showToast('Error: '+e.message,'error')}finally{if(btn){btn.disabled=false;btn.textContent='Save'}}}
-async function deleteQuestion(id){if(!confirm('Delete this question? This cannot be undone.'))return;var rfiId=document.getElementById('q-dialog').dataset.rfiId;try{var r=await fetch('/api/rfi/'+rfiId+'/questions/'+id,{method:'DELETE'});if(r.ok){showToast('Question deleted','success');setTimeout(function(){location.reload()},500)}else showToast('Delete failed','error')}catch(e){showToast('Error','error')}}
+async function deleteQuestion(id){if(!confirm('Delete this question?'))return;var rfiId=document.getElementById('q-dialog').dataset.rfiId;try{var r=await fetch('/api/rfi/'+rfiId+'/questions/'+id,{method:'DELETE'});if(r.ok){showToast('Question deleted','success');setTimeout(function(){location.reload()},500)}else showToast('Delete failed','error')}catch(e){showToast('Error','error')}}
 async function saveSection(rfiId){var name=document.getElementById('sec-name').value.trim();if(!name){showToast('Name required','error');return}try{var r=await fetch('/api/rfi_section',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,rfi_id:rfiId})});if(r.ok){showToast('Section added','success');setTimeout(function(){location.reload()},500)}else showToast('Failed','error')}catch(e){showToast('Error','error')}document.getElementById('sec-dialog').style.display='none'}
 async function sendReminder(rfiId){try{var r=await fetch('/api/friday/rfi/reminder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rfi_id:rfiId})});if(r.ok)showToast('Reminder sent','success');else showToast('Failed','error')}catch(e){showToast('Error','error')}}`;
 
-  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main style="padding:24px 32px" id="main-content">${content}</main></div>`;
+  const body = `<div class="min-h-screen bg-base-200">${nav(user)}<main class="p-4 md:p-6" id="main-content">${content}</main></div>`;
   return generateHtml(`${esc(rfi.name||'RFI')} | MY FRIDAY`, body, [script]);
 }
