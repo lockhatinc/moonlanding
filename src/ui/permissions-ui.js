@@ -37,13 +37,13 @@ function getEntityPermissions() {
 export function canAccess(user, entity, action) {
   if (!user?.role) return false;
   const config = getConfigEngineSync();
-  const roles = config.getRoles();
-  const partnerRole = Object.keys(roles)[0];
-
   const permissions = getEntityPermissions()[entity];
-  if (!permissions) return user.role === partnerRole;
+  if (!permissions) return isPartner(user);
   const allowed = permissions[action] || [];
-  return allowed.includes(user.role);
+  if (allowed.includes(user.role)) return true;
+  if (!allowed.length) return false;
+  if (action === 'list' || action === 'view') return isClerk(user);
+  return false;
 }
 
 export function canList(user, entity) {
@@ -67,24 +67,15 @@ export function canDelete(user, entity) {
 }
 
 export function isPartner(user) {
-  const config = getConfigEngineSync();
-  const roles = config.getRoles();
-  const partnerRole = Object.keys(roles)[0];
-  return user?.role === partnerRole;
+  return ['partner', 'admin'].includes(user?.role);
 }
 
 export function isManager(user) {
-  const config = getConfigEngineSync();
-  const roles = config.getRoles();
-  const managerRole = Object.keys(roles)[1];
-  return user?.role === managerRole;
+  return ['manager'].includes(user?.role);
 }
 
 export function isClerk(user) {
-  const config = getConfigEngineSync();
-  const roles = config.getRoles();
-  const clerkRole = Object.keys(roles)[2];
-  return user?.role === clerkRole;
+  return ['clerk', 'user'].includes(user?.role);
 }
 
 export function isClientUser(user) {

@@ -39,6 +39,22 @@ roles:
     permissions_scope: assigned
     can_rate_engagement: false
     can_view_all_client_rfis: false
+  admin:
+    hierarchy: 5
+    label: Admin
+    type: auditor
+    description: System admin with full access (alias for partner)
+    permissions_scope: global
+    can_assign_roles: true
+    can_manage_settings: true
+  user:
+    hierarchy: 6
+    label: User
+    type: auditor
+    description: Standard user with clerk-level access (migrated users)
+    permissions_scope: assigned
+    can_assign_roles: false
+    can_manage_settings: false
 permission_templates:
   standard_auditor:
     description: Standard entity permissions for auditor team
@@ -61,6 +77,19 @@ permission_templates:
     clerk:
     - list
     - view
+    admin:
+    - list
+    - view
+    - create
+    - edit
+    - delete
+    - manage_settings
+    - manage_team
+    - archive
+    - export
+    user:
+    - list
+    - view
     client_admin:
     - list
     - view
@@ -78,6 +107,16 @@ permission_templates:
     - manage_team
     - manage_roles
     manager: []
+    admin:
+    - list
+    - view
+    - create
+    - edit
+    - delete
+    - manage_settings
+    - manage_team
+    - manage_roles
+    user: []
     clerk: []
     client_admin: []
     client_user: []
@@ -115,6 +154,27 @@ permission_templates:
     - view
     - view_assigned
     - resolve_highlight
+    admin:
+    - list
+    - view
+    - create
+    - edit
+    - delete
+    - manage_collaborators
+    - manage_highlights
+    - resolve_highlight
+    - mark_all_resolved
+    - reopen_highlight
+    - change_status
+    - private
+    - attach_checklist
+    - manage_flags
+    - archive
+    user:
+    - list
+    - view
+    - view_assigned
+    - resolve_highlight
     client_admin: []
     client_user: []
   client_response:
@@ -135,6 +195,16 @@ permission_templates:
     clerk:
     - list
     - view
+    admin:
+    - list
+    - view
+    - create
+    - edit
+    - delete
+    - change_status
+    user:
+    - list
+    - view
     client_admin:
     - list
     - view
@@ -149,6 +219,9 @@ permission_templates:
     partner:
     - all
     manager: []
+    admin:
+    - all
+    user: []
     clerk: []
     client_admin: []
     client_user: []
@@ -165,6 +238,14 @@ permission_templates:
     - export
     - view_stats
     clerk:
+    - list
+    - view_own
+    admin:
+    - list
+    - view
+    - export
+    - view_stats
+    user:
     - list
     - view_own
     client_admin: []
