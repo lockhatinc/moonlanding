@@ -89,11 +89,13 @@ export function buildOAuthSuccessRedirect(path, request) {
 }
 
 export function validateOAuthState(code, state, storedState, storedCodeVerifier) {
-  if (!code || !state || !storedState || !storedCodeVerifier) {
+  if (!code || !state) {
     return { valid: false, error: 'invalid_state' };
   }
-  if (state !== storedState) {
-    return { valid: false, error: 'state_mismatch' };
+  // With server-side state storage, storedState and storedCodeVerifier are retrieved from memory
+  // If they exist, the stateKey was valid and found in memory
+  if (!storedState || !storedCodeVerifier) {
+    return { valid: false, error: 'state_not_found' };
   }
   return { valid: true };
 }
