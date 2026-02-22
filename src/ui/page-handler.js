@@ -130,8 +130,9 @@ async function getDashboardStats(user) {
     const myRfis = user ? rfis.filter(r => r.assigned_to === user.id) : [];
     const now = Math.floor(Date.now() / 1000);
     const overdueRfis = rfis.filter(r => r.status !== 'closed' && r.due_date && r.due_date < now).map(r => ({ ...r, daysOverdue: Math.floor((now - r.due_date) / 86400) }));
-    return { engagements: engagements.length, clients: clients.length, rfis: rfis.length, reviews: reviews.length, myRfis, overdueRfis };
-  } catch { return { engagements: 0, clients: 0, rfis: 0, reviews: 0, myRfis: [], overdueRfis: [] }; }
+    const recentEngagements = [...engagements].sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0)).slice(0, 8);
+    return { engagements: engagements.length, clients: clients.length, rfis: rfis.length, reviews: reviews.length, myRfis, overdueRfis, recentEngagements };
+  } catch { return { engagements: 0, clients: 0, rfis: 0, reviews: 0, myRfis: [], overdueRfis: [], recentEngagements: [] }; }
 }
 
 async function getSettingsCounts() {
@@ -367,8 +368,10 @@ export async function handlePage(pathname, req, res) {
   if (normalized === '/reviews/archive') {
     return handleFilteredReviewList(user, 'archive', 'Archive');
   }
-  if (normalized === '/reviews') {
-    return handleFilteredReviewList(user, 'all', 'All Reviews');
+  if (normalized === '/reviews' || normalized === '/review') {
+    if (!canList(user, 'review')) return renderAccessDenied(user, 'review', 'list');
+    let reviews = []; try { reviews = list('review', {}); } catch {}
+    return renderReviewListTabbed(user, reviews);
   }
 
   if (segments[0] === 'review' && segments.length === 3 && segments[2] === 'sections') {
@@ -623,6 +626,17 @@ export async function handlePage(pathname, req, res) {
 
     const resolvedItems = resolveRefFields(items, spec);
     return renderEntityList(entityName, resolvedItems, spec, user);
+  }
+
+  // F-CLIENT-DETAIL: Custom client detail page
+  if (segments.length === 2 && segments[0] === 'client' && segments[1] !== 'new') {
+    const clientId = segments[1];
+    if (!canView(user, 'client')) return renderAccessDenied(user, 'client', 'view');
+    if (isClientUser(user) && user.client_id && user.client_id !== clientId) return renderAccessDenied(user, 'client', 'view');
+    const client = get('client', clientId);
+    if (!client) return null;
+    const stats = getClientDashboardStats(clientId);
+    return renderClientDashboard(user, client, stats);
   }
 
   // F-ENG-DETAIL: Friday-style engagement detail

@@ -41,9 +41,47 @@ export function renderDashboard(user, stats = {}) {
 
   const navLinks = getNavItems(user)
   const navHtml = navLinks.length > 0
-    ? `<div style="background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
+    ? `<div style="background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px;margin-bottom:16px">
         <div style="font-size:0.9rem;font-weight:700;color:#333;margin-bottom:12px">Navigate</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px">${navLinks.map(n => `<a href="${n.href}" style="background:#f7f8fa;border:1px solid #e0e0e0;color:#333;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:0.82rem;font-weight:500" onmouseover="this.style.background='#e3f2fd'" onmouseout="this.style.background='#f7f8fa'">${n.label}</a>`).join('')}</div>
+      </div>` : ''
+
+  const recentRows = (stats.recentEngagements || []).map(e => {
+    const sc = {info_gathering:['#e53935','#ffebee'],commencement:['#e65100','#fff3e0'],team_execution:['#1565c0','#e3f2fd'],partner_review:['#283593','#e8eaf6'],finalization:['#2e7d32','#e8f5e9'],closeout:['#33691e','#f1f8e9']}
+    const stageLabels = {info_gathering:'Info Gathering',commencement:'Commencement',team_execution:'Team Execution',partner_review:'Partner Review',finalization:'Finalization',closeout:'Close Out'}
+    const [sc_,sbg] = sc[e.stage] || ['#555','#f5f5f5']
+    const stagePill = `<span style="background:${sbg};color:${sc_};padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;border:1px solid ${sc_}44">${stageLabels[e.stage]||e.stage||'-'}</span>`
+    const sm = {active:['#2e7d32','#e8f5e9'],pending:['#e65100','#fff3e0'],inactive:['#555','#f5f5f5']}
+    const [sc2,sbg2] = sm[e.status] || ['#555','#f5f5f5']
+    const statusPill = `<span style="background:${sbg2};color:${sc2};padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;border:1px solid ${sc2}44">${e.status ? e.status.charAt(0).toUpperCase()+e.status.slice(1) : '-'}</span>`
+    const name = String(e.name || e.client_name || 'Untitled').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    const client = String(e.client_id_display || e.client_name || '-').replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    const updated = e.updated_at ? new Date(typeof e.updated_at === 'number' ? e.updated_at * 1000 : e.updated_at).toLocaleDateString() : '-'
+    return `<tr onclick="location.href='/engagement/${e.id}'" style="cursor:pointer;border-bottom:1px solid #f0f0f0" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">
+      <td style="padding:9px 12px;font-weight:500;font-size:0.82rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</td>
+      <td style="padding:9px 12px;font-size:0.8rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${client}</td>
+      <td style="padding:9px 12px">${stagePill}</td>
+      <td style="padding:9px 12px">${statusPill}</td>
+      <td style="padding:9px 12px;font-size:0.78rem;color:#888">${updated}</td>
+    </tr>`
+  }).join('')
+
+  const recentHtml = !isClerk && (stats.recentEngagements || []).length > 0
+    ? `<div style="background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:0.9rem;font-weight:700;color:#333">Recent Engagements</div>
+          <a href="/engagements" style="font-size:0.78rem;color:#1565c0;text-decoration:none;font-weight:600">View all</a>
+        </div>
+        <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+          <thead><tr style="border-bottom:2px solid #e0e0e0">
+            <th style="padding:7px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600;text-transform:uppercase">Name</th>
+            <th style="padding:7px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600;text-transform:uppercase">Client</th>
+            <th style="padding:7px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600;text-transform:uppercase">Stage</th>
+            <th style="padding:7px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600;text-transform:uppercase">Status</th>
+            <th style="padding:7px 12px;text-align:left;font-size:0.72rem;color:#666;font-weight:600;text-transform:uppercase">Updated</th>
+          </tr></thead>
+          <tbody>${recentRows}</tbody>
+        </table></div>
       </div>` : ''
 
   const content = `
@@ -55,6 +93,7 @@ export function renderDashboard(user, stats = {}) {
     ${overdueAlert}
     ${actionsHtml}
     ${navHtml}
+    ${recentHtml}
   `
   return page(user, 'Dashboard | MY FRIDAY', [], content)
 }

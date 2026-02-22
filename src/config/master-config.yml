@@ -834,34 +834,6 @@ engagement_status_types:
         color: green
         description: Engagement closed out
 
-engagement_views:
-  tabs:
-    - id: my
-      label: My Engagements
-      filter: assigned_to CONTAINS current_user.id
-      icon: User
-      order: 1
-    - id: team
-      label: Team Engagements
-      filter: team_id IN current_user.teams
-      icon: Users
-      order: 2
-    - id: all
-      label: All Engagements
-      filter: null
-      icon: Globe
-      order: 3
-      requires_role:
-      - partner
-      - manager
-  current_year_toggle:
-    enabled: true
-    field: year
-    label: Current Year Only
-  stage_counts_bar:
-    enabled: true
-    stages: engagement_lifecycle.stages
-
 entities:
   engagement:
     label: Engagement
@@ -3990,107 +3962,7 @@ engagement:
       min_value: 0
       max_value: 100
 
-rfi:
-  templates:
-    - id: standard_audit_rfi
-      name: Standard Audit RFI
-      description: Standard request for information in audit engagement
-      category: audit
-      enabled: true
-      required_fields:
-        - title
-        - due_date
-        - assigned_to
-    - id: compliance_rfi
-      name: Compliance RFI
-      description: Compliance and regulatory information request
-      category: compliance
-      enabled: true
-      required_fields:
-        - title
-        - due_date
-        - regulatory_reference
-    - id: financial_rfi
-      name: Financial RFI
-      description: Financial statement and data request
-      category: financial
-      enabled: true
-      required_fields:
-        - title
-        - due_date
-        - financial_period
 
-review_settings:
-  temp_review_access_period: 7
-  flags:
-    standard:
-      - Review Comment
-      - Highlight Note
-      - Priority
-      - Urgent
-    tender:
-      - Open
-      - Missed
-      - Declined
-      - Won
-      - Lost
-      - Awaiting Adjudication
-  flags_managers: []
-  highlight_resolution_levels:
-    - clerk
-    - manager
-    - partner
-
-review:
-  tabs:
-    - id: active
-      label: Active
-      filter: status == 'active'
-      icon: CheckCircle
-      order: 1
-    - id: priority
-      label: Priority
-      filter: priority_level == 'high' OR priority_level == 'critical'
-      icon: AlertCircle
-      order: 2
-    - id: history
-      label: History
-      filter: status == 'completed' OR status == 'archived'
-      icon: History
-      order: 3
-    - id: archive
-      label: Archive
-      filter: status == 'archived'
-      icon: Archive
-      order: 4
-
-
-checklist:
-  templates:
-    - id: standard_review_checklist
-      name: Standard Review Checklist
-      description: Default checklist for financial statement review
-      items:
-        - Review financial statements for accuracy
-        - Verify audit trail completeness
-        - Check consolidation entries
-        - Verify disclosure adequacy
-    - id: compliance_checklist
-      name: Compliance Checklist
-      description: Checklist for regulatory compliance verification
-      items:
-        - Verify regulatory filings
-        - Check compliance documentation
-        - Review audit findings follow-up
-        - Verify corrective actions
-    - id: closeout_checklist
-      name: Closeout Checklist
-      description: Final checklist for engagement closeout
-      items:
-        - Sign off on final review
-        - Generate closeout report
-        - Archive engagement files
-        - Notify client of completion
 
 settings:
   navigation:
