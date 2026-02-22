@@ -57,6 +57,12 @@ export async function requireUser() { const user = await getUser(); if (!user) t
 export async function createSession(userId) {
   const session = await lucia.createSession(userId, {}), sessionCookie = lucia.createSessionCookie(session.id);
   const cookieStore = await cookies(); cookieStore.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+  return { session, sessionCookie };
+}
+
+export async function createSessionLegacy(userId) {
+  const session = await lucia.createSession(userId, {}), sessionCookie = lucia.createSessionCookie(session.id);
+  const cookieStore = await cookies(); cookieStore.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
   return session;
 }
 

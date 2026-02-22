@@ -5,12 +5,12 @@ import { GOOGLE_APIS } from '@/config/constants';
 import { config } from '@/config';
 import { getConfigEngine } from '@/lib/config-generator-engine';
 import { globalManager } from '@/lib/hot-reload/mutex';
+import { NextResponse } from '@/lib/next-polyfills';
 import {
   validateOAuthProvider,
   getOAuthCookie,
   deleteOAuthCookie,
   buildOAuthErrorResponse,
-  buildOAuthSuccessRedirect,
   validateOAuthState,
 } from '@/lib/auth-route-helpers';
 
@@ -84,12 +84,17 @@ export async function GET(request) {
       });
     });
 
-    await createSession(user.id);
+    const { session, sessionCookie } = await createSession(user.id);
+    console.log('[OAuth Callback] Session created:', { userId: user.id, sessionId: session.id });
 
     await deleteOAuthCookie('google_oauth_state');
     await deleteOAuthCookie('google_code_verifier');
 
-    return buildOAuthSuccessRedirect('/', request);
+    // Create redirect response and explicitly set the session cookie on it
+    const redirectUrl = new URL('/', request.url);
+    const response = NextResponse.redirect(redirectUrl);
+    response.cookies.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+    return response;
   } catch (error) {
     console.error('Google OAuth error:', error);
     return buildOAuthErrorResponse('oauth_failed', request);

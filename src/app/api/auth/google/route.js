@@ -7,6 +7,18 @@ import { config } from '@/config';
 import { validateOAuthProvider, setOAuthCookie, buildOAuthErrorResponse } from '@/lib/auth-route-helpers';
 
 export async function GET(request) {
+  // Check for ?check=1 query param - used by login page to verify Google is configured
+  const url = new URL(request.url);
+  const isCheck = url.searchParams.get('check') === '1';
+
+  if (isCheck) {
+    const { valid } = validateOAuthProvider(google);
+    return new Response(JSON.stringify({ configured: valid }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   // Build redirect URI from request to support reverse proxies (Traefik, etc.)
   // Node.js http.IncomingMessage headers are lowercase object properties
   const protocol = request.headers['x-forwarded-proto'] || 'http';
@@ -45,4 +57,9 @@ export async function GET(request) {
 
     return NextResponse.redirect(url);
   });
+}
+
+export async function HEAD(request) {
+  const { valid } = validateOAuthProvider(google);
+  return new Response(null, { status: valid ? 200 : 503 });
 }
