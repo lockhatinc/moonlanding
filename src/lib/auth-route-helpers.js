@@ -1,9 +1,9 @@
-import { NextResponse, cookies } from '@/lib/next-polyfills';
+import { NextResponse } from '@/lib/next-polyfills';
 import { SESSION } from '@/config/auth-config';
 import { HTTP } from '@/config/constants';
-import { globalManager } from '@/lib/hot-reload/mutex';
 
-// OAuth state storage - in-memory cache more reliable than cookies through redirects
+// OAuth state storage - in-memory cache
+// State parameter itself contains the key, so it survives the Google redirect
 const oauthStateStore = new Map();
 
 // Cleanup expired OAuth states every 5 minutes
@@ -12,6 +12,7 @@ setInterval(() => {
   for (const [key, data] of oauthStateStore) {
     if (data.expiresAt < now) {
       oauthStateStore.delete(key);
+      console.log('[OAuth] Cleaned up expired state:', key.substring(0, 20));
     }
   }
 }, 5 * 60 * 1000);
@@ -27,59 +28,53 @@ export function validateOAuthProvider(provider) {
 }
 
 export async function setOAuthCookie(name, value, options = {}) {
-  // Store OAuth state in memory instead of cookies (more reliable through redirects)
-  const key = `${name}:${Date.now()}`;
-  const expiresAt = Date.now() + (SESSION.cookieMaxAge * 1000);
-  oauthStateStore.set(key, { value, expiresAt });
+  // Store OAuth state in memory, return the key as the "cookie" value
+  // The key will be sent to Google and returned unchanged, solving the cookie persistence issue
+  const timestamp = Date.now();
+  const key = `oauth-${timestamp}-${Math.random().toString(36).substring(7)}`;
+  const expiresAt = timestamp + (SESSION.cookieMaxAge * 1000);
 
-  // Also set a cookie with the key so we can retrieve it on callback
-  return globalManager.lock('oauth-cookie', async () => {
-    const cookieStore = await cookies();
-    cookieStore.set('oauth_state_key', key, {
-      path: '/',
-      secure: true,
-      httpOnly: true,
-      maxAge: SESSION.cookieMaxAge,
-      sameSite: 'lax',
-    });
+  oauthStateStore.set(key, {
+    value,
+    expiresAt,
+    createdAt: timestamp,
   });
+
+  console.log('[OAuth] Stored state in memory:', { key: key.substring(0, 20), expiresIn: SESSION.cookieMaxAge });
+
+  // Return the key - this will be used as part of the state variable sent to Google
+  // Google returns it unchanged, allowing us to retrieve the state on callback
+  return key;
 }
 
 export async function getOAuthCookie(name) {
-  return globalManager.lock('oauth-cookie', async () => {
-    const cookieStore = await cookies();
-    const key = cookieStore.get('oauth_state_key')?.value;
+  // name parameter is actually the key that was sent to Google and returned
+  const key = name;
 
-    if (!key) {
-      console.log('[OAuth] No oauth_state_key cookie found');
-      return null;
-    }
+  const data = oauthStateStore.get(key);
 
-    const data = oauthStateStore.get(key);
-    if (!data) {
-      console.log('[OAuth] State not found in memory store:', key);
-      return null;
-    }
+  if (!data) {
+    console.log('[OAuth] State not found in memory:', key?.substring(0, 20));
+    return null;
+  }
 
-    if (data.expiresAt < Date.now()) {
-      console.log('[OAuth] State expired:', key);
-      oauthStateStore.delete(key);
-      return null;
-    }
+  if (data.expiresAt < Date.now()) {
+    console.log('[OAuth] State expired:', key.substring(0, 20));
+    oauthStateStore.delete(key);
+    return null;
+  }
 
-    return data.value;
-  });
+  console.log('[OAuth] Retrieved state from memory:', key.substring(0, 20));
+  return data.value;
 }
 
 export async function deleteOAuthCookie(name) {
-  return globalManager.lock('oauth-cookie', async () => {
-    const cookieStore = await cookies();
-    const key = cookieStore.get('oauth_state_key')?.value;
-    if (key) {
-      oauthStateStore.delete(key);
-    }
-    cookieStore.delete('oauth_state_key');
-  });
+  // name parameter is the key
+  const key = name;
+  if (key) {
+    oauthStateStore.delete(key);
+    console.log('[OAuth] Deleted state from memory:', key.substring(0, 20));
+  }
 }
 
 export function buildOAuthErrorResponse(message, request) {
