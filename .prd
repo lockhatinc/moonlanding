@@ -1,8 +1,5 @@
 # PRD: Feature & UX Parity with Friday/MyWorkReview
 
-## Wave 2 remaining
-- [ ] W2C: Settings enhancement - Users tab (list users, add user button), Teams tab, RFI Sections tab with Friday-style layout
-
 ## Wave 3 (parallel, after Wave 2)
 - [ ] W3A: RFI management - list RFIs per engagement, status badges, deadline display, link from engagement detail
 - [ ] W3B: Dashboard improvements - stat cards showing engagement/client/rfi counts

@@ -24,6 +24,8 @@ import {
   renderSettingsUsers,
   renderSettingsTeams,
   renderSettingsRfiSections,
+} from '@/ui/settings-renderer.js';
+import {
   renderSettingsTemplates,
   renderSettingsNotifications,
   renderSettingsIntegrations,
@@ -32,7 +34,7 @@ import {
   renderSettingsReviewSettings,
   renderSettingsFileReview,
   renderSettingsTemplateManage,
-} from '@/ui/settings-renderer.js';
+} from '@/ui/settings-renderer-advanced.js';
 import {
   renderClientDashboard, renderClientList, clientUserManagementDialog, clientUserReplaceDialog,
   clientTestEmailDialog, clientRiskAssessmentDialog, clientInfoCard
