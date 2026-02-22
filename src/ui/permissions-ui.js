@@ -20,14 +20,29 @@ function getEntityPermissions() {
     if (!name) continue;
     try {
       const spec = config.generateEntitySpec(name);
+      const templateName = spec.permission_template;
+      const template = config.getPermissionTemplate(templateName);
+
+      // Template is role-based: {partner: [...], manager: [...], ...}
+      // Convert to action-based: {list: [...roles...], view: [...roles...], ...}
+      const actionBased = {};
+      for (const [role, actions] of Object.entries(template)) {
+        if (role === 'description' || !Array.isArray(actions)) continue;
+        actions.forEach(action => {
+          if (!actionBased[action]) actionBased[action] = [];
+          actionBased[action].push(role);
+        });
+      }
+
       permissions[name] = {
-        list: (spec.permission_template?.list || []).map(r => r.name || r),
-        view: (spec.permission_template?.view || []).map(r => r.name || r),
-        create: (spec.permission_template?.create || []).map(r => r.name || r),
-        edit: (spec.permission_template?.edit || []).map(r => r.name || r),
-        delete: (spec.permission_template?.delete || []).map(r => r.name || r),
+        list: actionBased.list || [],
+        view: actionBased.view || [],
+        create: actionBased.create || [],
+        edit: actionBased.edit || [],
+        delete: actionBased.delete || [],
       };
     } catch (e) {
+      console.error(`[Permissions] Error loading permissions for ${name}:`, e.message);
       permissions[name] = { list: [], view: [], create: [], edit: [], delete: [] };
     }
   }
