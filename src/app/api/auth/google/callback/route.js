@@ -47,8 +47,19 @@ export async function GET(request) {
   const storedState = await getOAuthCookie('google_oauth_state');
   const storedCodeVerifier = await getOAuthCookie('google_code_verifier');
 
+  console.log('[OAuth Callback] State validation:', {
+    hasCode: !!code,
+    hasState: !!state,
+    hasStoredState: !!storedState,
+    hasStoredCodeVerifier: !!storedCodeVerifier,
+    stateMatch: state === storedState,
+    stateLength: state?.length,
+    storedStateLength: storedState?.length,
+  });
+
   const stateValidation = validateOAuthState(code, state, storedState, storedCodeVerifier);
   if (!stateValidation.valid) {
+    console.error('[OAuth Callback] State validation failed:', stateValidation.error);
     return buildOAuthErrorResponse(stateValidation.error, request);
   }
 
