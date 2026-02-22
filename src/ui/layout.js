@@ -21,11 +21,8 @@ export function generateHtml(title, bodyContent, scripts = [], pathname = '/') {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
-  <link rel="preload" href="/ui/client.js" as="script">
+  <link rel="preload" href="/ui/client.js" as="script" crossorigin>
   <link rel="preload" href="/ui/styles.css" as="style">
-  <link rel="preload" href="/lib/webjsx/runtime.js" as="script">
-  <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
-  <link href="https://cdn.jsdelivr.net/npm/rippleui@1.12.1/dist/css/styles.css" rel="stylesheet"/>
   <link href="/ui/styles.css" rel="stylesheet"/>
   <style>
     .skip-link{position:absolute;left:-9999px;z-index:999;padding:0.5rem 1rem;background:#000;color:#fff;text-decoration:none}
