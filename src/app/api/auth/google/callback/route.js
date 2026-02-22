@@ -67,7 +67,7 @@ export async function GET(request) {
 
   try {
     const tokens = await dynamicGoogle.validateAuthorizationCode(code, codeVerifier);
-    const accessToken = tokens.accessToken();
+    const accessToken = tokens.accessToken;
 
     const googleResponse = await fetch(GOOGLE_APIS.oauth2, {
       headers: { Authorization: `Bearer ${accessToken}` },
@@ -97,21 +97,15 @@ export async function GET(request) {
       });
     });
 
-    const { session, sessionCookie } = await createSession(user.id);
-    console.log('[OAuth Callback] Session created:', { userId: user.id, sessionId: session.id });
+    await createSession(user.id);
+    console.log('[OAuth Callback] Session created for user');
 
     // Clean up the OAuth state from memory
     await deleteOAuthCookie(stateKey);
 
-    // Create redirect response with session cookie in Set-Cookie header
+    // Redirect to home (session cookie already set via createSession -> cookies().set())
     const redirectUrl = new URL('/', request.url);
-    const response = NextResponse.redirect(redirectUrl);
-
-    // Manually add Set-Cookie header for session
-    const cookieHeader = `${sessionCookie.name}=${sessionCookie.value}; Path=${sessionCookie.attributes.path || '/'}; HttpOnly${sessionCookie.attributes.secure ? '; Secure' : ''}; SameSite=${sessionCookie.attributes.sameSite || 'Lax'}`;
-    response.headers.append('Set-Cookie', cookieHeader);
-
-    return response;
+    return NextResponse.redirect(redirectUrl);
   } catch (error) {
     console.error('Google OAuth error:', error);
     return buildOAuthErrorResponse('oauth_failed', request);
