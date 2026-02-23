@@ -1,16 +1,9 @@
-import { generateHtml, statusLabel, linearProgress } from '@/ui/renderer.js';
-import { nav } from '@/ui/layout.js';
+import { page } from '@/ui/layout.js';
 import { canCreate } from '@/ui/permissions-ui.js';
 
 const TOAST = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
 
 function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function page(user, title, bc, content, scripts = []) {
-  const crumbs = bc?.length ? `<nav class="breadcrumbs text-sm mb-4"><ul>${bc.map(item => `<li>${item.href ? `<a href="${item.href}">${item.label}</a>` : item.label}</li>`).join('')}</ul></nav>` : '';
-  const body = `<div style="min-height:100vh;background:var(--color-bg)">${nav(user)}<main id="main-content" class="page-shell">${crumbs}${content}</main></div>`;
-  return generateHtml(title, body, scripts);
-}
 
 export function checklistTemplatesUI(user, templates = []) {
   const rows = templates.map(t => `<tr class="hover cursor-pointer" onclick="window.location='/admin/settings/checklists/${esc(t.id)}'">

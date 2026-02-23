@@ -1,5 +1,4 @@
-import { generateHtml } from '@/ui/renderer.js';
-import { nav } from '@/ui/layout.js';
+import { page } from '@/ui/layout.js';
 import { esc, statusPill, TABLE_SCRIPT } from '@/ui/render-helpers.js';
 
 function deadlineCell(deadline) {
@@ -41,8 +40,7 @@ export function renderRfiList(user, rfis = [], engagements = []) {
 
   const statusOpts = TABS.filter(t=>t!=='all').map(t=>`<option value="${t}">${t.charAt(0).toUpperCase()+t.slice(1)}</option>`).join('');
 
-  const body = `<div style="min-height:100vh;background:var(--color-bg)">${nav(user)}<main class="page-shell" id="main-content"><div class="page-shell-inner">
-    <div class="page-header">
+  const content = `<div class="page-header">
       <div><h1 class="page-title">RFIs</h1><p class="page-subtitle">${rfis.length} total</p></div>
       <a href="/rfi/new" class="btn-primary-clean"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New RFI</a>
     </div>
@@ -61,10 +59,9 @@ export function renderRfiList(user, rfis = [], engagements = []) {
         </tr></thead>
         <tbody id="rfi-tbody">${rows}</tbody>
       </table>
-    </div>
-  </div></main></div>`;
+    </div>`;
 
   const tabScript = `var _activeTab='all';function filterTab(t){_activeTab=t;document.querySelectorAll('[id^="tab-"]').forEach(b=>b.classList.toggle('active',b.id==='tab-'+t));document.querySelectorAll('[data-filter="status"]').forEach(s=>{s.value=t==='all'?'':t});window.filterTable();}`;
 
-  return generateHtml('RFIs | MOONLANDING', body, [TABLE_SCRIPT, tabScript]);
+  return page(user, 'RFIs | MOONLANDING', null, content, [TABLE_SCRIPT, tabScript]);
 }

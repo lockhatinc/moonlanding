@@ -1,17 +1,6 @@
-import { statusLabel, generateHtml } from '@/ui/renderer.js';
-import { nav } from '@/ui/layout.js';
-import { canEdit, getNavItems, getAdminItems } from '@/ui/permissions-ui.js';
-
-
-
-function bc(items) {
-  return `<nav class="breadcrumb" aria-label="Breadcrumb">${items.map((item, i) => i === items.length - 1 ? `<span>${item.label}</span>` : `<a href="${item.href}">${item.label}</a><span class="breadcrumb-separator">/</span>`).join('')}</nav>`;
-}
-
-function page(user, title, crumbs, content, scripts = []) {
-  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main id="main-content" style="padding:24px 32px">${bc(crumbs)}${content}</main></div>`;
-  return generateHtml(title, body, scripts);
-}
+import { statusLabel } from '@/ui/renderer.js';
+import { page } from '@/ui/layout.js';
+import { canEdit } from '@/ui/permissions-ui.js';
 
 function fmtDate(ts) {
   if (!ts) return '-';
@@ -29,8 +18,8 @@ function reviewCheckRow(review) {
 export function renderBatchOperations(user, reviews) {
   const canEditReview = canEdit(user, 'review');
   if (!canEditReview) {
-    const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main id="main-content" style="padding:24px 32px"><div class="text-center py-12"><h1 class="text-xl font-bold mb-2">Access Denied</h1><p class="text-gray-500">You need edit permissions for batch operations.</p><a href="/reviews" class="btn btn-primary btn-sm mt-4">Back to Reviews</a></div></main></div>`;
-    return generateHtml('Batch Operations', body, []);
+    const denied = `<div class="text-center py-12"><h1 class="text-xl font-bold mb-2">Access Denied</h1><p class="text-gray-500">You need edit permissions for batch operations.</p><a href="/reviews" class="btn btn-primary btn-sm mt-4">Back to Reviews</a></div>`;
+    return page(user, 'Batch Operations', null, denied);
   }
 
   const statusOptions = ['active', 'completed', 'archived', 'draft', 'closed'].map(s =>

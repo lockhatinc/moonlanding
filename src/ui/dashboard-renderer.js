@@ -57,15 +57,13 @@ export function renderDashboard(user, stats = {}) {
         </table>
       </div>` : '';
 
-  const content = `<div class="page-shell"><div class="page-shell-inner">
-    <div class="page-header">
+  const content = `<div class="page-header">
       <div>
         <h1 class="page-title">Welcome back, ${esc(user?.name || 'User')}</h1>
         <p class="page-subtitle">${new Date().toLocaleDateString('en-ZA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
       </div>
     </div>
-    ${statsHtml}${overdueAlert}${actionsHtml}${recentHtml}
-  </div></div>`;
+    ${statsHtml}${overdueAlert}${actionsHtml}${recentHtml}`;
 
   return page(user, 'Dashboard | MOONLANDING', [], content, [TABLE_SCRIPT]);
 }
@@ -90,8 +88,7 @@ export function renderAuditDashboard(user, auditData = {}) {
     { label: 'Role Changes',        value: summary.role_changes || 0 },
   ].map(s => `<div class="stat-card"><div class="stat-card-value">${s.value}</div><div class="stat-card-label">${s.label}</div></div>`).join('')}</div>`;
 
-  const content = `<div class="page-shell"><div class="page-shell-inner">
-    <div class="page-header"><h1 class="page-title">Audit Dashboard</h1><a href="/permission_audit" class="btn-ghost-clean">View All Records</a></div>
+  const content = `<div class="page-header"><h1 class="page-title">Audit Dashboard</h1><a href="/permission_audit" class="btn-ghost-clean">View All Records</a></div>
     ${statsHtml}
     <div class="table-wrap">
       <div class="table-toolbar">
@@ -102,8 +99,7 @@ export function renderAuditDashboard(user, auditData = {}) {
         <thead><tr><th data-sort="time">Time</th><th data-sort="action">Action</th><th data-sort="entity">Entity Type</th><th data-sort="id">Entity ID</th><th data-sort="user">User</th><th data-sort="reason">Reason</th></tr></thead>
         <tbody>${actRows}</tbody>
       </table>
-    </div>
-  </div></div>`;
+    </div>`;
 
   return page(user, 'Audit Dashboard', [{ href: '/', label: 'Dashboard' }, { href: '/admin/audit', label: 'Audit' }], content, [TABLE_SCRIPT]);
 }
@@ -120,8 +116,7 @@ export function renderSystemHealth(user, healthData = {}) {
     { label: 'Uptime',        value: srv.uptime||'N/A',            sub: 'Started: '+(srv.startTime||'N/A') },
   ].map(s => `<div class="stat-card"><div class="stat-card-value" style="font-size:20px">${s.value}</div><div class="stat-card-label">${s.label}</div><div class="stat-card-sub">${s.sub}</div></div>`).join('')}</div>`;
 
-  const content = `<div class="page-shell"><div class="page-shell-inner">
-    <div class="page-header"><h1 class="page-title">System Health</h1></div>
+  const content = `<div class="page-header"><h1 class="page-title">System Health</h1></div>
     ${statsHtml}
     <div class="table-wrap">
       <div class="table-toolbar">
@@ -132,8 +127,7 @@ export function renderSystemHealth(user, healthData = {}) {
         <thead><tr><th data-sort="entity">Entity</th><th data-sort="count" style="text-align:right">Count</th></tr></thead>
         <tbody>${entRows}</tbody>
       </table>
-    </div>
-  </div></div>`;
+    </div>`;
 
   return page(user, 'System Health', [{ href: '/', label: 'Dashboard' }, { href: '/admin/health', label: 'Health' }], content, [TABLE_SCRIPT]);
 }

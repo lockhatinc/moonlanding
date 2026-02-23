@@ -1,12 +1,10 @@
-import { generateHtml } from '@/ui/renderer.js';
-import { nav, breadcrumb } from '@/ui/layout.js';
+import { page } from '@/ui/layout.js';
 import { TOAST_SCRIPT, statusBadge as _statusBadge } from '@/ui/render-helpers.js';
 
 export { TOAST_SCRIPT } from '@/ui/render-helpers.js';
 
 export function settingsPage(user, title, bc, content, scripts = []) {
-  const body = `<div style="min-height:100vh;background:var(--color-bg)">${nav(user)}<main class="page-shell" id="main-content"><div class="page-shell-inner">${breadcrumb(bc)}${content}</div></main></div>`;
-  return generateHtml(title, body, scripts);
+  return page(user, title, bc, content, scripts);
 }
 
 export function settingsBack() {

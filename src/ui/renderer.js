@@ -5,7 +5,7 @@ export const REDIRECT = Symbol('REDIRECT')
 export { renderDialog, renderComponent, getComponentConfig, validateComponentProps }
 
 export { STAGE_COLORS, STATUS_COLORS, TOAST_SCRIPT, fmtVal, statusLabel } from '@/ui/render-helpers.js'
-export { generateHtml, breadcrumb, nav, page, statCards, confirmDialog, dataTable } from '@/ui/layout.js'
+export { generateHtml, breadcrumb, nav, page, fullPage, statCards, confirmDialog, dataTable } from '@/ui/layout.js'
 export { renderLogin, renderPasswordReset, renderPasswordResetConfirm, renderAccessDenied } from '@/ui/auth-pages.js'
 export { renderDashboard, renderAuditDashboard, renderSystemHealth } from '@/ui/dashboard-renderer.js'
 export { renderEntityList, renderEntityDetail, renderEntityForm, renderSettings } from '@/ui/entity-renderer.js'

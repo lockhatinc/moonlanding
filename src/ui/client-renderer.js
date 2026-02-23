@@ -1,6 +1,5 @@
 import { canCreate, canEdit } from '@/ui/permissions-ui.js';
-import { generateHtml } from '@/ui/renderer.js';
-import { nav, breadcrumb } from '@/ui/layout.js';
+import { page } from '@/ui/layout.js';
 import { esc, statusBadge, TOAST_SCRIPT, TABLE_SCRIPT } from '@/ui/render-helpers.js';
 
 const RISK_LEVELS = [
@@ -9,11 +8,6 @@ const RISK_LEVELS = [
   { value: 'high',     label: 'High',     cls: 'badge-error badge-flat-error' },
   { value: 'critical', label: 'Critical', cls: 'badge-error' },
 ];
-
-function page(user, title, bc, content, scripts = []) {
-  const body = '<div style="min-height:100vh;background:var(--color-bg)">' + nav(user) + '<main class="page-shell" id="main-content">' + breadcrumb(bc) + '<div class="page-shell-inner">' + content + '</div></main></div>';
-  return generateHtml(title, body, scripts);
-}
 
 export function renderClientList(user, clients) {
   const addBtn = canCreate(user, 'client')
@@ -30,8 +24,7 @@ export function renderClientList(user, clients) {
     </tr>`;
   }).join('') || `<tr><td colspan="5" style="text-align:center;padding:48px;color:var(--color-text-muted)">No clients found</td></tr>`;
 
-  const body = `<div style="min-height:100vh;background:var(--color-bg)">${nav(user)}<main class="page-shell" id="main-content"><div class="page-shell-inner">
-    <div class="page-header">
+  const content = `<div class="page-header">
       <div><h1 class="page-title">Clients</h1><p class="page-subtitle">${(clients||[]).length} clients</p></div>
       ${addBtn}
     </div>
@@ -45,9 +38,8 @@ export function renderClientList(user, clients) {
         <thead><tr><th data-sort="code">Code</th><th data-sort="name">Name</th><th data-sort="type">Industry</th><th data-sort="email">Email</th><th data-sort="status">Status</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
-    </div>
-  </div></main></div>`;
-  return generateHtml('Clients | MOONLANDING', body, [TABLE_SCRIPT]);
+    </div>`;
+  return page(user, 'Clients | MOONLANDING', null, content, [TABLE_SCRIPT]);
 }
 
 export function renderClientDashboard(user, client, stats = {}) {

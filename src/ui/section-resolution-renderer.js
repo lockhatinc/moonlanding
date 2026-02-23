@@ -1,17 +1,6 @@
-import { statusLabel, linearProgress, generateHtml } from '@/ui/renderer.js';
-import { nav } from '@/ui/layout.js';
-import { canEdit, getNavItems, getAdminItems } from '@/ui/permissions-ui.js';
-
-
-
-function bc(items) {
-  return `<nav class="breadcrumb" aria-label="Breadcrumb">${items.map((item, i) => i === items.length - 1 ? `<span>${item.label}</span>` : `<a href="${item.href}">${item.label}</a><span class="breadcrumb-separator">/</span>`).join('')}</nav>`;
-}
-
-function page(user, title, crumbs, content, scripts = []) {
-  const body = `<div style="min-height:100vh;background:#f7f8fa">${nav(user)}<main id="main-content" style="padding:24px 32px">${bc(crumbs)}${content}</main></div>`;
-  return generateHtml(title, body, scripts);
-}
+import { statusLabel, linearProgress } from '@/ui/renderer.js';
+import { page } from '@/ui/layout.js';
+import { canEdit } from '@/ui/permissions-ui.js';
 
 function resolutionBar(resolved, partial, total) {
   if (total === 0) return '<div class="text-xs text-gray-400">No highlights</div>';

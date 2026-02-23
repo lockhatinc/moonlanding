@@ -1,5 +1,4 @@
-import { generateHtml } from '@/ui/renderer.js';
-import { nav } from '@/ui/layout.js';
+import { page } from '@/ui/layout.js';
 import { canEdit, isPartner, isManager } from '@/ui/permissions-ui.js';
 import { esc, statusBadge, TOAST_SCRIPT } from '@/ui/render-helpers.js';
 
@@ -161,6 +160,5 @@ async function deleteQuestion(id){if(!confirm('Delete this question?'))return;va
 async function saveSection(rfiId){var name=document.getElementById('sec-name').value.trim();if(!name){showToast('Name required','error');return}try{var r=await fetch('/api/rfi_section',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,rfi_id:rfiId})});if(r.ok){showToast('Section added','success');setTimeout(function(){location.reload()},500)}else showToast('Failed','error')}catch(e){showToast('Error','error')}document.getElementById('sec-dialog').style.display='none'}
 async function sendReminder(rfiId){try{var r=await fetch('/api/friday/rfi/reminder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rfi_id:rfiId})});if(r.ok)showToast('Reminder sent','success');else showToast('Failed','error')}catch(e){showToast('Error','error')}}`;
 
-  const body = `<div style="min-height:100vh;background:var(--color-bg)">${nav(user)}<main class="page-shell" id="main-content"><div class="page-shell-inner">${content}</div></main></div>`;
-  return generateHtml(`${esc(rfi.name||'RFI')} | MOONLANDING`, body, [script]);
+  return page(user, `${esc(rfi.name||'RFI')} | MOONLANDING`, null, content, [script]);
 }

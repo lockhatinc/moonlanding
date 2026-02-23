@@ -1,5 +1,4 @@
-import { generateHtml } from '@/ui/renderer.js';
-import { nav } from '@/ui/layout.js';
+import { page } from '@/ui/layout.js';
 import { canEdit } from '@/ui/permissions-ui.js';
 import { esc, statusBadge } from '@/ui/render-helpers.js';
 import { reviewDetailScript } from '@/ui/review-detail-script.js';
@@ -163,6 +162,5 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
 
   const script = reviewDetailScript(r.id);
 
-  const body = `<div class="min-h-screen bg-base-200">${nav(user)}<main id="main-content">${content}</main></div>`;
-  return generateHtml(`${esc(r.name||'Review')} | MOONLANDING`, body, [script]);
+  return page(user, `${esc(r.name||'Review')} | MOONLANDING`, null, content, [script]);
 }

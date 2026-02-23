@@ -1,6 +1,5 @@
-import { canCreate, canEdit, canDelete, getNavItems, getAdminItems } from '@/ui/permissions-ui.js';
-import { statusLabel, linearProgress, userAvatar, teamAvatarGroup, generateHtml } from '@/ui/renderer.js';
-import { nav as fridayNav } from '@/ui/layout.js';
+import { canCreate, canEdit, canDelete } from '@/ui/permissions-ui.js';
+import { page } from '@/ui/layout.js';
 import { reviewCreateDialog, reviewTemplateChoiceDialog, reviewContextMenu, reviewFlagsDialog, reviewTagsDialog, reviewValueDialog, reviewDeadlineDialog, reviewNotificationDialog } from '@/ui/review-dialogs.js';
 
 export { reviewCreateDialog, reviewTemplateChoiceDialog, reviewContextMenu, reviewFlagsDialog, reviewTagsDialog, reviewValueDialog, reviewDeadlineDialog, reviewNotificationDialog };
@@ -20,19 +19,6 @@ function fmtDate(ts) {
   const n = Number(ts);
   if (!isNaN(n) && n > 1e9 && n < 3e9) return new Date(n * 1000).toLocaleDateString();
   return String(ts);
-}
-
-function breadcrumb(items) {
-  if (!items?.length) return '';
-  return '<nav class="breadcrumb-clean">' + items.map((item, i) =>
-    i === items.length - 1 ? '<span>' + item.label + '</span>'
-      : '<a href="' + item.href + '">' + item.label + '</a><span class="breadcrumb-sep">/</span>'
-  ).join('') + '</nav>';
-}
-
-function page(user, title, bc, content, scripts = []) {
-  const body = '<div style="min-height:100vh;background:var(--color-bg)">' + fridayNav(user) + '<main class="page-shell" id="main-content"><div class="page-shell-inner">' + breadcrumb(bc) + content + '</div></main></div>';
-  return generateHtml(title, body, scripts);
 }
 
 function statusBadge(status) {

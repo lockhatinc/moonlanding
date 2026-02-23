@@ -160,7 +160,14 @@ schedule()})();
 export function page(user, title, bc, content, scripts = []) {
   const authData = user ? JSON.stringify({ id: user.id, name: user.name, email: user.email, role: user.role }) : 'null'
   const authScript = `window.__AUTH__=${authData};`
-  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" ${role.main} style="padding:1rem 1.5rem">${breadcrumb(bc)}${content}</main></div>`
+  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" ${role.main} class="page-shell">${breadcrumb(bc)}${content}</main></div>`
+  return generateHtml(title, body, [authScript, ...scripts])
+}
+
+export function fullPage(user, title, content, scripts = []) {
+  const authData = user ? JSON.stringify({ id: user.id, name: user.name, email: user.email, role: user.role }) : 'null'
+  const authScript = `window.__AUTH__=${authData};`
+  const body = `<div class="min-h-screen flex flex-col">${nav(user)}<main id="main-content" ${role.main} class="flex-1 flex flex-col">${content}</main></div>`
   return generateHtml(title, body, [authScript, ...scripts])
 }
 

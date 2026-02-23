@@ -1,5 +1,4 @@
-import { generateHtml } from '@/ui/renderer.js';
-import { nav } from '@/ui/layout.js';
+import { page } from '@/ui/layout.js';
 import { canEdit, isPartner, isManager } from '@/ui/permissions-ui.js';
 import { esc, STAGE_CONFIG } from '@/ui/render-helpers.js';
 import { stagePipelineHtml, stageTransitionDialog, chatPanel, checklistPanel, activityPanel, filesPanel, engDetailScript } from '@/ui/engagement-detail-panels.js';
@@ -92,6 +91,5 @@ export function renderEngagementDetail(user, engagement, client, rfis = []) {
     ${stageTransitionDialog(e.id, e.stage)}
   `;
 
-  const body = `<div style="min-height:100vh;background:var(--color-bg)">${nav(user)}<main class="page-shell" id="main-content"><div class="page-shell-inner">${content}</div></main></div>`;
-  return generateHtml(`${esc(e.name || 'Engagement')} | MOONLANDING`, body, [engDetailScript(e.id)]);
+  return page(user, `${esc(e.name || 'Engagement')} | MOONLANDING`, null, content, [engDetailScript(e.id)]);
 }

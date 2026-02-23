@@ -1,4 +1,4 @@
-import { generateHtml, nav } from '@/ui/layout.js';
+import { page } from '@/ui/layout.js';
 import { canCreate } from '@/ui/permissions-ui.js';
 import { esc, stagePill, statusPill, progressBar, STAGE_CONFIG, TABLE_SCRIPT } from '@/ui/render-helpers.js';
 
@@ -62,9 +62,7 @@ export function renderEngagementGrid(user, engagements, options = {}) {
   const rows = engagements.map(e => engRow(e)).join('') ||
     `<tr><td colspan="11" style="text-align:center;padding:48px;color:var(--color-text-muted)">No engagements found</td></tr>`;
 
-  const body = `<div class="min-h-screen" style="background:var(--color-bg)">${nav(user)}<main class="page-shell" id="main-content">
-    <div class="page-shell-inner">
-      <div class="page-header">
+  const content = `<div class="page-header">
         <div><h1 class="page-title">Engagements</h1><p class="page-subtitle">${engagements.length} total engagements</p></div>
         ${addBtn}
       </div>
@@ -86,11 +84,9 @@ export function renderEngagementGrid(user, engagements, options = {}) {
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>
-      </div>
-    </div>
-  </main></div>`;
+      </div>`;
 
   const stageFilterScript = `var _activeStage='';function filterByStage(stage){_activeStage=_activeStage===stage?'':stage;document.querySelectorAll('[id^="stage-card-"]').forEach(c=>{const s=c.id.replace('stage-card-','');c.style.outline=_activeStage===s?'2px solid var(--color-primary)':'none'});window.filterTable();}var _origFilter=window.filterTable||function(){};window.filterTable=function(){_origFilter();if(!_activeStage)return;const stageLabels=${JSON.stringify(Object.fromEntries(STAGE_CONFIG.map(s=>[s.key,s.label])))};document.querySelectorAll('tbody tr[data-row]').forEach(row=>{const stageCell=row.querySelector('[data-col="stage"]');if(stageCell&&!stageCell.textContent.toLowerCase().includes((stageLabels[_activeStage]||_activeStage||'').toLowerCase())){row.style.display='none';}})};function switchTab(tab){document.querySelectorAll('[id^="tab-"]').forEach(b=>b.classList.toggle('active',b.id==='tab-'+tab))}`;
 
-  return generateHtml('Engagements | MOONLANDING', body, [TABLE_SCRIPT, stageFilterScript]);
+  return page(user, 'Engagements | MOONLANDING', null, content, [TABLE_SCRIPT, stageFilterScript]);
 }
