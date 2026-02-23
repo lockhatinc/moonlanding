@@ -78,8 +78,8 @@ export function nav(user, pathname = '') {
   const avatarColors = ['#1565c0','#2e7d32','#6a1b9a','#c62828','#e65100','#00695c']
   const avatarBg = avatarColors[(user?.name?.charCodeAt(0) || 0) % avatarColors.length]
 
-  return `<nav id="main-nav" style="background:#04141f;height:50px;display:flex;align-items:center;padding:0 1rem;position:relative;z-index:100" ${role.navigation} ${aria.label('Main navigation')}>
-  <div style="display:flex;align-items:center;flex:1;gap:1rem">
+  return `<nav id="main-nav" style="background:#04141f;height:50px;display:flex;align-items:center;padding:0;position:relative;z-index:100" ${role.navigation} ${aria.label('Main navigation')}>
+  <div style="display:flex;align-items:center;flex:1;gap:1rem;padding:0 1rem">
     <a href="/" style="display:flex;align-items:center;gap:0.5rem;text-decoration:none" ${aria.label('Home')}>
       ${gearSvg}
       <span style="color:#f8f9fa;font-size:0.8rem;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;margin-left:0.25rem">MOONLANDING</span>
@@ -88,7 +88,7 @@ export function nav(user, pathname = '') {
   <div class="nav-links-desktop" style="display:flex;align-items:center;gap:0.5rem">
     ${logoutLink}${engLink}${clientLink}${settingsLink}${reviewLink}
   </div>
-  <div style="display:flex;align-items:center;gap:0.75rem;margin-left:1rem">
+  <div style="display:flex;align-items:center;gap:0.75rem;margin-left:1rem;padding-right:1rem">
     <div style="display:flex;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;border-radius:50%;background:${avatarBg};color:#fff;font-weight:700;font-size:0.82rem;cursor:pointer;flex-shrink:0" id="user-avatar" onclick="toggleUserMenu(event)" title="${user?.name || 'User'}" aria-label="User menu" role="button" tabindex="0">
       ${avatarInitial}
     </div>
@@ -160,7 +160,7 @@ schedule()})();
 export function page(user, title, bc, content, scripts = []) {
   const authData = user ? JSON.stringify({ id: user.id, name: user.name, email: user.email, role: user.role }) : 'null'
   const authScript = `window.__AUTH__=${authData};`
-  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" ${role.main}>${breadcrumb(bc)}${content}</main></div>`
+  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" ${role.main} style="padding:1rem 1.5rem">${breadcrumb(bc)}${content}</main></div>`
   return generateHtml(title, body, [authScript, ...scripts])
 }
 
