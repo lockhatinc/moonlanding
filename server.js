@@ -196,7 +196,8 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (pathname === '/ui/styles.css' || pathname === '/ui/styles2.css') {
-      const cssPath = path.join(__dirname, 'src/ui/styles.css');
+      const cssFile = pathname === '/ui/styles2.css' ? 'styles2.css' : 'styles.css';
+      const cssPath = path.join(__dirname, 'src/ui', cssFile);
       if (fs.existsSync(cssPath)) {
         let content = fs.readFileSync(cssPath, 'utf-8');
         const { minifyCSS } = await loadModule(path.join(__dirname, 'src/lib/minifier.js'));
