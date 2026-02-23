@@ -171,5 +171,5 @@ async function saveSection(rfiId){var name=document.getElementById('sec-name').v
 async function sendReminder(rfiId){try{var r=await fetch('/api/friday/rfi/reminder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rfi_id:rfiId})});if(r.ok)showToast('Reminder sent','success');else showToast('Failed','error')}catch(e){showToast('Error','error')}}`;
 
   const body = `<div style="min-height:100vh;background:var(--color-bg)">${nav(user)}<main class="page-shell" id="main-content"><div class="page-shell-inner">${content}</div></main></div>`;
-  return generateHtml(`${esc(rfi.name||'RFI')} | MY FRIDAY`, body, [script]);
+  return generateHtml(`${esc(rfi.name||'RFI')} | MOONLANDING`, body, [script]);
 }

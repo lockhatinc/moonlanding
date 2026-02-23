@@ -73,7 +73,7 @@ export function renderRfiList(user, rfis = [], engagements = []) {
 
   const tabScript = `var _activeTab='all';function filterTab(t){_activeTab=t;document.querySelectorAll('[id^="tab-"]').forEach(b=>b.classList.toggle('active',b.id==='tab-'+t));document.querySelectorAll('[data-filter="status"]').forEach(s=>{s.value=t==='all'?'':t});window.filterTable();}`;
 
-  return generateHtml('RFIs | MY FRIDAY', body, [`(function(){
+  return generateHtml('RFIs | MOONLANDING', body, [`(function(){
 let sortCol=null,sortDir=1;
 function filterTable(){
   const search=(document.getElementById('search-input')?.value||'').toLowerCase();

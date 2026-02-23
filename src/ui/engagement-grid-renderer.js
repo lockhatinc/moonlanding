@@ -162,7 +162,7 @@ function switchTab(tab){
 }
 `;
 
-  return generateHtml('Engagements | MY FRIDAY', body, [`(function(){
+  return generateHtml('Engagements | MOONLANDING', body, [`(function(){
   let sortCol=null,sortDir=1;
   function filterTable(){
     const search=(document.getElementById('search-input')?.value||'').toLowerCase();

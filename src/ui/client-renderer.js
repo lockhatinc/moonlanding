@@ -77,7 +77,7 @@ export function renderClientList(user, clients) {
       </table>
     </div>
   </div></main></div>`;
-  return generateHtml('Clients | MY FRIDAY', body, [`(function(){
+  return generateHtml('Clients | MOONLANDING', body, [`(function(){
 let sortCol=null,sortDir=1;
 function filterTable(){
   const search=(document.getElementById('search-input')?.value||'').toLowerCase();

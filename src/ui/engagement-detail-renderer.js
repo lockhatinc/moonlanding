@@ -341,5 +341,5 @@ async function downloadFilesZip(engId){try{var r=await fetch('/api/friday/engage
 `;
 
   const body = `<div style="min-height:100vh;background:var(--color-bg)">${nav(user)}<main class="page-shell" id="main-content"><div class="page-shell-inner">${content}</div></main></div>`;
-  return generateHtml(`${esc(e.name || 'Engagement')} | MY FRIDAY`, body, [script]);
+  return generateHtml(`${esc(e.name || 'Engagement')} | MOONLANDING`, body, [script]);
 }

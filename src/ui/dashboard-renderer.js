@@ -106,7 +106,7 @@ export function renderDashboard(user, stats = {}) {
     ${recentHtml}
   </div></div>`;
 
-  return page(user, 'Dashboard | MY FRIDAY', [], content, [`(function(){
+  return page(user, 'Dashboard | MOONLANDING', [], content, [`(function(){
   let sortCol=null,sortDir=1;
   function filterTable(){
     const search=(document.getElementById('search-input')?.value||'').toLowerCase();
