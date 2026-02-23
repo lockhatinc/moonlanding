@@ -1,55 +1,31 @@
-import { canCreate, canEdit, canDelete, getNavItems, getAdminItems } from '@/ui/permissions-ui.js';
-import { generateHtml, statusLabel, linearProgress, userAvatar, teamAvatarGroup } from '@/ui/renderer.js';
-import { nav } from '@/ui/layout.js';
+import { canCreate, canEdit } from '@/ui/permissions-ui.js';
+import { generateHtml } from '@/ui/renderer.js';
+import { nav, breadcrumb } from '@/ui/layout.js';
+import { esc, statusBadge, TOAST_SCRIPT, TABLE_SCRIPT } from '@/ui/render-helpers.js';
 
-function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-const TOAST_SCRIPT = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';c.setAttribute('role','status');c.setAttribute('aria-live','polite');document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
-
-function statusBadge(status) {
-  const map = { active:'pill pill-success', inactive:'pill pill-danger', pending:'pill pill-warning' };
-  const cls = map[status] || 'pill pill-neutral';
-  const lbl = status ? status.charAt(0).toUpperCase()+status.slice(1) : '-';
-  return '<span class="'+cls+'">'+lbl+'</span>';
-}
-
-function breadcrumb(items) {
-  if (!items?.length) return '';
-  return '<nav class="breadcrumb-clean">' + items.map((item, i) =>
-    i === items.length - 1
-      ? '<span>' + item.label + '</span>'
-      : '<a href="' + item.href + '">' + item.label + '</a><span class="breadcrumb-sep">/</span>'
-  ).join('') + '</nav>';
-}
+const RISK_LEVELS = [
+  { value: 'low',      label: 'Low',      cls: 'badge-success badge-flat-success' },
+  { value: 'medium',   label: 'Medium',   cls: 'badge-warning badge-flat-warning' },
+  { value: 'high',     label: 'High',     cls: 'badge-error badge-flat-error' },
+  { value: 'critical', label: 'Critical', cls: 'badge-error' },
+];
 
 function page(user, title, bc, content, scripts = []) {
   const body = '<div style="min-height:100vh;background:var(--color-bg)">' + nav(user) + '<main class="page-shell" id="main-content">' + breadcrumb(bc) + '<div class="page-shell-inner">' + content + '</div></main></div>';
   return generateHtml(title, body, scripts);
 }
 
-const RISK_LEVELS = [
-  { value: 'low', label: 'Low', cls: 'badge-success badge-flat-success' },
-  { value: 'medium', label: 'Medium', cls: 'badge-warning badge-flat-warning' },
-  { value: 'high', label: 'High', cls: 'badge-error badge-flat-error' },
-  { value: 'critical', label: 'Critical', cls: 'badge-error' },
-];
-
 export function renderClientList(user, clients) {
   const addBtn = canCreate(user, 'client')
     ? `<a href="/client/new" class="btn-primary-clean"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Client</a>`
     : '';
   const rows = (clients || []).map(c => {
-    const code = esc(c.client_code || c.code || '-');
-    const name = esc(c.name || '-');
-    const entityType = esc(c.entity_type || c.industry || '-');
-    const email = esc(Array.isArray(c.master_emails) ? c.master_emails[0] : (c.email || '-'));
-    const status = c.status || 'active';
-    const sp = status === 'active' ? '<span class="pill pill-success">Active</span>' : '<span class="pill pill-neutral">Inactive</span>';
+    const sp = (c.status || 'active') === 'active' ? '<span class="pill pill-success">Active</span>' : '<span class="pill pill-neutral">Inactive</span>';
     return `<tr data-row onclick="location.href='/client/${esc(c.id)}'" style="cursor:pointer">
-      <td data-col="code" style="font-weight:600;color:var(--color-info)">${code}</td>
-      <td data-col="name"><strong>${name}</strong></td>
-      <td data-col="type">${entityType}</td>
-      <td data-col="email">${email}</td>
+      <td data-col="code" style="font-weight:600;color:var(--color-info)">${esc(c.client_code || c.code || '-')}</td>
+      <td data-col="name"><strong>${esc(c.name || '-')}</strong></td>
+      <td data-col="type">${esc(c.entity_type || c.industry || '-')}</td>
+      <td data-col="email">${esc(Array.isArray(c.master_emails) ? c.master_emails[0] : (c.email || '-'))}</td>
       <td data-col="status">${sp}</td>
     </tr>`;
   }).join('') || `<tr><td colspan="5" style="text-align:center;padding:48px;color:var(--color-text-muted)">No clients found</td></tr>`;
@@ -62,52 +38,16 @@ export function renderClientList(user, clients) {
     <div class="table-wrap">
       <div class="table-toolbar">
         <div class="table-search"><input id="search-input" type="text" placeholder="Search clients..."></div>
-        <div class="table-filter">
-          <select data-filter="status"><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
-        </div>
+        <div class="table-filter"><select data-filter="status"><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
         <span class="table-count" id="row-count">${(clients||[]).length} items</span>
       </div>
       <table class="data-table">
-        <thead><tr>
-          <th data-sort="code">Code</th><th data-sort="name">Name</th>
-          <th data-sort="type">Industry</th><th data-sort="email">Email</th>
-          <th data-sort="status">Status</th>
-        </tr></thead>
+        <thead><tr><th data-sort="code">Code</th><th data-sort="name">Name</th><th data-sort="type">Industry</th><th data-sort="email">Email</th><th data-sort="status">Status</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
   </div></main></div>`;
-  return generateHtml('Clients | MOONLANDING', body, [`(function(){
-let sortCol=null,sortDir=1;
-function filterTable(){
-  const search=(document.getElementById('search-input')?.value||'').toLowerCase();
-  const filters={};
-  document.querySelectorAll('[data-filter]').forEach(el=>{if(el.value)filters[el.dataset.filter]=el.value.toLowerCase()});
-  let shown=0,total=0;
-  document.querySelectorAll('tbody tr[data-row]').forEach(row=>{
-    total++;const text=row.textContent.toLowerCase();
-    const matchSearch=!search||text.includes(search);
-    const matchFilters=Object.entries(filters).every(([key,val])=>{const cell=row.querySelector('[data-col="'+key+'"]');return !cell||cell.textContent.toLowerCase().includes(val)});
-    const visible=matchSearch&&matchFilters;row.style.display=visible?'':'none';if(visible)shown++;
-  });
-  const counter=document.getElementById('row-count');
-  if(counter)counter.textContent=shown===total?total+' items':shown+' of '+total+' items';
-}
-function sortTable(col){
-  if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}
-  document.querySelectorAll('th[data-sort]').forEach(th=>{th.classList.remove('sort-asc','sort-desc');if(th.dataset.sort===col)th.classList.add(sortDir===1?'sort-asc':'sort-desc')});
-  const tbody=document.querySelector('tbody');if(!tbody)return;
-  const rows=Array.from(tbody.querySelectorAll('tr[data-row]'));
-  rows.sort((a,b)=>{const av=a.querySelector('[data-col="'+col+'"]')?.textContent?.trim()||'';const bv=b.querySelector('[data-col="'+col+'"]')?.textContent?.trim()||'';return av.localeCompare(bv,undefined,{numeric:true})*sortDir});
-  rows.forEach(r=>tbody.appendChild(r));
-}
-window.filterTable=filterTable;window.sortTable=sortTable;
-document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('search-input')?.addEventListener('input',filterTable);
-  document.querySelectorAll('[data-filter]').forEach(el=>el.addEventListener('change',filterTable));
-  document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>sortTable(th.dataset.sort)));
-});
-})();`]);
+  return generateHtml('Clients | MOONLANDING', body, [TABLE_SCRIPT]);
 }
 
 export function renderClientDashboard(user, client, stats = {}) {
@@ -116,11 +56,8 @@ export function renderClientDashboard(user, client, stats = {}) {
   const riskBadge = c.risk_level ? `<span class="badge ${riskCls} ml-2">${(c.risk_level || '').charAt(0).toUpperCase() + (c.risk_level || '').slice(1)} Risk</span>` : '';
 
   const infoRows = [
-    ['Name', c.name || '-'],
-    ['Email', c.email || '-'],
-    ['Phone', c.phone || '-'],
-    ['Address', c.address || '-'],
-    ['Status', statusBadge(c.status || 'active')],
+    ['Name', c.name || '-'], ['Email', c.email || '-'], ['Phone', c.phone || '-'],
+    ['Address', c.address || '-'], ['Status', statusBadge(c.status || 'active')],
     ['Created', c.created_at ? new Date(typeof c.created_at === 'number' ? c.created_at * 1000 : c.created_at).toLocaleDateString() : '-'],
   ].map(([l, v]) => `<div class="flex flex-col gap-1 py-2 border-b border-base-200 last:border-0">
     <span class="text-xs font-semibold uppercase tracking-wider text-base-content/50">${l}</span>
@@ -144,28 +81,16 @@ export function renderClientDashboard(user, client, stats = {}) {
 
   const content = `
     <div class="flex justify-between items-start mb-6 flex-wrap gap-3">
-      <div>
-        <h1 class="text-2xl font-bold text-base-content">${esc(c.name || 'Client')}</h1>
-        <div class="mt-1">${riskBadge}</div>
-      </div>
+      <div><h1 class="text-2xl font-bold text-base-content">${esc(c.name || 'Client')}</h1><div class="mt-1">${riskBadge}</div></div>
       ${actions}
     </div>
     ${statsHtml}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div class="card bg-base-100 shadow-md">
-        <div class="card-body">
-          <h2 class="card-title text-sm mb-3">Client Info</h2>
-          <div>${infoRows}</div>
-        </div>
-      </div>
-      <div class="card bg-base-100 shadow-md">
-        <div class="card-body">
-          <h2 class="card-title text-sm mb-3">Engagements</h2>
-          <div class="table-container">
-            <table class="table table-hover"><thead><tr><th>Name</th><th>Stage</th><th>Status</th></tr></thead><tbody>${engRows}</tbody></table>
-          </div>
-        </div>
-      </div>
+      <div class="card bg-base-100 shadow-md"><div class="card-body"><h2 class="card-title text-sm mb-3">Client Info</h2><div>${infoRows}</div></div></div>
+      <div class="card bg-base-100 shadow-md"><div class="card-body">
+        <h2 class="card-title text-sm mb-3">Engagements</h2>
+        <div class="table-container"><table class="table table-hover"><thead><tr><th>Name</th><th>Stage</th><th>Status</th></tr></thead><tbody>${engRows}</tbody></table></div>
+      </div></div>
     </div>
     ${clientUserManagementDialog(c.id)}${clientRiskAssessmentDialog(c.id, c.risk_level)}${clientTestEmailDialog(c.id)}`;
 
@@ -179,22 +104,12 @@ export function clientUserManagementDialog(clientId) {
     <div class="modal-content rounded-box max-w-lg p-6">
       <h3 class="text-lg font-semibold mb-4" id="client-user-dialog-title">Manage Client Users</h3>
       <div id="cud-list" class="flex flex-col gap-2 mb-4"></div>
-      <div class="form-group">
-        <div class="flex gap-2 items-end">
-          <div class="flex-1">
-            <label class="label"><span class="label-text font-medium">Email</span></label>
-            <input type="email" id="cud-email" class="input input-solid max-w-full" placeholder="user@example.com"/>
-          </div>
-          <div>
-            <label class="label"><span class="label-text font-medium">Role</span></label>
-            <select id="cud-role" class="select select-solid"><option value="client_user">User</option><option value="client_admin">Admin</option></select>
-          </div>
-          <button class="btn btn-primary btn-sm" onclick="cudAdd()">Add</button>
-        </div>
-      </div>
-      <div class="modal-action mt-4">
-        <button class="btn btn-ghost" onclick="document.getElementById('client-user-dialog').style.display='none'">Close</button>
-      </div>
+      <div class="form-group"><div class="flex gap-2 items-end">
+        <div class="flex-1"><label class="label"><span class="label-text font-medium">Email</span></label><input type="email" id="cud-email" class="input input-solid max-w-full" placeholder="user@example.com"/></div>
+        <div><label class="label"><span class="label-text font-medium">Role</span></label><select id="cud-role" class="select select-solid"><option value="client_user">User</option><option value="client_admin">Admin</option></select></div>
+        <button class="btn btn-primary btn-sm" onclick="cudAdd()">Add</button>
+      </div></div>
+      <div class="modal-action mt-4"><button class="btn btn-ghost" onclick="document.getElementById('client-user-dialog').style.display='none'">Close</button></div>
     </div>
   </div>
   <script>
@@ -210,25 +125,11 @@ export function clientUserReplaceDialog(clientId) {
     <div class="modal-overlay" onclick="document.getElementById('client-replace-dialog').style.display='none'"></div>
     <div class="modal-content rounded-box max-w-md p-6">
       <h3 class="text-lg font-semibold mb-4">Replace Client User</h3>
-      <div class="form-group mb-3">
-        <label class="label"><span class="label-text font-medium">Current User</span></label>
-        <select id="crd-from" class="select select-solid max-w-full"><option value="">Select user to replace...</option></select>
-      </div>
+      <div class="form-group mb-3"><label class="label"><span class="label-text font-medium">Current User</span></label><select id="crd-from" class="select select-solid max-w-full"><option value="">Select user to replace...</option></select></div>
       <div class="divider text-xs text-base-content/40">Replace with</div>
-      <div class="form-group mb-3">
-        <label class="label"><span class="label-text font-medium">New User</span></label>
-        <select id="crd-to" class="select select-solid max-w-full"><option value="">Select replacement user...</option></select>
-      </div>
-      <div class="form-group mb-4">
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input type="checkbox" id="crd-transfer" class="checkbox" checked/>
-          <span class="label-text">Transfer all assignments</span>
-        </label>
-      </div>
-      <div class="modal-action">
-        <button class="btn btn-primary" onclick="crdConfirm()">Replace</button>
-        <button class="btn btn-ghost" onclick="document.getElementById('client-replace-dialog').style.display='none'">Cancel</button>
-      </div>
+      <div class="form-group mb-3"><label class="label"><span class="label-text font-medium">New User</span></label><select id="crd-to" class="select select-solid max-w-full"><option value="">Select replacement user...</option></select></div>
+      <div class="form-group mb-4"><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="crd-transfer" class="checkbox" checked/><span class="label-text">Transfer all assignments</span></label></div>
+      <div class="modal-action"><button class="btn btn-primary" onclick="crdConfirm()">Replace</button><button class="btn btn-ghost" onclick="document.getElementById('client-replace-dialog').style.display='none'">Cancel</button></div>
     </div>
   </div>
   <script>
@@ -242,22 +143,10 @@ export function clientTestEmailDialog(clientId) {
     <div class="modal-overlay" onclick="document.getElementById('test-email-dialog').style.display='none'"></div>
     <div class="modal-content rounded-box max-w-md p-6">
       <h3 class="text-lg font-semibold mb-4">Send Test Email</h3>
-      <div class="form-group mb-3">
-        <label class="label"><span class="label-text font-medium">To</span></label>
-        <input type="email" id="ted-to" class="input input-solid max-w-full" placeholder="recipient@example.com"/>
-      </div>
-      <div class="form-group mb-3">
-        <label class="label"><span class="label-text font-medium">Subject</span></label>
-        <input type="text" id="ted-subject" class="input input-solid max-w-full" value="Test Email - Platform Notification"/>
-      </div>
-      <div class="form-group mb-4">
-        <label class="label"><span class="label-text font-medium">Message</span></label>
-        <textarea id="ted-body" class="textarea textarea-solid max-w-full" rows="4">This is a test email from the Platform to verify email delivery to client users.</textarea>
-      </div>
-      <div class="modal-action">
-        <button class="btn btn-primary" onclick="tedSend()">Send Test</button>
-        <button class="btn btn-ghost" onclick="document.getElementById('test-email-dialog').style.display='none'">Cancel</button>
-      </div>
+      <div class="form-group mb-3"><label class="label"><span class="label-text font-medium">To</span></label><input type="email" id="ted-to" class="input input-solid max-w-full" placeholder="recipient@example.com"/></div>
+      <div class="form-group mb-3"><label class="label"><span class="label-text font-medium">Subject</span></label><input type="text" id="ted-subject" class="input input-solid max-w-full" value="Test Email - Platform Notification"/></div>
+      <div class="form-group mb-4"><label class="label"><span class="label-text font-medium">Message</span></label><textarea id="ted-body" class="textarea textarea-solid max-w-full" rows="4">This is a test email from the Platform to verify email delivery to client users.</textarea></div>
+      <div class="modal-action"><button class="btn btn-primary" onclick="tedSend()">Send Test</button><button class="btn btn-ghost" onclick="document.getElementById('test-email-dialog').style.display='none'">Cancel</button></div>
     </div>
   </div>
   <script>
@@ -266,23 +155,14 @@ export function clientTestEmailDialog(clientId) {
 }
 
 export function clientRiskAssessmentDialog(clientId, currentRisk) {
-  const options = RISK_LEVELS.map(r => `<label class="flex items-center gap-3 p-3 rounded-box border border-base-200 cursor-pointer hover:bg-base-200 transition-colors">
-    <input type="radio" name="crad-risk" value="${r.value}" ${currentRisk === r.value ? 'checked' : ''} class="radio radio-primary"/>
-    <span class="badge ${r.cls}">${r.label}</span>
-  </label>`).join('');
+  const options = RISK_LEVELS.map(r => `<label class="flex items-center gap-3 p-3 rounded-box border border-base-200 cursor-pointer hover:bg-base-200 transition-colors"><input type="radio" name="crad-risk" value="${r.value}" ${currentRisk === r.value ? 'checked' : ''} class="radio radio-primary"/><span class="badge ${r.cls}">${r.label}</span></label>`).join('');
   return `<div id="risk-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal-overlay" onclick="document.getElementById('risk-dialog').style.display='none'"></div>
     <div class="modal-content rounded-box max-w-md p-6">
       <h3 class="text-lg font-semibold mb-4">Risk Assessment</h3>
       <div class="flex flex-col gap-2 mb-4">${options}</div>
-      <div class="form-group mb-4">
-        <label class="label"><span class="label-text font-medium">Notes</span></label>
-        <textarea id="crad-notes" class="textarea textarea-solid max-w-full" rows="2" placeholder="Risk assessment notes..."></textarea>
-      </div>
-      <div class="modal-action">
-        <button class="btn btn-primary" onclick="cradSave()">Save</button>
-        <button class="btn btn-ghost" onclick="document.getElementById('risk-dialog').style.display='none'">Cancel</button>
-      </div>
+      <div class="form-group mb-4"><label class="label"><span class="label-text font-medium">Notes</span></label><textarea id="crad-notes" class="textarea textarea-solid max-w-full" rows="2" placeholder="Risk assessment notes..."></textarea></div>
+      <div class="modal-action"><button class="btn btn-primary" onclick="cradSave()">Save</button><button class="btn btn-ghost" onclick="document.getElementById('risk-dialog').style.display='none'">Cancel</button></div>
     </div>
   </div>
   <script>
@@ -296,9 +176,6 @@ export function clientInfoCard(client) {
     ['Name', c.name], ['Email', c.email], ['Phone', c.phone],
     ['Industry', c.industry], ['Status', c.status ? statusBadge(c.status) : null],
     ['Risk', c.risk_level ? `<span class="badge badge-flat-secondary text-xs">${c.risk_level}</span>` : null],
-  ].filter(([, v]) => v).map(([l, v]) => `<div class="flex flex-col gap-1 py-2 border-b border-base-200 last:border-0">
-    <span class="text-xs font-semibold uppercase tracking-wider text-base-content/50">${l}</span>
-    <span class="text-sm">${v}</span>
-  </div>`).join('');
+  ].filter(([, v]) => v).map(([l, v]) => `<div class="flex flex-col gap-1 py-2 border-b border-base-200 last:border-0"><span class="text-xs font-semibold uppercase tracking-wider text-base-content/50">${l}</span><span class="text-sm">${v}</span></div>`).join('');
   return `<div class="card bg-base-100 shadow-md"><div class="card-body"><h2 class="card-title text-sm">Client Details</h2><div class="mt-3">${infoRows || '<div class="text-base-content/50 text-sm">No details available</div>'}</div></div></div>`;
 }

@@ -1,39 +1,6 @@
 import { generateHtml, nav } from '@/ui/layout.js';
-import { canCreate, isPartner, isClerk } from '@/ui/permissions-ui.js';
-
-const STAGE_CONFIG = [
-  { key: 'info_gathering', label: 'Info Gathering' },
-  { key: 'commencement',   label: 'Commencement'   },
-  { key: 'team_execution', label: 'Team Execution'  },
-  { key: 'partner_review', label: 'Partner Review'  },
-  { key: 'finalization',   label: 'Finalization'    },
-  { key: 'closeout',       label: 'Close Out'       },
-];
-
-function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function stagePill(stage) {
-  const cfg = STAGE_CONFIG.find(s => s.key === stage);
-  const lbl = cfg ? cfg.label : (stage || '-');
-  return `<span class="stage-pill stage-${esc(stage||'')}">${lbl}</span>`;
-}
-
-function statusPill(status) {
-  const map = { active:'pill pill-success', pending:'pill pill-warning', inactive:'pill pill-neutral' };
-  const cls = map[status] || 'pill pill-neutral';
-  return `<span class="${cls}">${status ? status.charAt(0).toUpperCase()+status.slice(1) : '-'}</span>`;
-}
-
-function progressBar(pct) {
-  if (typeof pct !== 'number') return '-';
-  const p = Math.min(100, Math.max(0, Math.round(pct)));
-  return `<div style="display:flex;align-items:center;gap:8px;min-width:100px">
-    <div style="flex:1;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden">
-      <div style="height:100%;width:${p}%;background:var(--color-primary);border-radius:3px"></div>
-    </div>
-    <span style="font-size:12px;color:var(--color-text-muted);min-width:28px">${p}%</span>
-  </div>`;
-}
+import { canCreate } from '@/ui/permissions-ui.js';
+import { esc, stagePill, statusPill, progressBar, STAGE_CONFIG, TABLE_SCRIPT } from '@/ui/render-helpers.js';
 
 function engRow(e) {
   const name = esc(e.name || e.client_name || 'Untitled');
@@ -81,9 +48,7 @@ export function renderEngagementGrid(user, engagements, options = {}) {
   ];
 
   const tabBar = `<div class="tab-bar">${tabs.map(t =>
-    `<button class="tab-btn${t.key === filter ? ' active' : ''}" onclick="switchTab('${t.key}')" id="tab-${t.key}">
-      ${t.label}<span class="tab-count">${t.count}</span>
-    </button>`
+    `<button class="tab-btn${t.key === filter ? ' active' : ''}" onclick="switchTab('${t.key}')" id="tab-${t.key}">${t.label}<span class="tab-count">${t.count}</span></button>`
   ).join('')}</div>`;
 
   const addBtn = canCreate(user, 'engagement')
@@ -100,14 +65,10 @@ export function renderEngagementGrid(user, engagements, options = {}) {
   const body = `<div class="min-h-screen" style="background:var(--color-bg)">${nav(user)}<main class="page-shell" id="main-content">
     <div class="page-shell-inner">
       <div class="page-header">
-        <div>
-          <h1 class="page-title">Engagements</h1>
-          <p class="page-subtitle">${engagements.length} total engagements</p>
-        </div>
+        <div><h1 class="page-title">Engagements</h1><p class="page-subtitle">${engagements.length} total engagements</p></div>
         ${addBtn}
       </div>
-      ${stageStats}
-      ${tabBar}
+      ${stageStats}${tabBar}
       <div class="table-wrap">
         <div class="table-toolbar">
           <div class="table-search"><input id="search-input" type="text" placeholder="Search engagements..."></div>
@@ -118,17 +79,10 @@ export function renderEngagementGrid(user, engagements, options = {}) {
         </div>
         <table class="data-table">
           <thead><tr>
-            <th data-sort="name">Name</th>
-            <th data-sort="client">Client</th>
-            <th data-sort="type">Type</th>
-            <th data-sort="year">Year</th>
-            <th data-sort="team">Team</th>
-            <th data-sort="stage-raw">Stage</th>
-            <th style="display:none"></th>
-            <th data-sort="status">Status</th>
-            <th data-sort="deadline">Deadline</th>
-            <th data-sort="rfi" style="text-align:center">RFI</th>
-            <th>Progress</th>
+            <th data-sort="name">Name</th><th data-sort="client">Client</th><th data-sort="type">Type</th>
+            <th data-sort="year">Year</th><th data-sort="team">Team</th><th data-sort="stage-raw">Stage</th>
+            <th style="display:none"></th><th data-sort="status">Status</th><th data-sort="deadline">Deadline</th>
+            <th data-sort="rfi" style="text-align:center">RFI</th><th>Progress</th>
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>
@@ -136,75 +90,7 @@ export function renderEngagementGrid(user, engagements, options = {}) {
     </div>
   </main></div>`;
 
-  const script = `
-var _activeStage='';
-function filterByStage(stage){
-  _activeStage=_activeStage===stage?'':stage;
-  document.querySelectorAll('[id^="stage-card-"]').forEach(c=>{
-    const s=c.id.replace('stage-card-','');
-    c.style.outline=_activeStage===s?'2px solid var(--color-primary)':'none';
-  });
-  window.filterTable();
-}
-var _origFilter=window.filterTable||function(){};
-window.filterTable=function(){
-  _origFilter();
-  if(!_activeStage)return;
-  document.querySelectorAll('tbody tr[data-row]').forEach(row=>{
-    const stageCell=row.querySelector('[data-col="stage"]');
-    if(stageCell&&!stageCell.textContent.toLowerCase().includes(
-      (STAGE_CONFIG.find(s=>s.key===_activeStage)?.label||_activeStage||'').toLowerCase()
-    )){row.style.display='none';}
-  });
-};
-function switchTab(tab){
-  document.querySelectorAll('[id^="tab-"]').forEach(b=>b.classList.toggle('active',b.id==='tab-'+tab));
-}
-`;
+  const stageFilterScript = `var _activeStage='';function filterByStage(stage){_activeStage=_activeStage===stage?'':stage;document.querySelectorAll('[id^="stage-card-"]').forEach(c=>{const s=c.id.replace('stage-card-','');c.style.outline=_activeStage===s?'2px solid var(--color-primary)':'none'});window.filterTable();}var _origFilter=window.filterTable||function(){};window.filterTable=function(){_origFilter();if(!_activeStage)return;const stageLabels=${JSON.stringify(Object.fromEntries(STAGE_CONFIG.map(s=>[s.key,s.label])))};document.querySelectorAll('tbody tr[data-row]').forEach(row=>{const stageCell=row.querySelector('[data-col="stage"]');if(stageCell&&!stageCell.textContent.toLowerCase().includes((stageLabels[_activeStage]||_activeStage||'').toLowerCase())){row.style.display='none';}})};function switchTab(tab){document.querySelectorAll('[id^="tab-"]').forEach(b=>b.classList.toggle('active',b.id==='tab-'+tab))}`;
 
-  return generateHtml('Engagements | MOONLANDING', body, [`(function(){
-  let sortCol=null,sortDir=1;
-  function filterTable(){
-    const search=(document.getElementById('search-input')?.value||'').toLowerCase();
-    const filters={};
-    document.querySelectorAll('[data-filter]').forEach(el=>{if(el.value)filters[el.dataset.filter]=el.value.toLowerCase()});
-    let shown=0,total=0;
-    document.querySelectorAll('tbody tr[data-row]').forEach(row=>{
-      total++;
-      const text=row.textContent.toLowerCase();
-      const matchSearch=!search||text.includes(search);
-      const matchFilters=Object.entries(filters).every(([key,val])=>{
-        const cell=row.querySelector('[data-col="'+key+'"]');
-        return !cell||cell.textContent.toLowerCase().includes(val);
-      });
-      const visible=matchSearch&&matchFilters;
-      row.style.display=visible?'':'none';
-      if(visible)shown++;
-    });
-    const counter=document.getElementById('row-count');
-    if(counter)counter.textContent=shown===total?total+' items':shown+' of '+total+' items';
-  }
-  function sortTable(col){
-    if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}
-    document.querySelectorAll('th[data-sort]').forEach(th=>{
-      th.classList.remove('sort-asc','sort-desc');
-      if(th.dataset.sort===col)th.classList.add(sortDir===1?'sort-asc':'sort-desc');
-    });
-    const tbody=document.querySelector('tbody');
-    if(!tbody)return;
-    const rows=Array.from(tbody.querySelectorAll('tr[data-row]'));
-    rows.sort((a,b)=>{
-      const av=a.querySelector('[data-col="'+col+'"]')?.textContent?.trim()||'';
-      const bv=b.querySelector('[data-col="'+col+'"]')?.textContent?.trim()||'';
-      return av.localeCompare(bv,undefined,{numeric:true})*sortDir;
-    });
-    rows.forEach(r=>tbody.appendChild(r));
-  }
-  window.filterTable=filterTable;window.sortTable=sortTable;
-  document.addEventListener('DOMContentLoaded',()=>{
-    document.getElementById('search-input')?.addEventListener('input',filterTable);
-    document.querySelectorAll('[data-filter]').forEach(el=>el.addEventListener('change',filterTable));
-    document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>sortTable(th.dataset.sort)));
-  });
-})();`, script]);
+  return generateHtml('Engagements | MOONLANDING', body, [TABLE_SCRIPT, stageFilterScript]);
 }

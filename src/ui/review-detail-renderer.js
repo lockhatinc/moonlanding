@@ -1,64 +1,9 @@
 import { generateHtml } from '@/ui/renderer.js';
 import { nav } from '@/ui/layout.js';
-import { canEdit, canCreate, isPartner, isManager } from '@/ui/permissions-ui.js';
-
-const TOAST = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';c.setAttribute('role','status');c.setAttribute('aria-live','polite');document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
-
-function esc(s) {
-  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function statusBadge(status) {
-  const s = status || 'open';
-  const map = { active:'pill pill-info', open:'pill pill-info', in_progress:'pill pill-info', completed:'pill pill-success', closed:'pill pill-success', archived:'pill pill-neutral' };
-  const cls = map[s] || 'pill pill-warning';
-  return '<span class="'+cls+'">'+s+'</span>';
-}
-
-function highlightRow(h) {
-  const resolved = h.resolved || h.status === 'resolved';
-  return `<tr class="hover">
-    <td class="text-sm max-w-xs">${esc(h.text||h.content||h.comment||'Highlight')}</td>
-    <td class="text-sm text-base-content/50">p.${h.page||h.page_number||'-'}</td>
-    <td><span class="badge ${resolved?'badge-success badge-flat-success':'badge-warning badge-flat-warning'} text-xs">${resolved?'Resolved':'Open'}</span></td>
-    <td class="text-sm text-base-content/50">${h.created_by_name||h.user_id||'-'}</td>
-    <td>${!resolved ? `<button onclick="resolveHighlight('${esc(h.id)}')" class="btn btn-success btn-xs">Resolve</button>` : ''}</td>
-  </tr>`;
-}
-
-function collaboratorRow(c) {
-  return `<tr class="hover">
-    <td class="text-sm">${esc(c.user_name||c.email||c.user_id||'-')}</td>
-    <td><span class="badge badge-flat-primary text-xs">${esc(c.role||'viewer')}</span></td>
-    <td class="text-sm text-base-content/50">${c.expires_at?new Date(typeof c.expires_at==='number'?c.expires_at*1000:c.expires_at).toLocaleDateString():'-'}</td>
-    <td><button onclick="removeCollaborator('${esc(c.id)}')" class="btn btn-error btn-xs">Remove</button></td>
-  </tr>`;
-}
-
-function addCollaboratorDialog(reviewId) {
-  return `<div id="collab-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-    <div class="modal-overlay" onclick="document.getElementById('collab-dialog').style.display='none'"></div>
-    <div class="modal-content rounded-box max-w-sm p-6">
-      <h3 class="text-lg font-semibold mb-4">Add Collaborator</h3>
-      <div class="form-group mb-3">
-        <label class="label"><span class="label-text font-medium">Email</span></label>
-        <input type="email" id="collab-email" class="input input-solid max-w-full" placeholder="collaborator@example.com"/>
-      </div>
-      <div class="form-group mb-4">
-        <label class="label"><span class="label-text font-medium">Role</span></label>
-        <select id="collab-role" class="select select-solid max-w-full">
-          <option value="viewer">Viewer</option>
-          <option value="commenter">Commenter</option>
-          <option value="editor">Editor</option>
-        </select>
-      </div>
-      <div class="modal-action">
-        <button onclick="addCollaborator('${esc(reviewId)}')" class="btn btn-primary">Add</button>
-        <button onclick="document.getElementById('collab-dialog').style.display='none'" class="btn btn-ghost">Cancel</button>
-      </div>
-    </div>
-  </div>`;
-}
+import { canEdit } from '@/ui/permissions-ui.js';
+import { esc, statusBadge } from '@/ui/render-helpers.js';
+import { reviewDetailScript } from '@/ui/review-detail-script.js';
+import { highlightRow, collaboratorRow, addCollaboratorDialog } from '@/ui/review-detail-panels.js';
 
 export function renderReviewDetail(user, review, highlights = [], collaborators = [], checklists = [], sections = []) {
   const r = review || {};
@@ -216,18 +161,7 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
     ${addCollaboratorDialog(r.id)}
   `;
 
-  const script = `${TOAST}
-function switchTab(tab){
-  document.querySelectorAll('.rv-panel').forEach(function(p){p.style.display='none'});
-  var panel=document.getElementById('rvpanel-'+tab);if(panel)panel.style.display='';
-  document.querySelectorAll('[id^="rvtab-"]').forEach(function(b){b.classList.remove('active')});
-  var btn=document.getElementById('rvtab-'+tab);if(btn)btn.classList.add('active');
-}
-async function resolveHighlight(id){if(!confirm('Mark this highlight as resolved?'))return;try{var r=await fetch('/api/mwr/review/${esc(r.id)}/highlights/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({resolved:true,status:'resolved'})});if(r.ok){showToast('Resolved','success');setTimeout(function(){location.reload()},500)}else showToast('Failed','error')}catch(e){showToast('Error','error')}}
-async function bulkResolve(reviewId){if(!confirm('Resolve all highlights?'))return;try{var r=await fetch('/api/mwr/review/'+reviewId+'/highlights/bulk-resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({resolve_all:true})});if(r.ok){showToast('All resolved','success');setTimeout(function(){location.reload()},500)}else showToast('Failed','error')}catch(e){showToast('Error','error')}}
-async function exportPdf(reviewId){showToast('Generating PDF...','info');try{var r=await fetch('/api/mwr/review/'+reviewId+'/export-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});if(r.ok){var b=await r.blob();var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='review-'+reviewId+'.pdf';a.click();showToast('PDF downloaded','success')}else showToast('Export failed','error')}catch(e){showToast('Error','error')}}
-async function addCollaborator(reviewId){var email=document.getElementById('collab-email').value.trim();var role=document.getElementById('collab-role').value;if(!email){showToast('Email required','error');return}try{var r=await fetch('/api/mwr/review/'+reviewId+'/collaborators',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,role:role})});if(r.ok){showToast('Collaborator added','success');document.getElementById('collab-dialog').style.display='none';setTimeout(function(){location.reload()},500)}else showToast('Failed','error')}catch(e){showToast('Error','error')}}
-async function removeCollaborator(collabId){if(!confirm('Remove this collaborator?'))return;try{var r=await fetch('/api/mwr/review/${esc(r.id)}/collaborators/'+collabId,{method:'DELETE'});if(r.ok){showToast('Removed','success');setTimeout(function(){location.reload()},500)}else showToast('Failed','error')}catch(e){showToast('Error','error')}}`;
+  const script = reviewDetailScript(r.id);
 
   const body = `<div class="min-h-screen bg-base-200">${nav(user)}<main id="main-content">${content}</main></div>`;
   return generateHtml(`${esc(r.name||'Review')} | MOONLANDING`, body, [script]);

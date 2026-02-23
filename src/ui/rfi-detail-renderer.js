@@ -1,18 +1,9 @@
 import { generateHtml } from '@/ui/renderer.js';
 import { nav } from '@/ui/layout.js';
 import { canEdit, isPartner, isManager } from '@/ui/permissions-ui.js';
+import { esc, statusBadge, TOAST_SCRIPT } from '@/ui/render-helpers.js';
 
-const TOAST = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';c.setAttribute('role','status');c.setAttribute('aria-live','polite');document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
-
-function esc(s) {
-  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function statusBadge(status) {
-  const map = { active:'pill pill-success', closed:'pill pill-neutral', responded:'pill pill-info', pending:'pill pill-warning' };
-  const cls = map[status] || 'pill pill-neutral';
-  return `<span class="${cls}">${status||'-'}</span>`;
-}
+const TOAST = TOAST_SCRIPT;
 
 function questionRow(q, i, sections = []) {
   const section = sections.find(s => s.id === q.section_id || s.id === q.rfi_section_id);

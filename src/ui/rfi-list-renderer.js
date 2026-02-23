@@ -1,13 +1,6 @@
 import { generateHtml } from '@/ui/renderer.js';
 import { nav } from '@/ui/layout.js';
-
-function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function statusPill(status) {
-  const s = (status || 'draft').toLowerCase();
-  const map = { draft:'pill pill-neutral', active:'pill pill-info', sent:'pill pill-warning', responded:'pill pill-success', closed:'pill pill-neutral', overdue:'pill pill-danger' };
-  return `<span class="${map[s]||'pill pill-neutral'}">${s.charAt(0).toUpperCase()+s.slice(1)}</span>`;
-}
+import { esc, statusPill, TABLE_SCRIPT } from '@/ui/render-helpers.js';
 
 function deadlineCell(deadline) {
   if (!deadline) return '<span style="color:var(--color-text-light)">—</span>';
@@ -73,35 +66,5 @@ export function renderRfiList(user, rfis = [], engagements = []) {
 
   const tabScript = `var _activeTab='all';function filterTab(t){_activeTab=t;document.querySelectorAll('[id^="tab-"]').forEach(b=>b.classList.toggle('active',b.id==='tab-'+t));document.querySelectorAll('[data-filter="status"]').forEach(s=>{s.value=t==='all'?'':t});window.filterTable();}`;
 
-  return generateHtml('RFIs | MOONLANDING', body, [`(function(){
-let sortCol=null,sortDir=1;
-function filterTable(){
-  const search=(document.getElementById('search-input')?.value||'').toLowerCase();
-  const filters={};
-  document.querySelectorAll('[data-filter]').forEach(el=>{if(el.value)filters[el.dataset.filter]=el.value.toLowerCase()});
-  let shown=0,total=0;
-  document.querySelectorAll('tbody tr[data-row]').forEach(row=>{
-    total++;const text=row.textContent.toLowerCase();
-    const matchSearch=!search||text.includes(search);
-    const matchFilters=Object.entries(filters).every(([key,val])=>{const cell=row.querySelector('[data-col="'+key+'"]');return !cell||cell.textContent.toLowerCase().includes(val)});
-    const visible=matchSearch&&matchFilters;row.style.display=visible?'':'none';if(visible)shown++;
-  });
-  const counter=document.getElementById('row-count');
-  if(counter)counter.textContent=shown===total?total+' items':shown+' of '+total+' items';
-}
-function sortTable(col){
-  if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}
-  document.querySelectorAll('th[data-sort]').forEach(th=>{th.classList.remove('sort-asc','sort-desc');if(th.dataset.sort===col)th.classList.add(sortDir===1?'sort-asc':'sort-desc')});
-  const tbody=document.querySelector('tbody');if(!tbody)return;
-  const rows=Array.from(tbody.querySelectorAll('tr[data-row]'));
-  rows.sort((a,b)=>{const av=a.querySelector('[data-col="'+col+'"]')?.textContent?.trim()||'';const bv=b.querySelector('[data-col="'+col+'"]')?.textContent?.trim()||'';return av.localeCompare(bv,undefined,{numeric:true})*sortDir});
-  rows.forEach(r=>tbody.appendChild(r));
-}
-window.filterTable=filterTable;window.sortTable=sortTable;
-document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('search-input')?.addEventListener('input',filterTable);
-  document.querySelectorAll('[data-filter]').forEach(el=>el.addEventListener('change',filterTable));
-  document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>sortTable(th.dataset.sort)));
-});
-})();`, tabScript]);
+  return generateHtml('RFIs | MOONLANDING', body, [TABLE_SCRIPT, tabScript]);
 }
