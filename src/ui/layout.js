@@ -19,7 +19,7 @@ export function generateHtml(title, bodyContent, scripts = [], pathname = '/') {
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
-    <link href="https://cdn.jsdelivr.net/npm/rippleui@1.12.1/dist/css/styles.css" rel="stylesheet"/>
+    <link href="/ui/rippleui.css" rel="stylesheet"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#04141f">
   <title>${title}</title>

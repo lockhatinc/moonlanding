@@ -1,7 +1,8 @@
-const CACHE_NAME = 'moonlanding-v3';
+const CACHE_NAME = 'moonlanding-v4';
 const STATIC_ASSETS = [
   '/ui/client.js',
-  '/ui/styles.css'
+  '/ui/styles.css',
+  '/ui/rippleui.css'
 ];
 
 self.addEventListener('install', (event) => {
