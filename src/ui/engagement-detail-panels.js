@@ -2,14 +2,16 @@ import { esc, STAGE_CONFIG } from '@/ui/render-helpers.js';
 
 export function stagePipelineHtml(e) {
   const currentIdx = STAGE_CONFIG.findIndex(s => s.key === e.stage);
-  return STAGE_CONFIG.map((s, i) => {
+  const stages = STAGE_CONFIG.map((s, i) => {
     const isCurrent = i === currentIdx;
     const isPast = i < currentIdx;
-    const opacity = isPast ? '0.6' : isCurrent ? '1' : '0.2';
-    return `<div onclick="openStageTransition('${esc(s.key)}')" style="flex:1;padding:8px 4px;text-align:center;background:${isCurrent || isPast ? s.color : '#e0e0e0'};color:${isCurrent || isPast ? '#fff' : '#999'};opacity:${opacity};font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;cursor:pointer;position:relative">
-      ${s.label}${isCurrent ? `<div style="position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:7px solid ${s.color}"></div>` : ''}
-    </div>`;
+    const bg = isCurrent || isPast ? s.color : '#e2e8f0';
+    const color = isCurrent || isPast ? '#fff' : '#94a3b8';
+    const opacity = isPast ? '0.7' : '1';
+    const shine = isCurrent ? 'background:rgba(255,255,255,0.18);position:absolute;inset:0;pointer-events:none' : '';
+    return `<div onclick="openStageTransition('${esc(s.key)}')" title="${s.label}" style="flex:1;min-width:0;padding:9px 4px;text-align:center;background:${bg};color:${color};opacity:${opacity};font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;cursor:pointer;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isCurrent ? `<div style="${shine}"></div>` : ''}<span style="position:relative">${s.label}</span></div>`;
   }).join('');
+  return `<div style="display:flex;flex-direction:row;width:100%;border-radius:8px;overflow:hidden;height:34px">${stages}</div>`;
 }
 
 export function stageTransitionDialog(engId, currentStage) {
