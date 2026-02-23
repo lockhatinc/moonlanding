@@ -2,7 +2,7 @@ import { statusLabel } from '@/ui/renderer.js';
 
 export function rfiSectionCrudPanel(engagementId, sections = []) {
   const rows = sections.map((s, i) => `<div class="rfi-section-row" draggable="true" data-id="${s.id}" data-idx="${i}" ondragstart="rfiDragStart(event)" ondragover="rfiDragOver(event)" ondrop="rfiDrop(event)"><span class="rfi-section-handle">&#9776;</span><span class="rfi-section-name">${s.name || 'Untitled'}</span><span class="badge-status">${s.question_count || 0} Q</span><div class="flex gap-1"><button class="btn btn-xs btn-ghost" onclick="rfiEditSection('${s.id}','${(s.name || '').replace(/'/g, "\\'")}')">Edit</button><button class="btn btn-xs btn-ghost btn-error" onclick="rfiDeleteSection('${s.id}')">Del</button></div></div>`).join('');
-  return `<div class="card bg-white shadow mb-4"><div class="card-body"><div class="flex justify-between items-center mb-3"><h3 class="card-title text-sm">RFI Sections</h3><button class="btn btn-primary btn-sm" onclick="rfiAddSection()">Add Section</button></div><div id="rfi-sections-list">${rows || '<div class="text-gray-500 text-sm text-center py-3">No sections yet</div>'}</div></div></div>
+  return `<div class="card-clean" style="margin-bottom:1rem"><div class="card-clean-body"><div class="flex justify-between items-center mb-3"><h3 style="font-size:0.875rem;font-weight:600">RFI Sections</h3><button class="btn btn-primary btn-sm" onclick="rfiAddSection()">Add Section</button></div><div id="rfi-sections-list">${rows || '<div class="text-gray-500 text-sm text-center py-3">No sections yet</div>'}</div></div></div>
   <script>
   var rfiEngId='${engagementId}';var dragSrc=null;
   window.rfiDragStart=function(e){dragSrc=e.target.closest('.rfi-section-row');e.dataTransfer.effectAllowed='move'};

@@ -92,6 +92,6 @@ export function buildDeploymentLogsPage(user) {
       const sts = l.status === 'success' ? '<span style="color:#22c55e">Success</span>' : l.status === 'failed' ? '<span style="color:#ef4444">Failed</span>' : '<span style="color:#f59e0b">' + (l.status || 'pending') + '</span>';
       return '<tr><td class="text-sm">' + (l.version || '-') + '</td><td>' + sts + '</td><td class="text-xs text-gray-500">' + (l.created_at ? new Date(l.created_at * 1000).toLocaleString() : '-') + '</td><td class="text-xs">' + (l.duration ? l.duration + 's' : '-') + '</td><td class="text-xs text-gray-500">' + (l.message || '-') + '</td></tr>';
     }).join('');
-    return '<div class="mb-6"><h1 class="text-2xl font-bold">Build & Deployment Logs</h1></div><div class="card bg-white shadow"><div class="card-body"><table class="table table-zebra w-full"><thead><tr><th>Version</th><th>Status</th><th>Time</th><th>Duration</th><th>Message</th></tr></thead><tbody>' + (rows || '<tr><td colspan="5" class="text-center py-4 text-gray-500">No build logs</td></tr>') + '</tbody></table></div></div>';
+    return '<div class="mb-6"><h1 class="text-2xl font-bold">Build & Deployment Logs</h1></div><div class="card-clean"><div class="card-clean-body"><table class="data-table"><thead><tr><th>Version</th><th>Status</th><th>Time</th><th>Duration</th><th>Message</th></tr></thead><tbody>' + (rows || '<tr><td colspan="5" class="text-center py-4 text-gray-500">No build logs</td></tr>') + '</tbody></table></div></div>';
   };
 }

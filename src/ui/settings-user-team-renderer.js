@@ -63,7 +63,7 @@ export function renderSettingsUserDetail(user, targetUser = {}, teams = []) {
     <h1 class="text-2xl font-bold">${esc(title)}</h1>
     ${targetUser.role ? roleBadge(targetUser.role) : ''}
   </div>
-  <div class="card bg-base-100 shadow-md max-w-2xl"><div class="card-body">${form}</div></div>`;
+  <div class="card-clean"><div class="card-clean-body">${form}</div></div>`;
 
   const script = `${TOAST_SCRIPT}
 async function saveUser(id){
@@ -97,7 +97,7 @@ export function renderSettingsTeamDetail(user, team = {}, allUsers = []) {
   const availOpts = available.map(u => `<option value="${esc(u.id)}">${esc(u.name||u.email||u.id)}</option>`).join('');
 
   const form = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <div class="card bg-base-100 shadow-md"><div class="card-body">
+    <div class="card-clean"><div class="card-clean-body">
       <h2 class="card-title text-base">Team Details</h2>
       <div class="space-y-4">
         ${field('Team Name', 't-name', 'text', team.name || '')}
@@ -105,7 +105,7 @@ export function renderSettingsTeamDetail(user, team = {}, allUsers = []) {
         <button onclick="saveTeam('${esc(team.id||'')}')" class="btn btn-primary">${isNew ? 'Create Team' : 'Save Changes'}</button>
       </div>
     </div></div>
-    <div class="card bg-base-100 shadow-md"><div class="card-body">
+    <div class="card-clean"><div class="card-clean-body">
       <div class="flex justify-between items-center mb-4">
         <h2 class="card-title text-base">Members (${members.length})</h2>
         ${!isNew ? `<div class="flex gap-2"><select id="add-member-select" class="select select-solid select-sm"><option value="">Select user...</option>${availOpts}</select><button onclick="addMember('${esc(team.id||'')}')" class="btn btn-primary btn-sm">Add</button></div>` : '<span class="text-sm text-base-content/40">Save team first to add members</span>'}

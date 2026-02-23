@@ -14,7 +14,7 @@ export function settingsBack() {
 export function inlineTable(headers, rows, emptyMsg) {
   const ths = headers.map(h => `<th>${h}</th>`).join('');
   const empty = `<tr><td colspan="${headers.length}" class="text-center py-8 text-base-content/40 text-sm">${emptyMsg}</td></tr>`;
-  return `<div class="table-container"><table class="table table-hover"><thead><tr>${ths}</tr></thead><tbody>${rows || empty}</tbody></table></div>`;
+  return `<div class="table-wrap"><table class="data-table"><thead><tr>${ths}</tr></thead><tbody>${rows || empty}</tbody></table></div>`;
 }
 
 const KNOWN_ROLE_LABELS = { admin:'Admin', partner:'Partner', manager:'Manager', clerk:'Clerk', user:'User', auditor:'Auditor', client_admin:'Client Admin', client_user:'Client User' };
@@ -45,8 +45,8 @@ export function renderSettingsHome(user, config = {}, counts = {}) {
   const cards = SETTINGS_CARDS.map(c => {
     const cnt = c.countKey && counts[c.countKey] !== undefined ? counts[c.countKey] : null;
     const badge = cnt !== null ? `<span class="badge badge-flat-primary text-xs">${cnt.toLocaleString()} items</span>` : '';
-    return `<a href="${c.href}" class="card bg-base-100" style="text-decoration:none;border:1px solid var(--color-border);transition:box-shadow 0.15s">
-      <div class="card-body" style="padding:1rem">
+    return `<a href="${c.href}" class="card-clean" style="text-decoration:none;border:1px solid var(--color-border);transition:box-shadow 0.15s">
+      <div class="card-clean-body" style="padding:1rem">
         <div style="display:flex;align-items:flex-start;gap:0.75rem">
           <div style="font-size:1.25rem;width:2.25rem;height:2.25rem;display:flex;align-items:center;justify-content:center;background:var(--color-base-200);border-radius:8px;flex-shrink:0">${c.icon}</div>
           <div style="flex:1;min-width:0">
@@ -75,8 +75,8 @@ export function renderSettingsSystem(user, config = {}) {
     { icon: '✉️', title: 'Email Configuration', items: [['Batch Size', t.email?.send_batch_size || 10], ['Max Retries', t.email?.send_max_retries || 3], ['Rate Limit Delay', (t.email?.rate_limit_delay_ms || 6000) + 'ms']] },
     { icon: '⚙️', title: 'Workflow Configuration', items: [['Stage Transition Lockout', (t.workflow?.stage_transition_lockout_minutes || 5) + ' min'], ['Collaborator Default Expiry', (t.collaborator?.default_expiry_days || 7) + ' days'], ['Collaborator Max Expiry', (t.collaborator?.max_expiry_days || 30) + ' days']] },
   ];
-  const cards = sections.map(s => `<div class="card bg-base-100 shadow-sm border border-base-200">
-    <div class="card-body p-4">
+  const cards = sections.map(s => `<div class="card-clean">
+    <div class="card-clean-body" style="padding:1rem">
       <h2 class="font-semibold text-sm flex items-center gap-2 mb-3"><span>${s.icon}</span> ${s.title}</h2>
       ${s.items.map(([l, v]) => `<div class="flex justify-between items-center py-2 border-b border-base-200 last:border-0">
         <span class="text-sm text-base-content/60">${l}</span>
@@ -142,9 +142,9 @@ export function renderSettingsUsers(user, users = []) {
     </div>
     <span class="table-count" id="row-count">${users.length} items</span>
   </div>
-  <div class="card bg-base-100 shadow-md">
-    <div class="card-body p-0">
-      <div class="table-container"><table class="data-table">
+  <div class="card-clean">
+    <div class="card-clean-body" style="padding:0rem">
+      <div class="table-wrap"><table class="data-table">
         <thead><tr>
           <th data-sort="name">User</th>
           <th data-sort="role">Role</th>

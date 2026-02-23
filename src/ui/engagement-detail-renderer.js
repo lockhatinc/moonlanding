@@ -21,8 +21,8 @@ export function renderEngagementCardView(user, engagements) {
     const cfg = STAGE_CONFIG.find(s => s.key === e.stage);
     const stageLbl = cfg ? `<span class="badge ${cfg.badge} text-xs">${cfg.label}</span>` : '';
     const pct = typeof e.progress === 'number' ? Math.min(100, Math.round(e.progress)) : 0;
-    return `<div onclick="location.href='/engagement/${esc(e.id)}'" class="card bg-base-100 shadow-md cursor-pointer hover:shadow-lg transition-shadow">
-      <div class="card-body p-4">
+    return `<div onclick="location.href='/engagement/${esc(e.id)}'" class="card-clean">
+      <div class="card-clean-body" style="padding:1rem">
         <div class="font-semibold text-sm mb-1">${esc(e.name || 'Untitled')}</div>
         <div class="text-xs text-base-content/60 mb-2">${esc(e.client_name || '')}</div>
         ${stageLbl}

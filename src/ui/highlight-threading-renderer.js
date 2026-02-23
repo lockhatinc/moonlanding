@@ -40,7 +40,7 @@ function highlightThread(highlight, responses, canResolve) {
 
   const replyForm = `<div class="mt-3 border-t border-gray-100 pt-3"><textarea id="reply-${highlight.id}" class="textarea textarea-bordered textarea-sm w-full" rows="2" placeholder="Add a response..."></textarea><div class="flex justify-end gap-2 mt-2"><button class="btn btn-xs btn-primary" onclick="submitResponse('${highlight.id}')">Reply</button></div></div>`;
 
-  return `<div class="card bg-white shadow mb-4" id="thread-${highlight.id}"><div class="card-body"><div class="flex items-start justify-between mb-3"><div class="flex items-center gap-2"><span style="width:28px;height:28px;border-radius:50%;background:${color};color:white;display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700">${idx}</span><span class="font-medium text-sm">${highlight.text || highlight.content || 'Area highlight'}</span></div>${badge}</div><div class="text-xs text-gray-400 mb-2">Page ${highlight.page_number || '?'} ${highlight.section_name ? '&middot; ' + highlight.section_name : ''}</div><div class="border-t border-gray-100">${threadItems || '<div class="py-4 text-center text-sm text-gray-400">No responses yet</div>'}</div>${resolveActions}${replyForm}</div></div>`;
+  return `<div class="card-clean" style="margin-bottom:1rem" id="thread-${highlight.id}"><div class="card-clean-body"><div class="flex items-start justify-between mb-3"><div class="flex items-center gap-2"><span style="width:28px;height:28px;border-radius:50%;background:${color};color:white;display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700">${idx}</span><span class="font-medium text-sm">${highlight.text || highlight.content || 'Area highlight'}</span></div>${badge}</div><div class="text-xs text-gray-400 mb-2">Page ${highlight.page_number || '?'} ${highlight.section_name ? '&middot; ' + highlight.section_name : ''}</div><div class="border-t border-gray-100">${threadItems || '<div class="py-4 text-center text-sm text-gray-400">No responses yet</div>'}</div>${resolveActions}${replyForm}</div></div>`;
 }
 
 export function renderHighlightThreading(user, review, highlights, responseMap) {
@@ -59,7 +59,7 @@ export function renderHighlightThreading(user, review, highlights, responseMap) 
     { label: 'Open', value: stats.open, color: 'red' },
     { label: 'Partial', value: stats.partial, color: 'yellow' },
     { label: 'Resolved', value: stats.resolved, color: 'green' },
-  ].map(s => `<div class="card bg-white shadow"><div class="card-body py-3 text-center"><div class="text-lg font-bold${s.color ? ` text-${s.color}-600` : ''}">${s.value}</div><div class="text-xs text-gray-500">${s.label}</div></div></div>`).join('')}</div>`;
+  ].map(s => `<div class="card-clean"><div class="card-clean-body" style=""><div class="text-lg font-bold${s.color ? ` text-${s.color}-600` : ''}">${s.value}</div><div class="text-xs text-gray-500">${s.label}</div></div></div>`).join('')}</div>`;
 
   const filterBar = `<div class="flex gap-2 mb-4"><button class="btn btn-sm btn-primary" data-thread-filter="all" onclick="filterThreads('all')">All (${stats.total})</button><button class="btn btn-sm btn-ghost" data-thread-filter="open" onclick="filterThreads('open')">Open (${stats.open})</button><button class="btn btn-sm btn-ghost" data-thread-filter="resolved" onclick="filterThreads('resolved')">Resolved (${stats.resolved})</button></div>`;
 

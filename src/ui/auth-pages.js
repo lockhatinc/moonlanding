@@ -86,7 +86,7 @@ form.addEventListener('submit', async function(e) {
 }
 
 export function renderPasswordReset() {
-  const body = `<div class="center-screen"><div class="card w-96 bg-white shadow-lg"><div class="card-body">
+  const body = `<div class="center-screen"><div class="card w-96 bg-white shadow-lg"><div class="card-clean-body">
     <div class="text-center mb-6"><h2 class="card-title justify-center">Reset Password</h2><p class="text-gray-500 text-sm">Enter your email to receive a reset link</p></div>
     <div id="reset-success" style="display:none" class="alert alert-success mb-4">If an account exists with that email, a password reset link has been sent.</div>
     <form id="reset-form" aria-label="Password reset request"><div class="form-group"><label class="form-label" for="email">Email</label><input type="email" name="email" id="email" class="input input-bordered w-full" placeholder="Enter your email" required/></div>
@@ -97,7 +97,7 @@ export function renderPasswordReset() {
 }
 
 export function renderPasswordResetConfirm(token) {
-  const body = `<div class="center-screen"><div class="card w-96 bg-white shadow-lg"><div class="card-body">
+  const body = `<div class="center-screen"><div class="card w-96 bg-white shadow-lg"><div class="card-clean-body">
     <div class="text-center mb-6"><h2 class="card-title justify-center">Set New Password</h2><p class="text-gray-500 text-sm">Enter your new password below</p></div>
     <div id="confirm-success" style="display:none" class="alert alert-success mb-4">Password updated successfully. <a href="/login" class="text-primary underline">Sign in</a></div>
     <form id="confirm-form" aria-label="Set new password"><input type="hidden" name="token" value="${token}"/>

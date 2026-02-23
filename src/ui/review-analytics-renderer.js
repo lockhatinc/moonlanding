@@ -4,7 +4,7 @@ import { page } from '@/ui/layout.js';
 function statCard(label, value, sub, color) {
   const borderClass = color ? ` border-l-4 border-${color}-500` : '';
   const textClass = color ? ` text-${color}-600` : '';
-  return `<div class="card bg-white shadow${borderClass}"><div class="card-body"><h3 class="text-gray-500 text-sm">${label}</h3><p class="text-2xl font-bold${textClass}">${value}</p>${sub ? `<p class="text-xs text-gray-500 mt-1">${sub}</p>` : ''}</div></div>`;
+  return `<div class="card-clean"><div class="card-clean-body"><h3 class="text-gray-500 text-sm">${label}</h3><p class="text-2xl font-bold${textClass}">${value}</p>${sub ? `<p class="text-xs text-gray-500 mt-1">${sub}</p>` : ''}</div></div>`;
 }
 
 function barChart(data, maxVal, label) {
@@ -62,15 +62,15 @@ export function renderReviewAnalytics(user, stats) {
   reviews.forEach(r => { const c = r.creator_name || r.created_by || 'Unknown'; reviewsByCreator[c] = (reviewsByCreator[c] || 0) + 1; });
   const creatorData = Object.entries(reviewsByCreator).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([label, value]) => ({ label, value, color: '#6366f1' }));
 
-  const charts = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"><div class="card bg-white shadow"><div class="card-body"><h3 class="font-semibold mb-4">Review Status</h3>${distributionRing(statusData, totalReviews, 'Reviews')}</div></div><div class="card bg-white shadow"><div class="card-body"><h3 class="font-semibold mb-4">Highlight Resolution</h3>${distributionRing(highlightData, totalHighlights, 'Highlights')}</div></div></div>`;
+  const charts = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"><div class="card-clean"><div class="card-clean-body"><h3 class="font-semibold mb-4">Review Status</h3>${distributionRing(statusData, totalReviews, 'Reviews')}</div></div><div class="card-clean"><div class="card-clean-body"><h3 class="font-semibold mb-4">Highlight Resolution</h3>${distributionRing(highlightData, totalHighlights, 'Highlights')}</div></div></div>`;
 
-  const creatorChart = creatorData.length > 0 ? `<div class="card bg-white shadow mb-6"><div class="card-body"><h3 class="font-semibold mb-4">Reviews by Creator</h3>${barChart(creatorData, 0, '')}</div></div>` : '';
+  const creatorChart = creatorData.length > 0 ? `<div class="card-clean" style="margin-bottom:1.5rem"><div class="card-clean-body"><h3 class="font-semibold mb-4">Reviews by Creator</h3>${barChart(creatorData, 0, '')}</div></div>` : '';
 
   const activityRows = recentActivity.slice(0, 15).map(a => {
     const date = a.created_at ? (typeof a.created_at === 'number' ? new Date(a.created_at * 1000).toLocaleDateString() : a.created_at) : '-';
     return `<tr><td class="text-sm">${a.description || a.action || '-'}</td><td class="text-sm text-gray-500">${a.user_name || '-'}</td><td class="text-xs text-gray-400">${date}</td></tr>`;
   }).join('');
-  const activityTable = `<div class="card bg-white shadow"><div class="card-body"><h3 class="font-semibold mb-4">Recent Activity</h3><table class="table table-sm w-full"><thead><tr><th>Action</th><th>User</th><th>Date</th></tr></thead><tbody>${activityRows || '<tr><td colspan="3" class="text-center py-4 text-gray-400">No recent activity</td></tr>'}</tbody></table></div></div>`;
+  const activityTable = `<div class="card-clean"><div class="card-clean-body"><h3 class="font-semibold mb-4">Recent Activity</h3><table class="data-table"><thead><tr><th>Action</th><th>User</th><th>Date</th></tr></thead><tbody>${activityRows || '<tr><td colspan="3" class="text-center py-4 text-gray-400">No recent activity</td></tr>'}</tbody></table></div></div>`;
 
   const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Review Analytics</h1><a href="/reviews" class="btn btn-ghost btn-sm">Back to Reviews</a></div>${cards}${charts}${creatorChart}${activityTable}`;
 

@@ -59,7 +59,7 @@ async function deleteTeam(id){if(!confirm('Delete this team?'))return;try{const 
       <h1 class="text-2xl font-bold">Teams</h1>
       <button onclick="openAddTeam()" class="btn btn-primary btn-sm gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Team</button>
     </div>
-    <div class="card bg-base-100 shadow-md"><div class="card-body p-0">${inlineTable(['Name', 'Members', 'Actions'], rows, 'No teams found')}</div></div>`;
+    <div class="card-clean"><div class="card-clean-body" style="padding:0rem">${inlineTable(['Name', 'Members', 'Actions'], rows, 'No teams found')}</div></div>`;
   return settingsPage(user, 'Teams - Settings', [{ href: '/', label: 'Dashboard' }, { href: '/admin/settings', label: 'Settings' }, { label: 'Teams' }], content, [script]);
 }
 
@@ -77,7 +77,7 @@ export function renderSettingsRfiSections(user, sections = []) {
   </tr>`).join('');
 
   const palette = RFI_PALETTE.map(c => `<div data-color="${c}" class="w-6 h-6 rounded cursor-pointer border-2 border-transparent hover:border-base-content" style="background:${c}" onclick="selectColor('${c}')" title="${c}"></div>`).join('');
-  const formHtml = `<div id="section-form" class="card bg-base-100 shadow-md mb-4" style="display:none">
+  const formHtml = `<div id="section-form" class="card-clean" style="margin-bottom:1rem" style="display:none">
     <div class="card-clean-body">
       <div class="flex flex-wrap gap-4 items-end">
         <div class="form-group"><label class="label"><span class="label-text font-medium">Name</span></label><input type="text" id="section-name" class="input input-solid" style="max-width:200px" placeholder="Section name"/></div>
@@ -94,7 +94,7 @@ export function renderSettingsRfiSections(user, sections = []) {
       <button onclick="toggleAddForm()" class="btn btn-primary btn-sm">Add Section</button>
     </div>
     ${formHtml}
-    <div class="card bg-base-100 shadow-md"><div class="card-body p-0">${inlineTable(['Color', 'Name', 'Order', 'Actions'], rows, 'No RFI sections. Add one below.')}</div></div>`;
+    <div class="card-clean"><div class="card-clean-body" style="padding:0rem">${inlineTable(['Color', 'Name', 'Order', 'Actions'], rows, 'No RFI sections. Add one below.')}</div></div>`;
 
   const script = `${TOAST_SCRIPT}
 function toggleAddForm(){document.getElementById('section-form').style.display='block';document.getElementById('edit-id').value='';document.getElementById('section-name').value='';selectColor('#B0B0B0')}

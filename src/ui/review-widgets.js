@@ -6,8 +6,8 @@ export function mobileReviewCard(review) {
   const r = review || {}
   const sts = r.status ? statusLabel(r.status) : ''
   const date = r.created_at ? `<span class="text-xs text-gray-500">${typeof r.created_at === 'number' ? new Date(r.created_at * 1000).toLocaleDateString() : r.created_at}</span>` : ''
-  return `<div class="mobile-card mobile-review-card card bg-white shadow">
-    <div class="card-body">
+  return `<div class="mobile-card mobile-review-card card-clean">
+    <div class="card-clean-body">
       <div class="flex justify-between items-center mb-2"><h3 class="font-medium text-sm">${r.name || r.title || 'Untitled Review'}</h3>${sts}</div>
       <div class="flex items-center gap-2 text-xs text-gray-500 mb-2">${r.engagement_name ? `<span>${r.engagement_name}</span>` : ''}${date}</div>
       ${r.highlights_count !== undefined ? `<div class="text-xs text-gray-500">${r.highlights_count} highlight${r.highlights_count !== 1 ? 's' : ''}</div>` : ''}

@@ -144,7 +144,8 @@ export async function handlePage(pathname, req, res) {
     if (!canList(user, entityName)) return renderAccessDenied(user, entityName, 'list');
     let items = list(entityName, {});
     if (isClientUser(user) && user.client_id) items = items.filter(item => { if (item.client_id) return item.client_id === user.client_id; if (item.assigned_to) return item.assigned_to === user.id; return true; });
-    return renderEntityList(entityName, resolveRefFields(items, spec), spec, user);
+    const { renderEntityList: lazyEntityList } = await lazyRenderer('entity-renderer.js');
+    return lazyEntityList(entityName, resolveRefFields(items, spec), spec, user);
   }
 
   if (segments.length === 2 && segments[0] === 'client' && segments[1] !== 'new') {
@@ -173,14 +174,16 @@ export async function handlePage(pathname, req, res) {
     if (idOrAction === 'new') {
       if (!canCreate(user, entityName)) return renderAccessDenied(user, entityName, 'create');
       const resolvedSpec = resolveEnumOptions(spec);
-      return renderEntityForm(entityName, null, resolvedSpec, user, true, getRefOptions(resolvedSpec));
+      const { renderEntityForm: lazyEntityForm } = await lazyRenderer('entity-renderer.js');
+      return lazyEntityForm(entityName, null, resolvedSpec, user, true, getRefOptions(resolvedSpec));
     }
     if (!canView(user, entityName)) return renderAccessDenied(user, entityName, 'view');
     const item = get(entityName, idOrAction); if (!item) return null;
     if (item.team_id && user.team_id && item.team_id !== user.team_id && !isPartner(user)) return renderAccessDenied(user, entityName, 'view');
     if (isClientUser(user) && user.client_id && item.client_id && item.client_id !== user.client_id) return renderAccessDenied(user, entityName, 'view');
     const [resolvedItem] = resolveRefFields([item], spec);
-    return renderEntityDetail(entityName, resolvedItem, spec, user);
+    const { renderEntityDetail: lazyEntityDetail } = await lazyRenderer('entity-renderer.js');
+    return lazyEntityDetail(entityName, resolvedItem, spec, user);
   }
 
   if (segments.length === 3 && segments[2] === 'edit') {
@@ -190,7 +193,8 @@ export async function handlePage(pathname, req, res) {
     const item = get(entityName, id); if (!item) return null;
     if (item.team_id && user.team_id && item.team_id !== user.team_id && !isPartner(user)) return renderAccessDenied(user, entityName, 'edit');
     const resolvedSpec = resolveEnumOptions(spec);
-    return renderEntityForm(entityName, item, resolvedSpec, user, false, getRefOptions(resolvedSpec));
+    const { renderEntityForm: lazyEntityForm2 } = await lazyRenderer('entity-renderer.js');
+    return lazyEntityForm2(entityName, item, resolvedSpec, user, false, getRefOptions(resolvedSpec));
   }
 
   return null;

@@ -17,8 +17,8 @@ export function renderSettingsReviewSettings(user, config = {}) {
   ];
   const content = `${settingsBack()}<h1 class="text-2xl font-bold mb-6">Review Settings</h1>
     <form id="review-settings-form"><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-      <div class="card bg-base-100 shadow-md"><div class="card-body"><h2 class="card-title text-base mb-2">Review Options</h2>${toggles.map(togRow).join('')}</div></div>
-      <div class="card bg-base-100 shadow-md"><div class="card-body"><h2 class="card-title text-base mb-4">Defaults</h2>
+      <div class="card-clean"><div class="card-clean-body"><h2 class="card-title text-base mb-2">Review Options</h2>${toggles.map(togRow).join('')}</div></div>
+      <div class="card-clean"><div class="card-clean-body"><h2 class="card-title text-base mb-4">Defaults</h2>
         <div class="form-group mb-3"><label class="label"><span class="label-text font-semibold">Default Status</span></label><select name="default_status" class="select select-solid max-w-full"><option value="active" ${review.default_status==='active'?'selected':''}>Active</option><option value="draft" ${review.default_status==='draft'?'selected':''}>Draft</option></select></div>
         <div class="form-group mb-3"><label class="label"><span class="label-text font-semibold">Max Highlights Per Review</span></label><input type="number" name="max_highlights" class="input input-solid max-w-full" value="${review.max_highlights || 500}" min="1"/></div>
         <div class="form-group"><label class="label"><span class="label-text font-semibold">Default Currency</span></label><select name="default_currency" class="select select-solid max-w-full"><option value="ZAR" ${!review.default_currency||review.default_currency==='ZAR'?'selected':''}>ZAR</option><option value="USD" ${review.default_currency==='USD'?'selected':''}>USD</option><option value="EUR" ${review.default_currency==='EUR'?'selected':''}>EUR</option><option value="GBP" ${review.default_currency==='GBP'?'selected':''}>GBP</option></select></div>
@@ -38,8 +38,8 @@ export function renderSettingsFileReview(user, config = {}) {
   ];
   const content = `${settingsBack()}<h1 class="text-2xl font-bold mb-6">File Review Settings</h1>
     <form id="file-review-settings-form"><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-      <div class="card bg-base-100 shadow-md"><div class="card-body"><h2 class="card-title text-base mb-2">File Review Options</h2>${toggles.map(togRow).join('')}</div></div>
-      <div class="card bg-base-100 shadow-md"><div class="card-body"><h2 class="card-title text-base mb-4">File Limits</h2>
+      <div class="card-clean"><div class="card-clean-body"><h2 class="card-title text-base mb-2">File Review Options</h2>${toggles.map(togRow).join('')}</div></div>
+      <div class="card-clean"><div class="card-clean-body"><h2 class="card-title text-base mb-4">File Limits</h2>
         <div class="form-group mb-3"><label class="label"><span class="label-text font-semibold">Max File Size (MB)</span></label><input type="number" name="max_file_size_mb" class="input input-solid max-w-full" value="${fr.max_file_size_mb || 50}" min="1"/></div>
         <div class="form-group mb-3"><label class="label"><span class="label-text font-semibold">Max Files Per Review</span></label><input type="number" name="max_files_per_review" class="input input-solid max-w-full" value="${fr.max_files_per_review || 20}" min="1"/></div>
         <div class="form-group"><label class="label"><span class="label-text font-semibold">Allowed File Types</span></label><input type="text" name="allowed_types" class="input input-solid max-w-full" value="${fr.allowed_types || 'pdf,doc,docx,xls,xlsx,png,jpg'}"/></div>
@@ -65,14 +65,14 @@ export function renderSettingsTemplateManage(user, template = {}, sections = [])
     <p class="text-sm text-base-content/50 mt-1">Manage template sections and configuration</p>
   </div>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div class="card bg-base-100 shadow-md"><div class="card-body">
+    <div class="card-clean"><div class="card-clean-body">
       <h2 class="card-title text-base mb-4">Template Info</h2>
       <div class="form-group mb-3"><label class="label"><span class="label-text font-semibold">Name</span></label><input type="text" id="tpl-name" class="input input-solid max-w-full" value="${esc(template.name || '')}"/></div>
       <div class="form-group mb-3"><label class="label"><span class="label-text font-semibold">Type</span></label><select id="tpl-type" class="select select-solid max-w-full"><option value="standard" ${template.type==='standard'?'selected':''}>Standard</option><option value="checklist" ${template.type==='checklist'?'selected':''}>Checklist</option><option value="audit" ${template.type==='audit'?'selected':''}>Audit</option></select></div>
       <div class="form-group mb-4"><label class="label cursor-pointer justify-start gap-3"><input type="checkbox" id="tpl-active" class="checkbox checkbox-primary" ${template.is_active?'checked':''}/><span class="label-text">Active</span></label></div>
       <button onclick="saveTplInfo()" class="btn btn-primary btn-sm">Save Template Info</button>
     </div></div>
-    <div class="card bg-base-100 shadow-md"><div class="card-body">
+    <div class="card-clean"><div class="card-clean-body">
       <div class="flex justify-between items-center mb-4">
         <h2 class="card-title text-base">Sections</h2>
         <button onclick="addTplSection()" class="btn btn-primary btn-sm">+ Add Section</button>
@@ -80,7 +80,7 @@ export function renderSettingsTemplateManage(user, template = {}, sections = [])
       ${inlineTable(['Color', 'Name', 'Order', 'Actions'], sectionRows, 'No sections defined')}
     </div></div>
   </div>
-  <div id="tpl-section-form" class="hidden card bg-base-100 shadow-md mt-4"><div class="card-body">
+  <div id="tpl-section-form" class="hidden card-clean" style="margin-top:1rem"><div class="card-clean-body">
     <div class="flex flex-wrap gap-4 items-end">
       <div class="form-group flex-1 min-w-40"><label class="label"><span class="label-text font-semibold">Name</span></label><input type="text" id="tpl-sec-name" class="input input-solid max-w-full" placeholder="Section name"/></div>
       <div class="form-group"><label class="label"><span class="label-text font-semibold">Color</span></label><input type="color" id="tpl-sec-color" value="#B0B0B0" class="input input-solid" style="height:42px;width:60px;padding:4px"/></div>

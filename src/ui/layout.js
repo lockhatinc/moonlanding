@@ -186,5 +186,5 @@ export function confirmDialog(entityName) {
 }
 
 export function dataTable(headers, rows, emptyMsg) {
-  return `<div class="card bg-base-100 shadow-md"><div class="table-container" ${role.region} ${aria.label('Data table')}><table class="table table-hover w-full"><thead><tr>${headers}</tr></thead><tbody id="table-body">${rows || `<tr><td colspan="100" class="text-center py-8 text-base-content/50">${emptyMsg}</td></tr>`}</tbody></table></div></div>`
+  return `<div class="card-clean"><div class="table-wrap" ${role.region} ${aria.label('Data table')}><table class="data-table"><thead><tr>${headers}</tr></thead><tbody id="table-body">${rows || `<tr><td colspan="100" class="text-center py-8 text-base-content/50">${emptyMsg}</td></tr>`}</tbody></table></div></div>`
 }

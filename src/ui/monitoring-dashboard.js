@@ -31,28 +31,28 @@ export function renderMonitoringDashboard() {
 
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div class="card metric-card bg-base-200">
-              <div class="card-body">
+              <div class="card-clean-body">
                 <div class="metric-value text-success" id="health-status">OK</div>
                 <div class="metric-label">System Health</div>
               </div>
             </div>
 
             <div class="card metric-card bg-base-200">
-              <div class="card-body">
+              <div class="card-clean-body">
                 <div class="metric-value" id="p95-latency">-</div>
                 <div class="metric-label">P95 Latency (ms)</div>
               </div>
             </div>
 
             <div class="card metric-card bg-base-200">
-              <div class="card-body">
+              <div class="card-clean-body">
                 <div class="metric-value" id="error-count">0</div>
                 <div class="metric-label">Error Count</div>
               </div>
             </div>
 
             <div class="card metric-card bg-base-200">
-              <div class="card-body">
+              <div class="card-clean-body">
                 <div class="metric-value" id="memory-usage">-</div>
                 <div class="metric-label">Memory Usage (%)</div>
               </div>
@@ -69,8 +69,8 @@ export function renderMonitoringDashboard() {
 
           <div id="tab-requests" class="tab-content">
             <div class="card bg-base-200">
-              <div class="card-body">
-                <h2 class="card-title">Request Metrics</h2>
+              <div class="card-clean-body">
+                <h2 style="font-size:1rem;font-weight:600">Request Metrics</h2>
                 <div id="request-metrics" class="overflow-auto max-h-96"></div>
               </div>
             </div>
@@ -78,8 +78,8 @@ export function renderMonitoringDashboard() {
 
           <div id="tab-alerts" class="tab-content hidden">
             <div class="card bg-base-200">
-              <div class="card-body">
-                <h2 class="card-title">Recent Alerts</h2>
+              <div class="card-clean-body">
+                <h2 style="font-size:1rem;font-weight:600">Recent Alerts</h2>
                 <div id="alert-list" class="space-y-2"></div>
               </div>
             </div>
@@ -87,8 +87,8 @@ export function renderMonitoringDashboard() {
 
           <div id="tab-database" class="tab-content hidden">
             <div class="card bg-base-200">
-              <div class="card-body">
-                <h2 class="card-title">Database Metrics</h2>
+              <div class="card-clean-body">
+                <h2 style="font-size:1rem;font-weight:600">Database Metrics</h2>
                 <div id="database-metrics"></div>
               </div>
             </div>
@@ -96,8 +96,8 @@ export function renderMonitoringDashboard() {
 
           <div id="tab-resources" class="tab-content hidden">
             <div class="card bg-base-200">
-              <div class="card-body">
-                <h2 class="card-title">Resource Usage</h2>
+              <div class="card-clean-body">
+                <h2 style="font-size:1rem;font-weight:600">Resource Usage</h2>
                 <div id="resource-metrics"></div>
               </div>
             </div>
@@ -105,8 +105,8 @@ export function renderMonitoringDashboard() {
 
           <div id="tab-logs" class="tab-content hidden">
             <div class="card bg-base-200">
-              <div class="card-body">
-                <h2 class="card-title">System Logs</h2>
+              <div class="card-clean-body">
+                <h2 style="font-size:1rem;font-weight:600">System Logs</h2>
                 <div class="mb-4 flex gap-2">
                   <label for="log-level" class="sr-only">Log level filter</label>
                   <select id="log-level" class="select select-bordered" aria-label="Log level filter">

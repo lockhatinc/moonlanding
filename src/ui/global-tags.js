@@ -134,7 +134,7 @@ export async function initGlobalTags() {
 
 export function renderTagsUI() {
   return `
-    <div class="card bg-white shadow"><div class="card-body">
+    <div class="card-clean"><div class="card-clean-body">
       <div class="flex justify-between items-center mb-4"><h2 class="card-title text-lg">Global Tags</h2><button class="btn btn-primary btn-sm" onclick="gtsOpenDialog('create')">New Tag</button></div>
       <div id="tags-list-container">${renderTagsList()}</div>
     </div></div>

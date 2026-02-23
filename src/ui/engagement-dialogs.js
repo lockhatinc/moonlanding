@@ -30,7 +30,7 @@ export function postRfiJournalDialog(engagementId) {
 }
 
 export function postRfiFileUpload(engagementId) {
-  return `<div class="card bg-white shadow mb-4"><div class="card-body"><h3 class="card-title text-sm">Upload Post-RFI Files</h3><div class="mt-3"><input type="file" id="prfi-files" class="file-input file-input-bordered w-full" multiple/><div class="flex justify-end mt-2"><button class="btn btn-primary btn-sm" onclick="prfiUpload()">Upload</button></div><div id="prfi-progress" class="mt-2"></div></div></div></div>
+  return `<div class="card-clean" style="margin-bottom:1rem"><div class="card-clean-body"><h3 style="font-size:0.875rem;font-weight:600">Upload Post-RFI Files</h3><div class="mt-3"><input type="file" id="prfi-files" class="file-input file-input-bordered w-full" multiple/><div class="flex justify-end mt-2"><button class="btn btn-primary btn-sm" onclick="prfiUpload()">Upload</button></div><div id="prfi-progress" class="mt-2"></div></div></div></div>
   <script>
   window.prfiUpload=async function(){var files=document.getElementById('prfi-files').files;if(!files.length){showToast('Select files','error');return}var prog=document.getElementById('prfi-progress');prog.innerHTML='Uploading '+files.length+' file(s)...';var ok=0;for(var i=0;i<files.length;i++){var fd=new FormData();fd.append('file',files[i]);fd.append('engagement_id','${engagementId}');fd.append('type','post_rfi');try{var r=await fetch('/api/file/upload',{method:'POST',body:fd});if(r.ok)ok++;prog.innerHTML='Uploaded '+(i+1)+' of '+files.length}catch(e){}}prog.innerHTML=ok+' of '+files.length+' uploaded successfully';if(ok>0)showToast(ok+' files uploaded','success')};
   </script>`;

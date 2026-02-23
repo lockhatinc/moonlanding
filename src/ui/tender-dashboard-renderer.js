@@ -57,7 +57,7 @@ export function renderTenderDashboard(user, tenders, reviews = []) {
     { label: 'Due Soon', value: upcoming7, color: 'yellow' },
     { label: 'Overdue', value: overdue, color: overdue > 0 ? 'red' : '' },
     { label: 'Won', value: won, color: 'green' },
-  ].map(s => `<div class="card bg-white shadow${s.color === 'red' ? ' border-l-4 border-red-500' : ''}"><div class="card-body py-3"><h3 class="text-gray-500 text-xs">${s.label}</h3><p class="text-xl font-bold${s.color ? ` text-${s.color}-600` : ''}">${s.value}</p></div></div>`).join('')}</div>`;
+  ].map(s => `<div class="card-clean"><div class="card-clean-body" style="padding:0.75rem 0"><h3 class="text-gray-500 text-xs">${s.label}</h3><p class="text-xl font-bold${s.color ? ` text-${s.color}-600` : ''}">${s.value}</p></div></div>`).join('')}</div>`;
 
   const filterBar = `<div class="flex gap-2 mb-4 flex-wrap"><button class="btn btn-sm btn-primary" data-tender-filter="all" onclick="filterTenders('all')">All (${total})</button>${Object.entries(TENDER_FLAGS).map(([k, v]) => {
     const cnt = tenders.filter(t => (t.flag || t.status) === k).length;
@@ -72,7 +72,7 @@ export function renderTenderDashboard(user, tenders, reviews = []) {
     if (db === null) return -1;
     return da - db;
   }).map(t => tenderRow(t)).join('');
-  const table = `<div class="card bg-white shadow" style="overflow-x:auto"><table class="table table-zebra w-full"><thead><tr>${headers}</tr></thead><tbody id="tender-tbody">${rows || '<tr><td colspan="7" class="text-center py-8 text-gray-500">No tenders found</td></tr>'}</tbody></table></div>`;
+  const table = `<div class="card-clean" style="overflow-x:auto"><table class="data-table"><thead><tr>${headers}</tr></thead><tbody id="tender-tbody">${rows || '<tr><td colspan="7" class="text-center py-8 text-gray-500">No tenders found</td></tr>'}</tbody></table></div>`;
 
   const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Tender Management</h1><a href="/reviews" class="btn btn-ghost btn-sm">Back to Reviews</a></div>${statCards}${filterBar}${table}`;
 

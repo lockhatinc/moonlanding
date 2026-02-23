@@ -15,8 +15,8 @@ export function checklistTemplatesUI(user, templates = []) {
   const createBtn = canCreate(user, 'checklist') ? `<button class="btn btn-primary btn-sm" onclick="chtCreate()">+ New Template</button>` : '';
   const bc = [{ href: '/', label: 'Dashboard' }, { href: '/admin/settings', label: 'Settings' }, { label: 'Checklists' }];
   const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Checklist Templates</h1>${createBtn}</div>
-    <div class="card bg-base-100 shadow-md"><div class="card-body p-0">
-      <div class="table-container"><table class="table table-hover">
+    <div class="card-clean"><div class="card-clean-body" style="padding:0rem">
+      <div class="table-wrap"><table class="data-table">
         <thead><tr><th>Name</th><th>Items</th><th>Status</th><th>Created</th></tr></thead>
         <tbody>${rows || '<tr><td colspan="4" class="text-center py-8 text-base-content/40">No templates</td></tr>'}</tbody>
       </table></div>
@@ -93,7 +93,7 @@ export function renderChecklistDetails(user, checklist, items = []) {
       <span class="text-sm font-semibold text-base-content/60 w-10 text-right" data-ck-pct>${pct}%</span>
     </div>
     ${doneState}
-    <div class="card bg-base-100 shadow-md">
+    <div class="card-clean">
       <div id="ck-items">
         ${itemRows || emptyState}
       </div>
@@ -125,8 +125,8 @@ export function renderChecklistsHome(user, checklists = []) {
   }).join('');
   const bc = [{ href: '/', label: 'Dashboard' }, { label: 'Checklists' }];
   const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Checklists</h1></div>
-    <div class="card bg-base-100 shadow-md"><div class="card-body p-0">
-      <div class="table-container"><table class="table table-hover">
+    <div class="card-clean"><div class="card-clean-body" style="padding:0rem">
+      <div class="table-wrap"><table class="data-table">
         <thead><tr><th>Name</th><th>Engagement</th><th>Progress</th><th>%</th></tr></thead>
         <tbody>${rows || '<tr><td colspan="4" class="text-center py-8 text-base-content/40">No checklists</td></tr>'}</tbody>
       </table></div>
@@ -147,8 +147,8 @@ export function renderChecklistsManagement(user, checklists = []) {
   </tr>`).join('');
   const bc = [{ href: '/', label: 'Dashboard' }, { href: '/admin/settings', label: 'Settings' }, { label: 'Manage Checklists' }];
   const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Manage Checklists</h1></div>
-    <div class="card bg-base-100 shadow-md"><div class="card-body p-0">
-      <div class="table-container"><table class="table table-hover">
+    <div class="card-clean"><div class="card-clean-body" style="padding:0rem">
+      <div class="table-wrap"><table class="data-table">
         <thead><tr><th>Name</th><th>Items</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody>${rows || '<tr><td colspan="4" class="text-center py-8 text-base-content/40">No checklists</td></tr>'}</tbody>
       </table></div>

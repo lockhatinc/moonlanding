@@ -105,8 +105,8 @@ export function renderReviewSections(user, review, sections) {
   const pct = totalHighlights > 0 ? Math.round(resolvedHighlights / totalHighlights * 100) : 0;
   const sectionRows = sections.map((sec, i) => {
     const secPct = sec.highlights_count > 0 ? Math.round((sec.resolved_count || 0) / sec.highlights_count * 100) : 0;
-    return `<div class="card bg-base-100 shadow-sm mb-3">
-      <div class="card-body py-3">
+    return `<div class="card-clean" style="margin-bottom:0.75rem">
+      <div class="card-clean-body" style="padding:0.75rem 0">
         <div class="flex justify-between items-center">
           <span class="font-medium">${sec.name || `Section ${i + 1}`}</span>
           <span class="text-sm text-base-content/60">${sec.highlights_count || 0} highlights</span>
@@ -146,8 +146,8 @@ export function renderSectionReport(user, review, sections) {
     <h1 class="text-2xl font-bold">Section Report: ${review.name || 'Review'}</h1>
     <div class="flex gap-2"><button class="btn btn-ghost btn-sm" onclick="window.print()">Print</button><button class="btn btn-primary btn-sm" onclick="exportSectionReport()">Export CSV</button></div>
   </div>
-  <div class="card bg-base-100 shadow-md"><div class="card-body">
-    <div class="table-container"><table class="table table-hover"><thead><tr><th>Section</th><th class="text-center">Highlights</th><th class="text-center">Resolved</th><th class="text-center">Flagged</th><th class="text-center">Progress</th></tr></thead><tbody>${tableRows}${summaryRow}</tbody></table></div>
+  <div class="card-clean"><div class="card-clean-body">
+    <div class="table-wrap"><table class="data-table"><thead><tr><th>Section</th><th class="text-center">Highlights</th><th class="text-center">Resolved</th><th class="text-center">Flagged</th><th class="text-center">Progress</th></tr></thead><tbody>${tableRows}${summaryRow}</tbody></table></div>
   </div></div>`;
   const bc = [{ href: '/', label: 'Dashboard' }, { href: '/review', label: 'Reviews' }, { href: `/review/${review.id}`, label: review.name || 'Review' }, { label: 'Section Report' }];
   const exportScript = `window.exportSectionReport=function(){var rows=[['Section','Highlights','Resolved','Flagged','Progress']];document.querySelectorAll('tbody tr').forEach(function(r){var cells=[];r.querySelectorAll('td').forEach(function(c){cells.push(c.textContent.trim())});if(cells.length)rows.push(cells)});var csv=rows.map(function(r){return r.join(',')}).join('\\n');var b=new Blob([csv],{type:'text/csv'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='section-report.csv';a.click()}`;
@@ -175,7 +175,7 @@ export function renderMwrHome(user, stats) {
   const actList = recentActivity.length ? recentActivity.slice(0, 20).map(a => `<div class="flex gap-3 p-3 border-b border-base-200"><span class="text-xs text-base-content/40">${fmtDate(a.created_at)}</span><span class="text-sm">${a.description || a.action || '-'}</span></div>`).join('') : '<div class="text-center py-8 text-base-content/40 text-sm">No recent activity</div>';
 
   const panels = `<div id="home-panel-my">${myList}</div><div id="home-panel-shared" style="display:none">${sharedList}</div><div id="home-panel-activity" style="display:none">${actList}</div>`;
-  const content = `<div class="mb-4"><h1 class="text-2xl font-bold">MWR Home</h1><p class="text-base-content/60 text-sm">Welcome back, ${user?.name || 'User'}</p></div>${statsHtml}${tabBar}<div class="card bg-base-100 shadow-md"><div class="card-body p-0">${panels}</div></div>`;
+  const content = `<div class="mb-4"><h1 class="text-2xl font-bold">MWR Home</h1><p class="text-base-content/60 text-sm">Welcome back, ${user?.name || 'User'}</p></div>${statsHtml}${tabBar}<div class="card-clean"><div class="card-clean-body" style="padding:0rem">${panels}</div></div>`;
   const script = `window.switchHomeTab=(key)=>{document.querySelectorAll('[data-tab]').forEach(t=>t.classList.toggle('tab-active',t.dataset.tab===key));document.querySelectorAll('[id^="home-panel-"]').forEach(p=>p.style.display='none');const el=document.getElementById('home-panel-'+key);if(el)el.style.display='block'}`;
   const bc = [{ href: '/', label: 'Dashboard' }, { label: 'MWR Home' }];
   return page(user, 'MWR Home', bc, content, [script]);

@@ -62,7 +62,7 @@ export function renderClientDashboard(user, client, stats = {}) {
     <span class="text-sm text-base-content text-right">${v}</span>
   </div>`).join('');
 
-  const mkStat = (icon, value, label) => `<div class="card bg-base-100 shadow-sm" style="border:1px solid var(--color-border)"><div class="card-body" style="padding:1rem"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span style="font-size:1.4rem">${icon}</span><span style="font-size:1.8rem;font-weight:700">${value}</span></div><div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">${label}</div></div></div>`;
+  const mkStat = (icon, value, label) => `<div class="card-clean"><div class="card-clean-body" style="padding:1rem"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span style="font-size:1.4rem">${icon}</span><span style="font-size:1.8rem;font-weight:700">${value}</span></div><div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">${label}</div></div></div>`;
   const statsHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1.5rem">${mkStat('📁',stats.engagements||0,'Engagements')}${mkStat('📋',stats.activeRfis||0,'Active RFIs')}${mkStat('👤',stats.users||0,'Users')}${mkStat('📄',stats.reviews||0,'Reviews')}</div>`;
 
   const engRows = (stats.engagementList || []).map(e => `<tr class="hover cursor-pointer" onclick="window.location='/engagement/${e.id}'"><td class="text-sm font-medium">${esc(e.name || '-')}</td><td>${statusBadge(e.stage)}</td><td>${statusBadge(e.status)}</td></tr>`).join('') || `<tr><td colspan="3" class="text-center py-10 text-base-content/40"><div class="flex flex-col items-center gap-2"><span class="text-3xl">📁</span><span class="text-sm">No engagements yet</span>${canEdit(user, 'client') ? `<a href="/engagement/new?client_id=${esc(c.id)}" class="btn btn-primary btn-xs mt-1">+ New Engagement</a>` : ''}</div></td></tr>`;
@@ -89,19 +89,19 @@ export function renderClientDashboard(user, client, stats = {}) {
     </div>
     ${statsHtml}
     <div style="display:grid;grid-template-columns:2fr 3fr;gap:1rem">
-      <div class="card bg-base-100 shadow-md">
-        <div class="card-body">
-          <h2 class="card-title text-sm mb-1">Client Info</h2>
+      <div class="card-clean">
+        <div class="card-clean-body">
+          <h2 style="font-size:0.875rem;font-weight:600;margin-bottom:8px">Client Info</h2>
           <div>${infoRows}</div>
         </div>
       </div>
-      <div class="card bg-base-100 shadow-md">
-        <div class="card-body">
+      <div class="card-clean">
+        <div class="card-clean-body">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-            <h2 class="card-title text-sm">Engagements</h2>
+            <h2 style="font-size:0.875rem;font-weight:600;margin-bottom:16px">Engagements</h2>
             ${canEditClient ? `<a href="/engagement/new?client_id=${esc(c.id)}" class="btn btn-primary btn-xs">+ New</a>` : ''}
           </div>
-          <div class="table-container"><table class="table table-hover">
+          <div class="table-wrap"><table class="data-table">
             <thead><tr><th>Name</th><th>Stage</th><th>Status</th></tr></thead>
             <tbody>${engRows}</tbody>
           </table></div>
@@ -193,5 +193,5 @@ export function clientInfoCard(client) {
     ['Industry', c.industry], ['Status', c.status ? statusBadge(c.status) : null],
     ['Risk', c.risk_level ? `<span class="badge badge-flat-secondary text-xs">${c.risk_level}</span>` : null],
   ].filter(([, v]) => v).map(([l, v]) => `<div class="flex flex-col gap-1 py-2 border-b border-base-200 last:border-0"><span class="text-xs font-semibold uppercase tracking-wider text-base-content/50">${l}</span><span class="text-sm">${v}</span></div>`).join('');
-  return `<div class="card bg-base-100 shadow-md"><div class="card-body"><h2 class="card-title text-sm">Client Details</h2><div class="mt-3">${infoRows || '<div class="text-base-content/50 text-sm">No details available</div>'}</div></div></div>`;
+  return `<div class="card-clean"><div class="card-clean-body"><h2 style="font-size:0.875rem;font-weight:600;margin-bottom:16px">Client Details</h2><div class="mt-3">${infoRows || '<div class="text-base-content/50 text-sm">No details available</div>'}</div></div></div>`;
 }

@@ -13,7 +13,7 @@ export function tenderDetailsDialog(tenderId) {
 }
 
 export function tenderDetailsHolder(tenderId) {
-  return `<div id="tender-holder" class="card bg-white shadow mb-4"><div class="card-body"><h3 class="card-title text-sm">Tender Information</h3><div id="th-content" class="mt-3"><div class="text-gray-500 text-sm">Loading...</div></div></div></div>
+  return `<div id="tender-holder" class="card-clean" style="margin-bottom:1rem"><div class="card-clean-body"><h3 style="font-size:0.875rem;font-weight:600">Tender Information</h3><div id="th-content" class="mt-3"><div class="text-gray-500 text-sm">Loading...</div></div></div></div>
   <script>
   (function(){fetch('/api/tender/${tenderId}').then(function(r){return r.json()}).then(function(d){var t=d.data||d;var el=document.getElementById('th-content');el.innerHTML='<div class="grid grid-cols-2 gap-2 text-sm"><div><span class="text-gray-500">Type:</span> '+(t.tender_type||'-')+'</div><div><span class="text-gray-500">Status:</span> '+(t.status||'-')+'</div><div><span class="text-gray-500">Priority:</span> '+(t.priority||'-')+'</div><div><span class="text-gray-500">Value:</span> '+(t.value?'R '+Number(t.value).toLocaleString():'-')+'</div></div>'}).catch(function(){document.getElementById('th-content').innerHTML='<div class="text-red-500 text-sm">Error</div>'})})();
   </script>`;

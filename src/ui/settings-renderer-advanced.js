@@ -44,7 +44,7 @@ export function renderSettingsRecreation(user, logs = [], users = []) {
       <td class="text-xs text-base-content/50">${esc(l.reason||'-')}</td>
     </tr>`;
   }).join('');
-  const filters = `<div class="card bg-base-100 shadow-md mb-4"><div class="card-body">
+  const filters = `<div class="card-clean" style="margin-bottom:1rem"><div class="card-clean-body">
     <div class="flex flex-wrap gap-4 items-end">
       <div class="form-group"><label class="label"><span class="label-text font-semibold">Start Date</span></label><input type="date" id="filter-start" class="input input-solid"/></div>
       <div class="form-group"><label class="label"><span class="label-text font-semibold">End Date</span></label><input type="date" id="filter-end" class="input input-solid"/></div>
@@ -67,7 +67,7 @@ export function renderSettingsIntegrations(user, integrations = {}) {
   const cards = INTEGRATIONS.map(integ => {
     const state = integrations[integ.id] || {};
     const connected = state.connected || false;
-    return `<div class="card bg-base-100 shadow-md mb-4"><div class="card-body">
+    return `<div class="card-clean" style="margin-bottom:1rem"><div class="card-clean-body">
       <div class="flex items-center gap-4">
         <div class="text-2xl">${integ.icon}</div>
         <div class="flex-1"><div class="font-semibold">${integ.name}</div><div class="text-xs text-base-content/50">${integ.desc}</div></div>
@@ -106,8 +106,8 @@ export function renderSettingsNotifications(user, config = {}) {
   ];
   const content = `${settingsBack()}<h1 class="text-2xl font-bold mb-6">Notifications</h1>
     <form id="notif-form"><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-      <div class="card bg-base-100 shadow-md"><div class="card-body"><h2 class="card-title text-base mb-2">Notification Toggles</h2>${toggles.map(togRow).join('')}</div></div>
-      <div class="card bg-base-100 shadow-md"><div class="card-body"><h2 class="card-title text-base mb-4">Configuration</h2>
+      <div class="card-clean"><div class="card-clean-body"><h2 class="card-title text-base mb-2">Notification Toggles</h2>${toggles.map(togRow).join('')}</div></div>
+      <div class="card-clean"><div class="card-clean-body"><h2 class="card-title text-base mb-4">Configuration</h2>
         <div class="form-group mb-3"><label class="label"><span class="label-text font-semibold">RFI Notification Days</span></label><input type="text" name="notification_days" class="input input-solid max-w-full" value="${(rfi.notification_days || [7,3,1,0]).join(', ')}"/></div>
         <div class="form-group mb-3"><label class="label"><span class="label-text font-semibold">Escalation Delay (hours)</span></label><input type="number" name="escalation_delay_hours" class="input input-solid max-w-full" value="${rfi.escalation_delay_hours || 24}"/></div>
         <div class="form-group"><label class="label"><span class="label-text font-semibold">Batch Size</span></label><input type="number" name="batch_size" class="input input-solid max-w-full" value="${notif.batch_size || 50}"/></div>

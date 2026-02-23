@@ -40,8 +40,8 @@ export function renderReviewEdit(user, review, engagements = [], teams = []) {
       <a href="/review/${id}" class="btn btn-ghost btn-sm">&larr; Back to Review</a>
     </div>
     ${reviewZoneNav(r.id, 'overview')}
-    <div class="card bg-base-100 shadow-md max-w-2xl">
-      <div class="card-body">
+    <div class="card-clean">
+      <div class="card-clean-body">
         <form id="review-edit-form" class="space-y-4" novalidate>
           ${formField('Review Name <span class="text-error">*</span>', `<input type="text" name="name" class="input input-solid max-w-full" value="${esc(r.name||r.title||'')}" required placeholder="Enter review name"/>`)}
           ${engOptions ? formField('Engagement', `<select name="engagement_id" class="select select-solid max-w-full"><option value="">-- None --</option>${engOptions}</select>`) : ''}

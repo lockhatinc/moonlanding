@@ -21,7 +21,7 @@ function engagementProgressCard(engagement) {
     ? linearProgress(e.client_progress, 100, 'Client', 'thin')
     : '';
 
-  return `<div class="card bg-white shadow mb-4"><div class="card-body"><div class="flex items-start justify-between mb-3"><div><a href="/engagement/${e.id}" class="font-medium hover:text-blue-600">${e.name || 'Untitled'}</a><div class="text-xs text-gray-500 mt-0.5">${e.engagement_type || ''} ${e.year ? '&middot; ' + e.year : ''}</div></div><div class="flex items-center gap-2">${sts}</div></div><div class="mb-3">${engagementProgress(stage)}</div><div class="grid grid-cols-2 gap-4 text-sm mb-3"><div><span class="text-gray-500">Deadline:</span> <span class="font-medium">${dueDate}</span></div><div><span class="text-gray-500">Progress:</span> <span class="font-medium">${pct}%</span></div></div>${rfiProgress}${clientProgress}</div></div>`;
+  return `<div class="card-clean" style="margin-bottom:1rem"><div class="card-clean-body"><div class="flex items-start justify-between mb-3"><div><a href="/engagement/${e.id}" class="font-medium hover:text-blue-600">${e.name || 'Untitled'}</a><div class="text-xs text-gray-500 mt-0.5">${e.engagement_type || ''} ${e.year ? '&middot; ' + e.year : ''}</div></div><div class="flex items-center gap-2">${sts}</div></div><div class="mb-3">${engagementProgress(stage)}</div><div class="grid grid-cols-2 gap-4 text-sm mb-3"><div><span class="text-gray-500">Deadline:</span> <span class="font-medium">${dueDate}</span></div><div><span class="text-gray-500">Progress:</span> <span class="font-medium">${pct}%</span></div></div>${rfiProgress}${clientProgress}</div></div>`;
 }
 
 export function renderClientProgress(user, client, engagements, rfiStats) {
@@ -41,16 +41,16 @@ export function renderClientProgress(user, client, engagements, rfiStats) {
     { label: 'Avg Progress', value: avgProgress + '%', sub: `${completedEngagements} completed` },
     { label: 'RFI Items', value: totalRfis, sub: `${respondedRfis} responded` },
     { label: 'Overdue', value: overdueRfis, sub: overdueRfis > 0 ? 'Action needed' : 'On track', color: overdueRfis > 0 ? 'red' : 'green' },
-  ].map(s => `<div class="card bg-white shadow${s.color === 'red' ? ' border-l-4 border-red-500' : ''}"><div class="card-body py-3"><h3 class="text-gray-500 text-sm">${s.label}</h3><p class="text-xl font-bold${s.color ? ` text-${s.color}-600` : ''}">${s.value}</p><p class="text-xs text-gray-400">${s.sub}</p></div></div>`).join('')}</div>`;
+  ].map(s => `<div class="card-clean" style="${s.color === 'red' ? 'border-left:4px solid var(--color-danger,#ef4444)' : ''}"><div class="card-clean-body" style="padding:0.75rem"><h3 class="text-gray-500 text-sm">${s.label}</h3><p class="text-xl font-bold${s.color ? ` text-${s.color}-600` : ''}">${s.value}</p><p class="text-xs text-gray-400">${s.sub}</p></div></div>`).join('')}</div>`;
 
-  const overallProgress = `<div class="card bg-white shadow mb-6"><div class="card-body"><div class="flex items-center justify-between"><div><h3 class="font-semibold mb-1">${client.name}</h3><p class="text-sm text-gray-500">${client.entity_type || ''} ${client.status ? '&middot; ' + client.status : ''}</p></div><div>${circularProgress(avgProgress, 100, 'Overall')}</div></div></div></div>`;
+  const overallProgress = `<div class="card-clean" style="margin-bottom:1.5rem"><div class="card-clean-body"><div class="flex items-center justify-between"><div><h3 class="font-semibold mb-1">${client.name}</h3><p class="text-sm text-gray-500">${client.entity_type || ''} ${client.status ? '&middot; ' + client.status : ''}</p></div><div>${circularProgress(avgProgress, 100, 'Overall')}</div></div></div></div>`;
 
   const stageBreakdown = {};
   engagements.forEach(e => {
     const s = e.stage || 'unknown';
     stageBreakdown[s] = (stageBreakdown[s] || 0) + 1;
   });
-  const stageTable = `<div class="card bg-white shadow mb-6"><div class="card-body"><h3 class="font-semibold mb-3">Stage Breakdown</h3><div class="grid grid-cols-2 md:grid-cols-3 gap-2">${Object.entries(stageBreakdown).map(([k, v]) => `<div class="flex items-center justify-between p-2 bg-gray-50 rounded"><span class="text-sm text-gray-700">${k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span><span class="font-semibold text-sm">${v}</span></div>`).join('')}</div></div></div>`;
+  const stageTable = `<div class="card-clean" style="margin-bottom:1.5rem"><div class="card-clean-body"><h3 class="font-semibold mb-3">Stage Breakdown</h3><div class="grid grid-cols-2 md:grid-cols-3 gap-2">${Object.entries(stageBreakdown).map(([k, v]) => `<div class="flex items-center justify-between p-2 bg-gray-50 rounded"><span class="text-sm text-gray-700">${k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</span><span class="font-semibold text-sm">${v}</span></div>`).join('')}</div></div></div>`;
 
   const engList = engagements.length > 0
     ? engagements.map(e => engagementProgressCard(e)).join('')

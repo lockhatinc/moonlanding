@@ -25,13 +25,13 @@ export function crossEngagementFilePicker(currentEngId) {
   </script>`;
 }
 export function fileUploadPanel(entityType, entityId) {
-  return `<div class="card bg-white shadow mb-4"><div class="card-body"><h3 class="card-title text-sm">Upload Files</h3><div class="mt-3"><input type="file" id="fup-files" class="file-input file-input-bordered w-full" multiple/><div class="flex justify-end mt-2"><button class="btn btn-primary btn-sm" onclick="fupUpload()">Upload</button></div><div id="fup-progress" class="text-sm text-gray-500 mt-2"></div></div></div></div>
+  return `<div class="card-clean" style="margin-bottom:1rem"><div class="card-clean-body"><h3 style="font-size:0.875rem;font-weight:600">Upload Files</h3><div class="mt-3"><input type="file" id="fup-files" class="file-input file-input-bordered w-full" multiple/><div class="flex justify-end mt-2"><button class="btn btn-primary btn-sm" onclick="fupUpload()">Upload</button></div><div id="fup-progress" class="text-sm text-gray-500 mt-2"></div></div></div></div>
   <script>
   window.fupUpload=async function(){var files=document.getElementById('fup-files').files;if(!files.length){showToast('Select files','error');return}var prog=document.getElementById('fup-progress');var ok=0;for(var i=0;i<files.length;i++){prog.textContent='Uploading '+(i+1)+'/'+files.length;var fd=new FormData();fd.append('file',files[i]);fd.append('entity_type','${entityType}');fd.append('entity_id','${entityId}');try{var r=await fetch('/api/file/upload',{method:'POST',body:fd});if(r.ok)ok++}catch(e){}}prog.textContent=ok+'/'+files.length+' uploaded';if(ok>0)showToast(ok+' files uploaded','success')};
   </script>`;
 }
 export function userCvUpload(userId) {
-  return `<div class="card bg-white shadow mb-4"><div class="card-body"><h3 class="card-title text-sm">Upload CV</h3><div class="mt-3"><input type="file" id="cv-file" class="file-input file-input-bordered w-full" accept=".pdf,.doc,.docx"/><div class="flex justify-end mt-2"><button class="btn btn-primary btn-sm" onclick="cvUpload()">Upload CV</button></div></div></div></div>
+  return `<div class="card-clean" style="margin-bottom:1rem"><div class="card-clean-body"><h3 style="font-size:0.875rem;font-weight:600">Upload CV</h3><div class="mt-3"><input type="file" id="cv-file" class="file-input file-input-bordered w-full" accept=".pdf,.doc,.docx"/><div class="flex justify-end mt-2"><button class="btn btn-primary btn-sm" onclick="cvUpload()">Upload CV</button></div></div></div></div>
   <script>
   window.cvUpload=async function(){var file=document.getElementById('cv-file').files[0];if(!file){showToast('Select a file','error');return}var fd=new FormData();fd.append('file',file);fd.append('entity_type','user_cv');fd.append('entity_id','${userId}');try{var r=await fetch('/api/file/upload',{method:'POST',body:fd});if(r.ok)showToast('CV uploaded','success');else showToast('Upload failed','error')}catch(e){showToast('Error','error')}};
   </script>`;
@@ -74,7 +74,7 @@ export function reviewAttachmentChoiceDialog(reviewId) {
   </script>`;
 }
 export function uploadFridayFilesCrossApp(engagementId) {
-  return `<div class="card bg-white shadow mb-4"><div class="card-body"><h3 class="card-title text-sm">Upload Friday Files</h3><p class="text-xs text-gray-500 mb-2">Upload files accessible from both Friday and MWR</p><input type="file" id="fxf-files" class="file-input file-input-bordered w-full" multiple/><div class="flex justify-end mt-2"><button class="btn btn-primary btn-sm" onclick="fxfUpload()">Upload</button></div></div></div>
+  return `<div class="card-clean" style="margin-bottom:1rem"><div class="card-clean-body"><h3 style="font-size:0.875rem;font-weight:600">Upload Friday Files</h3><p class="text-xs text-gray-500 mb-2">Upload files accessible from both Friday and MWR</p><input type="file" id="fxf-files" class="file-input file-input-bordered w-full" multiple/><div class="flex justify-end mt-2"><button class="btn btn-primary btn-sm" onclick="fxfUpload()">Upload</button></div></div></div>
   <script>
   window.fxfUpload=async function(){var files=document.getElementById('fxf-files').files;if(!files.length){showToast('Select files','error');return}var ok=0;for(var i=0;i<files.length;i++){var fd=new FormData();fd.append('file',files[i]);fd.append('engagement_id','${engagementId}');fd.append('cross_app',true);try{var r=await fetch('/api/file/upload',{method:'POST',body:fd});if(r.ok)ok++}catch(e){}}if(ok)showToast(ok+' files uploaded','success')};
   </script>`;

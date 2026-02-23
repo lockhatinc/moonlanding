@@ -32,9 +32,9 @@ export function renderEntityList(entityName, items, spec, user, options = {}) {
       const groupId = `group-${gkey.replace(/\s+/g, '-').toLowerCase()}`
       const togglerId = `toggle-${gkey.replace(/\s+/g, '-').toLowerCase()}`
       const itemRows = groupItems.map(buildRow).join('')
-      return `<tbody class="group-section" data-group="${gkey}"><tr class="group-header hover cursor-pointer" tabindex="0" onclick="document.getElementById('${togglerId}').checked=!document.getElementById('${togglerId}').checked"><td colspan="100" style="padding:12px"><div class="flex items-center gap-2"><input type="checkbox" id="${togglerId}" class="group-toggle" style="cursor:pointer" checked/><span class="font-semibold text-base">${gkey}</span><span class="badge badge-sm">${groupItems.length}</span></div></td></tr><tr class="group-content" id="${groupId}" style="display:contents"><td colspan="100"><table class="table table-sm w-full" style="background:transparent"><tbody>${itemRows}</tbody></table></td></tr></tbody>`
+      return `<tbody class="group-section" data-group="${gkey}"><tr class="group-header hover cursor-pointer" tabindex="0" onclick="document.getElementById('${togglerId}').checked=!document.getElementById('${togglerId}').checked"><td colspan="100" style="padding:12px"><div class="flex items-center gap-2"><input type="checkbox" id="${togglerId}" class="group-toggle" style="cursor:pointer" checked/><span class="font-semibold text-base">${gkey}</span><span class="badge badge-sm">${groupItems.length}</span></div></td></tr><tr class="group-content" id="${groupId}" style="display:contents"><td colspan="100"><table class="data-table" style="background:transparent"><tbody>${itemRows}</tbody></table></td></tr></tbody>`
     }).join('')
-    tableContent = `<div class="card bg-base-100 shadow-md"><div class="table-container"><table class="table table-hover w-full"><thead><tr>${headers}</tr></thead>${groupRows}</table></div></div>`
+    tableContent = `<div class="card-clean"><div class="table-wrap"><table class="data-table"><thead><tr>${headers}</tr></thead>${groupRows}</table></div></div>`
   } else {
     const rows = items.map(buildRow).join('')
     tableContent = dataTable(headers, rows, items.length === 0 ? (userCanCreate ? `No items found. <a href="/${entityName}/new" class="text-primary hover:underline">Create your first ${label.toLowerCase()}</a>` : 'No items found.') : '')
@@ -48,7 +48,7 @@ export function renderEntityList(entityName, items, spec, user, options = {}) {
   return page(user, label, [{ href: '/', label: 'Dashboard' }, { href: `/${entityName}`, label }], content, [TOAST_SCRIPT, deleteScript, searchScript])
 }
 
-const HIDDEN_FIELDS = new Set(['password_hash', 'password', 'session_token'])
+const HIDDEN_FIELDS = new Set(['password_hash', 'password', 'session_token', 'photo_url'])
 const KNOWN_ROLE_LABELS = { admin:'Admin', partner:'Partner', manager:'Manager', clerk:'Clerk', user:'User', auditor:'Auditor', client_admin:'Client Admin', client_user:'Client User' }
 
 function roleLabel(r) {
@@ -155,7 +155,7 @@ export function renderEntityForm(entityName, item, spec, user, isNew = false, re
     ? [{ href: '/', label: 'Dashboard' }, { href: `/${entityName}`, label: spec?.labelPlural || label }, { label: 'Create' }]
     : [{ href: '/', label: 'Dashboard' }, { href: `/${entityName}`, label: spec?.labelPlural || label }, { href: `/${entityName}/${item?.id}`, label: item?.name || item?.title || `#${item?.id}` }, { label: 'Edit' }]
   const content = `<div class="mb-6"><h1 class="text-2xl font-bold">${isNew ? 'Create' : 'Edit'} ${label}</h1></div>
-    <div class="card bg-base-100 shadow-md max-w-2xl"><div class="card-body"><form id="entity-form" class="space-y-4" aria-label="${isNew ? 'Create' : 'Edit'} ${label}">${formFields}${pwField}
+    <div class="card-clean"><div class="card-clean-body"><form id="entity-form" class="space-y-4" aria-label="${isNew ? 'Create' : 'Edit'} ${label}">${formFields}${pwField}
     <div class="flex gap-3 pt-4 border-t border-base-200"><button type="submit" id="submit-btn" class="btn btn-primary"><span class="btn-text">Save</span><span class="btn-loading-text" style="display:none">Saving...</span></button>
     <a href="/${entityName}${isNew ? '' : '/' + item?.id}" class="btn btn-ghost">Cancel</a></div></form></div></div>`
   const script = `${TOAST_SCRIPT}const form=document.getElementById('entity-form');const sb=document.getElementById('submit-btn');form.addEventListener('submit',async(e)=>{e.preventDefault();sb.classList.add('btn-loading');sb.querySelector('.btn-text').style.display='none';sb.querySelector('.btn-loading-text').style.display='inline';sb.disabled=true;const fd=new FormData(form);const data={};for(const[k,v]of fd.entries())data[k]=v;form.querySelectorAll('input[type=checkbox]').forEach(cb=>{data[cb.name]=cb.checked});form.querySelectorAll('input[type=number]').forEach(inp=>{if(inp.name&&data[inp.name]!==undefined&&data[inp.name]!=='')data[inp.name]=Number(data[inp.name])});const url=${isNew}?'/api/${entityName}':'/api/${entityName}/${item?.id}';const method=${isNew}?'POST':'PUT';try{const res=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const result=await res.json();if(res.ok){showToast('${isNew?'Created':'Updated'} successfully!','success');const ed=result.data||result;setTimeout(()=>{window.location='/${entityName}/'+(ed.id||'${item?.id}')},500)}else{showToast(result.message||result.error||'Save failed','error');sb.classList.remove('btn-loading');sb.querySelector('.btn-text').style.display='inline';sb.querySelector('.btn-loading-text').style.display='none';sb.disabled=false}}catch(err){showToast('Error: '+err.message,'error');sb.classList.remove('btn-loading');sb.querySelector('.btn-text').style.display='inline';sb.querySelector('.btn-loading-text').style.display='none';sb.disabled=false}})`
@@ -170,7 +170,7 @@ export function renderSettings(user, config = {}) {
     { title: 'Email Configuration', items: [['Batch Size', t.email?.send_batch_size || 10], ['Max Retries', t.email?.send_max_retries || 3], ['Rate Limit Delay', (t.email?.rate_limit_delay_ms || 6000) + 'ms']] },
     { title: 'Workflow Configuration', items: [['Stage Transition Lockout', (t.workflow?.stage_transition_lockout_minutes || 5) + ' minutes'], ['Collaborator Default Expiry', (t.collaborator?.default_expiry_days || 7) + ' days'], ['Collaborator Max Expiry', (t.collaborator?.max_expiry_days || 30) + ' days']] },
   ]
-  const cards = sections.map(s => `<div class="card bg-base-100 shadow-md"><div class="card-body"><h2 class="card-title">${s.title}</h2><div class="space-y-4 mt-4">${s.items.map(([l, v]) => `<div class="flex justify-between py-2 border-b border-base-200"><span class="text-base-content/50 text-sm">${l}</span><span class="font-medium text-sm">${v}</span></div>`).join('')}</div></div></div>`).join('')
+  const cards = sections.map(s => `<div class="card-clean"><div class="card-clean-body"><h2 style="font-size:1rem;font-weight:600">${s.title}</h2><div class="space-y-4 mt-4">${s.items.map(([l, v]) => `<div class="flex justify-between py-2 border-b border-base-200"><span class="text-base-content/50 text-sm">${l}</span><span class="font-medium text-sm">${v}</span></div>`).join('')}</div></div></div>`).join('')
   return page(user, 'System Settings', [{ href: '/', label: 'Dashboard' }, { href: '/admin/settings', label: 'Settings' }],
     `<h1 class="text-2xl font-bold mb-6">System Settings</h1><div class="grid grid-cols-1 lg:grid-cols-2 gap-6">${cards}</div>`)
 }

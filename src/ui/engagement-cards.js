@@ -12,8 +12,8 @@ export function engagementCard(engagement, user) {
   const team = e.team?.length ? `<div class="engagement-card-team">${teamAvatarGroup(e.team, 3)}</div>` : ''
   const dueDate = e.due_date ? `<span class="text-xs text-gray-500">${typeof e.due_date === 'number' ? new Date(e.due_date * 1000).toLocaleDateString() : e.due_date}</span>` : ''
   const clientName = e.client_name || e.client?.name || ''
-  return `<div class="engagement-card card bg-white shadow" onclick="window.location='/engagement/${e.id}'" style="cursor:pointer">
-    <div class="card-body">
+  return `<div class="engagement-card card-clean" onclick="window.location='/engagement/${e.id}'" style="cursor:pointer">
+    <div class="card-clean-body">
       <div class="flex justify-between items-center mb-2">${clientName ? `<span class="text-xs text-gray-500">${clientName}</span>` : '<span></span>'}${sts}</div>
       <h3 class="font-medium mb-2">${e.name || e.title || 'Untitled'}</h3>
       <div class="flex items-center gap-2 mb-2">${stageBadge}${dueDate}</div>
@@ -27,8 +27,8 @@ export function mobileEngagementCard(engagement) {
   const stage = e.stage ? (STAGE_COLORS[e.stage] || { bg: '#f3f4f6', text: '#6b7280', label: e.stage }) : null
   const stageBadge = stage ? `<span class="badge-stage" style="background:${stage.bg};color:${stage.text};font-size:0.65rem;padding:0.15rem 0.5rem">${stage.label || e.stage}</span>` : ''
   const sts = e.status ? statusLabel(e.status) : ''
-  return `<div class="mobile-card mobile-engagement-card card bg-white shadow">
-    <div class="card-body">
+  return `<div class="mobile-card mobile-engagement-card card-clean">
+    <div class="card-clean-body">
       <div class="flex justify-between items-center mb-2"><h3 class="font-medium text-sm">${e.name || e.title || 'Untitled'}</h3>${sts}</div>
       ${e.client_name ? `<div class="text-xs text-gray-500 mb-1">${e.client_name}</div>` : ''}
       <div class="flex items-center gap-2 mb-2">${stageBadge}${e.due_date ? `<span class="text-xs text-gray-500">${typeof e.due_date === 'number' ? new Date(e.due_date * 1000).toLocaleDateString() : e.due_date}</span>` : ''}</div>
