@@ -1,4 +1,4 @@
-const CACHE_NAME = 'moonlanding-v2';
+const CACHE_NAME = 'moonlanding-v3';
 const STATIC_ASSETS = [
   '/ui/client.js',
   '/ui/styles.css'
@@ -31,6 +31,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   if (request.method !== 'GET') return;
+  if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api/')) return;
 
   event.respondWith(
