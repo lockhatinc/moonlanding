@@ -95,6 +95,17 @@ export async function handleReviewRoutes(normalized, segments, user, req) {
     if (action === 'editor') { if (!canEdit(user, 'review')) return renderAccessDenied(user, 'review', 'edit'); const review = get('review', reviewId); if (!review) return null; return renderPdfEditorPlaceholder(user, review); }
     if (action === 'highlights') { if (!canView(user, 'review')) return renderAccessDenied(user, 'review', 'view'); const review = get('review', reviewId); if (!review) return null; let h = []; try { h = list('highlight', {}).filter(x => x.review_id === reviewId); } catch {} const rm = {}; for (const x of h) { try { rm[x.id] = list('highlight_response', {}).filter(r => r.highlight_id === x.id); } catch { rm[x.id] = []; } } return renderHighlightThreading(user, review, h, rm); }
     if (action === 'resolution') { if (!canView(user, 'review')) return renderAccessDenied(user, 'review', 'view'); const review = get('review', reviewId); if (!review) return null; let s = []; try { s = list('review_section', {}).filter(x => x.review_id === reviewId); } catch {} const hbs = {}; for (const sec of s) { try { hbs[sec.id] = list('highlight', {}).filter(h => h.review_id === reviewId && h.section_id === sec.id); } catch { hbs[sec.id] = []; } } return renderSectionResolution(user, review, s, hbs); }
+    if (action === 'edit') {
+      if (!canEdit(user, 'review')) return renderAccessDenied(user, 'review', 'edit');
+      const review = get('review', reviewId) || getDatabase().prepare('SELECT * FROM review WHERE id=?').get(reviewId);
+      if (!review) return null;
+      let engagements = [], teams = [];
+      try { engagements = list('engagement', {}); } catch {}
+      try { teams = list('team', {}); } catch {}
+      const { renderReviewEdit } = await lazyRenderer('review-edit-renderer.js');
+      return renderReviewEdit(user, review, engagements, teams);
+    }
+    return null;
   }
 
   if (segments.length === 2 && segments[0] === 'review' && segments[1] !== 'new') {
