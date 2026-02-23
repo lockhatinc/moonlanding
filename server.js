@@ -195,14 +195,16 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (pathname === '/ui/styles.css') {
+    if (pathname === '/ui/styles.css' || pathname === '/ui/styles2.css') {
       const cssPath = path.join(__dirname, 'src/ui/styles.css');
       if (fs.existsSync(cssPath)) {
         let content = fs.readFileSync(cssPath, 'utf-8');
         const { minifyCSS } = await loadModule(path.join(__dirname, 'src/lib/minifier.js'));
         content = minifyCSS(content);
-        const cacheHeaders = getCacheHeaders('static', 86400);
-        Object.entries(cacheHeaders).forEach(([k, v]) => res.setHeader(k, v));
+        const etag = `"${content.length}-${fs.statSync(cssPath).mtimeMs.toString(36)}"`;
+        if (req.headers['if-none-match'] === etag) { res.writeHead(304); res.end(); return; }
+        res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+        res.setHeader('ETag', etag);
         const { content: finalContent, encoding } = compress(content, acceptEncoding);
         res.setHeader('Content-Type', 'text/css; charset=utf-8');
         if (encoding) res.setHeader('Content-Encoding', encoding);

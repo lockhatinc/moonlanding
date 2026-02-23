@@ -24,8 +24,8 @@ export function generateHtml(title, bodyContent, scripts = [], pathname = '/') {
   <meta name="theme-color" content="#04141f">
   <title>${title}</title>
   <link rel="preload" href="/ui/client.js" as="script" crossorigin>
-  <link rel="preload" href="/ui/styles.css" as="style">
-  <link href="/ui/styles.css" rel="stylesheet"/>
+  <link rel="preload" href="/ui/styles2.css" as="style">
+  <link href="/ui/styles2.css" rel="stylesheet"/>
   <style>
     .skip-link{position:absolute;left:-9999px;z-index:999;padding:0.5rem 1rem;background:#000;color:#fff;text-decoration:none}
     .skip-link:focus{left:0;top:0}
