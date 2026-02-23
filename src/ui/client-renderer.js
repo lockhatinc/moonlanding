@@ -44,45 +44,69 @@ export function renderClientList(user, clients) {
 
 export function renderClientDashboard(user, client, stats = {}) {
   const c = client || {};
-  const riskCls = RISK_LEVELS.find(r => r.value === c.risk_level)?.cls || 'badge-flat-secondary';
-  const riskBadge = c.risk_level ? `<span class="badge ${riskCls} ml-2">${(c.risk_level || '').charAt(0).toUpperCase() + (c.risk_level || '').slice(1)} Risk</span>` : '';
+  const riskLevel = RISK_LEVELS.find(r => r.value === c.risk_level);
+  const riskCls = riskLevel?.cls || 'badge-flat-secondary';
+  const riskBadge = c.risk_level ? `<span class="badge ${riskCls}">${riskLevel?.label || c.risk_level} Risk</span>` : '';
 
   const infoRows = [
-    ['Name', c.name || '-'], ['Email', c.email || '-'], ['Phone', c.phone || '-'],
-    ['Address', c.address || '-'], ['Status', statusBadge(c.status || 'active')],
+    ['Name', esc(c.name || '-')],
+    ['Email', c.email ? `<a href="mailto:${esc(c.email)}" class="text-primary hover:underline">${esc(c.email)}</a>` : '-'],
+    ['Phone', c.phone ? `<a href="tel:${esc(c.phone)}" class="text-primary hover:underline">${esc(c.phone)}</a>` : '-'],
+    ['Industry', esc(c.industry || '-')],
+    ['Address', esc(c.address || '-')],
+    ['Status', statusBadge(c.status || 'active')],
+    ['Client Code', c.client_code ? `<code class="text-xs bg-base-200 px-2 py-1 rounded">${esc(c.client_code)}</code>` : '-'],
     ['Created', c.created_at ? new Date(typeof c.created_at === 'number' ? c.created_at * 1000 : c.created_at).toLocaleDateString() : '-'],
-  ].map(([l, v]) => `<div class="flex flex-col gap-1 py-2 border-b border-base-200 last:border-0">
-    <span class="text-xs font-semibold uppercase tracking-wider text-base-content/50">${l}</span>
-    <span class="text-sm text-base-content">${v}</span>
+  ].map(([l, v]) => `<div class="flex items-start justify-between gap-4 py-2 border-b border-base-200 last:border-0">
+    <span class="text-xs font-semibold uppercase tracking-wider text-base-content/50 w-24 flex-shrink-0 pt-0.5">${l}</span>
+    <span class="text-sm text-base-content text-right">${v}</span>
   </div>`).join('');
 
-  const statsHtml = `<div class="stats-row">
-    <div class="stat-card"><div class="stat-card-value">${stats.engagements||0}</div><div class="stat-card-label">Engagements</div></div>
-    <div class="stat-card"><div class="stat-card-value">${stats.activeRfis||0}</div><div class="stat-card-label">Active RFIs</div></div>
-    <div class="stat-card"><div class="stat-card-value">${stats.users||0}</div><div class="stat-card-label">Users</div></div>
-    <div class="stat-card"><div class="stat-card-value">${stats.reviews||0}</div><div class="stat-card-label">Reviews</div></div>
-  </div>`;
+  const mkStat = (icon, value, label) => `<div class="card bg-base-100 shadow-sm" style="border:1px solid var(--color-border)"><div class="card-body" style="padding:1rem"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span style="font-size:1.4rem">${icon}</span><span style="font-size:1.8rem;font-weight:700">${value}</span></div><div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">${label}</div></div></div>`;
+  const statsHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1.5rem">${mkStat('📁',stats.engagements||0,'Engagements')}${mkStat('📋',stats.activeRfis||0,'Active RFIs')}${mkStat('👤',stats.users||0,'Users')}${mkStat('📄',stats.reviews||0,'Reviews')}</div>`;
 
-  const engRows = (stats.engagementList || []).map(e => `<tr class="hover cursor-pointer" onclick="window.location='/engagement/${e.id}'"><td class="text-sm">${e.name || '-'}</td><td>${statusBadge(e.stage)}</td><td>${statusBadge(e.status)}</td></tr>`).join('') || '<tr><td colspan="3" class="text-center py-6 text-base-content/40 text-sm">No engagements</td></tr>';
+  const engRows = (stats.engagementList || []).map(e => `<tr class="hover cursor-pointer" onclick="window.location='/engagement/${e.id}'"><td class="text-sm font-medium">${esc(e.name || '-')}</td><td>${statusBadge(e.stage)}</td><td>${statusBadge(e.status)}</td></tr>`).join('') || `<tr><td colspan="3" class="text-center py-10 text-base-content/40"><div class="flex flex-col items-center gap-2"><span class="text-3xl">📁</span><span class="text-sm">No engagements yet</span>${canEdit(user, 'client') ? `<a href="/engagement/new?client_id=${esc(c.id)}" class="btn btn-primary btn-xs mt-1">+ New Engagement</a>` : ''}</div></td></tr>`;
 
-  const actions = canEdit(user, 'client') ? `<div class="flex gap-2 flex-wrap">
-    <a href="/client/${c.id}/edit" class="btn btn-primary btn-sm">Edit</a>
-    <button onclick="document.getElementById('risk-dialog').style.display='flex'" class="btn btn-ghost btn-sm" style="border:1px solid #e5e7eb">Risk Assessment</button>
-    <button onclick="document.getElementById('test-email-dialog').style.display='flex'" class="btn btn-ghost btn-sm" style="border:1px solid #e5e7eb">Test Email</button>
+  const canEditClient = canEdit(user, 'client');
+  const actions = canEditClient ? `<div class="flex gap-2 flex-wrap">
+    <a href="/client/${esc(c.id)}/edit" class="btn btn-primary btn-sm">Edit Client</a>
+    <button onclick="document.getElementById('risk-dialog').style.display='flex'" class="btn btn-ghost btn-sm border border-base-300">Risk Assessment</button>
+    <button onclick="document.getElementById('test-email-dialog').style.display='flex'" class="btn btn-ghost btn-sm border border-base-300">Test Email</button>
+    <button onclick="window.showClientUsers()" class="btn btn-ghost btn-sm border border-base-300">Manage Users</button>
   </div>` : '';
 
   const content = `
-    <div class="flex justify-between items-start mb-6 flex-wrap gap-3">
-      <div><h1 class="text-2xl font-bold text-base-content">${esc(c.name || 'Client')}</h1><div class="mt-1">${riskBadge}</div></div>
+    <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
+      <div>
+        <h1 class="text-2xl font-bold text-base-content">${esc(c.name || 'Client')}</h1>
+        <div class="flex items-center gap-2 mt-1">
+          ${riskBadge}
+          ${statusBadge(c.status || 'active')}
+          ${c.client_code ? `<code class="text-xs bg-base-200 px-2 py-0.5 rounded text-base-content/60">${esc(c.client_code)}</code>` : ''}
+        </div>
+      </div>
       ${actions}
     </div>
     ${statsHtml}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div class="card bg-base-100 shadow-md"><div class="card-body"><h2 class="card-title text-sm mb-3">Client Info</h2><div>${infoRows}</div></div></div>
-      <div class="card bg-base-100 shadow-md"><div class="card-body">
-        <h2 class="card-title text-sm mb-3">Engagements</h2>
-        <div class="table-container"><table class="table table-hover"><thead><tr><th>Name</th><th>Stage</th><th>Status</th></tr></thead><tbody>${engRows}</tbody></table></div>
-      </div></div>
+    <div style="display:grid;grid-template-columns:2fr 3fr;gap:1rem">
+      <div class="card bg-base-100 shadow-md">
+        <div class="card-body">
+          <h2 class="card-title text-sm mb-1">Client Info</h2>
+          <div>${infoRows}</div>
+        </div>
+      </div>
+      <div class="card bg-base-100 shadow-md">
+        <div class="card-body">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <h2 class="card-title text-sm">Engagements</h2>
+            ${canEditClient ? `<a href="/engagement/new?client_id=${esc(c.id)}" class="btn btn-primary btn-xs">+ New</a>` : ''}
+          </div>
+          <div class="table-container"><table class="table table-hover">
+            <thead><tr><th>Name</th><th>Stage</th><th>Status</th></tr></thead>
+            <tbody>${engRows}</tbody>
+          </table></div>
+        </div>
+      </div>
     </div>
     ${clientUserManagementDialog(c.id)}${clientRiskAssessmentDialog(c.id, c.risk_level)}${clientTestEmailDialog(c.id)}`;
 

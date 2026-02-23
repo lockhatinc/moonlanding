@@ -30,29 +30,28 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
     ['Highlights', `${resolvedH}/${totalH} resolved`],
   ];
 
+  const infoGrid = infoItems.map(([l,v]) => `<div style="padding:0.5rem 0;border-bottom:1px solid var(--color-border)"><div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);margin-bottom:3px">${l}</div><div style="font-size:0.875rem">${v}</div></div>`).join('');
   const overviewPanel = `<div id="rvpanel-overview" class="rv-panel">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
       <div class="card bg-base-100 shadow-md">
         <div class="card-body">
-          <h2 class="card-title text-sm mb-4">Review Details</h2>
-          <div class="grid grid-cols-2 gap-3">
-            ${infoItems.map(([l,v]) => `<div><div class="text-xs text-base-content/50 font-semibold uppercase tracking-wider mb-1">${l}</div><div class="text-sm text-base-content">${v}</div></div>`).join('')}
-          </div>
-          <div class="mt-4">
-            <div class="flex justify-between mb-1"><span class="text-sm font-semibold text-base-content/60">Resolution Progress</span><span class="text-sm text-base-content/50">${pct}%</span></div>
-            <progress class="progress progress-success w-full" value="${pct}" max="100"></progress>
+          <h2 class="card-title text-sm" style="margin-bottom:0.75rem">Review Details</h2>
+          ${infoGrid}
+          <div style="margin-top:1rem">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:0.875rem;color:var(--color-text-muted)">Resolution Progress</span><span style="font-size:0.875rem;color:var(--color-text-muted)">${pct}%</span></div>
+            <progress class="progress progress-success" style="width:100%" value="${pct}" max="100"></progress>
           </div>
         </div>
       </div>
       <div class="card bg-base-100 shadow-md">
         <div class="card-body">
-          <h2 class="card-title text-sm mb-4">Quick Actions</h2>
-          <div class="flex flex-col gap-2">
-            <a href="/review/${esc(r.id)}/pdf" class="btn btn-ghost btn-sm justify-start">&#128196; View PDF &amp; Highlights</a>
-            <a href="/review/${esc(r.id)}/highlights" class="btn btn-ghost btn-sm justify-start">&#128172; Highlight Threads</a>
-            <a href="/review/${esc(r.id)}/sections" class="btn btn-ghost btn-sm justify-start">&#128203; Section Report</a>
-            <button onclick="exportPdf('${esc(r.id)}')" class="btn btn-ghost btn-sm justify-start">&#128229; Export PDF</button>
-            ${resolvedH < totalH && canEditReview ? `<button onclick="bulkResolve('${esc(r.id)}')" class="btn btn-success btn-sm justify-start">&#10003; Bulk Resolve All</button>` : ''}
+          <h2 class="card-title text-sm" style="margin-bottom:0.75rem">Quick Actions</h2>
+          <div style="display:flex;flex-direction:column;gap:0.375rem">
+            <a href="/review/${esc(r.id)}/pdf" class="btn btn-ghost btn-sm" style="justify-content:flex-start">&#128196; View PDF &amp; Highlights</a>
+            <a href="/review/${esc(r.id)}/highlights" class="btn btn-ghost btn-sm" style="justify-content:flex-start">&#128172; Highlight Threads</a>
+            <a href="/review/${esc(r.id)}/sections" class="btn btn-ghost btn-sm" style="justify-content:flex-start">&#128203; Section Report</a>
+            <button onclick="exportPdf('${esc(r.id)}')" class="btn btn-ghost btn-sm" style="justify-content:flex-start">&#128229; Export PDF</button>
+            ${resolvedH < totalH && canEditReview ? `<button onclick="bulkResolve('${esc(r.id)}')" class="btn btn-success btn-sm" style="justify-content:flex-start">&#10003; Bulk Resolve All</button>` : ''}
           </div>
         </div>
       </div>
@@ -137,17 +136,16 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
     </div>
   </div>`;
 
+  const bc = [{ href: '/', label: 'Home' }, { href: '/review', label: 'Reviews' }, { label: r.name || 'Review' }];
+
   const content = `
-    <nav class="breadcrumbs text-sm mb-4">
-      <ul><li><a href="/">Home</a></li><li><a href="/review">Reviews</a></li><li>${esc(r.name||'Review')}</li></ul>
-    </nav>
     <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
       <div>
         <h1 class="text-2xl font-bold text-base-content mb-1">${esc(r.name||r.title||'Review')}</h1>
-        ${statusBadge(r.status)}
+        <div class="flex items-center gap-2">${statusBadge(r.status)}${r.type ? `<span class="text-xs text-base-content/50 uppercase tracking-wider">${esc(r.type)}</span>` : ''}</div>
       </div>
       <div class="flex gap-2">
-        ${canEditReview ? `<a href="/review/${esc(r.id)}/edit" class="btn btn-ghost btn-sm">Edit</a>` : ''}
+        ${canEditReview ? `<a href="/review/${esc(r.id)}/edit" class="btn btn-ghost btn-sm border border-base-300">Edit</a>` : ''}
         <a href="/review/${esc(r.id)}/pdf" class="btn btn-primary btn-sm">View PDF</a>
       </div>
     </div>
@@ -162,5 +160,5 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
 
   const script = reviewDetailScript(r.id);
 
-  return page(user, `${esc(r.name||'Review')} | MOONLANDING`, null, content, [script]);
+  return page(user, `${esc(r.name||'Review')} | MOONLANDING`, bc, content, [script]);
 }

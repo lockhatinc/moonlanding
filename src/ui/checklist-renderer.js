@@ -56,27 +56,60 @@ export function pushChecklistCrossRef(engagementId) {
 export function renderChecklistDetails(user, checklist, items = []) {
   const completed = items.filter(i => i.is_done).length;
   const pct = items.length > 0 ? Math.round(completed / items.length * 100) : 0;
-  const itemRows = items.map(it => `<div class="flex items-center gap-3 p-3 border-b border-base-200">
-    <label class="flex items-center gap-3 flex-1 cursor-pointer">
-      <input type="checkbox" class="checkbox checkbox-sm" ${it.is_done ? 'checked' : ''} onchange="ckToggle('${esc(it.id)}',this.checked)"/>
-      <span class="text-sm${it.is_done ? ' line-through text-base-content/40' : ''}">${esc(it.name || it.title || '')}</span>
+  const remaining = items.length - completed;
+  const pctColor = pct === 100 ? 'progress-success' : pct >= 50 ? 'progress-primary' : 'progress-warning';
+
+  const itemRows = items.map((it, idx) => `<div class="flex items-center gap-3 px-4 py-3 border-b border-base-200 last:border-0 hover:bg-base-50 transition-colors group" id="item-${esc(it.id)}">
+    <label class="flex items-center gap-3 flex-1 cursor-pointer min-w-0">
+      <input type="checkbox" class="checkbox checkbox-sm flex-shrink-0" ${it.is_done ? 'checked' : ''} onchange="ckToggle('${esc(it.id)}',this.checked,this)"/>
+      <span class="text-sm flex-1 leading-relaxed${it.is_done ? ' line-through text-base-content/40' : ''}" id="label-${esc(it.id)}">${esc(it.name || it.title || '')}</span>
     </label>
-    <button class="btn btn-ghost btn-xs btn-error" onclick="ckDel('${esc(it.id)}')">&#x2715;</button>
+    <button class="btn btn-ghost btn-xs text-error opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" onclick="ckDel('${esc(it.id)}')" title="Delete item">&#x2715;</button>
   </div>`).join('');
+
+  const emptyState = `<div class="flex flex-col items-center py-12 text-base-content/40">
+    <span class="text-4xl mb-3">☑️</span>
+    <p class="text-sm font-medium">No items yet</p>
+    <p class="text-xs mt-1">Add your first item below</p>
+  </div>`;
+
+  const doneState = pct === 100 && items.length > 0 ? `<div class="flex items-center gap-2 p-3 bg-success/10 border border-success/20 rounded-lg mb-4 text-success text-sm font-medium">
+    <span>✓</span> All ${items.length} items complete!
+  </div>` : '';
+
   const bc = [{ href: '/', label: 'Dashboard' }, { href: '/checklist', label: 'Checklists' }, { label: checklist.name || 'Checklist' }];
-  const content = `<div class="flex justify-between items-center mb-2">
-    <h1 class="text-2xl font-bold">${esc(checklist.name || 'Checklist')}</h1>
-    <span class="badge badge-flat-primary text-sm">${completed}/${items.length} (${pct}%)</span>
-  </div>
-  <progress class="progress progress-primary w-full mb-6" value="${completed}" max="${items.length || 1}"></progress>
-  <div class="card bg-base-100 shadow-md"><div class="card-body p-0">
-    ${itemRows || '<div class="text-base-content/40 text-center py-8">No items</div>'}
-    <div class="flex gap-2 p-4 border-t border-base-200">
-      <input id="ck-new" class="input input-solid flex-1" placeholder="New item"/>
-      <button class="btn btn-primary btn-sm" onclick="ckAdd()">Add</button>
+  const content = `
+    <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
+      <div>
+        <h1 class="text-2xl font-bold">${esc(checklist.name || 'Checklist')}</h1>
+        <p class="text-sm text-base-content/50 mt-1" data-ck-label>${completed} of ${items.length} items complete${remaining > 0 ? ` &middot; ${remaining} remaining` : ''}</p>
+      </div>
+      <div class="flex gap-2">
+        ${remaining > 0 && items.length > 0 ? `<button class="btn btn-ghost btn-sm border border-base-300" onclick="ckCompleteAll()">Complete All</button>` : ''}
+      </div>
     </div>
-  </div></div>`;
-  const script = `window.ckToggle=async function(id,done){await fetch('/api/checklist_item/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({is_done:done})});location.reload()};window.ckDel=async function(id){if(!confirm('Delete?'))return;await fetch('/api/checklist_item/'+id,{method:'DELETE'});location.reload()};window.ckAdd=async function(){var n=document.getElementById('ck-new').value.trim();if(!n)return;await fetch('/api/checklist_item',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({checklist_id:'${esc(checklist.id)}',name:n})});location.reload()}`;
+    <div class="flex items-center gap-3 mb-6">
+      <progress class="progress ${pctColor} flex-1" value="${completed}" max="${items.length || 1}"></progress>
+      <span class="text-sm font-semibold text-base-content/60 w-10 text-right" data-ck-pct>${pct}%</span>
+    </div>
+    ${doneState}
+    <div class="card bg-base-100 shadow-md">
+      <div id="ck-items">
+        ${itemRows || emptyState}
+      </div>
+      <div class="flex gap-2 p-4 border-t border-base-200">
+        <input id="ck-new" class="input input-solid flex-1" placeholder="Add a new item..." onkeydown="if(event.key==='Enter')ckAdd()"/>
+        <button class="btn btn-primary btn-sm" onclick="ckAdd()">Add</button>
+      </div>
+    </div>`;
+
+  const script = `${TOAST}
+var CK_TOTAL=${items.length},CK_DONE=${completed};
+function ckUp(){var p=CK_TOTAL>0?Math.round(CK_DONE/CK_TOTAL*100):0;var pg=document.querySelector('.progress');if(pg){pg.value=CK_DONE;pg.max=CK_TOTAL||1}var lb=document.querySelector('[data-ck-label]');if(lb)lb.textContent=CK_DONE+' of '+CK_TOTAL+' items complete'+(CK_TOTAL-CK_DONE>0?' \xb7 '+(CK_TOTAL-CK_DONE)+' remaining':'');var pe=document.querySelector('[data-ck-pct]');if(pe)pe.textContent=p+'%'}
+window.ckToggle=async function(id,done,el){try{await fetch('/api/checklist_item/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({is_done:done})});var lbl=document.getElementById('label-'+id);if(lbl){lbl.classList.toggle('line-through',done);lbl.classList.toggle('text-base-content/40',done)}CK_DONE+=done?1:-1;ckUp()}catch(e){showToast('Failed to update','error');if(el)el.checked=!done}};
+window.ckDel=async function(id){if(!confirm('Delete this item?'))return;try{await fetch('/api/checklist_item/'+id,{method:'DELETE'});var el=document.getElementById('item-'+id);if(el){var wasDone=el.querySelector('input').checked;el.remove();CK_TOTAL--;if(wasDone)CK_DONE--;ckUp()}showToast('Item deleted','success')}catch(e){showToast('Error','error')}};
+window.ckAdd=async function(){var inp=document.getElementById('ck-new');var n=inp.value.trim();if(!n)return;inp.disabled=true;try{var r=await fetch('/api/checklist_item',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({checklist_id:'${esc(checklist.id)}',name:n})});var d=await r.json();var id=(d.data||d).id;var c=document.getElementById('ck-items');var ee=c.querySelector('.flex-col.items-center');if(ee)ee.remove();var div=document.createElement('div');div.id='item-'+id;div.className='flex items-center gap-3 px-4 py-3 border-b border-base-200 last:border-0 hover:bg-base-50 transition-colors group';div.innerHTML='<label class="flex items-center gap-3 flex-1 cursor-pointer min-w-0"><input type="checkbox" class="checkbox checkbox-sm flex-shrink-0" onchange="ckToggle(\\''+id+'\\',this.checked,this)"/><span class="text-sm flex-1 leading-relaxed" id="label-'+id+'">'+n.replace(/</g,'&lt;')+'</span></label><button class="btn btn-ghost btn-xs text-error opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" onclick="ckDel(\\''+id+'\\')">&#x2715;</button>';c.appendChild(div);inp.value='';inp.disabled=false;inp.focus();CK_TOTAL++;ckUp()}catch(e){showToast('Error adding item','error');inp.disabled=false}};
+window.ckCompleteAll=async function(){var cbs=document.querySelectorAll('#ck-items input[type=checkbox]:not(:checked)');for(var cb of cbs){var id=cb.closest('[id^=item-]')?.id?.replace('item-','');if(id){cb.checked=true;await ckToggle(id,true,cb)}}};`;
   return page(user, esc(checklist.name || 'Checklist'), bc, content, [script]);
 }
 

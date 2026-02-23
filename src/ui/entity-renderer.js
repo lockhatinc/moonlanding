@@ -48,20 +48,75 @@ export function renderEntityList(entityName, items, spec, user, options = {}) {
   return page(user, label, [{ href: '/', label: 'Dashboard' }, { href: `/${entityName}`, label }], content, [TOAST_SCRIPT, deleteScript, searchScript])
 }
 
+const HIDDEN_FIELDS = new Set(['password_hash', 'password', 'session_token'])
+const KNOWN_ROLE_LABELS = { admin:'Admin', partner:'Partner', manager:'Manager', clerk:'Clerk', user:'User', auditor:'Auditor', client_admin:'Client Admin', client_user:'Client User' }
+
+function roleLabel(r) {
+  const key = (r || '').toLowerCase()
+  return KNOWN_ROLE_LABELS[key] || (key.length > 8 ? 'Staff' : (key.charAt(0).toUpperCase() + key.slice(1)))
+}
+
+function formatFieldValue(k, v, entityName) {
+  if (entityName === 'user' && k === 'role') return `<span class="pill pill-neutral">${roleLabel(v)}</span>`
+  if (entityName === 'user' && k === 'status') {
+    const cls = v === 'active' ? 'pill-success' : v === 'deleted' ? 'pill-danger' : 'pill-neutral'
+    return `<span class="pill ${cls}">${v ? v.charAt(0).toUpperCase() + v.slice(1) : '-'}</span>`
+  }
+  if (entityName === 'user' && k === 'email' && v) return `<a href="mailto:${v}" class="text-primary hover:underline">${v}</a>`
+  if (k === 'photo_url' && v && v.startsWith('http')) return `<div class="flex items-center gap-3"><img src="${v}" class="w-10 h-10 rounded-full object-cover" alt="avatar" onerror="this.style.display='none'"/><span class="text-sm text-base-content/60">${v.length > 60 ? v.substring(0, 60) + '...' : v}</span></div>`
+  return fmtVal(v, k)
+}
+
 export function renderEntityDetail(entityName, item, spec, user) {
   const label = spec?.label || entityName
   const fields = spec?.fields || {}
   const userCanEdit = canEdit(user, entityName)
   const userCanDelete = canDelete(user, entityName)
-  const fieldRows = Object.entries(fields).filter(([k]) => k !== 'id' && item[k] !== undefined).map(([k, f]) =>
-    `<div class="py-2 border-b border-base-200"><span class="text-base-content/50 text-xs font-semibold uppercase tracking-wider">${f.label || k}</span><p class="font-medium text-sm mt-1">${fmtVal(item[k], k, item)}</p></div>`
+
+  const visibleFields = Object.entries(fields).filter(([k]) => k !== 'id' && !HIDDEN_FIELDS.has(k) && item[k] !== undefined)
+
+  const fieldRows = visibleFields.map(([k, f]) =>
+    `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:0.625rem 0;border-bottom:1px solid var(--color-border)">
+      <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);width:8rem;flex-shrink:0;padding-top:2px">${f.label || k}</span>
+      <span style="font-size:0.875rem;text-align:right">${formatFieldValue(k, item[k], entityName)}</span>
+    </div>`
   ).join('')
-  const editBtn = userCanEdit ? `<a href="/${entityName}/${item.id}/edit" class="btn btn-outline">Edit</a>` : `<span class="btn btn-outline btn-disabled tooltip" data-tip="No permission">Edit</span>`
-  const delBtn = userCanDelete ? `<button onclick="showDeleteConfirm()" class="btn btn-error btn-outline">Delete</button>` : `<span class="btn btn-error btn-outline btn-disabled tooltip" data-tip="No permission">Delete</span>`
-  const content = `<div class="flex justify-between items-center mb-6"><div><h1 class="text-2xl font-bold">${item.name || item.title || label}</h1><p class="text-base-content/50 text-sm">ID: ${item.id}</p></div><div class="flex gap-2">${editBtn}${delBtn}</div></div>
-    <div class="card bg-base-100 shadow-md"><div class="card-body">${fieldRows}</div></div>${userCanDelete ? confirmDialog(entityName) : ''}`
+
+  const displayName = item.name || item.title || label
+  const initials = (displayName || '?').charAt(0).toUpperCase()
+  const statusCls = item.status === 'active' ? 'pill-success' : item.status === 'deleted' ? 'pill-danger' : 'pill-neutral'
+  const statusLabel2 = item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : '-'
+
+  const headerExtra = entityName === 'user' ? `
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem">
+      <div style="width:3.5rem;height:3.5rem;border-radius:50%;background:#e0f2fe;display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:700;color:#0369a1;flex-shrink:0">
+        ${item.photo_url ? `<img src="${item.photo_url}" style="width:3.5rem;height:3.5rem;border-radius:50%;object-fit:cover" alt="${displayName}" onerror="this.style.display='none'"/>` : initials}
+      </div>
+      <div>
+        <h1 style="font-size:1.5rem;font-weight:700;margin:0">${displayName}</h1>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-top:0.375rem">
+          <span class="pill pill-neutral">${roleLabel(item.role)}</span>
+          <span class="pill ${statusCls}">${statusLabel2}</span>
+          ${item.user_type ? `<span style="font-size:0.75rem;color:var(--color-text-muted)">${item.user_type}</span>` : ''}
+        </div>
+      </div>
+    </div>` : `<div style="margin-bottom:1.5rem"><h1 style="font-size:1.5rem;font-weight:700">${displayName}</h1></div>`
+
+  const editBtn = userCanEdit ? `<a href="/${entityName}/${item.id}/edit" class="btn btn-outline btn-sm">Edit</a>` : ''
+  const delBtn = userCanDelete ? `<button onclick="showDeleteConfirm()" class="btn btn-error btn-outline btn-sm">Delete</button>` : ''
+
+  const content = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div style="flex:1">${headerExtra}</div>
+      <div style="display:flex;gap:0.5rem;margin-left:1rem">${editBtn}${delBtn}</div>
+    </div>
+    <div class="card bg-base-100 shadow-md" style="max-width:640px">
+      <div class="card-body">${fieldRows || '<p class="text-base-content/50 text-sm">No details available</p>'}</div>
+    </div>
+    ${userCanDelete ? confirmDialog(entityName) : ''}`
+
   const script = `${TOAST_SCRIPT}window.showDeleteConfirm=()=>{document.getElementById('confirm-dialog').style.display='flex'};window.hideDeleteConfirm=()=>{document.getElementById('confirm-dialog').style.display='none'};window.executeDelete=async()=>{const btn=document.getElementById('confirm-delete-btn');btn.classList.add('btn-loading');btn.textContent='Deleting...';try{const res=await fetch('/api/${entityName}/${item.id}',{method:'DELETE'});if(res.ok){showToast('Deleted successfully','success');setTimeout(()=>{window.location='/${entityName}'},500)}else{const d=await res.json().catch(()=>({}));showToast(d.message||d.error||'Delete failed','error');hideDeleteConfirm();btn.classList.remove('btn-loading');btn.textContent='Delete'}}catch(err){showToast('Error: '+err.message,'error');hideDeleteConfirm();btn.classList.remove('btn-loading');btn.textContent='Delete'}}`
-  const bc = [{ href: '/', label: 'Dashboard' }, { href: `/${entityName}`, label: spec?.labelPlural || label }, { href: `/${entityName}/${item.id}`, label: item.name || item.title || `#${item.id}` }]
+  const bc = [{ href: '/', label: 'Dashboard' }, { href: `/${entityName}`, label: spec?.labelPlural || label }, { label: item.name || item.title || `#${item.id}` }]
   return page(user, `${label} Detail`, bc, content, [script])
 }
 
