@@ -15,14 +15,15 @@ const ROLES = ['partner','manager','clerk','client_admin','client_user','admin',
 const ROLE_BADGE = { partner:'badge-flat-primary', manager:'badge-flat-success', clerk:'badge-warning badge-flat-warning', client_admin:'badge-flat-secondary', client_user:'badge-flat-secondary', admin:'badge-error badge-flat-error', user:'badge-flat-secondary' };
 
 function roleBadge(role) {
-  const cls = ROLE_BADGE[role] || 'badge-flat-secondary';
-  return role ? `<span class="badge ${cls} text-xs">${role}</span>` : '-';
+  const map = { partner:'pill pill-info', manager:'pill pill-success', clerk:'pill pill-warning', client_admin:'pill pill-neutral', client_user:'pill pill-neutral', admin:'pill pill-danger', user:'pill pill-neutral' };
+  const cls = map[role] || 'pill pill-neutral';
+  return role ? `<span class="${cls}">${role}</span>` : '-';
 }
 
 function field(label, id, type = 'text', value = '', extra = '') {
   return `<div class="form-group">
     <label class="label" for="${id}"><span class="label-text font-semibold">${label}</span></label>
-    <input type="${type}" id="${id}" value="${esc(value)}" ${extra} class="input input-solid max-w-full" placeholder="Enter ${label.toLowerCase()}"/>
+    <input type="${type}" id="${id}" value="${esc(value)}" ${extra} class="form-input" placeholder="Enter ${label.toLowerCase()}"/>
   </div>`;
 }
 
@@ -34,7 +35,7 @@ function selectField(label, id, options, selected = '') {
   }).join('');
   return `<div class="form-group">
     <label class="label" for="${id}"><span class="label-text font-semibold">${label}</span></label>
-    <select id="${id}" class="select select-solid max-w-full">${opts}</select>
+    <select id="${id}" class="form-input">${opts}</select>
   </div>`;
 }
 

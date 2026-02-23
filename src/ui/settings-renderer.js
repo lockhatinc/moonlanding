@@ -5,11 +5,14 @@ export const TOAST_SCRIPT = `window.showToast=(m,t='info')=>{let c=document.getE
 
 function breadcrumb(items) {
   if (!items?.length) return '';
-  return `<nav class="breadcrumbs text-sm mb-4" aria-label="Breadcrumb"><ul>${items.map((item, i) => i === items.length - 1 ? `<li>${item.label}</li>` : `<li><a href="${item.href}">${item.label}</a></li>`).join('')}</ul></nav>`;
+  return '<nav class="breadcrumb-clean">' + items.map((item, i) =>
+    i === items.length - 1 ? '<span>' + item.label + '</span>'
+      : '<a href="' + item.href + '">' + item.label + '</a><span class="breadcrumb-sep">/</span>'
+  ).join('') + '</nav>';
 }
 
 export function settingsPage(user, title, bc, content, scripts = []) {
-  const body = `<div class="min-h-screen bg-base-200">${nav(user)}<main class="p-4 md:p-6">${breadcrumb(bc)}${content}</main></div>`;
+  const body = `<div style="min-height:100vh;background:var(--color-bg)">${nav(user)}<main class="page-shell" id="main-content"><div class="page-shell-inner">${breadcrumb(bc)}${content}</div></main></div>`;
   return generateHtml(title, body, scripts);
 }
 
@@ -27,14 +30,16 @@ const KNOWN_ROLES = { admin:'badge-error', partner:'badge-flat-primary', manager
 
 export function roleBadge(role) {
   const r = (role || '').toLowerCase();
-  const cls = KNOWN_ROLES[r] || 'badge-flat-secondary';
+  const pillMap = { admin:'pill pill-danger', partner:'pill pill-info', manager:'pill pill-success', clerk:'pill pill-warning', user:'pill pill-neutral', auditor:'pill pill-neutral' };
+  const cls = pillMap[r] || 'pill pill-neutral';
   const label = r ? r.charAt(0).toUpperCase() + r.slice(1) : 'Staff';
-  return `<span class="badge ${cls} text-xs" title="${role}">${label}</span>`;
+  return `<span class="${cls}" title="${role}">${label}</span>`;
 }
 
 function statusBadge(status) {
   const active = status === 'active';
-  return `<span class="badge ${active ? 'badge-success badge-flat-success' : 'badge-warning badge-flat-warning'} text-xs">${status || '-'}</span>`;
+  return `<span class="${active ? 'pill pill-success' : 'pill pill-warning'}">${status || '-'}</span>`;
+} text-xs">${status || '-'}</span>`;
 }
 
 const SETTINGS_CARDS = [
@@ -54,7 +59,7 @@ export function renderSettingsHome(user, config = {}, counts = {}) {
     const badge = c.countKey && counts[c.countKey] !== undefined
       ? `<span class="badge badge-flat-primary text-xs mt-2">${counts[c.countKey]} items</span>` : '';
     return `<a href="${c.href}" class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow" style="text-decoration:none">
-      <div class="card-body">
+      <div class="card-clean-body">
         <div class="flex items-start gap-3">
           <div class="text-2xl">${c.icon}</div>
           <div>
@@ -79,7 +84,7 @@ export function renderSettingsSystem(user, config = {}) {
     { title: 'Workflow Configuration', items: [['Stage Transition Lockout', (t.workflow?.stage_transition_lockout_minutes || 5) + ' min'], ['Collaborator Default Expiry', (t.collaborator?.default_expiry_days || 7) + ' days'], ['Collaborator Max Expiry', (t.collaborator?.max_expiry_days || 30) + ' days']] },
   ];
   const cards = sections.map(s => `<div class="card bg-base-100 shadow-md">
-    <div class="card-body">
+    <div class="card-clean-body">
       <h2 class="card-title text-sm mb-3">${s.title}</h2>
       ${s.items.map(([l, v]) => `<div class="flex justify-between py-2 border-b border-base-200 last:border-0"><span class="text-sm text-base-content/60">${l}</span><span class="text-sm font-semibold">${v}</span></div>`).join('')}
     </div>
@@ -204,7 +209,7 @@ export function renderSettingsRfiSections(user, sections = []) {
 
   const palette = RFI_PALETTE.map(c => `<div data-color="${c}" class="w-6 h-6 rounded cursor-pointer border-2 border-transparent hover:border-base-content" style="background:${c}" onclick="selectColor('${c}')" title="${c}"></div>`).join('');
   const formHtml = `<div id="section-form" class="card bg-base-100 shadow-md mb-4" style="display:none">
-    <div class="card-body">
+    <div class="card-clean-body">
       <div class="flex flex-wrap gap-4 items-end">
         <div class="form-group">
           <label class="label"><span class="label-text font-medium">Name</span></label>

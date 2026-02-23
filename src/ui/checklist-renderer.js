@@ -8,7 +8,7 @@ function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt
 
 function page(user, title, bc, content, scripts = []) {
   const crumbs = bc?.length ? `<nav class="breadcrumbs text-sm mb-4"><ul>${bc.map(item => `<li>${item.href ? `<a href="${item.href}">${item.label}</a>` : item.label}</li>`).join('')}</ul></nav>` : '';
-  const body = `<div class="min-h-screen bg-base-200">${nav(user)}<main id="main-content" class="p-4 md:p-6">${crumbs}${content}</main></div>`;
+  const body = `<div style="min-height:100vh;background:var(--color-bg)">${nav(user)}<main id="main-content" class="page-shell">${crumbs}${content}</main></div>`;
   return generateHtml(title, body, scripts);
 }
 

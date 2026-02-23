@@ -3,12 +3,12 @@ import { nav } from '@/ui/layout.js';
 import { canEdit, isPartner, isManager } from '@/ui/permissions-ui.js';
 
 const STAGE_CONFIG = [
-  { key: 'info_gathering',  label: 'Info Gathering',  badge: 'badge-error badge-flat-error',     color: '#e53935' },
-  { key: 'commencement',    label: 'Commencement',    badge: 'badge-warning badge-flat-warning',  color: '#e65100' },
-  { key: 'team_execution',  label: 'Team Execution',  badge: 'badge-flat-primary',                color: '#1565c0' },
-  { key: 'partner_review',  label: 'Partner Review',  badge: 'badge-flat-secondary',              color: '#283593' },
-  { key: 'finalization',    label: 'Finalization',    badge: 'badge-success badge-flat-success',  color: '#2e7d32' },
-  { key: 'closeout',        label: 'Close Out',       badge: 'badge-success badge-flat-success',  color: '#33691e' },
+  { key: 'info_gathering',  label: 'Info Gathering',  badge: 'stage-pill stage-info_gathering',  color: '#e53935' },
+  { key: 'commencement',    label: 'Commencement',    badge: 'stage-pill stage-commencement',     color: '#e65100' },
+  { key: 'team_execution',  label: 'Team Execution',  badge: 'stage-pill stage-team_execution',   color: '#1565c0' },
+  { key: 'partner_review',  label: 'Partner Review',  badge: 'stage-pill stage-partner_review',   color: '#283593' },
+  { key: 'finalization',    label: 'Finalization',    badge: 'stage-pill stage-finalization',     color: '#2e7d32' },
+  { key: 'closeout',        label: 'Close Out',       badge: 'stage-pill stage-closeout',         color: '#33691e' },
 ];
 
 function esc(s) {
@@ -191,8 +191,8 @@ export function renderEngagementDetail(user, engagement, client, rfis = []) {
   const newRfiBtn = `<a href="/rfi/new?engagement_id=${esc(e.id)}" class="btn btn-primary btn-sm">+ RFI</a>`;
 
   const TABS = ['Details','RFIs','Chat','Checklist','Activity','Files'];
-  const tabBar = `<div class="tabs tabs-boxed bg-base-200 mb-4 flex-wrap gap-1">` +
-    TABS.map((t,i) => `<button onclick="switchEngTab('${t.toLowerCase()}')" id="engtab-${t.toLowerCase()}" class="tab ${i===0?'tab-active':''}">${t}</button>`).join('') +
+  const tabBar = `<div class="tab-bar">` +
+    TABS.map((t,i) => `<button onclick="switchEngTab('${t.toLowerCase()}')" id="engtab-${t.toLowerCase()}" class="tab ${i===0?'active':''}">${t}</button>`).join('') +
     `</div>`;
 
   const detailsPanel = `<div id="tab-details" class="eng-tab-panel">
@@ -260,9 +260,9 @@ function switchEngTab(tab){
   document.querySelectorAll('.eng-tab-panel').forEach(function(p){p.style.display='none'});
   var panel=document.getElementById('tab-'+tab);
   if(panel)panel.style.display='';
-  document.querySelectorAll('[id^="engtab-"]').forEach(function(b){b.classList.remove('tab-active')});
+  document.querySelectorAll('[id^="engtab-"]').forEach(function(b){b.classList.remove('active')});
   var btn=document.getElementById('engtab-'+tab);
-  if(btn)btn.classList.add('tab-active');
+  if(btn)btn.classList.add('active');
   activeEngTab=tab;
   if(tab==='chat')loadChat();
   else if(tab==='checklist')loadChecklist();
@@ -340,6 +340,6 @@ async function uploadEngFiles(event,engId){
 async function downloadFilesZip(engId){try{var r=await fetch('/api/friday/engagement/files-zip',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({engagement_id:engId})});if(r.ok){var b=await r.blob();var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='engagement-files.zip';a.click()}else showToast('No files to download','error')}catch(e){showToast('Error','error')}}
 `;
 
-  const body = `<div class="min-h-screen bg-base-200">${nav(user)}<main class="p-4 md:p-6" id="main-content">${content}</main></div>`;
+  const body = `<div style="min-height:100vh;background:var(--color-bg)">${nav(user)}<main class="page-shell" id="main-content"><div class="page-shell-inner">${content}</div></main></div>`;
   return generateHtml(`${esc(e.name || 'Engagement')} | MY FRIDAY`, body, [script]);
 }

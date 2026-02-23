@@ -24,17 +24,26 @@ function fmtDate(ts) {
 
 function breadcrumb(items) {
   if (!items?.length) return '';
-  return `<nav class="breadcrumbs text-sm mb-4" aria-label="Breadcrumb"><ul>${items.map((item, i) => i === items.length - 1 ? `<li>${item.label}</li>` : `<li><a href="${item.href}">${item.label}</a></li>`).join('')}</ul></nav>`;
+  return '<nav class="breadcrumb-clean">' + items.map((item, i) =>
+    i === items.length - 1 ? '<span>' + item.label + '</span>'
+      : '<a href="' + item.href + '">' + item.label + '</a><span class="breadcrumb-sep">/</span>'
+  ).join('') + '</nav>';
+}</li>` : `<li><a href="${item.href}">${item.label}</a></li>`).join('')}</ul></nav>`;
 }
 
 function page(user, title, bc, content, scripts = []) {
-  const body = `<div class="min-h-screen bg-base-200">${fridayNav(user)}<main id="main-content" class="p-4 md:p-6">${breadcrumb(bc)}${content}</main></div>`;
+  const body = '<div style="min-height:100vh;background:var(--color-bg)">' + fridayNav(user) + '<main class="page-shell" id="main-content"><div class="page-shell-inner">' + breadcrumb(bc) + content + '</div></main></div>';
+  return generateHtml(title, body, scripts);
+}<main id="main-content" class="p-4 md:p-6">${breadcrumb(bc)}${content}</main></div>`;
   return generateHtml(title, body, scripts);
 }
 
 function statusBadge(status) {
   const s = status || 'open';
-  const map = { active:'badge-flat-primary', open:'badge-flat-primary', in_progress:'badge-flat-primary', completed:'badge-success badge-flat-success', closed:'badge-success badge-flat-success', archived:'badge-flat-secondary' };
+  const map = { active:'pill pill-info', open:'pill pill-info', in_progress:'pill pill-info', completed:'pill pill-success', closed:'pill pill-success', archived:'pill pill-neutral' };
+  const cls = map[s] || 'pill pill-warning';
+  return '<span class="'+cls+'">'+s+'</span>';
+};
   const cls = map[s] || 'badge-warning badge-flat-warning';
   return `<span class="badge ${cls} text-xs">${s}</span>`;
 }
@@ -53,9 +62,7 @@ function reviewRow(r) {
 export function renderReviewListTabbed(user, reviews) {
   const counts = {};
   TAB_DEFS.forEach(t => { counts[t.key] = reviews.filter(t.filter).length; });
-  const tabBar = `<div class="tabs tabs-boxed bg-base-200 mb-4 flex-wrap gap-1">` +
-    TAB_DEFS.map(t => `<button class="review-tab tab ${t.key==='all'?'tab-active':''}" data-tab="${t.key}" onclick="switchTab('${t.key}')">${t.label}<span class="badge badge-sm ml-1">${counts[t.key]}</span></button>`).join('') +
-    `</div>`;
+  const tabBar = `<div class="tab-bar">${TAB_DEFS.map(t => `<button class="review-tab tab-btn ${t.key==='all'?'active':''}" data-tab="${t.key}" onclick="switchTab('${t.key}')">${t.label}<span class="tab-count">${counts[t.key]}</span></button>`).join('')}</div>`;
 
   const rows = reviews.map(reviewRow).join('');
   const createBtn = canCreate(user, 'review') ? `<button onclick="document.getElementById('review-create-dialog').style.display='flex'" class="btn btn-primary btn-sm">New Review</button>` : '';
@@ -66,32 +73,24 @@ export function renderReviewListTabbed(user, reviews) {
     <div class="text-sm">Start a new review to get started.</div>
   </td></tr>`;
 
-  const content = `
-    <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
-      <h1 class="text-2xl font-bold text-base-content">Reviews</h1>
-      <div class="flex gap-2 items-center flex-wrap">
-        ${reviewSearchField()}
-        ${hideEmptyReviewsToggle()}
-        ${createBtn}
-      </div>
+  const content = `<div class="page-header">
+      <div><h1 class="page-title">Reviews</h1><p class="page-subtitle">${reviews.length} total</p></div>
+      <div style="display:flex;gap:10px;align-items:center">${reviewSearchField()}${createBtn}</div>
     </div>
     ${tabBar}
-    <div class="card bg-base-100 shadow-md">
-      <div class="card-body p-0">
-        <div class="flex items-center px-4 py-3 border-b border-base-200">
-          <span id="review-count" class="text-sm text-base-content/60">Showing <strong>${reviews.length}</strong> reviews</span>
-        </div>
-        <div class="table-container">
-          <table class="table table-hover">
-            <thead><tr><th>Name</th><th>Engagement</th><th>Status</th><th class="text-center">Highlights</th><th>Deadline</th><th>Created</th></tr></thead>
-            <tbody id="review-tbody">${rows || emptyState}</tbody>
-          </table>
-        </div>
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <div class="table-search"><input id="search-input" type="text" placeholder="Search reviews..."></div>
+        <span class="table-count" id="row-count">${reviews.length} items</span>
       </div>
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Engagement</th><th>Status</th><th style="text-align:center">Highlights</th><th>Deadline</th><th>Created</th></tr></thead>
+        <tbody id="review-tbody">${rows || emptyState}</tbody>
+      </table>
     </div>
     ${reviewContextMenu()}`;
 
-  const tabScript = `window.switchTab=(key)=>{document.querySelectorAll('.review-tab').forEach(t=>{var isA=t.dataset.tab===key;t.classList.toggle('tab-active',isA)});const rows=document.querySelectorAll('.review-row');var vis=0,tot=0;rows.forEach(r=>{const s=r.dataset.status,a=r.dataset.archived,p=r.dataset.priority;let show=true;if(key==='active')show=s==='active'||s==='open'||s==='in_progress';else if(key==='priority')show=p==='1';else if(key==='history')show=s==='completed'||s==='closed';else if(key==='archive')show=s==='archived'||a==='1';r.style.display=show?'':'none';tot++;if(show)vis++});var rc=document.getElementById('review-count');if(rc)rc.innerHTML='Showing <strong>'+vis+'</strong> of '+tot+' reviews'}`;
+  const tabScript = `window.switchTab=(key)=>{document.querySelectorAll('.review-tab').forEach(t=>{var isA=t.dataset.tab===key;t.classList.toggle('active',isA)});const rows=document.querySelectorAll('.review-row');var vis=0,tot=0;rows.forEach(r=>{const s=r.dataset.status,a=r.dataset.archived,p=r.dataset.priority;let show=true;if(key==='active')show=s==='active'||s==='open'||s==='in_progress';else if(key==='priority')show=p==='1';else if(key==='history')show=s==='completed'||s==='closed';else if(key==='archive')show=s==='archived'||a==='1';r.style.display=show?'':'none';tot++;if(show)vis++});var rc=document.getElementById('review-count');if(rc)rc.innerHTML='Showing <strong>'+vis+'</strong> of '+tot+' reviews'}`;
   const ctxScript = `let ctxId=null;window.showCtxMenu=(e,id)=>{e.preventDefault();ctxId=id;const m=document.getElementById('review-ctx-menu');m.style.display='block';m.style.left=e.pageX+'px';m.style.top=e.pageY+'px'};document.addEventListener('click',()=>{const m=document.getElementById('review-ctx-menu');if(m)m.style.display='none'});window.ctxAction=(action)=>{if(!ctxId)return;if(action==='view')window.location='/review/'+ctxId;else if(action==='edit')window.location='/review/'+ctxId+'/edit';else if(action==='duplicate')fetch('/api/review/'+ctxId).then(r=>r.json()).then(d=>{const b=d.data||d;delete b.id;fetch('/api/review',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(()=>{showToast('Duplicated','success');setTimeout(()=>location.reload(),500)})});else if(action==='archive')fetch('/api/review/'+ctxId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:'archived'})}).then(()=>{showToast('Archived','success');setTimeout(()=>location.reload(),500)});else if(action==='delete'){if(confirm('Delete this review?'))fetch('/api/review/'+ctxId,{method:'DELETE'}).then(()=>{showToast('Deleted','success');setTimeout(()=>location.reload(),500)})}else if(action==='export')fetch('/api/mwr/review/'+ctxId+'/export-pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})}).then(r=>r.blob()).then(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='review-'+ctxId+'.pdf';a.click()})}`;
   const hideScript = `(function(){const cb=document.getElementById('hide-empty-toggle');if(!cb)return;cb.checked=localStorage.getItem('hideEmptyReviews')==='true';function apply(){const hide=cb.checked;document.querySelectorAll('.review-row').forEach(r=>{if(hide&&r.dataset.highlights==='0')r.classList.add('review-hidden');else r.classList.remove('review-hidden')})}cb.addEventListener('change',()=>{localStorage.setItem('hideEmptyReviews',cb.checked);apply()});apply()})()`;
   const searchScript = `(function(){const si=document.getElementById('review-search');if(!si)return;let t;si.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>{const q=si.value.toLowerCase();document.querySelectorAll('.review-row').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q)?'':'none'})},300)})})()`;

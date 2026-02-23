@@ -9,7 +9,10 @@ function esc(s) {
 }
 
 function statusBadge(status) {
-  const map = { active:'badge-success badge-flat-success', closed:'badge-flat-secondary', responded:'badge-flat-primary', pending:'badge-warning badge-flat-warning' };
+  const map = { active:'pill pill-success', closed:'pill pill-neutral', responded:'pill pill-info', pending:'pill pill-warning' };
+  const cls = map[status] || 'pill pill-neutral';
+  return `<span class="${cls}">${status||'-'}</span>`;
+};
   const cls = map[status] || 'badge-flat-secondary';
   return `<span class="badge ${cls} text-xs">${status||'-'}</span>`;
 }
@@ -90,8 +93,8 @@ export function renderRfiDetail(user, rfi = {}, questions = [], sections = [], e
     `<tr><td colspan="6" class="text-center py-8 text-base-content/40 text-sm">No questions yet. Add one using the button above.</td></tr>`;
 
   const sectionTabs = sections.length ? `<div class="tabs tabs-boxed bg-base-200 flex-wrap gap-1">
-    <button onclick="filterBySection('')" id="stab-all" class="tab tab-active">All</button>
-    ${sections.map(s => `<button onclick="filterBySection('${esc(s.id)}')" id="stab-${esc(s.id)}" class="tab">${esc(s.name)}</button>`).join('')}
+    <button onclick="filterBySection('')" id="stab-all" class="tab-btn active">All</button>
+    ${sections.map(s => `<button onclick="filterBySection('${esc(s.id)}')" id="stab-${esc(s.id)}" class="tab-btn">${esc(s.name)}</button>`).join('')}
   </div>` : '';
 
   const engLink = engagement
@@ -158,7 +161,7 @@ export function renderRfiDetail(user, rfi = {}, questions = [], sections = [], e
 var activeSection='';
 function filterBySection(sid){
   activeSection=sid;
-  document.querySelectorAll('[id^="stab-"]').forEach(b=>b.classList.toggle('tab-active',b.id==='stab-'+(sid||'all')));
+  document.querySelectorAll('[id^="stab-"]').forEach(b=>b.classList.toggle('active',b.id==='stab-'+(sid||'all')));
   filterRows()
 }
 function filterRows(){var q=(document.querySelector('#q-table input')?.value||'').toLowerCase();document.querySelectorAll('#q-tbody tr').forEach(function(r){var text=(r.textContent||'').toLowerCase();var secSpan=r.querySelector('td:nth-child(3) span');var rowSec=secSpan?secSpan.textContent:'';var showSec=!activeSection||rowSec===document.getElementById('stab-'+activeSection)?.textContent;r.style.display=(!q||text.includes(q))&&showSec?'':'none'})}
@@ -170,6 +173,6 @@ async function deleteQuestion(id){if(!confirm('Delete this question?'))return;va
 async function saveSection(rfiId){var name=document.getElementById('sec-name').value.trim();if(!name){showToast('Name required','error');return}try{var r=await fetch('/api/rfi_section',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,rfi_id:rfiId})});if(r.ok){showToast('Section added','success');setTimeout(function(){location.reload()},500)}else showToast('Failed','error')}catch(e){showToast('Error','error')}document.getElementById('sec-dialog').style.display='none'}
 async function sendReminder(rfiId){try{var r=await fetch('/api/friday/rfi/reminder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rfi_id:rfiId})});if(r.ok)showToast('Reminder sent','success');else showToast('Failed','error')}catch(e){showToast('Error','error')}}`;
 
-  const body = `<div class="min-h-screen bg-base-200">${nav(user)}<main class="p-4 md:p-6" id="main-content">${content}</main></div>`;
+  const body = `<div style="min-height:100vh;background:var(--color-bg)">${nav(user)}<main class="page-shell" id="main-content"><div class="page-shell-inner">${content}</div></main></div>`;
   return generateHtml(`${esc(rfi.name||'RFI')} | MY FRIDAY`, body, [script]);
 }

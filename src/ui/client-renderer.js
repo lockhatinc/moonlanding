@@ -7,7 +7,11 @@ function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt
 const TOAST_SCRIPT = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';c.setAttribute('role','status');c.setAttribute('aria-live','polite');document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
 
 function statusBadge(status) {
-  const map = { active: 'badge-success badge-flat-success', inactive: 'badge-error badge-flat-error' };
+  const map = { active:'pill pill-success', inactive:'pill pill-danger', pending:'pill pill-warning' };
+  const cls = map[status] || 'pill pill-neutral';
+  const lbl = status ? status.charAt(0).toUpperCase()+status.slice(1) : '-';
+  return '<span class="'+cls+'">'+lbl+'</span>';
+};
   const cls = map[status] || 'badge-flat-secondary';
   const lbl = status ? status.charAt(0).toUpperCase() + status.slice(1) : '-';
   return `<span class="badge ${cls} text-xs">${lbl}</span>`;
@@ -15,11 +19,18 @@ function statusBadge(status) {
 
 function breadcrumb(items) {
   if (!items?.length) return '';
-  return `<nav class="breadcrumbs text-sm mb-4" aria-label="Breadcrumb"><ul>${items.map((item, i) => i === items.length - 1 ? `<li>${item.label}</li>` : `<li><a href="${item.href}">${item.label}</a></li>`).join('')}</ul></nav>`;
+  return '<nav class="breadcrumb-clean">' + items.map((item, i) =>
+    i === items.length - 1
+      ? '<span>' + item.label + '</span>'
+      : '<a href="' + item.href + '">' + item.label + '</a><span class="breadcrumb-sep">/</span>'
+  ).join('') + '</nav>';
+}</li>` : `<li><a href="${item.href}">${item.label}</a></li>`).join('')}</ul></nav>`;
 }
 
 function page(user, title, bc, content, scripts = []) {
-  const body = `<div class="min-h-screen bg-base-200">${nav(user)}<main id="main-content" role="main" class="p-4 md:p-6">${breadcrumb(bc)}${content}</main></div>`;
+  const body = '<div style="min-height:100vh;background:var(--color-bg)">' + nav(user) + '<main class="page-shell" id="main-content">' + breadcrumb(bc) + '<div class="page-shell-inner">' + content + '</div></main></div>';
+  return generateHtml(title, body, scripts);
+}<main id="main-content" role="main" class="p-4 md:p-6">${breadcrumb(bc)}${content}</main></div>`;
   return generateHtml(title, body, scripts);
 }
 
@@ -31,61 +42,79 @@ const RISK_LEVELS = [
 ];
 
 export function renderClientList(user, clients) {
-  const addBtn = canCreate(user, 'client') ? `<a href="/client/new" class="btn btn-primary btn-sm gap-1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Client</a>` : '';
+  const addBtn = canCreate(user, 'client')
+    ? `<a href="/client/new" class="btn-primary-clean"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> New Client</a>`
+    : '';
   const rows = (clients || []).map(c => {
     const code = esc(c.client_code || c.code || '-');
     const name = esc(c.name || '-');
     const entityType = esc(c.entity_type || c.industry || '-');
     const email = esc(Array.isArray(c.master_emails) ? c.master_emails[0] : (c.email || '-'));
-    const contact = esc(c.contact || c.phone || '-');
-    const taxNo = esc(c.tax_number || c.tax_no || '-');
-    const regNo = esc(c.reg_number || c.reg_no || '-');
     const status = c.status || 'active';
-    return `<tr class="hover cursor-pointer" onclick="location.href='/client/${esc(c.id)}'">
-      <td class="font-semibold text-sm text-primary">${code}</td>
-      <td class="font-medium max-w-48 truncate" title="${name}">${name}</td>
-      <td class="text-sm">${entityType}</td>
-      <td class="text-sm max-w-40 truncate" title="${email}">${email}</td>
-      <td class="text-sm">${contact}</td>
-      <td class="text-sm">${taxNo}</td>
-      <td class="text-sm">${regNo}</td>
-      <td>${statusBadge(status)}</td>
+    const sp = status === 'active' ? '<span class="pill pill-success">Active</span>' : '<span class="pill pill-neutral">Inactive</span>';
+    return `<tr data-row onclick="location.href='/client/${esc(c.id)}'" style="cursor:pointer">
+      <td data-col="code" style="font-weight:600;color:var(--color-info)">${code}</td>
+      <td data-col="name"><strong>${name}</strong></td>
+      <td data-col="type">${entityType}</td>
+      <td data-col="email">${email}</td>
+      <td data-col="status">${sp}</td>
     </tr>`;
-  }).join('');
+  }).join('') || `<tr><td colspan="5" style="text-align:center;padding:48px;color:var(--color-text-muted)">No clients found</td></tr>`;
 
-  const emptyState = `<tr><td colspan="8" class="text-center py-16 text-base-content/40">
-    <div class="text-4xl mb-3">&#127968;</div>
-    <div class="font-semibold mb-1">No clients yet</div>
-    <div class="text-sm">Add your first client to get started.</div>
-  </td></tr>`;
-
-  const content = `
-    <div class="flex justify-between items-center mb-4">
-      <h1 class="text-2xl font-bold text-base-content">Clients</h1>
+  const body = `<div style="min-height:100vh;background:var(--color-bg)">${nav(user)}<main class="page-shell" id="main-content"><div class="page-shell-inner">
+    <div class="page-header">
+      <div><h1 class="page-title">Clients</h1><p class="page-subtitle">${(clients||[]).length} clients</p></div>
       ${addBtn}
     </div>
-    <div class="mb-3">
-      <input type="text" id="client-search" placeholder="Search clients..." oninput="filterClients()" class="input input-solid" style="max-width:280px">
-    </div>
-    <div class="card bg-base-100 shadow-md">
-      <div class="card-body p-0">
-        <div class="flex items-center px-4 py-3 border-b border-base-200">
-          <span id="client-count" class="text-sm text-base-content/60">Showing <strong>${(clients||[]).length}</strong> clients</span>
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <div class="table-search"><input id="search-input" type="text" placeholder="Search clients..."></div>
+        <div class="table-filter">
+          <select data-filter="status"><option value="">All statuses</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
         </div>
-        <div class="table-container">
-          <table class="table table-hover">
-            <thead><tr>
-              <th>Code</th><th>Name</th><th>Industry</th><th>Email</th><th>Contact</th><th>Tax No</th><th>Reg No</th><th>Status</th>
-            </tr></thead>
-            <tbody id="client-tbody">${rows || emptyState}</tbody>
-          </table>
-        </div>
+        <span class="table-count" id="row-count">${(clients||[]).length} items</span>
       </div>
-    </div>`;
-
-  const body = `<div class="min-h-screen bg-base-200">${nav(user)}<main class="p-4 md:p-6" id="main-content">${content}</main></div>`;
-  const script = `function filterClients(){var q=(document.getElementById('client-search').value||'').toLowerCase(),vis=0,tot=0;document.querySelectorAll('#client-tbody tr').forEach(function(r){if(!r.cells||r.cells.length<2)return;tot++;var show=!q||r.textContent.toLowerCase().includes(q);r.style.display=show?'':'none';if(show)vis++});var c=document.getElementById('client-count');if(c)c.innerHTML='Showing <strong>'+vis+'</strong> of '+tot+' clients'}`;
-  return generateHtml('Clients | MY FRIDAY', body, [script]);
+      <table class="data-table">
+        <thead><tr>
+          <th data-sort="code">Code</th><th data-sort="name">Name</th>
+          <th data-sort="type">Industry</th><th data-sort="email">Email</th>
+          <th data-sort="status">Status</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  </div></main></div>`;
+  return generateHtml('Clients | MY FRIDAY', body, [`(function(){
+let sortCol=null,sortDir=1;
+function filterTable(){
+  const search=(document.getElementById('search-input')?.value||'').toLowerCase();
+  const filters={};
+  document.querySelectorAll('[data-filter]').forEach(el=>{if(el.value)filters[el.dataset.filter]=el.value.toLowerCase()});
+  let shown=0,total=0;
+  document.querySelectorAll('tbody tr[data-row]').forEach(row=>{
+    total++;const text=row.textContent.toLowerCase();
+    const matchSearch=!search||text.includes(search);
+    const matchFilters=Object.entries(filters).every(([key,val])=>{const cell=row.querySelector('[data-col="'+key+'"]');return !cell||cell.textContent.toLowerCase().includes(val)});
+    const visible=matchSearch&&matchFilters;row.style.display=visible?'':'none';if(visible)shown++;
+  });
+  const counter=document.getElementById('row-count');
+  if(counter)counter.textContent=shown===total?total+' items':shown+' of '+total+' items';
+}
+function sortTable(col){
+  if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}
+  document.querySelectorAll('th[data-sort]').forEach(th=>{th.classList.remove('sort-asc','sort-desc');if(th.dataset.sort===col)th.classList.add(sortDir===1?'sort-asc':'sort-desc')});
+  const tbody=document.querySelector('tbody');if(!tbody)return;
+  const rows=Array.from(tbody.querySelectorAll('tr[data-row]'));
+  rows.sort((a,b)=>{const av=a.querySelector('[data-col="'+col+'"]')?.textContent?.trim()||'';const bv=b.querySelector('[data-col="'+col+'"]')?.textContent?.trim()||'';return av.localeCompare(bv,undefined,{numeric:true})*sortDir});
+  rows.forEach(r=>tbody.appendChild(r));
+}
+window.filterTable=filterTable;window.sortTable=sortTable;
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('search-input')?.addEventListener('input',filterTable);
+  document.querySelectorAll('[data-filter]').forEach(el=>el.addEventListener('change',filterTable));
+  document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>sortTable(th.dataset.sort)));
+});
+})();`]);
 }
 
 export function renderClientDashboard(user, client, stats = {}) {
@@ -105,11 +134,11 @@ export function renderClientDashboard(user, client, stats = {}) {
     <span class="text-sm text-base-content">${v}</span>
   </div>`).join('');
 
-  const statsHtml = `<div class="stats shadow w-full mb-6 flex-wrap">
-    <div class="stat"><div class="stat-title">Engagements</div><div class="stat-value text-2xl">${stats.engagements || 0}</div></div>
-    <div class="stat"><div class="stat-title">Active RFIs</div><div class="stat-value text-2xl text-primary">${stats.activeRfis || 0}</div></div>
-    <div class="stat"><div class="stat-title">Users</div><div class="stat-value text-2xl">${stats.users || 0}</div></div>
-    <div class="stat"><div class="stat-title">Reviews</div><div class="stat-value text-2xl">${stats.reviews || 0}</div></div>
+  const statsHtml = `<div class="stats-row">
+    <div class="stat-card"><div class="stat-card-value">${stats.engagements||0}</div><div class="stat-card-label">Engagements</div></div>
+    <div class="stat-card"><div class="stat-card-value">${stats.activeRfis||0}</div><div class="stat-card-label">Active RFIs</div></div>
+    <div class="stat-card"><div class="stat-card-value">${stats.users||0}</div><div class="stat-card-label">Users</div></div>
+    <div class="stat-card"><div class="stat-card-value">${stats.reviews||0}</div><div class="stat-card-label">Reviews</div></div>
   </div>`;
 
   const engRows = (stats.engagementList || []).map(e => `<tr class="hover cursor-pointer" onclick="window.location='/engagement/${e.id}'"><td class="text-sm">${e.name || '-'}</td><td>${statusBadge(e.stage)}</td><td>${statusBadge(e.status)}</td></tr>`).join('') || '<tr><td colspan="3" class="text-center py-6 text-base-content/40 text-sm">No engagements</td></tr>';

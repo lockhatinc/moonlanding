@@ -1,137 +1,318 @@
-import { h } from '@/ui/webjsx.js'
-import { page, statCards, dataTable } from '@/ui/layout.js'
-import { getNavItems, getQuickActions } from '@/ui/permissions-ui.js'
+import { page } from '@/ui/layout.js'
+import { getQuickActions } from '@/ui/permissions-ui.js'
 
 function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function stageBadge(stage) {
-  const map = {info_gathering:['badge-error','Info Gathering'],commencement:['badge-warning','Commencement'],team_execution:['badge-flat-primary','Team Execution'],partner_review:['badge-flat-secondary','Partner Review'],finalization:['badge-success','Finalization'],closeout:['badge-success','Close Out']}
-  const [cls, lbl] = map[stage] || ['badge-flat-secondary', stage || '-']
-  return `<span class="badge ${cls} badge-flat-${cls.replace('badge-','')} text-xs">${lbl}</span>`
+const STAGE_MAP = {
+  info_gathering:  ['stage-pill stage-info_gathering',  'Info Gathering'],
+  commencement:    ['stage-pill stage-commencement',    'Commencement'],
+  team_execution:  ['stage-pill stage-team_execution',  'Team Execution'],
+  partner_review:  ['stage-pill stage-partner_review',  'Partner Review'],
+  finalization:    ['stage-pill stage-finalization',    'Finalization'],
+  closeout:        ['stage-pill stage-closeout',        'Close Out'],
+};
+
+function stagePill(stage) {
+  const [cls, lbl] = STAGE_MAP[stage] || ['pill pill-neutral', stage || '-'];
+  return `<span class="${cls}">${lbl}</span>`;
 }
 
-function statusBadge(status) {
-  const map = {active:'badge-success badge-flat-success',pending:'badge-warning badge-flat-warning',inactive:'badge-flat-secondary'}
-  const cls = map[status] || 'badge-flat-secondary'
-  const lbl = status ? status.charAt(0).toUpperCase()+status.slice(1) : '-'
-  return `<span class="badge ${cls} text-xs">${lbl}</span>`
+function statusPill(status) {
+  const map = { active:'pill pill-success', pending:'pill pill-warning', inactive:'pill pill-neutral' };
+  const cls = map[status] || 'pill pill-neutral';
+  return `<span class="${cls}">${status ? status.charAt(0).toUpperCase()+status.slice(1) : '-'}</span>`;
 }
 
 export function renderDashboard(user, stats = {}) {
-  const isClerk = user?.role === 'clerk'
-
+  const isClerk = user?.role === 'clerk';
   const statDefs = isClerk
     ? [
-        { label: 'My RFIs', value: stats.myRfis?.length || 0, desc: 'Assigned to you', href: '/rfi' },
-        { label: 'Overdue', value: stats.overdueRfis?.length || 0, desc: 'Need attention', href: '/rfi', warn: true },
-        { label: 'Reviews', value: stats.reviews || 0, desc: 'Total reviews', href: '/review' },
-        { label: 'Clients', value: stats.clients || 0, desc: 'Active clients', href: '/client' },
+        { label: 'My RFIs',   value: stats.myRfis?.length || 0,   sub: 'Assigned to you',  href: '/rfi' },
+        { label: 'Overdue',   value: stats.overdueRfis?.length || 0, sub: 'Need attention', href: '/rfi', warn: true },
+        { label: 'Reviews',   value: stats.reviews || 0,            sub: 'Total reviews',   href: '/review' },
+        { label: 'Clients',   value: stats.clients || 0,            sub: 'Active clients',  href: '/client' },
       ]
     : [
-        { label: 'Engagements', value: stats.engagements || 0, desc: 'Total engagements', href: '/engagements' },
-        { label: 'Clients', value: stats.clients || 0, desc: 'Active clients', href: '/client' },
-        { label: 'Open RFIs', value: stats.rfis || 0, desc: stats.overdueRfis?.length > 0 ? `${stats.overdueRfis.length} overdue` : 'All on track', href: '/rfi', warn: stats.overdueRfis?.length > 0 },
-        { label: 'Reviews', value: stats.reviews || 0, desc: 'Active reviews', href: '/review' },
-      ]
+        { label: 'Engagements', value: stats.engagements || 0, sub: 'Total engagements',  href: '/engagements' },
+        { label: 'Clients',     value: stats.clients || 0,     sub: 'Active clients',     href: '/client' },
+        { label: 'Open RFIs',   value: stats.rfis || 0,        sub: stats.overdueRfis?.length > 0 ? `${stats.overdueRfis.length} overdue` : 'All on track', href: '/rfi', warn: stats.overdueRfis?.length > 0 },
+        { label: 'Reviews',     value: stats.reviews || 0,     sub: 'Active reviews',     href: '/review' },
+      ];
 
-  const statsHtml = `<div class="stats shadow w-full mb-6 flex-wrap">` +
-    statDefs.map(s => `<a href="${s.href}" class="stat hover:bg-base-200 transition-colors" style="text-decoration:none">
-      <div class="stat-title">${s.label}</div>
-      <div class="stat-value ${s.warn ? 'text-error' : ''}">${s.value}</div>
-      <div class="stat-desc">${s.desc}</div>
-    </a>`).join('') + `</div>`
+  const statsHtml = `<div class="stats-row">${statDefs.map(s => `<a href="${s.href}" class="stat-card stat-card-clickable" style="text-decoration:none">
+    <div class="stat-card-value${s.warn?' style=\"color:var(--color-danger)\"':''}">${s.value}</div>
+    <div class="stat-card-label">${s.label}</div>
+    <div class="stat-card-sub">${s.sub}</div>
+  </a>`).join('')}</div>`;
 
   const overdueAlert = stats.overdueRfis?.length > 0
-    ? `<div class="alert alert-error mb-4 flex justify-between items-center">
+    ? `<div class="alert-strip alert-strip-danger mb-5">
         <span>${stats.overdueRfis.length} overdue RFI${stats.overdueRfis.length !== 1 ? 's' : ''} require attention</span>
-        <a href="/rfi" class="btn btn-sm btn-error">View RFIs</a>
-      </div>` : ''
+        <a href="/rfi" class="btn-danger-clean">View RFIs</a>
+      </div>` : '';
 
-  const quickActions = getQuickActions(user)
+  const quickActions = getQuickActions(user);
   const actionsHtml = quickActions.length > 0
-    ? `<div class="card bg-base-100 shadow-md mb-4">
-        <div class="card-body">
-          <h2 class="card-title text-sm">Quick Actions</h2>
-          <div class="flex flex-wrap gap-2">
-            ${quickActions.map(a => `<a href="${a.href}" class="btn btn-sm ${a.primary ? 'btn-primary' : 'btn-ghost'}">${a.label}</a>`).join('')}
+    ? `<div class="card-clean card-section">
+        <div class="card-clean-body">
+          <div class="page-subtitle" style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px">Quick Actions</div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px">
+            ${quickActions.map(a => `<a href="${a.href}" class="${a.primary ? 'btn-primary-clean' : 'btn-ghost-clean'}">${a.label}</a>`).join('')}
           </div>
         </div>
-      </div>` : ''
+      </div>` : '';
 
   const recentRows = (stats.recentEngagements || []).map(e => {
-    const name = esc(e.name || e.client_name || 'Untitled')
-    const client = esc(e.client_id_display || e.client_name || '-')
-    const updated = e.updated_at ? new Date(typeof e.updated_at === 'number' ? e.updated_at * 1000 : e.updated_at).toLocaleDateString() : '-'
-    return `<tr class="hover cursor-pointer" onclick="location.href='/engagement/${esc(e.id)}'">
-      <td class="font-medium text-sm">${name}</td>
-      <td class="text-sm text-base-content/70">${client}</td>
-      <td>${stageBadge(e.stage)}</td>
-      <td>${statusBadge(e.status)}</td>
-      <td class="text-sm text-base-content/50">${updated}</td>
-    </tr>`
-  }).join('')
+    const name = esc(e.name || e.client_name || 'Untitled');
+    const client = esc(e.client_id_display || e.client_name || '-');
+    const updated = e.updated_at ? new Date(typeof e.updated_at === 'number' ? e.updated_at * 1000 : e.updated_at).toLocaleDateString() : '-';
+    return `<tr data-row onclick="location.href='/engagement/${esc(e.id)}'" style="cursor:pointer">
+      <td data-col="name"><strong>${name}</strong></td>
+      <td data-col="client">${client}</td>
+      <td data-col="stage">${stagePill(e.stage)}</td>
+      <td data-col="status">${statusPill(e.status)}</td>
+      <td data-col="updated">${updated}</td>
+    </tr>`;
+  }).join('');
 
   const recentHtml = !isClerk && (stats.recentEngagements || []).length > 0
-    ? `<div class="card bg-base-100 shadow-md">
-        <div class="card-body">
-          <div class="flex justify-between items-center mb-2">
-            <h2 class="card-title text-sm">Recent Engagements</h2>
-            <a href="/engagements" class="btn btn-ghost btn-sm">View all</a>
-          </div>
-          <div class="table-container">
-            <table class="table table-hover">
-              <thead><tr>
-                <th>Name</th><th>Client</th><th>Stage</th><th>Status</th><th>Updated</th>
-              </tr></thead>
-              <tbody>${recentRows}</tbody>
-            </table>
-          </div>
+    ? `<div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="table-search"><input id="search-input" type="text" placeholder="Search engagements..."></div>
+          <span class="table-count" id="row-count">${(stats.recentEngagements||[]).length} items</span>
         </div>
-      </div>` : ''
+        <table class="data-table">
+          <thead><tr>
+            <th data-sort="name">Name</th>
+            <th data-sort="client">Client</th>
+            <th data-sort="stage">Stage</th>
+            <th data-sort="status">Status</th>
+            <th data-sort="updated">Updated</th>
+          </tr></thead>
+          <tbody>${recentRows}</tbody>
+        </table>
+      </div>` : '';
 
-  const content = `
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-base-content">Welcome back, ${esc(user?.name || 'User')}</h1>
-      <p class="text-base-content/60 text-sm mt-1">${new Date().toLocaleDateString('en-ZA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+  const content = `<div class="page-shell"><div class="page-shell-inner">
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Welcome back, ${esc(user?.name || 'User')}</h1>
+        <p class="page-subtitle">${new Date().toLocaleDateString('en-ZA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+      </div>
     </div>
     ${statsHtml}
     ${overdueAlert}
     ${actionsHtml}
     ${recentHtml}
-  `
-  return page(user, 'Dashboard | MY FRIDAY', [], content)
+  </div></div>`;
+
+  return page(user, 'Dashboard | MY FRIDAY', [], content, [`(function(){
+  let sortCol=null,sortDir=1;
+  function filterTable(){
+    const search=(document.getElementById('search-input')?.value||'').toLowerCase();
+    const filters={};
+    document.querySelectorAll('[data-filter]').forEach(el=>{if(el.value)filters[el.dataset.filter]=el.value.toLowerCase()});
+    let shown=0,total=0;
+    document.querySelectorAll('tbody tr[data-row]').forEach(row=>{
+      total++;
+      const text=row.textContent.toLowerCase();
+      const matchSearch=!search||text.includes(search);
+      const matchFilters=Object.entries(filters).every(([key,val])=>{
+        const cell=row.querySelector('[data-col="'+key+'"]');
+        return !cell||cell.textContent.toLowerCase().includes(val);
+      });
+      const visible=matchSearch&&matchFilters;
+      row.style.display=visible?'':'none';
+      if(visible)shown++;
+    });
+    const counter=document.getElementById('row-count');
+    if(counter)counter.textContent=shown===total?total+' items':shown+' of '+total+' items';
+  }
+  function sortTable(col){
+    if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}
+    document.querySelectorAll('th[data-sort]').forEach(th=>{
+      th.classList.remove('sort-asc','sort-desc');
+      if(th.dataset.sort===col)th.classList.add(sortDir===1?'sort-asc':'sort-desc');
+    });
+    const tbody=document.querySelector('tbody');
+    if(!tbody)return;
+    const rows=Array.from(tbody.querySelectorAll('tr[data-row]'));
+    rows.sort((a,b)=>{
+      const av=a.querySelector('[data-col="'+col+'"]')?.textContent?.trim()||'';
+      const bv=b.querySelector('[data-col="'+col+'"]')?.textContent?.trim()||'';
+      return av.localeCompare(bv,undefined,{numeric:true})*sortDir;
+    });
+    rows.forEach(r=>tbody.appendChild(r));
+  }
+  window.filterTable=filterTable;window.sortTable=sortTable;
+  document.addEventListener('DOMContentLoaded',()=>{
+    document.getElementById('search-input')?.addEventListener('input',filterTable);
+    document.querySelectorAll('[data-filter]').forEach(el=>el.addEventListener('change',filterTable));
+    document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>sortTable(th.dataset.sort)));
+  });
+})();`]);
 }
 
 export function renderAuditDashboard(user, auditData = {}) {
-  const { summary = {}, recentActivity = [] } = auditData
-  const actRows = recentActivity.slice(0, 20).map(a => `<tr><td>${new Date((a.timestamp||a.created_at)*1000).toLocaleString()}</td><td><span class="badge badge-sm">${a.action||'-'}</span></td><td>${a.entity_type||'-'}</td><td class="text-xs">${a.entity_id||'-'}</td><td>${a.user_name||a.user_id||'-'}</td><td class="text-xs text-base-content/50">${a.reason||'-'}</td></tr>`).join('') || '<tr><td colspan="6" class="text-center py-4 text-base-content/50">No audit records found</td></tr>'
+  const { summary = {}, recentActivity = [] } = auditData;
+  const actRows = recentActivity.slice(0, 20).map(a =>
+    `<tr data-row>
+      <td data-col="time">${new Date((a.timestamp||a.created_at)*1000).toLocaleString()}</td>
+      <td data-col="action"><span class="pill pill-info">${a.action||'-'}</span></td>
+      <td data-col="entity">${a.entity_type||'-'}</td>
+      <td data-col="id" style="font-size:12px">${a.entity_id||'-'}</td>
+      <td data-col="user">${a.user_name||a.user_id||'-'}</td>
+      <td data-col="reason" style="font-size:12px;color:var(--color-text-muted)">${a.reason||'-'}</td>
+    </tr>`
+  ).join('') || '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--color-text-muted)">No audit records found</td></tr>';
 
-  const cards = statCards([
-    { label: 'Total Actions (30d)', value: summary.total_actions || 0 },
-    { label: 'Permission Grants', value: summary.grants || 0, textClass: ' text-success' },
-    { label: 'Permission Revokes', value: summary.revokes || 0, textClass: ' text-error' },
-    { label: 'Role Changes', value: summary.role_changes || 0, textClass: ' text-primary' },
-  ])
+  const statsHtml = `<div class="stats-row">
+    ${[
+      { label: 'Total Actions (30d)', value: summary.total_actions || 0 },
+      { label: 'Permission Grants',   value: summary.grants || 0 },
+      { label: 'Permission Revokes',  value: summary.revokes || 0 },
+      { label: 'Role Changes',        value: summary.role_changes || 0 },
+    ].map(s => `<div class="stat-card"><div class="stat-card-value">${s.value}</div><div class="stat-card-label">${s.label}</div></div>`).join('')}
+  </div>`;
 
-  const content = `<h1 class="text-2xl font-bold mb-6">Audit Dashboard</h1>${cards}
-    <div class="card bg-base-100 shadow-md"><div class="card-body"><div class="flex justify-between items-center mb-4"><h2 class="card-title">Recent Activity</h2><a href="/permission_audit" class="btn btn-sm btn-outline-primary">View All Records</a></div>
-    <div class="table-container">${dataTable('<th>Time</th><th>Action</th><th>Entity Type</th><th>Entity ID</th><th>User</th><th>Reason</th>', actRows, 'No audit records')}</div></div></div>`
-  return page(user, 'Audit Dashboard', [{ href: '/', label: 'Dashboard' }, { href: '/admin/audit', label: 'Audit' }], content)
+  const content2 = `<div class="page-shell"><div class="page-shell-inner">
+    <div class="page-header"><h1 class="page-title">Audit Dashboard</h1>
+      <a href="/permission_audit" class="btn-ghost-clean">View All Records</a></div>
+    ${statsHtml}
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <div class="table-search"><input id="search-input" type="text" placeholder="Search audit log..."></div>
+        <span class="table-count" id="row-count">${recentActivity.length} items</span>
+      </div>
+      <table class="data-table">
+        <thead><tr>
+          <th data-sort="time">Time</th><th data-sort="action">Action</th><th data-sort="entity">Entity Type</th>
+          <th data-sort="id">Entity ID</th><th data-sort="user">User</th><th data-sort="reason">Reason</th>
+        </tr></thead>
+        <tbody>${actRows}</tbody>
+      </table>
+    </div>
+  </div></div>`;
+
+  return page(user, 'Audit Dashboard', [{ href: '/', label: 'Dashboard' }, { href: '/admin/audit', label: 'Audit' }], content2, [`(function(){
+  let sortCol=null,sortDir=1;
+  function filterTable(){
+    const search=(document.getElementById('search-input')?.value||'').toLowerCase();
+    const filters={};
+    document.querySelectorAll('[data-filter]').forEach(el=>{if(el.value)filters[el.dataset.filter]=el.value.toLowerCase()});
+    let shown=0,total=0;
+    document.querySelectorAll('tbody tr[data-row]').forEach(row=>{
+      total++;
+      const text=row.textContent.toLowerCase();
+      const matchSearch=!search||text.includes(search);
+      const matchFilters=Object.entries(filters).every(([key,val])=>{
+        const cell=row.querySelector('[data-col="'+key+'"]');
+        return !cell||cell.textContent.toLowerCase().includes(val);
+      });
+      const visible=matchSearch&&matchFilters;
+      row.style.display=visible?'':'none';
+      if(visible)shown++;
+    });
+    const counter=document.getElementById('row-count');
+    if(counter)counter.textContent=shown===total?total+' items':shown+' of '+total+' items';
+  }
+  function sortTable(col){
+    if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}
+    document.querySelectorAll('th[data-sort]').forEach(th=>{
+      th.classList.remove('sort-asc','sort-desc');
+      if(th.dataset.sort===col)th.classList.add(sortDir===1?'sort-asc':'sort-desc');
+    });
+    const tbody=document.querySelector('tbody');
+    if(!tbody)return;
+    const rows=Array.from(tbody.querySelectorAll('tr[data-row]'));
+    rows.sort((a,b)=>{
+      const av=a.querySelector('[data-col="'+col+'"]')?.textContent?.trim()||'';
+      const bv=b.querySelector('[data-col="'+col+'"]')?.textContent?.trim()||'';
+      return av.localeCompare(bv,undefined,{numeric:true})*sortDir;
+    });
+    rows.forEach(r=>tbody.appendChild(r));
+  }
+  window.filterTable=filterTable;window.sortTable=sortTable;
+  document.addEventListener('DOMContentLoaded',()=>{
+    document.getElementById('search-input')?.addEventListener('input',filterTable);
+    document.querySelectorAll('[data-filter]').forEach(el=>el.addEventListener('change',filterTable));
+    document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>sortTable(th.dataset.sort)));
+  });
+})();`]);
 }
 
 export function renderSystemHealth(user, healthData = {}) {
-  const { database = {}, server: srv = {}, entities = {} } = healthData
-  const entRows = Object.entries(entities).map(([n, c]) => `<tr><td>${n}</td><td class="text-right">${c}</td></tr>`).join('') || '<tr><td colspan="2" class="text-center py-4">No data</td></tr>'
+  const { database = {}, server: srv = {}, entities = {} } = healthData;
+  const entRows = Object.entries(entities).map(([n, c]) =>
+    `<tr data-row><td data-col="entity">${n}</td><td data-col="count" style="text-align:right">${c}</td></tr>`
+  ).join('') || '<tr><td colspan="2" style="text-align:center;padding:32px;color:var(--color-text-muted)">No data</td></tr>';
 
-  const cards = statCards([
-    { label: 'Server Status', value: 'Online', textClass: ' text-success', sub: `Port: ${srv.port || 3004}` },
-    { label: 'Database', value: database.status || 'Connected', textClass: ' text-success', sub: `Size: ${database.size || 'N/A'}` },
-    { label: 'Uptime', value: srv.uptime || 'N/A', sub: `Started: ${srv.startTime || 'N/A'}` },
-  ])
+  const statsHtml = `<div class="stats-row">
+    ${[
+      { label: 'Server Status', value: 'Online', sub: 'Port: '+(srv.port||3000) },
+      { label: 'Database',      value: database.status||'Connected', sub: 'Size: '+(database.size||'N/A') },
+      { label: 'Uptime',        value: srv.uptime||'N/A', sub: 'Started: '+(srv.startTime||'N/A') },
+    ].map(s => `<div class="stat-card"><div class="stat-card-value" style="font-size:20px">${s.value}</div><div class="stat-card-label">${s.label}</div><div class="stat-card-sub">${s.sub}</div></div>`).join('')}
+  </div>`;
 
-  const content = `<h1 class="text-2xl font-bold mb-6">System Health</h1>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">${cards}</div>
-    <div class="card bg-base-100 shadow-md"><div class="card-body"><h2 class="card-title mb-4">Entity Counts</h2>
-    <div class="table-container"><table class="table table-hover"><thead><tr><th>Entity</th><th class="text-right">Count</th></tr></thead><tbody>${entRows}</tbody></table></div></div></div>`
-  return page(user, 'System Health', [{ href: '/', label: 'Dashboard' }, { href: '/admin/health', label: 'Health' }], content)
+  const content3 = `<div class="page-shell"><div class="page-shell-inner">
+    <div class="page-header"><h1 class="page-title">System Health</h1></div>
+    ${statsHtml}
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <div class="table-search"><input id="search-input" type="text" placeholder="Search entities..."></div>
+        <span class="table-count" id="row-count">${Object.keys(entities).length} items</span>
+      </div>
+      <table class="data-table">
+        <thead><tr><th data-sort="entity">Entity</th><th data-sort="count" style="text-align:right">Count</th></tr></thead>
+        <tbody>${entRows}</tbody>
+      </table>
+    </div>
+  </div></div>`;
+
+  return page(user, 'System Health', [{ href: '/', label: 'Dashboard' }, { href: '/admin/health', label: 'Health' }], content3, [`(function(){
+  let sortCol=null,sortDir=1;
+  function filterTable(){
+    const search=(document.getElementById('search-input')?.value||'').toLowerCase();
+    const filters={};
+    document.querySelectorAll('[data-filter]').forEach(el=>{if(el.value)filters[el.dataset.filter]=el.value.toLowerCase()});
+    let shown=0,total=0;
+    document.querySelectorAll('tbody tr[data-row]').forEach(row=>{
+      total++;
+      const text=row.textContent.toLowerCase();
+      const matchSearch=!search||text.includes(search);
+      const matchFilters=Object.entries(filters).every(([key,val])=>{
+        const cell=row.querySelector('[data-col="'+key+'"]');
+        return !cell||cell.textContent.toLowerCase().includes(val);
+      });
+      const visible=matchSearch&&matchFilters;
+      row.style.display=visible?'':'none';
+      if(visible)shown++;
+    });
+    const counter=document.getElementById('row-count');
+    if(counter)counter.textContent=shown===total?total+' items':shown+' of '+total+' items';
+  }
+  function sortTable(col){
+    if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=1;}
+    document.querySelectorAll('th[data-sort]').forEach(th=>{
+      th.classList.remove('sort-asc','sort-desc');
+      if(th.dataset.sort===col)th.classList.add(sortDir===1?'sort-asc':'sort-desc');
+    });
+    const tbody=document.querySelector('tbody');
+    if(!tbody)return;
+    const rows=Array.from(tbody.querySelectorAll('tr[data-row]'));
+    rows.sort((a,b)=>{
+      const av=a.querySelector('[data-col="'+col+'"]')?.textContent?.trim()||'';
+      const bv=b.querySelector('[data-col="'+col+'"]')?.textContent?.trim()||'';
+      return av.localeCompare(bv,undefined,{numeric:true})*sortDir;
+    });
+    rows.forEach(r=>tbody.appendChild(r));
+  }
+  window.filterTable=filterTable;window.sortTable=sortTable;
+  document.addEventListener('DOMContentLoaded',()=>{
+    document.getElementById('search-input')?.addEventListener('input',filterTable);
+    document.querySelectorAll('[data-filter]').forEach(el=>el.addEventListener('change',filterTable));
+    document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>sortTable(th.dataset.sort)));
+  });
+})();`]);
 }

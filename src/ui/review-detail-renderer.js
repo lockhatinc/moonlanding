@@ -10,7 +10,10 @@ function esc(s) {
 
 function statusBadge(status) {
   const s = status || 'open';
-  const map = { active:'badge-flat-primary', open:'badge-flat-primary', in_progress:'badge-flat-primary', completed:'badge-success badge-flat-success', closed:'badge-success badge-flat-success', archived:'badge-flat-secondary' };
+  const map = { active:'pill pill-info', open:'pill pill-info', in_progress:'pill pill-info', completed:'pill pill-success', closed:'pill pill-success', archived:'pill pill-neutral' };
+  const cls = map[s] || 'pill pill-warning';
+  return '<span class="'+cls+'">'+s+'</span>';
+};
   const cls = map[s] || 'badge-warning badge-flat-warning';
   return `<span class="badge ${cls} text-xs">${s||'-'}</span>`;
 }
@@ -75,9 +78,7 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
     { id: 'sections', label: `Sections (${sections.length})` },
   ];
 
-  const tabBar = `<div class="tabs tabs-boxed bg-base-200 mb-4 flex-wrap gap-1">` +
-    TABS.map((t, i) => `<button onclick="switchTab('${t.id}')" id="rvtab-${t.id}" class="tab ${i===0?'tab-active':''}">${t.label}</button>`).join('') +
-    `</div>`;
+  const tabBar = `<div class="tab-bar">${TABS.map((t, i) => `<button onclick="switchTab('${t.id}')" id="rvtab-${t.id}" class="tab-btn ${i===0?'active':''}">${t.label}</button>`).join('')}</div>`;
 
   const infoItems = [
     ['Name', esc(r.name||r.title||'-')],
@@ -222,8 +223,8 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
 function switchTab(tab){
   document.querySelectorAll('.rv-panel').forEach(function(p){p.style.display='none'});
   var panel=document.getElementById('rvpanel-'+tab);if(panel)panel.style.display='';
-  document.querySelectorAll('[id^="rvtab-"]').forEach(function(b){b.classList.remove('tab-active')});
-  var btn=document.getElementById('rvtab-'+tab);if(btn)btn.classList.add('tab-active');
+  document.querySelectorAll('[id^="rvtab-"]').forEach(function(b){b.classList.remove('active')});
+  var btn=document.getElementById('rvtab-'+tab);if(btn)btn.classList.add('active');
 }
 async function resolveHighlight(id){if(!confirm('Mark this highlight as resolved?'))return;try{var r=await fetch('/api/mwr/review/${esc(r.id)}/highlights/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({resolved:true,status:'resolved'})});if(r.ok){showToast('Resolved','success');setTimeout(function(){location.reload()},500)}else showToast('Failed','error')}catch(e){showToast('Error','error')}}
 async function bulkResolve(reviewId){if(!confirm('Resolve all highlights?'))return;try{var r=await fetch('/api/mwr/review/'+reviewId+'/highlights/bulk-resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({resolve_all:true})});if(r.ok){showToast('All resolved','success');setTimeout(function(){location.reload()},500)}else showToast('Failed','error')}catch(e){showToast('Error','error')}}
