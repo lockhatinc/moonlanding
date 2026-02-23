@@ -160,7 +160,7 @@ schedule()})();
 export function page(user, title, bc, content, scripts = []) {
   const authData = user ? JSON.stringify({ id: user.id, name: user.name, email: user.email, role: user.role }) : 'null'
   const authScript = `window.__AUTH__=${authData};`
-  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" ${role.main}><div class="p-6">${breadcrumb(bc)}${content}</div></main></div>`
+  const body = `<div class="min-h-screen">${nav(user)}<main id="main-content" ${role.main}>${breadcrumb(bc)}${content}</main></div>`
   return generateHtml(title, body, [authScript, ...scripts])
 }
 
