@@ -115,9 +115,9 @@ export function renderClientDashboard(user, client, stats = {}) {
   const engRows = (stats.engagementList || []).map(e => `<tr class="hover cursor-pointer" onclick="window.location='/engagement/${e.id}'"><td class="text-sm">${e.name || '-'}</td><td>${statusBadge(e.stage)}</td><td>${statusBadge(e.status)}</td></tr>`).join('') || '<tr><td colspan="3" class="text-center py-6 text-base-content/40 text-sm">No engagements</td></tr>';
 
   const actions = canEdit(user, 'client') ? `<div class="flex gap-2 flex-wrap">
-    <a href="/client/${c.id}/edit" class="btn btn-outline-primary btn-sm">Edit</a>
-    <button onclick="document.getElementById('risk-dialog').style.display='flex'" class="btn btn-ghost btn-sm">Risk Assessment</button>
-    <button onclick="document.getElementById('test-email-dialog').style.display='flex'" class="btn btn-ghost btn-sm">Test Email</button>
+    <a href="/client/${c.id}/edit" class="btn btn-primary btn-sm">Edit</a>
+    <button onclick="document.getElementById('risk-dialog').style.display='flex'" class="btn btn-ghost btn-sm" style="border:1px solid #e5e7eb">Risk Assessment</button>
+    <button onclick="document.getElementById('test-email-dialog').style.display='flex'" class="btn btn-ghost btn-sm" style="border:1px solid #e5e7eb">Test Email</button>
   </div>` : '';
 
   const content = `
