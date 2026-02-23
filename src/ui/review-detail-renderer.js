@@ -230,5 +230,5 @@ async function addCollaborator(reviewId){var email=document.getElementById('coll
 async function removeCollaborator(collabId){if(!confirm('Remove this collaborator?'))return;try{var r=await fetch('/api/mwr/review/${esc(r.id)}/collaborators/'+collabId,{method:'DELETE'});if(r.ok){showToast('Removed','success');setTimeout(function(){location.reload()},500)}else showToast('Failed','error')}catch(e){showToast('Error','error')}}`;
 
   const body = `<div class="min-h-screen bg-base-200">${nav(user)}<main class="p-4 md:p-6" id="main-content">${content}</main></div>`;
-  return generateHtml(`${esc(r.name||'Review')} | MY FRIDAY`, body, [script]);
+  return generateHtml(`${esc(r.name||'Review')} | MOONLANDING`, body, [script]);
 }

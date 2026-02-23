@@ -153,7 +153,7 @@ window.filterTable=function(){
   document.querySelectorAll('tbody tr[data-row]').forEach(row=>{
     const stageCell=row.querySelector('[data-col="stage"]');
     if(stageCell&&!stageCell.textContent.toLowerCase().includes(
-      (`${STAGE_CONFIG.find(s=>s.key===_activeStage)?.label||_activeStage}`).toLowerCase()
+      (STAGE_CONFIG.find(s=>s.key===_activeStage)?.label||_activeStage||'').toLowerCase()
     )){row.style.display='none';}
   });
 };
