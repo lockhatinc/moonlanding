@@ -28,13 +28,10 @@ function breadcrumb(items) {
     i === items.length - 1 ? '<span>' + item.label + '</span>'
       : '<a href="' + item.href + '">' + item.label + '</a><span class="breadcrumb-sep">/</span>'
   ).join('') + '</nav>';
-}</li>` : `<li><a href="${item.href}">${item.label}</a></li>`).join('')}</ul></nav>`;
 }
 
 function page(user, title, bc, content, scripts = []) {
   const body = '<div style="min-height:100vh;background:var(--color-bg)">' + fridayNav(user) + '<main class="page-shell" id="main-content"><div class="page-shell-inner">' + breadcrumb(bc) + content + '</div></main></div>';
-  return generateHtml(title, body, scripts);
-}<main id="main-content" class="p-4 md:p-6">${breadcrumb(bc)}${content}</main></div>`;
   return generateHtml(title, body, scripts);
 }
 
@@ -43,13 +40,10 @@ function statusBadge(status) {
   const map = { active:'pill pill-info', open:'pill pill-info', in_progress:'pill pill-info', completed:'pill pill-success', closed:'pill pill-success', archived:'pill pill-neutral' };
   const cls = map[s] || 'pill pill-warning';
   return '<span class="'+cls+'">'+s+'</span>';
-};
-  const cls = map[s] || 'badge-warning badge-flat-warning';
-  return `<span class="badge ${cls} text-xs">${s}</span>`;
 }
 
 function reviewRow(r) {
-  return `<tr class="review-row hover cursor-pointer" data-status="${r.status||''}" data-flags="${r.flags_count||0}" data-highlights="${r.highlights_count||0}" data-archived="${r.archived||0}" data-priority="${r.is_priority||r.flagged||(r.flags_count>0)?'1':'0'}" data-stage="${r.stage||r.status||''}" onclick="window.location='/review/${r.id}'" oncontextmenu="showCtxMenu(event,'${r.id}')">
+  return `<tr class="review-row hover cursor-pointer" data-status="${r.status||''}" data-flags="${r.flags_count||0}" data-highlights="${r.highlights_count||0}" data-archived="${r.archived||0}" data-priority="${(r.is_priority||r.flagged||(r.flags_count>0))?1:0}" data-stage="${r.stage||r.status||''}" onclick="window.location='/review/${r.id}'" oncontextmenu="showCtxMenu(event,'${r.id}')">
     <td class="font-medium max-w-52 truncate">${r.name || r.title || 'Untitled'}</td>
     <td class="text-sm text-base-content/60">${r.engagement_name || r.engagement_id_display || '-'}</td>
     <td>${statusBadge(r.status)}</td>

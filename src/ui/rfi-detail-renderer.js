@@ -12,9 +12,6 @@ function statusBadge(status) {
   const map = { active:'pill pill-success', closed:'pill pill-neutral', responded:'pill pill-info', pending:'pill pill-warning' };
   const cls = map[status] || 'pill pill-neutral';
   return `<span class="${cls}">${status||'-'}</span>`;
-};
-  const cls = map[status] || 'badge-flat-secondary';
-  return `<span class="badge ${cls} text-xs">${status||'-'}</span>`;
 }
 
 function questionRow(q, i, sections = []) {

@@ -13,9 +13,6 @@ function statusBadge(status) {
   const map = { active:'pill pill-info', open:'pill pill-info', in_progress:'pill pill-info', completed:'pill pill-success', closed:'pill pill-success', archived:'pill pill-neutral' };
   const cls = map[s] || 'pill pill-warning';
   return '<span class="'+cls+'">'+s+'</span>';
-};
-  const cls = map[s] || 'badge-warning badge-flat-warning';
-  return `<span class="badge ${cls} text-xs">${s||'-'}</span>`;
 }
 
 function highlightRow(h) {

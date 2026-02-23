@@ -38,8 +38,7 @@ export function roleBadge(role) {
 
 function statusBadge(status) {
   const active = status === 'active';
-  return `<span class="${active ? 'pill pill-success' : 'pill pill-warning'}">${status || '-'}</span>`;
-} text-xs">${status || '-'}</span>`;
+  return '<span class="' + (active ? 'pill pill-success' : 'pill pill-warning') + '">' + (status || '-') + '</span>';
 }
 
 const SETTINGS_CARDS = [

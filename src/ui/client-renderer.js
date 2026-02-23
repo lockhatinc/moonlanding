@@ -11,10 +11,6 @@ function statusBadge(status) {
   const cls = map[status] || 'pill pill-neutral';
   const lbl = status ? status.charAt(0).toUpperCase()+status.slice(1) : '-';
   return '<span class="'+cls+'">'+lbl+'</span>';
-};
-  const cls = map[status] || 'badge-flat-secondary';
-  const lbl = status ? status.charAt(0).toUpperCase() + status.slice(1) : '-';
-  return `<span class="badge ${cls} text-xs">${lbl}</span>`;
 }
 
 function breadcrumb(items) {
@@ -24,13 +20,10 @@ function breadcrumb(items) {
       ? '<span>' + item.label + '</span>'
       : '<a href="' + item.href + '">' + item.label + '</a><span class="breadcrumb-sep">/</span>'
   ).join('') + '</nav>';
-}</li>` : `<li><a href="${item.href}">${item.label}</a></li>`).join('')}</ul></nav>`;
 }
 
 function page(user, title, bc, content, scripts = []) {
   const body = '<div style="min-height:100vh;background:var(--color-bg)">' + nav(user) + '<main class="page-shell" id="main-content">' + breadcrumb(bc) + '<div class="page-shell-inner">' + content + '</div></main></div>';
-  return generateHtml(title, body, scripts);
-}<main id="main-content" role="main" class="p-4 md:p-6">${breadcrumb(bc)}${content}</main></div>`;
   return generateHtml(title, body, scripts);
 }
 
