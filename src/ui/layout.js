@@ -51,10 +51,10 @@ export function generateHtml(title, bodyContent, scripts = [], pathname = '/') {
 
 export function breadcrumb(items) {
   if (!items?.length) return ''
-  return `<nav ${aria.label('Breadcrumb')} class="breadcrumb">${items.map((item, i) =>
+  return `<nav ${aria.label('Breadcrumb')} class="breadcrumb-clean">${items.map((item, i) =>
     i === items.length - 1
       ? `<span ${aria.current('page')}>${item.label}</span>`
-      : `<a href="${item.href}">${item.label}</a><span class="breadcrumb-separator" aria-hidden="true">/</span>`
+      : `<a href="${item.href}">${item.label}</a><span class="breadcrumb-sep" aria-hidden="true">/</span>`
   ).join('')}</nav>`
 }
 

@@ -63,7 +63,7 @@ function formatFieldValue(k, v, entityName) {
     return `<span class="pill ${cls}">${v ? v.charAt(0).toUpperCase() + v.slice(1) : '-'}</span>`
   }
   if (entityName === 'user' && k === 'email' && v) return `<a href="mailto:${v}" class="text-primary hover:underline">${v}</a>`
-  if (k === 'photo_url' && v && v.startsWith('http')) return `<div class="flex items-center gap-3"><img src="${v}" class="w-10 h-10 rounded-full object-cover" alt="avatar" onerror="this.style.display='none'"/><span class="text-sm text-base-content/60">${v.length > 60 ? v.substring(0, 60) + '...' : v}</span></div>`
+  if (k === 'photo_url' && v && v.startsWith('http')) return `<img src="${v}" style="width:2.5rem;height:2.5rem;border-radius:50%;object-fit:cover" alt="avatar" onerror="this.style.display='none'/>`
   return fmtVal(v, k)
 }
 
@@ -110,8 +110,8 @@ export function renderEntityDetail(entityName, item, spec, user) {
       <div style="flex:1">${headerExtra}</div>
       <div style="display:flex;gap:0.5rem;margin-left:1rem">${editBtn}${delBtn}</div>
     </div>
-    <div class="card bg-base-100 shadow-md" style="max-width:640px">
-      <div class="card-body">${fieldRows || '<p class="text-base-content/50 text-sm">No details available</p>'}</div>
+    <div class="card-clean">
+      <div class="card-clean-body">${fieldRows || '<p style="color:var(--color-text-muted);font-size:0.875rem">No details available</p>'}</div>
     </div>
     ${userCanDelete ? confirmDialog(entityName) : ''}`
 

@@ -105,35 +105,33 @@ export function renderRfiDetail(user, rfi = {}, questions = [], sections = [], e
     ['Mandatory', rfi.mandatory!==false?'Yes':'No'],
   ];
 
-  const infoGrid = `<div class="grid grid-cols-2 md:grid-cols-3 gap-4">` +
-    infoItems.map(([l,v]) => `<div><div class="text-xs text-base-content/50 font-semibold uppercase tracking-wider mb-1">${l}</div><div class="text-sm text-base-content">${v}</div></div>`).join('') +
+  const infoGrid = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">` +
+    infoItems.map(([l,v]) => `<div><div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--color-text-muted);margin-bottom:4px">${l}</div><div style="font-size:0.875rem;color:var(--color-text)">${v}</div></div>`).join('') +
     `</div>`;
 
   const content = `
-    <nav class="breadcrumbs text-sm mb-4">
-      <ul><li>${engLink}</li></ul>
-    </nav>
-    <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
+    <nav class="breadcrumb-clean">${engLink}</nav>
+    <div class="page-header">
       <div>
-        <h1 class="text-2xl font-bold text-base-content mb-1">${esc(rfi.display_name||rfi.name||rfi.title||(engagement?'RFI – '+(engagement.name||''):'RFI'))}</h1>
-        ${rfi.description ? `<p class="text-base-content/60 text-sm">${esc(rfi.description)}</p>` : ''}
+        <h1 class="page-title">${esc(rfi.display_name||rfi.name||rfi.title||(engagement?'RFI \u2013 '+(engagement.name||''):'RFI'))}</h1>
+        ${rfi.description ? `<p style="margin-top:4px;font-size:0.875rem;color:var(--color-text-muted)">${esc(rfi.description)}</p>` : ''}
       </div>
       ${headerBtns}
     </div>
-    <div class="card bg-base-100 shadow-md mb-4">
-      <div class="card-body">${infoGrid}</div>
+    <div class="card-clean mb-4">
+      <div class="card-clean-body">${infoGrid}</div>
     </div>
-    <div class="card bg-base-100 shadow-md">
-      <div class="card-body">
-        <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
-          <h2 class="card-title text-sm">Questions (${questions.length})</h2>
-          <div class="flex gap-2 items-center flex-wrap">
+    <div class="card-clean">
+      <div class="card-clean-body">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+          <h2 style="font-size:0.875rem;font-weight:600;color:var(--color-text)">Questions (${questions.length})</h2>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             ${sectionTabs}
-            <input type="text" placeholder="Search..." oninput="filterQuestions(this.value)" class="input input-solid" style="max-width:160px"/>
+            <input type="text" placeholder="Search..." oninput="filterQuestions(this.value)" class="input input-solid" style="max-width:160px;font-size:0.875rem"/>
           </div>
         </div>
-        <div class="table-container">
-          <table class="table table-hover" id="q-table">
+        <div class="table-wrap">
+          <table class="data-table" id="q-table">
             <thead><tr><th>#</th><th>Question</th><th>Section</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead>
             <tbody id="q-tbody">${qRows}</tbody>
           </table>
