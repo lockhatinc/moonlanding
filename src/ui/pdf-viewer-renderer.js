@@ -1,4 +1,5 @@
-import { page, fullPage } from '@/ui/layout.js';
+import { page } from '@/ui/layout.js';
+import { reviewZoneNav } from '@/ui/review-zone-nav.js';
 import { canEdit } from '@/ui/permissions-ui.js';
 
 
@@ -36,14 +37,17 @@ export function renderPdfViewer(user, review, highlights = [], sections = []) {
 
   const viewer = `<div id="pdf-container" class="flex-1 bg-gray-100 overflow-auto relative" data-pdf-url="${pdfUrl}"><div id="pdf-pages" class="flex flex-col items-center py-4 gap-4"></div><div id="highlight-overlay" class="absolute inset-0 pointer-events-none"></div><div id="selection-layer" class="absolute inset-0" style="display:none"></div></div>`;
 
-  const content = `<div class="flex h-[calc(100vh-64px)]"><div class="w-72 border-r border-gray-200 bg-white flex-shrink-0 overflow-hidden">${sidebar}</div><div class="flex-1 flex flex-col">${toolbar}${viewer}</div></div>`;
+  const bc = [{ href: '/', label: 'Home' }, { href: '/review', label: 'Reviews' }, { href: `/review/${review.id}`, label: review.name || 'Review' }, { label: 'PDF' }];
+
+  const content = `${reviewZoneNav(review.id, 'pdf')}<div class="flex" style="height:calc(100vh - 120px)"><div class="w-72 border-r border-gray-200 bg-white flex-shrink-0 overflow-hidden">${sidebar}</div><div class="flex-1 flex flex-col">${toolbar}${viewer}</div></div>`;
 
   const pdfScript = `let currentZoom=1,currentPage=1,totalPages=0,highlightMode=null;window.zoomPdf=function(d){if(d===0)currentZoom=1;else currentZoom=Math.max(0.5,Math.min(3,currentZoom+d));document.getElementById('zoom-level').textContent=Math.round(currentZoom*100)+'%';document.getElementById('pdf-pages').style.transform='scale('+currentZoom+')';document.getElementById('pdf-pages').style.transformOrigin='top center'};window.prevPage=function(){if(currentPage>1){currentPage--;updatePageIndicator()}};window.nextPage=function(){if(currentPage<totalPages){currentPage++;updatePageIndicator()}};function updatePageIndicator(){document.getElementById('page-indicator').textContent='Page '+currentPage+(totalPages?' / '+totalPages:'')}window.toggleHighlightMode=function(mode){highlightMode=highlightMode===mode?null:mode;document.getElementById('tool-text')?.classList.toggle('btn-primary',highlightMode==='text');document.getElementById('tool-text')?.classList.toggle('btn-outline',highlightMode!=='text');document.getElementById('tool-area')?.classList.toggle('btn-primary',highlightMode==='area');document.getElementById('tool-area')?.classList.toggle('btn-outline',highlightMode!=='area');document.getElementById('selection-layer').style.display=highlightMode?'block':'none'};window.scrollToHighlight=function(id){const el=document.querySelector('[data-highlight-render="'+id+'"]');if(el)el.scrollIntoView({behavior:'smooth',block:'center'})};window.filterHighlights=function(f){document.querySelectorAll('.highlight-filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter===f));document.querySelectorAll('.highlight-item').forEach(el=>{if(f==='all')el.style.display='';else{const resolved=el.querySelector('[style*="#22c55e"]');el.style.display=(f==='resolved')==!!resolved?'':'none'}})};async function initPdf(){const url=document.getElementById('pdf-container')?.dataset.pdfUrl;if(!url){document.getElementById('pdf-pages').innerHTML='<div class="p-8 text-center text-gray-500">No PDF file associated with this review.<br/><span class="text-sm">Upload a PDF to begin reviewing.</span></div>';return}document.getElementById('pdf-pages').innerHTML='<div class="p-8 text-center"><div class="loading loading-spinner loading-lg"></div><div class="text-sm text-gray-500 mt-2">Loading PDF...</div></div>'}document.addEventListener('DOMContentLoaded',initPdf)`;
 
-  return fullPage(user, `Review: ${review.name || 'Untitled'}`, content, [pdfScript]);
+  return page(user, `Review: ${review.name || 'Untitled'} | PDF`, bc, content, [pdfScript]);
 }
 
 export function renderPdfEditorPlaceholder(user, review) {
   const content = `<div class="flex items-center justify-between mb-6"><h1 class="text-2xl font-bold">PDF Editor</h1><a href="/review/${review.id}" class="btn btn-ghost btn-sm">Back to Review</a></div><div class="card-clean"><div class="card-clean-body" style=""><div class="text-5xl mb-4">&#9999;&#65039;</div><h3 class="text-lg font-semibold mb-2">PDF Annotation Editor</h3><p class="text-sm text-gray-500 mb-6 max-w-md mx-auto">Canvas-based PDF annotation with brush tools, text overlay, and save functionality. Select brush size, draw directly on PDF pages, and save annotated versions.</p><div class="flex gap-2 justify-center"><button class="btn btn-outline btn-sm" disabled>Brush Tool</button><button class="btn btn-outline btn-sm" disabled>Text Tool</button><button class="btn btn-outline btn-sm" disabled>Eraser</button><button class="btn btn-primary btn-sm" disabled>Save</button></div></div></div>`;
-  return page(user, 'PDF Editor', null, content);
+  const editorBc = [{ href: '/', label: 'Home' }, { href: '/review', label: 'Reviews' }, { href: `/review/${review.id}`, label: review.name || 'Review' }, { label: 'Editor' }];
+  return page(user, `${review.name || 'Review'} | Editor`, editorBc, content);
 }

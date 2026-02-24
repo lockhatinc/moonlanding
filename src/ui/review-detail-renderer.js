@@ -1,4 +1,6 @@
 import { page } from '@/ui/layout.js';
+import { reviewZoneNav } from '@/ui/review-zone-nav.js';
+export { reviewZoneNav };
 import { canEdit } from '@/ui/permissions-ui.js';
 import { esc, statusBadge, TOAST_SCRIPT } from '@/ui/render-helpers.js';
 import { reviewDetailScript } from '@/ui/review-detail-script.js';
@@ -9,19 +11,6 @@ function fmtDate(ts) {
   const n = Number(ts);
   if (!isNaN(n) && n > 1e9 && n < 3e9) return new Date(n * 1000).toLocaleDateString();
   try { return new Date(ts).toLocaleDateString(); } catch { return String(ts); }
-}
-
-export function reviewZoneNav(reviewId, active) {
-  const links = [
-    { href: `/review/${reviewId}`, label: 'Overview', key: 'overview' },
-    { href: `/review/${reviewId}/pdf`, label: 'PDF', key: 'pdf' },
-    { href: `/review/${reviewId}/highlights`, label: 'Highlights', key: 'highlights' },
-    { href: `/review/${reviewId}/sections`, label: 'Sections', key: 'sections' },
-    { href: `/review/${reviewId}/resolution`, label: 'Resolution', key: 'resolution' },
-  ];
-  return `<nav class="tab-bar" style="margin-bottom:1.25rem;overflow-x:auto;scrollbar-width:none">
-    ${links.map(l => `<a href="${l.href}" class="tab-btn${l.key===active?' active':''}">${l.label}</a>`).join('')}
-  </nav>`;
 }
 
 export function renderReviewDetail(user, review, highlights = [], collaborators = [], checklists = [], sections = []) {

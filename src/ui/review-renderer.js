@@ -1,5 +1,6 @@
 import { canCreate, canEdit, canDelete } from '@/ui/permissions-ui.js';
 import { page } from '@/ui/layout.js';
+import { reviewZoneNav } from '@/ui/review-zone-nav.js';
 import { reviewCreateDialog, reviewTemplateChoiceDialog, reviewContextMenu, reviewFlagsDialog, reviewTagsDialog, reviewValueDialog, reviewDeadlineDialog, reviewNotificationDialog } from '@/ui/review-dialogs.js';
 
 export { reviewCreateDialog, reviewTemplateChoiceDialog, reviewContextMenu, reviewFlagsDialog, reviewTagsDialog, reviewValueDialog, reviewDeadlineDialog, reviewNotificationDialog };
@@ -149,9 +150,9 @@ export function renderSectionReport(user, review, sections) {
   <div class="card-clean"><div class="card-clean-body">
     <div class="table-wrap"><table class="data-table"><thead><tr><th>Section</th><th class="text-center">Highlights</th><th class="text-center">Resolved</th><th class="text-center">Flagged</th><th class="text-center">Progress</th></tr></thead><tbody>${tableRows}${summaryRow}</tbody></table></div>
   </div></div>`;
-  const bc = [{ href: '/', label: 'Dashboard' }, { href: '/review', label: 'Reviews' }, { href: `/review/${review.id}`, label: review.name || 'Review' }, { label: 'Section Report' }];
+  const bc = [{ href: '/', label: 'Home' }, { href: '/review', label: 'Reviews' }, { href: `/review/${review.id}`, label: review.name || 'Review' }, { label: 'Sections' }];
   const exportScript = `window.exportSectionReport=function(){var rows=[['Section','Highlights','Resolved','Flagged','Progress']];document.querySelectorAll('tbody tr').forEach(function(r){var cells=[];r.querySelectorAll('td').forEach(function(c){cells.push(c.textContent.trim())});if(cells.length)rows.push(cells)});var csv=rows.map(function(r){return r.join(',')}).join('\\n');var b=new Blob([csv],{type:'text/csv'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='section-report.csv';a.click()}`;
-  return page(user, `Section Report - ${review.name || 'Review'}`, bc, content, [exportScript]);
+  return page(user, `${review.name || 'Review'} | Sections`, bc, reviewZoneNav(review.id, 'sections') + content, [exportScript]);
 }
 
 export function renderMwrHome(user, stats) {

@@ -1,6 +1,7 @@
 import { statusLabel, userAvatar } from '@/ui/renderer.js';
 import { page } from '@/ui/layout.js';
 import { canEdit } from '@/ui/permissions-ui.js';
+import { reviewZoneNav } from '@/ui/review-zone-nav.js';
 
 function fmtDate(ts) {
   if (!ts) return '';
@@ -72,10 +73,6 @@ export function renderHighlightThreading(user, review, highlights, responseMap) 
 
   const threadScript = `window.filterThreads=function(f){document.querySelectorAll('[data-thread-filter]').forEach(b=>{b.classList.toggle('btn-primary',b.dataset.threadFilter===f);b.classList.toggle('btn-ghost',b.dataset.threadFilter!==f)});document.querySelectorAll('#threads-container>.card').forEach(c=>{if(f==='all'){c.style.display=''}else{const badge=c.querySelector('[style*="border-radius:9999px"]');const text=badge?.textContent?.toLowerCase()||'';c.style.display=(f==='resolved'?text==='resolved':text!=='resolved')?'':'none'}})};window.submitResponse=async function(hid){const ta=document.getElementById('reply-'+hid);if(!ta||!ta.value.trim())return;try{const res=await fetch('/api/mwr/review/highlight/'+hid+'/responses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:ta.value.trim()})});if(res.ok){ta.value='';location.reload()}else{alert('Failed to submit response')}}catch(e){alert('Error: '+e.message)}};window.updateResolution=async function(hid){const sel=document.getElementById('resolve-status-'+hid);if(!sel)return;try{const res=await fetch('/api/mwr/review/highlight/'+hid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:sel.value})});if(res.ok)location.reload();else alert('Failed to update')}catch(e){alert('Error: '+e.message)}};window.bulkResolve=async function(){if(!confirm('Resolve all highlights?'))return;try{const res=await fetch(location.pathname.replace('/highlights','')+'?action=resolve-all',{method:'POST'});if(res.ok)location.reload();else alert('Failed')}catch(e){alert('Error: '+e.message)}}`;
 
-  return page(user, 'Highlight Discussions', [
-    { href: '/', label: 'Dashboard' },
-    { href: '/reviews', label: 'Reviews' },
-    { href: `/review/${review.id}`, label: review.name || 'Review' },
-    { label: 'Highlights' }
-  ], content, [threadScript]);
+  const bc = [{ href: '/', label: 'Home' }, { href: '/review', label: 'Reviews' }, { href: `/review/${review.id}`, label: review.name || 'Review' }, { label: 'Highlights' }];
+  return page(user, `${review.name || 'Review'} | Highlights`, bc, reviewZoneNav(review.id, 'highlights') + content, [threadScript]);
 }

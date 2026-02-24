@@ -1,6 +1,7 @@
 import { statusLabel, linearProgress } from '@/ui/renderer.js';
 import { page } from '@/ui/layout.js';
 import { canEdit } from '@/ui/permissions-ui.js';
+import { reviewZoneNav } from '@/ui/review-zone-nav.js';
 
 function resolutionBar(resolved, partial, total) {
   if (total === 0) return '<div class="text-xs text-gray-400">No highlights</div>';
@@ -58,10 +59,6 @@ export function renderSectionResolution(user, review, sections, highlightsBySect
 
   const sectionScript = `window.toggleSection=function(id){const el=document.getElementById('section-highlights-'+id);if(el)el.style.display=el.style.display==='none'?'':'none'};window.toggleComplete=function(){const hide=document.getElementById('hide-complete')?.checked;document.querySelectorAll('[data-section-complete="true"]').forEach(c=>c.style.display=hide?'none':'')};window.resolveSection=async function(id){try{const r=await fetch('/api/mwr/review/section/'+id+'/resolve-all',{method:'POST'});if(r.ok)location.reload();else alert('Failed')}catch(e){alert(e.message)}};window.resolveAll=async function(){if(!confirm('Resolve all highlights in all sections?'))return;try{const r=await fetch('/api/mwr/review/${review.id}/resolve-all',{method:'POST'});if(r.ok)location.reload();else alert('Failed')}catch(e){alert(e.message)}}`;
 
-  return page(user, 'Section Resolution', [
-    { href: '/', label: 'Dashboard' },
-    { href: '/reviews', label: 'Reviews' },
-    { href: `/review/${review.id}`, label: review.name || 'Review' },
-    { label: 'Sections' }
-  ], content, [sectionScript]);
+  const bc = [{ href: '/', label: 'Home' }, { href: '/review', label: 'Reviews' }, { href: `/review/${review.id}`, label: review.name || 'Review' }, { label: 'Resolution' }];
+  return page(user, `${review.name || 'Review'} | Resolution`, bc, reviewZoneNav(review.id, 'resolution') + content, [sectionScript]);
 }
