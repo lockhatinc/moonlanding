@@ -1,0 +1,496 @@
+{
+  "project": "moonlanding-client-ux",
+  "created": "2026-02-24",
+  "objective": "Comprehensive client view testing and UX improvement - verify all 12 major page sections work correctly, test layouts, interactions, responsiveness, and fix any styling or usability issues discovered",
+  "phases": {
+    "phase_1_auth": "Test authentication pages (login, signup, password reset)",
+    "phase_2_friday": "Test Friday system (dashboard, engagements, clients, RFIs)",
+    "phase_3_mwr": "Test MWR system (reviews, highlights, collaborators, templates)",
+    "phase_4_admin": "Test admin/settings pages (audit, monitoring, user settings)",
+    "phase_5_fixes": "Fix all discovered UX/layout issues",
+    "phase_6_integration": "Cross-browser testing and final verification"
+  },
+  "items": [
+    {
+      "id": "auth-1",
+      "subject": "Test login page layout and styling",
+      "status": "pending",
+      "description": "Load login page, verify form layout, button styling, error message display, responsive design",
+      "blocking": [
+        "auth-2"
+      ],
+      "blockedBy": [],
+      "effort": "small",
+      "category": "test",
+      "checklist": [
+        "Page loads without errors",
+        "Login form visible and properly aligned",
+        "Email/password fields have proper labels",
+        "Submit button is accessible and styled",
+        "Google Sign-in button visible (if configured)",
+        "Password reset link visible",
+        "Form is responsive on mobile"
+      ]
+    },
+    {
+      "id": "auth-2",
+      "subject": "Test authentication flow and state management",
+      "status": "pending",
+      "description": "Test login with test credentials, verify token handling, session storage, redirect to dashboard",
+      "blocking": [
+        "dashboard-1"
+      ],
+      "blockedBy": [
+        "auth-1"
+      ],
+      "effort": "small",
+      "category": "test",
+      "checklist": [
+        "Login with valid credentials succeeds",
+        "Session cookie set correctly",
+        "Redirects to dashboard after login",
+        "Invalid credentials show error",
+        "Rate limiting works (5 attempts)",
+        "Logout clears session"
+      ]
+    },
+    {
+      "id": "dashboard-1",
+      "subject": "Test dashboard layout and content organization",
+      "status": "pending",
+      "description": "Verify dashboard page loads, all major sections visible, stats display correctly, cards properly aligned",
+      "blocking": [
+        "friday-1",
+        "mwr-1",
+        "admin-1"
+      ],
+      "blockedBy": [
+        "auth-2"
+      ],
+      "effort": "small",
+      "category": "test",
+      "checklist": [
+        "Dashboard loads after login",
+        "Header with user menu visible",
+        "Navigation sidebar present and functional",
+        "Main content area properly structured",
+        "Stats cards display (if present)",
+        "Quick action buttons visible",
+        "No layout shifts or broken elements"
+      ]
+    },
+    {
+      "id": "friday-1",
+      "subject": "Test Friday engagements list and grid view",
+      "status": "pending",
+      "description": "Check engagements list page, verify grid/table layout, sorting, filtering, pagination",
+      "blocking": [
+        "friday-2"
+      ],
+      "blockedBy": [
+        "dashboard-1"
+      ],
+      "effort": "medium",
+      "category": "test",
+      "checklist": [
+        "Engagements page loads",
+        "List/grid view renders correctly",
+        "Cards/rows properly formatted",
+        "Column headers visible (if table view)",
+        "Sort buttons functional",
+        "Filter options accessible",
+        "Pagination works (if > 20 items)",
+        "Search box functional",
+        "Responsive on mobile view"
+      ]
+    },
+    {
+      "id": "friday-2",
+      "subject": "Test Friday engagement detail and edit views",
+      "status": "pending",
+      "description": "Load engagement detail, verify all sections, test edit mode, check form validation",
+      "blocking": [
+        "friday-3"
+      ],
+      "blockedBy": [
+        "friday-1"
+      ],
+      "effort": "medium",
+      "category": "test",
+      "checklist": [
+        "Engagement detail page loads",
+        "All info sections visible (status, dates, participants)",
+        "Edit button triggers edit mode",
+        "Form fields display correctly",
+        "Validation works on save",
+        "Success message after save",
+        "Related RFIs section visible",
+        "Timeline/activity log visible",
+        "Breadcrumbs present and functional"
+      ]
+    },
+    {
+      "id": "friday-3",
+      "subject": "Test Friday clients and RFIs pages",
+      "status": "pending",
+      "description": "Check clients list, detail view, RFI list, RFI detail, and response workflows",
+      "blocking": [
+        "mwr-1"
+      ],
+      "blockedBy": [
+        "friday-2"
+      ],
+      "effort": "medium",
+      "category": "test",
+      "checklist": [
+        "Clients list page functional",
+        "Client detail displays all info",
+        "RFI list shows all items",
+        "RFI detail loads with questions",
+        "Response form functional",
+        "File uploads work (if available)",
+        "Date pickers functional",
+        "Deadline indicators visible",
+        "Status badges display correctly"
+      ]
+    },
+    {
+      "id": "mwr-1",
+      "subject": "Test MWR reviews list and grid view",
+      "status": "pending",
+      "description": "Check reviews page layout, list/grid rendering, sorting, filtering, search",
+      "blocking": [
+        "mwr-2"
+      ],
+      "blockedBy": [
+        "dashboard-1"
+      ],
+      "effort": "medium",
+      "category": "test",
+      "checklist": [
+        "Reviews page loads",
+        "List view renders properly",
+        "Review cards/rows formatted correctly",
+        "Status indicators visible",
+        "Sort options functional",
+        "Filter sidebar accessible",
+        "Search box working",
+        "View toggle (list/grid) functional",
+        "Pagination works"
+      ]
+    },
+    {
+      "id": "mwr-2",
+      "subject": "Test MWR review detail and PDF viewer",
+      "status": "pending",
+      "description": "Load review detail, test PDF viewer, highlight creation, annotation interface",
+      "blocking": [
+        "mwr-3"
+      ],
+      "blockedBy": [
+        "mwr-1"
+      ],
+      "effort": "large",
+      "category": "test",
+      "checklist": [
+        "Review detail loads",
+        "PDF viewer renders document",
+        "PDF navigation works (pages, zoom)",
+        "Highlight creation functional",
+        "Highlight colors/styles apply",
+        "Annotation text input works",
+        "Highlight deletion works",
+        "Comment threads functional",
+        "Export/save options visible",
+        "Performance acceptable (no lag)"
+      ]
+    },
+    {
+      "id": "mwr-3",
+      "subject": "Test MWR edit mode, collaborators, and templates",
+      "status": "pending",
+      "description": "Test review edit form, collaborators management, template selection, checklist interactions",
+      "blocking": [
+        "admin-1"
+      ],
+      "blockedBy": [
+        "mwr-2"
+      ],
+      "effort": "medium",
+      "category": "test",
+      "checklist": [
+        "Edit mode accessible",
+        "Form fields editable",
+        "Add collaborator dialog works",
+        "Remove collaborator functional",
+        "Permission levels display correctly",
+        "Template dropdown loads",
+        "Template selection updates form",
+        "Checklist items create/delete",
+        "Checklist item toggle works",
+        "Progress indicator updates"
+      ]
+    },
+    {
+      "id": "admin-1",
+      "subject": "Test audit dashboard and logs page",
+      "status": "pending",
+      "description": "Load audit logs, verify filter/search, check log display, test download functionality",
+      "blocking": [
+        "admin-2"
+      ],
+      "blockedBy": [
+        "dashboard-1"
+      ],
+      "effort": "medium",
+      "category": "test",
+      "checklist": [
+        "Audit logs page loads",
+        "Log table displays entries",
+        "Filter options work (level, type, date)",
+        "Search box filters logs",
+        "Date range picker functional",
+        "Column sorting works",
+        "Pagination for large datasets",
+        "Export/download button present",
+        "Log detail view accessible"
+      ]
+    },
+    {
+      "id": "admin-2",
+      "subject": "Test monitoring dashboard and system stats",
+      "status": "pending",
+      "description": "Check monitoring dashboard, verify metrics display, health status, resource usage indicators",
+      "blocking": [
+        "admin-3"
+      ],
+      "blockedBy": [
+        "admin-1"
+      ],
+      "effort": "small",
+      "category": "test",
+      "checklist": [
+        "Monitoring page loads",
+        "Charts/graphs render correctly",
+        "Resource metrics update",
+        "Health status indicators visible",
+        "Database stats display",
+        "Request metrics functional",
+        "Alert indicators show (if any)",
+        "Responsive on mobile"
+      ]
+    },
+    {
+      "id": "admin-3",
+      "subject": "Test settings and user profile pages",
+      "status": "pending",
+      "description": "Check user settings, profile edit, team settings, permissions management",
+      "blocking": [
+        "consistency-1"
+      ],
+      "blockedBy": [
+        "admin-2"
+      ],
+      "effort": "medium",
+      "category": "test",
+      "checklist": [
+        "Settings page loads",
+        "User profile section accessible",
+        "Edit profile form works",
+        "Password change functional",
+        "Email notifications settings",
+        "Team/department settings visible",
+        "Permission checkboxes functional",
+        "Save button works",
+        "Success message displays"
+      ]
+    },
+    {
+      "id": "consistency-1",
+      "subject": "Test design consistency across all pages",
+      "status": "pending",
+      "description": "Verify consistent spacing, typography, color scheme, button styles, form layouts across all pages",
+      "blocking": [
+        "ux-fixes"
+      ],
+      "blockedBy": [
+        "admin-3"
+      ],
+      "effort": "medium",
+      "category": "test",
+      "checklist": [
+        "Header consistent on all pages",
+        "Sidebar navigation consistent",
+        "Button styles uniform",
+        "Form field styling consistent",
+        "Card/container spacing even",
+        "Typography hierarchy clear",
+        "Color palette consistent",
+        "Loading states visible",
+        "Error messages styled uniformly"
+      ]
+    },
+    {
+      "id": "interactions-1",
+      "subject": "Test interactive elements and animations",
+      "status": "pending",
+      "description": "Verify hover states, click feedback, transitions, modals, tooltips, dropdown menus",
+      "blocking": [
+        "ux-fixes"
+      ],
+      "blockedBy": [
+        "consistency-1"
+      ],
+      "effort": "medium",
+      "category": "test",
+      "checklist": [
+        "Hover states visible on buttons",
+        "Click feedback provided",
+        "Transitions smooth",
+        "Modal dialogs open/close",
+        "Dropdowns functional",
+        "Tooltips display on hover",
+        "Loading spinners visible",
+        "Error animations show",
+        "Focus states accessible (keyboard nav)"
+      ]
+    },
+    {
+      "id": "responsiveness-1",
+      "subject": "Test responsive design on mobile/tablet",
+      "status": "pending",
+      "description": "Test all pages on mobile viewport (375px), tablet (768px), verify touch interactions, scrolling",
+      "blocking": [
+        "ux-fixes"
+      ],
+      "blockedBy": [
+        "interactions-1"
+      ],
+      "effort": "large",
+      "category": "test",
+      "checklist": [
+        "Mobile viewport renders correctly",
+        "Sidebar collapses on mobile",
+        "Hamburger menu appears",
+        "Touch interactions work",
+        "Scrolling smooth",
+        "Modals readable on mobile",
+        "Forms accessible on small screens",
+        "No horizontal scroll needed",
+        "Text readable at 375px width",
+        "Tablet layout (768px) functional"
+      ]
+    },
+    {
+      "id": "ux-fixes",
+      "subject": "Document all UX issues found during testing",
+      "status": "pending",
+      "description": "Compile comprehensive list of all layout, styling, interaction, and usability issues discovered. Priority: critical (blocking), major (impacts UX), minor (polish)",
+      "blocking": [
+        "fix-critical",
+        "fix-major",
+        "fix-minor"
+      ],
+      "blockedBy": [
+        "responsiveness-1"
+      ],
+      "effort": "medium",
+      "category": "test",
+      "notes": "Output comprehensive issue report with screenshots, location, severity, and reproduction steps"
+    },
+    {
+      "id": "fix-critical",
+      "subject": "Fix critical UX issues (blocking/breaking)",
+      "status": "pending",
+      "description": "Fix all critical issues that prevent page functionality - broken layouts, missing elements, non-functional buttons",
+      "blocking": [
+        "fix-major"
+      ],
+      "blockedBy": [
+        "ux-fixes"
+      ],
+      "effort": "large",
+      "category": "bug",
+      "notes": "Apply fixes based on discovered issues"
+    },
+    {
+      "id": "fix-major",
+      "subject": "Fix major UX issues (impacts usability)",
+      "status": "pending",
+      "description": "Fix spacing, alignment, styling issues that impact user experience - misaligned text, inconsistent padding, poor visual hierarchy",
+      "blocking": [
+        "fix-minor"
+      ],
+      "blockedBy": [
+        "fix-critical"
+      ],
+      "effort": "large",
+      "category": "refactor",
+      "notes": "Apply consistent styling and spacing"
+    },
+    {
+      "id": "fix-minor",
+      "subject": "Fix minor UX issues (polish)",
+      "status": "pending",
+      "description": "Fix polish issues - hover states, transitions, small styling adjustments, tooltip improvements",
+      "blocking": [
+        "verification-1"
+      ],
+      "blockedBy": [
+        "fix-major"
+      ],
+      "effort": "medium",
+      "category": "refactor"
+    },
+    {
+      "id": "verification-1",
+      "subject": "Verify all fixes with complete page re-test",
+      "status": "pending",
+      "description": "Re-test all major pages with agent-browser to verify fixes work correctly and no new issues introduced",
+      "blocking": [
+        "integration-test"
+      ],
+      "blockedBy": [
+        "fix-minor"
+      ],
+      "effort": "large",
+      "category": "test",
+      "checklist": [
+        "All critical issues resolved",
+        "All major issues resolved",
+        "All minor issues resolved",
+        "No regressions introduced",
+        "All pages load correctly",
+        "Interactions work smoothly",
+        "Responsive design verified",
+        "Performance acceptable"
+      ]
+    },
+    {
+      "id": "integration-test",
+      "subject": "Final integration and cross-browser verification",
+      "status": "pending",
+      "description": "Complete end-to-end workflow testing across multiple scenarios, verify all systems work together",
+      "blocking": [],
+      "blockedBy": [
+        "verification-1"
+      ],
+      "effort": "large",
+      "category": "test",
+      "checklist": [
+        "Login → Dashboard workflow",
+        "Create/edit engagement workflow",
+        "Review PDF workflow",
+        "RFI response workflow",
+        "Audit log query workflow",
+        "Settings update workflow",
+        "All pages accessible from navigation",
+        "Back button works correctly",
+        "Page refresh maintains state",
+        "Logout works correctly"
+      ]
+    }
+  ],
+  "completed": [],
+  "notes": "Total 20 items: 15 test items, 4 fix items, 1 integration test. Phases organized by system area with dependencies for sequential execution. Wave 1: Auth and Dashboard. Wave 2: Friday and MWR systems. Wave 3: Admin pages. Wave 4: Cross-cutting tests (consistency, interactions, responsiveness). Wave 5: Fix all issues. Wave 6: Final verification."
+}
