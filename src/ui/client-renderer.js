@@ -1,6 +1,7 @@
 import { canCreate, canEdit } from '@/ui/permissions-ui.js';
 import { page } from '@/ui/layout.js';
 import { esc, statusBadge, TOAST_SCRIPT, TABLE_SCRIPT } from '@/ui/render-helpers.js';
+import { SPACING } from '@/ui/spacing-system.js';
 
 const RISK_LEVELS = [
   { value: 'low',      label: 'Low',      cls: 'badge-success badge-flat-success' },
@@ -22,7 +23,7 @@ export function renderClientList(user, clients) {
       <td data-col="email">${esc(Array.isArray(c.master_emails) ? c.master_emails[0] : (c.email || '-'))}</td>
       <td data-col="status">${sp}</td>
     </tr>`;
-  }).join('') || `<tr><td colspan="5" style="text-align:center;padding:48px;color:var(--color-text-muted)">No clients found</td></tr>`;
+  }).join('') || `<tr><td colspan="5" style="text-align:center;padding:${SPACING.xl};color:var(--color-text-muted)">No clients found</td></tr>`;
 
   const content = `<div class="page-header">
       <div><h1 class="page-title">Clients</h1><p class="page-subtitle">${(clients||[]).length} clients</p></div>

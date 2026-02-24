@@ -1,6 +1,7 @@
 import { page } from '@/ui/layout.js'
 import { getQuickActions } from '@/ui/permissions-ui.js'
 import { esc, stagePill, statusPill, TABLE_SCRIPT } from '@/ui/render-helpers.js'
+import { SPACING, renderCard } from '@/ui/spacing-system.js'
 
 export function renderDashboard(user, stats = {}) {
   const isClerk = user?.role === 'clerk';
@@ -30,8 +31,8 @@ export function renderDashboard(user, stats = {}) {
   const quickActions = getQuickActions(user);
   const actionsHtml = quickActions.length > 0
     ? `<div class="card-clean card-section"><div class="card-clean-body">
-        <div class="page-subtitle" style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px">Quick Actions</div>
-        <div style="display:flex;flex-wrap:wrap;gap:10px">${quickActions.map(a => `<a href="${a.href}" class="${a.primary ? 'btn-primary-clean' : 'btn-ghost-clean'}">${a.label}</a>`).join('')}</div>
+        <div class="page-subtitle" style="font-size:0.8125rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:${SPACING.md}">Quick Actions</div>
+        <div style="display:flex;flex-wrap:wrap;gap:${SPACING.sm}">${quickActions.map(a => `<a href="${a.href}" class="${a.primary ? 'btn-primary-clean' : 'btn-ghost-clean'}">${a.label}</a>`).join('')}</div>
       </div></div>` : '';
 
   const recentRows = (stats.recentEngagements || []).map(e => {

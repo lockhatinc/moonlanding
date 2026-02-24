@@ -1,4 +1,5 @@
 import { monitoringDashboardScript } from '@/ui/monitoring-dashboard-client.js'
+import { SPACING } from '@/ui/spacing-system.js'
 
 const html = (strings, ...values) => strings.reduce((r, s, i) => r + s + (values[i] ?? ''), '')
 
@@ -12,12 +13,12 @@ export function renderMonitoringDashboard() {
         <title>Monitoring Dashboard</title>
         <link rel="stylesheet" href="/ui/styles.css">
         <style>
-          .metric-card { min-height: 120px; }
-          .metric-value { font-size: 2rem; font-weight: bold; }
+          .metric-card { min-height: 120px; padding: ${SPACING.md}; }
+          .metric-value { font-size: 2rem; font-weight: bold; margin-bottom: ${SPACING.sm}; }
           .metric-label { font-size: 0.875rem; color: #666; }
-          .alert-critical { background-color: #fee; border-left: 4px solid #f00; }
-          .alert-warning { background-color: #ffa; border-left: 4px solid #fa0; }
-          .alert-info { background-color: #eff; border-left: 4px solid #0af; }
+          .alert-critical { background-color: #fee; border-left: ${SPACING.sm} solid #f00; padding: ${SPACING.md}; margin-bottom: ${SPACING.md}; }
+          .alert-warning { background-color: #ffa; border-left: ${SPACING.sm} solid #fa0; padding: ${SPACING.md}; margin-bottom: ${SPACING.md}; }
+          .alert-info { background-color: #eff; border-left: ${SPACING.sm} solid #0af; padding: ${SPACING.md}; margin-bottom: ${SPACING.md}; }
           .log-error { color: #f00; }
           .log-warn { color: #fa0; }
           .log-info { color: #0af; }

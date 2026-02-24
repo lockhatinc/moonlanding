@@ -1,5 +1,6 @@
 import { page } from '@/ui/layout.js';
 import { canCreate } from '@/ui/permissions-ui.js';
+import { SPACING } from '@/ui/spacing-system.js';
 
 const TOAST = `window.showToast=(m,t='info')=>{let c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';document.body.appendChild(c)}const d=document.createElement('div');d.className='toast toast-'+t;d.textContent=m;c.appendChild(d);setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},3000)};`;
 

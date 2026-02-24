@@ -2,6 +2,7 @@ import { page } from '@/ui/layout.js';
 import { canEdit, isPartner, isManager } from '@/ui/permissions-ui.js';
 import { esc, STAGE_CONFIG } from '@/ui/render-helpers.js';
 import { stageTransitionDialog, chatPanel, checklistPanel, activityPanel, filesPanel, engDetailScript } from '@/ui/engagement-detail-panels.js';
+import { SPACING, renderInfoGrid, renderProgress } from '@/ui/spacing-system.js';
 
 function stagePipelineHtml(e) {
   const currentIdx = STAGE_CONFIG.findIndex(s => s.key === e.stage);
@@ -11,7 +12,7 @@ function stagePipelineHtml(e) {
     const bg = isCurrent || isPast ? s.color : '#e2e8f0';
     const color = isCurrent || isPast ? '#fff' : '#94a3b8';
     const opacity = isPast ? '0.7' : '1';
-    return `<div onclick="openStageTransition('${esc(s.key)}')" title="${s.label}" style="flex:1;min-width:0;padding:9px 4px;text-align:center;background:${bg};color:${color};opacity:${opacity};font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.label}</div>`;
+    return `<div onclick="openStageTransition('${esc(s.key)}')" title="${s.label}" style="flex:1;min-width:0;padding:${SPACING.xs} ${SPACING.xs};text-align:center;background:${bg};color:${color};opacity:${opacity};font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.label}</div>`;
   }).join('');
   return `<div style="display:flex;flex-direction:row;width:100%;border-radius:6px;overflow:hidden;height:34px">${stages}</div>`;
 }
@@ -22,7 +23,7 @@ export function renderEngagementCardView(user, engagements) {
     const stageLbl = cfg ? `<span class="badge ${cfg.badge} text-xs">${cfg.label}</span>` : '';
     const pct = typeof e.progress === 'number' ? Math.min(100, Math.round(e.progress)) : 0;
     return `<div onclick="location.href='/engagement/${esc(e.id)}'" class="card-clean">
-      <div class="card-clean-body" style="padding:1rem">
+      <div class="card-clean-body" style="padding:${SPACING.md}">
         <div class="font-semibold text-sm mb-1">${esc(e.name || 'Untitled')}</div>
         <div class="text-xs text-base-content/60 mb-2">${esc(e.client_name || '')}</div>
         ${stageLbl}
@@ -68,9 +69,9 @@ export function renderEngagementDetail(user, engagement, client, rfis = []) {
     ['Assigned', assignedUsersHtml],
   ];
 
-  const infoGrid = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">${infoItems.map(([label, val]) => `<div><div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--color-text-muted);margin-bottom:4px">${label}</div><div style="font-size:0.875rem;color:var(--color-text)">${val}</div></div>`).join('')}</div>`;
+  const infoGrid = renderInfoGrid(infoItems);
   const pct = typeof e.progress === 'number' ? Math.min(100, Math.round(e.progress)) : 0;
-  const progressHtml = `<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--color-border)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:0.8rem;font-weight:600;color:var(--color-text-muted)">Overall Progress</span><span style="font-size:0.8rem;color:var(--color-text-light)">${pct}%</span></div><progress class="progress progress-primary w-full" value="${pct}" max="100"></progress></div>`;
+  const progressHtml = `<div style="margin-top:${SPACING.lg};padding-top:${SPACING.md};border-top:1px solid var(--color-border)">${renderProgress(pct, 100, 'primary', '0px')}</div>`;
 
   const rfiRows = rfis.map(r => {
     const rs = r.status || 'pending';
@@ -90,10 +91,10 @@ export function renderEngagementDetail(user, engagement, client, rfis = []) {
   const content = `
     <nav class="breadcrumb-clean"><a href="/">Home</a><span class="breadcrumb-sep">/</span><a href="/engagements">Engagements</a><span class="breadcrumb-sep">/</span><span>${esc(e.name || 'Engagement')}</span></nav>
     <div class="page-header">
-      <div><h1 class="page-title">${esc(e.name || e.client_name || 'Engagement')}</h1><div style="margin-top:6px"><span class="badge ${stageBadgeCls}">${stageLabel}</span></div></div>
-      <div style="display:flex;gap:8px;flex-shrink:0">${stageBtn}${editBtn}</div>
+      <div><h1 class="page-title">${esc(e.name || e.client_name || 'Engagement')}</h1><div style="margin-top:${SPACING.xs}"><span class="badge ${stageBadgeCls}">${stageLabel}</span></div></div>
+      <div style="display:flex;gap:${SPACING.sm};flex-shrink:0">${stageBtn}${editBtn}</div>
     </div>
-    <div class="card-clean overflow-hidden mb-4" style="padding:12px">${stagePipelineHtml(e)}</div>
+    <div class="card-clean overflow-hidden mb-4" style="padding:${SPACING.sm}">${stagePipelineHtml(e)}</div>
     ${tabBar}
     <div id="tab-details" class="eng-tab-panel"><div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="card-clean"><div class="card-clean-body"><h2 class="text-sm font-semibold text-base-content mb-4">Engagement Details</h2>${infoGrid}${progressHtml}</div></div>

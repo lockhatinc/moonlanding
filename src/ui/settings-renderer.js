@@ -1,5 +1,6 @@
 import { page } from '@/ui/layout.js';
 import { TOAST_SCRIPT, TABLE_SCRIPT, statusBadge as _statusBadge } from '@/ui/render-helpers.js';
+import { SPACING, renderCard } from '@/ui/spacing-system.js';
 
 export { TOAST_SCRIPT } from '@/ui/render-helpers.js';
 
@@ -46,15 +47,15 @@ export function renderSettingsHome(user, config = {}, counts = {}) {
     const cnt = c.countKey && counts[c.countKey] !== undefined ? counts[c.countKey] : null;
     const badge = cnt !== null ? `<span class="badge badge-flat-primary text-xs">${cnt.toLocaleString()} items</span>` : '';
     return `<a href="${c.href}" class="card-clean" style="text-decoration:none;border:1px solid var(--color-border);transition:box-shadow 0.15s">
-      <div class="card-clean-body" style="padding:1rem">
-        <div style="display:flex;align-items:flex-start;gap:0.75rem">
+      <div class="card-clean-body" style="padding:${SPACING.md}">
+        <div style="display:flex;align-items:flex-start;gap:${SPACING.md}">
           <div style="font-size:1.25rem;width:2.25rem;height:2.25rem;display:flex;align-items:center;justify-content:center;background:var(--color-base-200);border-radius:8px;flex-shrink:0">${c.icon}</div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:600;font-size:0.875rem;color:var(--color-base-content)">${c.title}</div>
-            <div style="font-size:0.75rem;color:var(--color-text-muted);margin-top:2px;line-height:1.4">${c.desc}</div>
-            ${badge ? `<div style="margin-top:6px">${badge}</div>` : ''}
+            <div style="font-size:0.75rem;color:var(--color-text-muted);margin-top:${SPACING.xs};line-height:1.4">${c.desc}</div>
+            ${badge ? `<div style="margin-top:${SPACING.sm}">${badge}</div>` : ''}
           </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--color-text-muted);margin-top:2px"><polyline points="9 18 15 12 9 6"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--color-text-muted);margin-top:${SPACING.xs}"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>
     </a>`;
@@ -63,7 +64,7 @@ export function renderSettingsHome(user, config = {}, counts = {}) {
     <div class="flex items-center justify-between mb-6">
       <div><h1 class="text-2xl font-bold text-base-content">Settings</h1><p class="text-sm text-base-content/50 mt-1">System configuration and administration</p></div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem">${cards}</div>`;
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:${SPACING.md}">${cards}</div>`;
   return settingsPage(user, 'Settings', [{ href: '/', label: 'Dashboard' }, { label: 'Settings' }], content);
 }
 

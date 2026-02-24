@@ -1,6 +1,7 @@
 import { page } from '@/ui/layout.js';
 import { esc, TOAST_SCRIPT } from '@/ui/render-helpers.js';
 import { reviewZoneNav } from '@/ui/review-detail-renderer.js';
+import { SPACING } from '@/ui/spacing-system.js';
 
 export function renderReviewEdit(user, review, engagements = [], teams = []) {
   const r = review || {};
@@ -42,7 +43,7 @@ export function renderReviewEdit(user, review, engagements = [], teams = []) {
     ${reviewZoneNav(r.id, 'overview')}
     <div class="card-clean">
       <div class="card-clean-body">
-        <form id="review-edit-form" class="space-y-4" novalidate>
+        <form id="review-edit-form" style="display:flex;flex-direction:column;gap:${SPACING.md}" novalidate>
           ${formField('Review Name <span class="text-error">*</span>', `<input type="text" name="name" class="input input-solid max-w-full" value="${esc(r.name||r.title||'')}" required placeholder="Enter review name"/>`)}
           ${engOptions ? formField('Engagement', `<select name="engagement_id" class="select select-solid max-w-full"><option value="">-- None --</option>${engOptions}</select>`) : ''}
           ${formField('Status', `<select name="status" class="select select-solid max-w-full">${statusOptions}</select>`)}
@@ -54,7 +55,7 @@ export function renderReviewEdit(user, review, engagements = [], teams = []) {
           ${teamOptions.length > '<option value="">None</option>'.length ? formField('Team', `<select name="team_id" class="select select-solid max-w-full">${teamOptions}</select>`) : ''}
           <div class="form-group"><label class="label cursor-pointer justify-start gap-3"><input type="checkbox" name="is_private" class="checkbox checkbox-primary"${r.is_private?' checked':''}/><span class="label-text">Private Review</span></label></div>
           <div class="form-group"><label class="label cursor-pointer justify-start gap-3"><input type="checkbox" name="archived" class="checkbox checkbox-primary"${r.archived?' checked':''}/><span class="label-text">Archived</span></label></div>
-          <div class="flex gap-3 pt-4 border-t border-base-200">
+          <div class="flex gap-3" style="padding-top:${SPACING.md};border-top:1px solid var(--color-border);margin-top:${SPACING.md}">
             <button type="submit" id="save-btn" class="btn btn-primary"><span class="btn-text">Save Changes</span><span class="btn-loading-text" style="display:none">Saving...</span></button>
             <a href="/review/${id}" class="btn btn-ghost">Cancel</a>
             <button type="button" onclick="deleteReview('${id}')" class="btn btn-error btn-outline ml-auto">Delete Review</button>

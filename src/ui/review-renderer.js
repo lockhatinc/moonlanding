@@ -2,6 +2,7 @@ import { canCreate, canEdit, canDelete } from '@/ui/permissions-ui.js';
 import { page } from '@/ui/layout.js';
 import { reviewZoneNav } from '@/ui/review-zone-nav.js';
 import { reviewCreateDialog, reviewTemplateChoiceDialog, reviewContextMenu, reviewFlagsDialog, reviewTagsDialog, reviewValueDialog, reviewDeadlineDialog, reviewNotificationDialog } from '@/ui/review-dialogs.js';
+import { SPACING } from '@/ui/spacing-system.js';
 
 export { reviewCreateDialog, reviewTemplateChoiceDialog, reviewContextMenu, reviewFlagsDialog, reviewTagsDialog, reviewValueDialog, reviewDeadlineDialog, reviewNotificationDialog };
 
@@ -56,7 +57,7 @@ export function renderReviewListTabbed(user, reviews) {
 
   const content = `<div class="page-header">
       <div><h1 class="page-title">Reviews</h1><p class="page-subtitle">${reviews.length} total</p></div>
-      <div style="display:flex;gap:10px;align-items:center">${reviewSearchField()}${createBtn}</div>
+      <div style="display:flex;gap:${SPACING.sm};align-items:center">${reviewSearchField()}${createBtn}</div>
     </div>
     ${tabBar}
     <div class="table-wrap">
@@ -106,8 +107,8 @@ export function renderReviewSections(user, review, sections) {
   const pct = totalHighlights > 0 ? Math.round(resolvedHighlights / totalHighlights * 100) : 0;
   const sectionRows = sections.map((sec, i) => {
     const secPct = sec.highlights_count > 0 ? Math.round((sec.resolved_count || 0) / sec.highlights_count * 100) : 0;
-    return `<div class="card-clean" style="margin-bottom:0.75rem">
-      <div class="card-clean-body" style="padding:0.75rem 0">
+    return `<div class="card-clean" style="margin-bottom:${SPACING.sm}">
+      <div class="card-clean-body" style="padding:${SPACING.sm} 0">
         <div class="flex justify-between items-center">
           <span class="font-medium">${sec.name || `Section ${i + 1}`}</span>
           <span class="text-sm text-base-content/60">${sec.highlights_count || 0} highlights</span>

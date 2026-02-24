@@ -1,5 +1,6 @@
 import { statusLabel, linearProgress, circularProgress, engagementProgress } from '@/ui/renderer.js';
 import { page } from '@/ui/layout.js';
+import { SPACING } from '@/ui/spacing-system.js';
 
 function fmtDate(ts) {
   if (!ts) return '-';
@@ -21,7 +22,7 @@ function engagementProgressCard(engagement) {
     ? linearProgress(e.client_progress, 100, 'Client', 'thin')
     : '';
 
-  return `<div class="card-clean" style="margin-bottom:1rem"><div class="card-clean-body"><div class="flex items-start justify-between mb-3"><div><a href="/engagement/${e.id}" class="font-medium hover:text-blue-600">${e.name || 'Untitled'}</a><div class="text-xs text-gray-500 mt-0.5">${e.engagement_type || ''} ${e.year ? '&middot; ' + e.year : ''}</div></div><div class="flex items-center gap-2">${sts}</div></div><div class="mb-3">${engagementProgress(stage)}</div><div class="grid grid-cols-2 gap-4 text-sm mb-3"><div><span class="text-gray-500">Deadline:</span> <span class="font-medium">${dueDate}</span></div><div><span class="text-gray-500">Progress:</span> <span class="font-medium">${pct}%</span></div></div>${rfiProgress}${clientProgress}</div></div>`;
+  return `<div class="card-clean" style="margin-bottom:${SPACING.md}"><div class="card-clean-body"><div class="flex items-start justify-between" style="margin-bottom:${SPACING.md}"><div><a href="/engagement/${e.id}" class="font-medium hover:text-blue-600">${e.name || 'Untitled'}</a><div class="text-xs text-gray-500" style="margin-top:${SPACING.xs}">${e.engagement_type || ''} ${e.year ? '&middot; ' + e.year : ''}</div></div><div class="flex items-center gap-2">${sts}</div></div><div style="margin-bottom:${SPACING.md}">${engagementProgress(stage)}</div><div class="grid grid-cols-2 gap-4 text-sm" style="margin-bottom:${SPACING.md}"><div><span class="text-gray-500">Deadline:</span> <span class="font-medium">${dueDate}</span></div><div><span class="text-gray-500">Progress:</span> <span class="font-medium">${pct}%</span></div></div>${rfiProgress}${clientProgress}</div></div>`;
 }
 
 export function renderClientProgress(user, client, engagements, rfiStats) {
