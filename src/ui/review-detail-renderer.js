@@ -5,6 +5,7 @@ import { canEdit } from '@/ui/permissions-ui.js';
 import { esc, statusBadge, TOAST_SCRIPT } from '@/ui/render-helpers.js';
 import { reviewDetailScript } from '@/ui/review-detail-script.js';
 import { highlightRow, collaboratorRow, addCollaboratorDialog } from '@/ui/review-detail-panels.js';
+import { SPACING, renderCard, renderCardHeader, renderCardGrid, renderTable, renderFlex, renderInfoGrid, renderButton, renderProgress, renderEmptyState } from '@/ui/spacing-system.js';
 
 function fmtDate(ts) {
   if (!ts) return '-';
@@ -40,39 +41,51 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
     ['Highlights', totalH > 0 ? `${resolvedH}/${totalH} resolved` : '<span class="text-base-content/40">None yet</span>'],
   ];
 
-  const infoGrid = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">${infoItems.map(([l,v]) => `<div><div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--color-text-muted);margin-bottom:4px">${l}</div><div style="font-size:0.875rem;color:var(--color-text)">${v}</div></div>`).join('')}</div>`;
+  const infoGrid = renderInfoGrid(infoItems);
+
+  const detailsCard = renderCard(
+    renderCardHeader('Review Details') +
+    infoGrid +
+    (totalH > 0 ? `<div style="margin-top:${SPACING.md};padding-top:${SPACING.md};border-top:1px solid var(--color-border)">
+      <div style="display:flex;justify-content:space-between;margin-bottom:${SPACING.sm};align-items:center">
+        <span style="font-size:0.8rem;font-weight:600;color:var(--color-text-muted)">Resolution Progress</span>
+        <span style="font-size:0.8rem;color:var(--color-text-light)">${pct}%</span>
+      </div>
+      <progress class="progress progress-success w-full" value="${pct}" max="100"></progress>
+    </div>` : '')
+  );
+
+  const actionsCard = renderCard(
+    renderCardHeader('Quick Actions') +
+    `<div style="display:flex;flex-direction:column;gap:${SPACING.sm}">
+      <a href="/review/${esc(r.id)}/pdf" class="btn btn-ghost btn-sm" style="justify-content:flex-start">View PDF &amp; Highlights</a>
+      <a href="/review/${esc(r.id)}/highlights" class="btn btn-ghost btn-sm" style="justify-content:flex-start">Highlight Threads</a>
+      <a href="/review/${esc(r.id)}/sections" class="btn btn-ghost btn-sm" style="justify-content:flex-start">Section Report</a>
+      <a href="/review/${esc(r.id)}/resolution" class="btn btn-ghost btn-sm" style="justify-content:flex-start">Resolution Tracker</a>
+      <button onclick="exportPdf('${esc(r.id)}')" class="btn btn-ghost btn-sm" style="justify-content:flex-start">Export PDF</button>
+      ${resolvedH < totalH && canEditReview ? `<button onclick="bulkResolve('${esc(r.id)}')" class="btn btn-success btn-sm" style="justify-content:flex-start">Bulk Resolve All</button>` : ''}
+    </div>`
+  );
 
   const overviewPanel = `<div id="rvpanel-overview" class="rv-panel">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div class="card-clean"><div class="card-clean-body">
-        <h2 style="font-size:0.875rem;font-weight:600;margin-bottom:16px">Review Details</h2>
-        ${infoGrid}
-        ${totalH > 0 ? `<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--color-border)"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:0.8rem;font-weight:600;color:var(--color-text-muted)">Resolution Progress</span><span style="font-size:0.8rem;color:var(--color-text-light)">${pct}%</span></div><progress class="progress progress-success w-full" value="${pct}" max="100"></progress></div>` : ''}
-      </div></div>
-      <div class="card-clean"><div class="card-clean-body">
-        <h2 style="font-size:0.875rem;font-weight:600;margin-bottom:16px">Quick Actions</h2>
-        <div style="display:flex;flex-direction:column;gap:6px">
-          <a href="/review/${esc(r.id)}/pdf" class="btn btn-ghost btn-sm" style="justify-content:flex-start">View PDF &amp; Highlights</a>
-          <a href="/review/${esc(r.id)}/highlights" class="btn btn-ghost btn-sm" style="justify-content:flex-start">Highlight Threads</a>
-          <a href="/review/${esc(r.id)}/sections" class="btn btn-ghost btn-sm" style="justify-content:flex-start">Section Report</a>
-          <a href="/review/${esc(r.id)}/resolution" class="btn btn-ghost btn-sm" style="justify-content:flex-start">Resolution Tracker</a>
-          <button onclick="exportPdf('${esc(r.id)}')" class="btn btn-ghost btn-sm" style="justify-content:flex-start">Export PDF</button>
-          ${resolvedH < totalH && canEditReview ? `<button onclick="bulkResolve('${esc(r.id)}')" class="btn btn-success btn-sm" style="justify-content:flex-start">Bulk Resolve All</button>` : ''}
-        </div>
-      </div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:${SPACING.md}">
+      ${detailsCard}
+      ${actionsCard}
     </div>
   </div>`;
 
   function tablePanel(id, heading, countBadge, extraBtn, cols, bodyRows, emptyMsg) {
+    const header = renderCardHeader(heading + (countBadge ? ` (${countBadge})` : ''));
+    const table = renderTable(cols, bodyRows, SPACING.md);
     return `<div id="rvpanel-${id}" class="rv-panel" style="display:none">
       <div class="card-clean"><div class="card-clean-body">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${SPACING.md}">
           <h2 style="font-size:0.875rem;font-weight:600">${heading}${countBadge ? ' (' + countBadge + ')' : ''}</h2>
           ${extraBtn || ''}
         </div>
         <div class="table-wrap"><table class="data-table">
           <thead><tr>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
-          <tbody>${bodyRows || `<tr><td colspan="${cols.length}" style="text-align:center;padding:3rem 0;color:var(--color-text-muted)">${emptyMsg}</td></tr>`}</tbody>
+          <tbody>${bodyRows || `<tr><td colspan="${cols.length}" style="text-align:center;padding:${SPACING.lg} 0;color:var(--color-text-muted)">${emptyMsg}</td></tr>`}</tbody>
         </table></div>
       </div></div>
     </div>`;
@@ -80,7 +93,7 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
 
   const hRows = highlights.map(h => highlightRow(h)).join('');
   const highlightsPanel = tablePanel('highlights', 'Highlights', totalH,
-    `<div style="display:flex;gap:12px;align-items:center">${totalH > 0 ? `<span style="font-size:0.875rem;color:var(--color-text-muted)">${resolvedH} resolved, ${totalH-resolvedH} open</span>` : ''}<a href="/review/${esc(r.id)}/pdf" class="btn btn-primary btn-sm">Open PDF</a></div>`,
+    `<div style="display:flex;gap:${SPACING.md};align-items:center">${totalH > 0 ? `<span style="font-size:0.875rem;color:var(--color-text-muted)">${resolvedH} resolved, ${totalH-resolvedH} open</span>` : ''}<a href="/review/${esc(r.id)}/pdf" class="btn btn-primary btn-sm">Open PDF</a></div>`,
     ['Highlight','Page','Status','By','Actions'], hRows,
     `<a href="/review/${esc(r.id)}/pdf" class="text-primary">Open PDF</a> to add highlights`);
 
@@ -92,7 +105,7 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
   const clRows = checklists.map(cl => `<tr class="hover">
     <td style="font-size:0.875rem">${esc(cl.name||'-')}</td>
     <td style="font-size:0.875rem;color:var(--color-text-muted)">${cl.total_items||0} items</td>
-    <td><div style="display:flex;align-items:center;gap:8px"><progress class="progress progress-primary" style="width:4rem" value="${cl.total_items>0?Math.round((cl.completed_items||0)/cl.total_items*100):0}" max="100"></progress><span style="font-size:0.75rem;color:var(--color-text-muted)">${cl.completed_items||0}/${cl.total_items||0}</span></div></td>
+    <td><div style="display:flex;align-items:center;gap:${SPACING.sm}"><progress class="progress progress-primary" style="width:4rem" value="${cl.total_items>0?Math.round((cl.completed_items||0)/cl.total_items*100):0}" max="100"></progress><span style="font-size:0.75rem;color:var(--color-text-muted)">${cl.completed_items||0}/${cl.total_items||0}</span></div></td>
     <td><a href="/checklist/${esc(cl.id)}" class="btn btn-ghost btn-xs">View</a></td>
   </tr>`).join('');
   const checklistPanel = tablePanel('checklists', 'Checklists', checklists.length, '', ['Name','Items','Progress',''], clRows, 'No checklists attached');
@@ -112,13 +125,13 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
     <div class="page-header">
       <div>
         <h1 class="page-title">${esc(r.name||r.title||'Review')}</h1>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:${SPACING.sm};margin-top:${SPACING.xs};flex-wrap:wrap">
           ${statusBadge(r.status)}
           ${r.review_type ? `<span style="font-size:0.75rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.05em">${esc(r.review_type)}</span>` : ''}
           ${r.financial_year ? `<span style="font-size:0.75rem;color:var(--color-text-light)">${esc(r.financial_year)}</span>` : ''}
         </div>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div style="display:flex;gap:${SPACING.sm};flex-wrap:wrap">
         ${canEditReview ? `<a href="/review/${esc(r.id)}/edit" class="btn btn-ghost btn-sm" style="border:1px solid var(--color-border)">Edit</a>` : ''}
         <a href="/review/${esc(r.id)}/pdf" class="btn btn-primary btn-sm">View PDF</a>
       </div>
