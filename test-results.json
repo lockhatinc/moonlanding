@@ -1,0 +1,65 @@
+{
+  "date": "2026-02-24T12:39:58.081Z",
+  "totalTests": 7,
+  "passed": 7,
+  "results": [
+    {
+      "name": "Login Page",
+      "url": "http://localhost:3000/login",
+      "passed": true,
+      "elements": 5,
+      "screenshot": "test-login-page.png"
+    },
+    {
+      "name": "Dashboard",
+      "url": "http://localhost:3000/dashboard",
+      "passed": true,
+      "elements": 5,
+      "screenshot": "test-dashboard.png"
+    },
+    {
+      "name": "Engagements List",
+      "url": "http://localhost:3000/friday",
+      "passed": true,
+      "elements": 5,
+      "screenshot": "test-engagements-list.png"
+    },
+    {
+      "name": "Clients",
+      "url": "http://localhost:3000/friday/clients",
+      "passed": true,
+      "elements": 5,
+      "screenshot": "test-clients.png"
+    },
+    {
+      "name": "RFI Management",
+      "url": "http://localhost:3000/friday/rfi",
+      "passed": true,
+      "elements": 5,
+      "screenshot": "test-rfi-management.png"
+    },
+    {
+      "name": "Reviews List",
+      "url": "http://localhost:3000/mwr",
+      "passed": true,
+      "elements": 5,
+      "screenshot": "test-reviews-list.png"
+    },
+    {
+      "name": "Audit Logs",
+      "url": "http://localhost:3000/audit",
+      "passed": true,
+      "elements": 5,
+      "screenshot": "test-audit-logs.png"
+    }
+  ],
+  "screenshots": [
+    "test-login-page.png",
+    "test-dashboard.png",
+    "test-engagements-list.png",
+    "test-clients.png",
+    "test-rfi-management.png",
+    "test-reviews-list.png",
+    "test-audit-logs.png"
+  ]
+}
