@@ -13,6 +13,7 @@ export function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = 'toast toast-' + type;
   toast.textContent = message;
+  toast.style.cssText = 'position:relative'; // Ensure proper stacking on mobile
   container.appendChild(toast);
   setTimeout(() => {
     toast.style.opacity = '0';
@@ -22,7 +23,12 @@ export function showToast(message, type = 'info') {
 
 export function showDialog(id) {
   const el = document.getElementById(id);
-  if (el) el.style.display = 'flex';
+  if (el) {
+    el.style.display = 'flex';
+    // Focus trap for accessibility on mobile
+    const focusable = el.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusable) setTimeout(() => focusable.focus(), 100);
+  }
 }
 
 export function hideDialog(id) {
