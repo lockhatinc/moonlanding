@@ -80,7 +80,7 @@ export function renderAuditDashboard(user, auditData = {}) {
       <td data-col="user">${a.user_name||a.user_id||'-'}</td>
       <td data-col="reason" style="font-size:12px;color:var(--color-text-muted)">${a.reason||'-'}</td>
     </tr>`
-  ).join('') || '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--color-text-muted)">No audit records found</td></tr>';
+   ).join('') || `<tr><td colspan="6" style="text-align:center;padding:${SPACING.xl};color:var(--color-text-muted)">No audit records found</td></tr>`;
 
   const statsHtml = `<div class="stats-row">${[
     { label: 'Total Actions (30d)', value: summary.total_actions || 0 },
@@ -109,7 +109,7 @@ export function renderSystemHealth(user, healthData = {}) {
   const { database = {}, server: srv = {}, entities = {} } = healthData;
   const entRows = Object.entries(entities).map(([n, c]) =>
     `<tr data-row><td data-col="entity">${n}</td><td data-col="count" style="text-align:right">${c}</td></tr>`
-  ).join('') || '<tr><td colspan="2" style="text-align:center;padding:32px;color:var(--color-text-muted)">No data</td></tr>';
+   ).join('') || `<tr><td colspan="2" style="text-align:center;padding:${SPACING.xl};color:var(--color-text-muted)">No data</td></tr>`;
 
   const statsHtml = `<div class="stats-row">${[
     { label: 'Server Status', value: 'Online',                    sub: 'Port: '+(srv.port||3000) },

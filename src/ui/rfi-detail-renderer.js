@@ -1,6 +1,7 @@
 import { page } from '@/ui/layout.js';
 import { canEdit, isPartner, isManager } from '@/ui/permissions-ui.js';
 import { esc, statusBadge, TOAST_SCRIPT } from '@/ui/render-helpers.js';
+import { SPACING } from '@/ui/spacing-system.js';
 
 const TOAST = TOAST_SCRIPT;
 
@@ -105,8 +106,8 @@ export function renderRfiDetail(user, rfi = {}, questions = [], sections = [], e
     ['Mandatory', rfi.mandatory!==false?'Yes':'No'],
   ];
 
-  const infoGrid = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">` +
-    infoItems.map(([l,v]) => `<div><div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--color-text-muted);margin-bottom:4px">${l}</div><div style="font-size:0.875rem;color:var(--color-text)">${v}</div></div>`).join('') +
+  const infoGrid = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:${SPACING.md}">` +
+    infoItems.map(([l,v]) => `<div><div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--color-text-muted);margin-bottom:${SPACING.xs}">${l}</div><div style="font-size:0.875rem;color:var(--color-text)">${v}</div></div>`).join('') +
     `</div>`;
 
   const content = `
@@ -114,7 +115,7 @@ export function renderRfiDetail(user, rfi = {}, questions = [], sections = [], e
     <div class="page-header">
       <div>
         <h1 class="page-title">${esc(rfi.display_name||rfi.name||rfi.title||(engagement?'RFI \u2013 '+(engagement.name||''):'RFI'))}</h1>
-        ${rfi.description ? `<p style="margin-top:4px;font-size:0.875rem;color:var(--color-text-muted)">${esc(rfi.description)}</p>` : ''}
+         ${rfi.description ? `<p style="margin-top:${SPACING.xs};font-size:0.875rem;color:var(--color-text-muted)">${esc(rfi.description)}</p>` : ''}
       </div>
       ${headerBtns}
     </div>
@@ -123,9 +124,9 @@ export function renderRfiDetail(user, rfi = {}, questions = [], sections = [], e
     </div>
     <div class="card-clean">
       <div class="card-clean-body">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
-          <h2 style="font-size:0.875rem;font-weight:600;color:var(--color-text)">Questions (${questions.length})</h2>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${SPACING.md};flex-wrap:wrap;gap:${SPACING.sm}">
+           <h2 style="font-size:0.875rem;font-weight:600;color:var(--color-text)">Questions (${questions.length})</h2>
+           <div style="display:flex;gap:${SPACING.sm};align-items:center;flex-wrap:wrap">
             ${sectionTabs}
             <input type="text" placeholder="Search..." oninput="filterQuestions(this.value)" class="input input-solid" style="max-width:160px;font-size:0.875rem"/>
           </div>

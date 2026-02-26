@@ -63,8 +63,8 @@ export function renderClientDashboard(user, client, stats = {}) {
     <span class="text-sm text-base-content text-right">${v}</span>
   </div>`).join('');
 
-  const mkStat = (icon, value, label) => `<div class="card-clean"><div class="card-clean-body" style="padding:1rem"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><span style="font-size:1.4rem">${icon}</span><span style="font-size:1.8rem;font-weight:700">${value}</span></div><div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">${label}</div></div></div>`;
-  const statsHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1.5rem">${mkStat('📁',stats.engagements||0,'Engagements')}${mkStat('📋',stats.activeRfis||0,'Active RFIs')}${mkStat('👤',stats.users||0,'Users')}${mkStat('📄',stats.reviews||0,'Reviews')}</div>`;
+   const mkStat = (icon, value, label) => `<div class="card-clean"><div class="card-clean-body" style="padding:${SPACING.md}"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${SPACING.xs}"><span style="font-size:1.4rem">${icon}</span><span style="font-size:1.8rem;font-weight:700">${value}</span></div><div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">${label}</div></div></div>`;
+   const statsHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:${SPACING.md};margin-bottom:${SPACING.lg}">${mkStat('📁',stats.engagements||0,'Engagements')}${mkStat('📋',stats.activeRfis||0,'Active RFIs')}${mkStat('👤',stats.users||0,'Users')}${mkStat('📄',stats.reviews||0,'Reviews')}</div>`;
 
   const engRows = (stats.engagementList || []).map(e => `<tr class="hover cursor-pointer" onclick="window.location='/engagement/${e.id}'"><td class="text-sm font-medium">${esc(e.name || '-')}</td><td>${statusBadge(e.stage)}</td><td>${statusBadge(e.status)}</td></tr>`).join('') || `<tr><td colspan="3" class="text-center py-10 text-base-content/40"><div class="flex flex-col items-center gap-2"><span class="text-3xl">📁</span><span class="text-sm">No engagements yet</span>${canEdit(user, 'client') ? `<a href="/engagement/new?client_id=${esc(c.id)}" class="btn btn-primary btn-xs mt-1">+ New Engagement</a>` : ''}</div></td></tr>`;
 
@@ -89,17 +89,17 @@ export function renderClientDashboard(user, client, stats = {}) {
       ${actions}
     </div>
     ${statsHtml}
-    <div style="display:grid;grid-template-columns:2fr 3fr;gap:1rem">
+     <div style="display:grid;grid-template-columns:2fr 3fr;gap:${SPACING.md}">
       <div class="card-clean">
         <div class="card-clean-body">
-          <h2 style="font-size:0.875rem;font-weight:600;margin-bottom:8px">Client Info</h2>
+           <h2 style="font-size:0.875rem;font-weight:600;margin-bottom:${SPACING.sm}">Client Info</h2>
           <div>${infoRows}</div>
         </div>
       </div>
       <div class="card-clean">
         <div class="card-clean-body">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-            <h2 style="font-size:0.875rem;font-weight:600;margin-bottom:16px">Engagements</h2>
+           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${SPACING.md}">
+             <h2 style="font-size:0.875rem;font-weight:600;margin-bottom:${SPACING.md}">Engagements</h2>
             ${canEditClient ? `<a href="/engagement/new?client_id=${esc(c.id)}" class="btn btn-primary btn-xs">+ New</a>` : ''}
           </div>
           <div class="table-wrap"><table class="data-table">
