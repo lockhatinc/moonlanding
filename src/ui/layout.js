@@ -20,8 +20,10 @@ export function generateHtml(title, bodyContent, scripts = [], pathname = '/') {
 <head>
   <meta charset="UTF-8">
     <link href="/ui/rippleui.css" rel="stylesheet"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <meta name="theme-color" content="#04141f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>${title}</title>
   <link rel="preload" href="/ui/client.js" as="script" crossorigin>
   <link rel="preload" href="/ui/styles2.css" as="style">
@@ -78,21 +80,21 @@ export function nav(user, pathname = '') {
   const avatarColors = ['#1565c0','#2e7d32','#6a1b9a','#c62828','#e65100','#00695c']
   const avatarBg = avatarColors[(user?.name?.charCodeAt(0) || 0) % avatarColors.length]
 
-  return `<nav id="main-nav" style="background:#04141f;height:50px;display:flex;align-items:center;padding:0;position:relative;z-index:100" ${role.navigation} ${aria.label('Main navigation')}>
-  <div style="display:flex;align-items:center;flex:1;gap:1rem;padding:0 1rem">
-    <a href="/" style="display:flex;align-items:center;gap:0.5rem;text-decoration:none" ${aria.label('Home')}>
+  return `<nav id="main-nav" style="background:#04141f;height:50px;display:flex;align-items:center;padding:0;position:relative;z-index:100;overflow:hidden" ${role.navigation} ${aria.label('Main navigation')}>
+  <div style="display:flex;align-items:center;flex:1;gap:1rem;padding:0 1rem;min-width:0">
+    <a href="/" style="display:flex;align-items:center;gap:0.5rem;text-decoration:none;flex-shrink:0" ${aria.label('Home')}>
       ${gearSvg}
       <span style="color:#f8f9fa;font-size:0.8rem;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;margin-left:0.25rem">MOONLANDING</span>
     </a>
   </div>
-  <div class="nav-links-desktop" style="display:flex;align-items:center;gap:0.5rem">
+  <div class="nav-links-desktop" style="align-items:center;gap:0.5rem;flex-shrink:0">
     ${logoutLink}${engLink}${clientLink}${settingsLink}${reviewLink}
   </div>
-  <div style="display:flex;align-items:center;gap:0.75rem;margin-left:1rem;padding-right:1rem">
-    <div style="display:flex;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;border-radius:50%;background:${avatarBg};color:#fff;font-weight:700;font-size:0.82rem;cursor:pointer;flex-shrink:0" id="user-avatar" onclick="toggleUserMenu(event)" title="${user?.name || 'User'}" aria-label="User menu" role="button" tabindex="0">
+  <div style="display:flex;align-items:center;gap:0.75rem;margin-left:1rem;padding-right:1rem;flex-shrink:0">
+    <div style="display:flex;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;border-radius:50%;background:${avatarBg};color:#fff;font-weight:700;font-size:0.82rem;cursor:pointer;flex-shrink:0;min-width:44px;min-height:44px" id="user-avatar" onclick="toggleUserMenu(event)" title="${user?.name || 'User'}" aria-label="User menu" role="button" tabindex="0">
       ${avatarInitial}
     </div>
-    <button class="nav-hamburger" onclick="toggleMobileNav()" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-drawer" style="display:none;background:none;border:none;color:#ced4da;cursor:pointer;padding:4px;border-radius:4px">
+    <button class="nav-hamburger" onclick="toggleMobileNav()" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-drawer" style="background:none;border:none;color:#ced4da;cursor:pointer;padding:8px;border-radius:4px;align-items:center;justify-content:center;min-width:44px;min-height:44px">
       ${hamburgerSvg}
     </button>
   </div>
@@ -108,24 +110,24 @@ export function nav(user, pathname = '') {
     </a>
   </div>
 </nav>
-<div id="mobile-nav-drawer" style="display:none;position:fixed;inset:0;z-index:200" aria-hidden="true">
-  <div onclick="closeMobileNav()" style="position:absolute;inset:0;background:rgba(0,0,0,0.5)"></div>
-  <div style="position:absolute;left:0;top:0;bottom:0;width:260px;background:#04141f;padding:0;display:flex;flex-direction:column">
+<div id="mobile-nav-drawer" style="display:none;position:fixed;inset:0;z-index:200;pointer-events:none" aria-hidden="true">
+  <div onclick="closeMobileNav()" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);pointer-events:auto"></div>
+  <div style="position:absolute;left:0;top:0;bottom:0;width:280px;max-width:80vw;background:#04141f;padding:0;display:flex;flex-direction:column;transform:translateX(-100%);transition:transform 0.25s ease" id="mobile-nav-panel">
     <div style="padding:1rem;border-bottom:1px solid #0d4d6d;display:flex;align-items:center;justify-content:space-between">
       <span style="color:#f8f9fa;font-weight:700;letter-spacing:1px;font-size:0.85rem">MOONLANDING</span>
-      <button onclick="closeMobileNav()" style="background:none;border:none;color:#ced4da;cursor:pointer;font-size:1.2rem;padding:4px" aria-label="Close menu">&times;</button>
+      <button onclick="closeMobileNav()" style="background:none;border:none;color:#ced4da;cursor:pointer;font-size:1.5rem;padding:8px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center" aria-label="Close menu">&times;</button>
     </div>
     <nav style="flex:1;padding:1rem 0;overflow-y:auto">
-      <a href="/" style="display:block;padding:12px 20px;color:#ced4da;text-decoration:none;font-size:0.82rem;font-weight:600;text-transform:uppercase;letter-spacing:1px" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">Dashboard</a>
-      ${!isClerk(user) ? `<a href="/engagements" style="display:block;padding:12px 20px;color:#ced4da;text-decoration:none;font-size:0.82rem;font-weight:600;text-transform:uppercase;letter-spacing:1px" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">Engagements</a>` : ''}
-      ${!isClerk(user) ? `<a href="/client" style="display:block;padding:12px 20px;color:#ced4da;text-decoration:none;font-size:0.82rem;font-weight:600;text-transform:uppercase;letter-spacing:1px" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">Clients</a>` : ''}
-      <a href="/review" style="display:block;padding:12px 20px;color:#ced4da;text-decoration:none;font-size:0.82rem;font-weight:600;text-transform:uppercase;letter-spacing:1px" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">My Review</a>
-      ${isPartner(user) ? `<a href="/admin/settings" style="display:block;padding:12px 20px;color:#ced4da;text-decoration:none;font-size:0.82rem;font-weight:600;text-transform:uppercase;letter-spacing:1px" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">Settings</a>` : ''}
+      <a href="/" style="display:block;padding:14px 20px;color:#ced4da;text-decoration:none;font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;min-height:48px;display:flex;align-items:center" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">Dashboard</a>
+      ${!isClerk(user) ? `<a href="/engagements" style="display:block;padding:14px 20px;color:#ced4da;text-decoration:none;font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;min-height:48px;display:flex;align-items:center" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">Engagements</a>` : ''}
+      ${!isClerk(user) ? `<a href="/client" style="display:block;padding:14px 20px;color:#ced4da;text-decoration:none;font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;min-height:48px;display:flex;align-items:center" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">Clients</a>` : ''}
+      <a href="/review" style="display:block;padding:14px 20px;color:#ced4da;text-decoration:none;font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;min-height:48px;display:flex;align-items:center" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">My Review</a>
+      ${isPartner(user) ? `<a href="/admin/settings" style="display:block;padding:14px 20px;color:#ced4da;text-decoration:none;font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;min-height:48px;display:flex;align-items:center" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">Settings</a>` : ''}
     </nav>
     <div style="padding:1rem;border-top:1px solid #0d4d6d">
-      <div style="color:#888;font-size:0.75rem;margin-bottom:4px">${user?.name || ''}</div>
-      <div style="color:#666;font-size:0.7rem;margin-bottom:12px">${user?.email || ''}</div>
-      <a href="/api/auth/logout" style="display:block;padding:8px 12px;background:rgba(255,255,255,0.08);color:#ced4da;text-decoration:none;font-size:0.78rem;font-weight:600;border-radius:4px;text-align:center;text-transform:uppercase;letter-spacing:1px">Logout</a>
+      <div style="color:#888;font-size:0.875rem;margin-bottom:4px;font-weight:600">${user?.name || ''}</div>
+      <div style="color:#666;font-size:0.75rem;margin-bottom:12px;word-break:break-all">${user?.email || ''}</div>
+      <a href="/api/auth/logout" style="display:block;padding:12px 16px;background:rgba(255,255,255,0.08);color:#ced4da;text-decoration:none;font-size:0.875rem;font-weight:600;border-radius:6px;text-align:center;text-transform:uppercase;letter-spacing:1px;min-height:44px;display:flex;align-items:center;justify-content:center">Logout</a>
     </div>
   </div>
 </div>
@@ -141,8 +143,8 @@ window.loadingBtn=function(btn,loading,label){if(!btn)return;btn.disabled=loadin
 window.showToast=window.showToast||function(m,t){var c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';document.body.appendChild(c)}var d=document.createElement('div');d.className='toast toast-'+(t||'info');d.textContent=m;c.appendChild(d);setTimeout(function(){d.style.opacity='0';setTimeout(function(){d.remove()},300)},3000)}
 function toggleUserMenu(e){e.stopPropagation();var d=document.getElementById('user-dropdown');d.style.display=d.style.display==='none'?'block':'none'}
 document.addEventListener('click',function(e){var d=document.getElementById('user-dropdown');if(d&&!d.contains(e.target)&&e.target.id!=='user-avatar'){d.style.display='none'}})
-function toggleMobileNav(){var btn=document.querySelector('.nav-hamburger');var open=btn.getAttribute('aria-expanded')==='true';btn.setAttribute('aria-expanded',String(!open));var d=document.getElementById('mobile-nav-drawer');d.style.display=open?'none':'block';d.setAttribute('aria-hidden',String(open))}
-function closeMobileNav(){var btn=document.querySelector('.nav-hamburger');if(btn)btn.setAttribute('aria-expanded','false');var d=document.getElementById('mobile-nav-drawer');if(d){d.style.display='none';d.setAttribute('aria-hidden','true')}}
+function toggleMobileNav(){var btn=document.querySelector('.nav-hamburger');var open=btn.getAttribute('aria-expanded')==='true';btn.setAttribute('aria-expanded',String(!open));var drawer=document.getElementById('mobile-nav-drawer');var panel=document.getElementById('mobile-nav-panel');drawer.style.display=open?'none':'block';drawer.setAttribute('aria-hidden',String(open));panel.style.transform=open?'translateX(-100%)':'translateX(0)'}
+function closeMobileNav(){var btn=document.querySelector('.nav-hamburger');if(btn)btn.setAttribute('aria-expanded','false');var drawer=document.getElementById('mobile-nav-drawer');var panel=document.getElementById('mobile-nav-panel');if(drawer){drawer.style.display='none';drawer.setAttribute('aria-hidden','true');if(panel)panel.style.transform='translateX(-100%)'}}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMobileNav()})
 ;(function(){var WARN_MS=25*60*1000,LOGOUT_MS=30*60*1000,last=Date.now(),warnTimer=null,logoutTimer=null,countdownId=null;
 function reset(){last=Date.now();hideWarning();clearTimers();schedule()}

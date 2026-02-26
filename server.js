@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import { register } from 'module';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const PORT = 3000;
+const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // Load .env file manually
 function loadEnv(filePath) {
@@ -435,8 +435,15 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (!res.headersSent) {
-      res.writeHead(404);
-      res.end(JSON.stringify({ error: 'Not found' }));
+      if (pathname.startsWith('/api/')) {
+        res.setHeader('Content-Type', 'application/json; charset=utf-8');
+        res.writeHead(404);
+        res.end(JSON.stringify({ error: 'Not found' }));
+      } else {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.writeHead(404);
+        res.end('<!DOCTYPE html><html><body><h1>404 - Page Not Found</h1><p><a href="/">Go home</a></p></body></html>');
+      }
       trackResponse(req, 404, startTime);
     }
   } catch (err) {

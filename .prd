@@ -1,0 +1,73 @@
+# Mobile Friendliness & Broken Links Audit
+
+## Context
+- App: moonlanding, running at http://localhost:3001
+- Login: admin@coas.co.za / Test123456
+- Goal: Test every screen for mobile friendliness, fix CSS/layout issues, fix broken routes
+
+## All Pages to Test
+1. /login
+2. /dashboard (/)
+3. /engagements
+4. /engagements/:id (detail)
+5. /client
+6. /client/:id (dashboard)
+7. /client/:id/users
+8. /client/:id/progress
+9. /rfi
+10. /rfi/:id (detail)
+11. /reviews
+12. /reviews/active
+13. /reviews/priority
+14. /reviews/history
+15. /reviews/archive
+16. /reviews/analytics
+17. /reviews/compare
+18. /reviews/tenders
+19. /reviews/batch
+20. /review/:id
+21. /review/:id/pdf
+22. /review/:id/highlights
+23. /review/:id/resolution
+24. /review/:id/edit
+25. /search
+26. /admin/settings
+27. /admin/settings/users
+28. /admin/settings/teams
+29. /admin/settings/templates
+30. /admin/settings/notifications
+31. /admin/settings/checklists
+32. /admin/settings/integrations
+33. /admin/settings/system
+34. /admin/audit
+35. /admin/health
+36. /admin/jobs
+37. /admin/build-logs
+38. /engagement/:id/letter
+39. /password-reset
+
+## Work Items (dependency graph)
+
+### Wave 1 - Parallel (independent)
+- [W1A] Browser test: Login + Dashboard + Engagements pages (mobile 375px, 768px, 1024px)
+- [W1B] Browser test: Client + RFI pages (mobile 375px, 768px, 1024px)
+- [W1C] Browser test: Reviews pages (mobile 375px, 768px, 1024px)
+
+### Wave 2 - After Wave 1 (needs findings)
+- [W2A] Browser test: Admin pages (mobile 375px, 768px)
+- [W2B] Browser test: Review detail pages (pdf, highlights, resolution, edit)
+- [W2C] Fix broken links/routes identified in Wave 1
+
+### Wave 3 - After Wave 2 (needs fixes from W2)
+- [W3A] Fix CSS/layout mobile issues found in all tests
+- [W3B] Fix any broken routes/null returns
+
+### Wave 4 - Verification
+- [W4A] Re-test all fixed pages to confirm mobile friendliness
+- [W4B] Commit all changes
+
+## Screens: mobile widths to test
+- 375px (iPhone SE / small phone)
+- 390px (iPhone 14)
+- 768px (iPad portrait)
+- 1024px (iPad landscape / small laptop)
