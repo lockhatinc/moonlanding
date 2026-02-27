@@ -2,7 +2,7 @@ import { statusLabel } from '@/ui/renderer.js';
 
 export function rfiSectionCrudPanel(engagementId, sections = []) {
   const rows = sections.map((s, i) => `<div class="rfi-section-row" draggable="true" data-id="${s.id}" data-idx="${i}" ondragstart="rfiDragStart(event)" ondragover="rfiDragOver(event)" ondrop="rfiDrop(event)"><span class="rfi-section-handle">&#9776;</span><span class="rfi-section-name">${s.name || 'Untitled'}</span><span class="badge-status">${s.question_count || 0} Q</span><div class="flex gap-1"><button class="btn btn-xs btn-ghost" onclick="rfiEditSection('${s.id}','${(s.name || '').replace(/'/g, "\\'")}')">Edit</button><button class="btn btn-xs btn-ghost btn-error" onclick="rfiDeleteSection('${s.id}')">Del</button></div></div>`).join('');
-  return `<div class="card-clean" style="margin-bottom:1rem"><div class="card-clean-body"><div class="flex justify-between items-center mb-3"><h3 style="font-size:0.875rem;font-weight:600">RFI Sections</h3><button class="btn btn-primary btn-sm" onclick="rfiAddSection()">Add Section</button></div><div id="rfi-sections-list">${rows || '<div class="text-gray-500 text-sm text-center py-3">No sections yet</div>'}</div></div></div>
+  return `<div class="card-clean" style="margin-bottom:1rem"><div class="card-clean-body"><div class="flex justify-between items-center mb-3"><h3 style="font-size:0.875rem;font-weight:600">RFI Sections</h3><button class="btn btn-primary btn-sm" data-action="rfiAddSection">Add Section</button></div><div id="rfi-sections-list">${rows || '<div class="text-gray-500 text-sm text-center py-3">No sections yet</div>'}</div></div></div>
   <script>
   var rfiEngId='${engagementId}';var dragSrc=null;
   window.rfiDragStart=function(e){dragSrc=e.target.closest('.rfi-section-row');e.dataTransfer.effectAllowed='move'};
@@ -14,9 +14,9 @@ export function rfiSectionCrudPanel(engagementId, sections = []) {
   </script>`;
 }
 export function rfiQuestionEditDialog(questionId) {
-  return `<div id="rfi-q-edit" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-q-edit-title" aria-hidden="true">
+  return `<div id="rfi-q-edit" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-q-edit-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:640px">
-      <div class="dialog-header"><span class="dialog-title" id="rfi-q-edit-title">Edit Question</span><button class="dialog-close" onclick="document.getElementById('rfi-q-edit').style.display='none'" aria-label="Close dialog">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="rfi-q-edit-title">Edit Question</span><button class="dialog-close" data-dialog-close="rfi-q-edit" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div class="modal-form-group"><label for="rqe-text">Question Text</label><textarea id="rqe-text" class="textarea textarea-bordered w-full" rows="4"></textarea></div>
         <div class="grid grid-cols-2 gap-4">
@@ -26,7 +26,7 @@ export function rfiQuestionEditDialog(questionId) {
         <div class="modal-form-group"><label for="rqe-assign">Assigned To</label><select id="rqe-assign" class="select select-bordered w-full"><option value="">Unassigned</option></select></div>
         <div class="modal-form-group"><label class="flex items-center gap-2"><input type="checkbox" id="rqe-required" class="checkbox" checked/><span class="text-sm">Required</span></label></div>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('rfi-q-edit').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="rqeSave()">Save</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="rfi-q-edit">Cancel</button><button class="btn btn-primary btn-sm" data-action="rqeSave">Save</button></div>
     </div></div>
   <script>
   var rqeId=null;
@@ -35,10 +35,10 @@ export function rfiQuestionEditDialog(questionId) {
   </script>`;
 }
 export function rfiClientUserAssignment(rfiId) {
-  return `<div id="rfi-assign-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-assign-dialog-title" aria-hidden="true">
-    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rfi-assign-dialog-title">Assign Client User</span><button class="dialog-close" onclick="document.getElementById('rfi-assign-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
+  return `<div id="rfi-assign-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-assign-dialog-title" aria-hidden="true">
+    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rfi-assign-dialog-title">Assign Client User</span><button class="dialog-close" data-dialog-close="rfi-assign-dialog" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body"><div class="modal-form-group"><label for="rca-question">Question</label><select id="rca-question" class="select select-bordered w-full"></select></div><div class="modal-form-group"><label for="rca-user">Client User</label><select id="rca-user" class="select select-bordered w-full"></select></div></div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('rfi-assign-dialog').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="rcaAssign()">Assign</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="rfi-assign-dialog">Cancel</button><button class="btn btn-primary btn-sm" data-action="rcaAssign">Assign</button></div>
     </div></div>
   <script>
   window.openRfiAssign=function(){document.getElementById('rfi-assign-dialog').style.display='flex';Promise.all([fetch('/api/rfi_question?rfi_id=${rfiId}').then(function(r){return r.json()}),fetch('/api/user?role=client_user').then(function(r){return r.json()})]).then(function(r){var qs=(r[0].data||r[0]||[]);var us=(r[1].data||r[1]||[]);var qsel=document.getElementById('rca-question');while(qsel.options.length>0)qsel.remove(0);qs.forEach(function(q){var o=document.createElement('option');o.value=q.id;o.textContent=q.question_text||q.question||q.id;qsel.appendChild(o)});var usel=document.getElementById('rca-user');while(usel.options.length>0)usel.remove(0);us.forEach(function(u){var o=document.createElement('option');o.value=u.id;o.textContent=u.name||u.email||u.id;usel.appendChild(o)})}).catch(function(){})};
@@ -46,10 +46,10 @@ export function rfiClientUserAssignment(rfiId) {
   </script>`;
 }
 export function rfiBulkAssignDialog(rfiId) {
-  return `<div id="rfi-bulk-assign" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-bulk-assign-title" aria-hidden="true">
-    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rfi-bulk-assign-title">Bulk Assign Client Users</span><button class="dialog-close" onclick="document.getElementById('rfi-bulk-assign').style.display='none'" aria-label="Close dialog">&times;</button></div>
+  return `<div id="rfi-bulk-assign" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-bulk-assign-title" aria-hidden="true">
+    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rfi-bulk-assign-title">Bulk Assign Client Users</span><button class="dialog-close" data-dialog-close="rfi-bulk-assign" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body"><div class="modal-form-group"><label for="rba-user">Client User</label><select id="rba-user" class="select select-bordered w-full"></select></div><div class="modal-form-group"><label class="flex items-center gap-2"><input type="checkbox" id="rba-unassigned" class="checkbox" checked/><span class="text-sm">Unassigned questions only</span></label></div><div id="rba-preview" class="text-sm text-gray-500 mt-2"></div></div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('rfi-bulk-assign').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="rbaBulk()">Assign All</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="rfi-bulk-assign">Cancel</button><button class="btn btn-primary btn-sm" data-action="rbaBulk">Assign All</button></div>
     </div></div>
   <script>
   window.openBulkAssign=function(){document.getElementById('rfi-bulk-assign').style.display='flex';fetch('/api/user?role=client_user').then(function(r){return r.json()}).then(function(d){var us=d.data||d||[];var sel=document.getElementById('rba-user');while(sel.options.length>0)sel.remove(0);us.forEach(function(u){var o=document.createElement('option');o.value=u.id;o.textContent=u.name||u.email;sel.appendChild(o)})}).catch(function(){});fetch('/api/rfi_question?rfi_id=${rfiId}').then(function(r){return r.json()}).then(function(d){var qs=d.data||d||[];var unassigned=qs.filter(function(q){return!q.assigned_to}).length;document.getElementById('rba-preview').textContent=unassigned+' unassigned of '+qs.length+' total questions'}).catch(function(){})};
@@ -57,10 +57,10 @@ export function rfiBulkAssignDialog(rfiId) {
   </script>`;
 }
 export function rfiBulkDeadlineDialog(rfiId) {
-  return `<div id="rfi-bulk-deadline" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-bulk-deadline-title" aria-hidden="true">
-    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rfi-bulk-deadline-title">Set Bulk Deadline</span><button class="dialog-close" onclick="document.getElementById('rfi-bulk-deadline').style.display='none'" aria-label="Close dialog">&times;</button></div>
+  return `<div id="rfi-bulk-deadline" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-bulk-deadline-title" aria-hidden="true">
+    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rfi-bulk-deadline-title">Set Bulk Deadline</span><button class="dialog-close" data-dialog-close="rfi-bulk-deadline" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body"><div class="modal-form-group"><label for="rbd-date">Deadline Date</label><input type="date"  id="rbd-date" class="input input-bordered w-full"/></div><div class="modal-form-group"><label class="flex items-center gap-2"><input type="checkbox" id="rbd-all" class="checkbox" checked/><span class="text-sm">Apply to all questions (including those with existing deadlines)</span></label></div></div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('rfi-bulk-deadline').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="rbdSet()">Set Deadline</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="rfi-bulk-deadline">Cancel</button><button class="btn btn-primary btn-sm" data-action="rbdSet">Set Deadline</button></div>
     </div></div>
   <script>
   window.openBulkDeadline=function(){document.getElementById('rfi-bulk-deadline').style.display='flex'};
@@ -68,11 +68,11 @@ export function rfiBulkDeadlineDialog(rfiId) {
   </script>`;
 }
 export function rfiAttachmentPreview() {
-  return `<div id="rfi-attach-preview" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-attach-preview-title" aria-hidden="true">
+  return `<div id="rfi-attach-preview" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-attach-preview-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:800px;max-height:90vh">
-      <div class="dialog-header"><span class="dialog-title" id="rfi-attach-preview-title">Attachment</span><button class="dialog-close" onclick="document.getElementById('rfi-attach-preview').style.display='none'" aria-label="Close dialog">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="rfi-attach-preview-title">Attachment</span><button class="dialog-close" data-dialog-close="rfi-attach-preview" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body" style="overflow:auto;max-height:70vh"><div id="rap-content" class="text-center"><div class="text-gray-500">Loading...</div></div></div>
-      <div class="dialog-footer"><a id="rap-download" href="#" download class="btn btn-primary btn-sm">Download</a><button class="btn btn-ghost btn-sm" onclick="document.getElementById('rfi-attach-preview').style.display='none'">Close</button></div>
+      <div class="dialog-footer"><a id="rap-download" href="#" download class="btn btn-primary btn-sm">Download</a><button class="btn btn-ghost btn-sm" data-dialog-close="rfi-attach-preview">Close</button></div>
     </div></div>
   <script>
   window.previewAttachment=function(url,name,type){document.getElementById('rfi-attach-preview').style.display='flex';document.getElementById('rfi-attach-preview-title').textContent=name||'Attachment';document.getElementById('rap-download').href=url;var c=document.getElementById('rap-content');if(type&&type.startsWith('image/')){c.innerHTML='<img src="'+url+'" style="max-width:100%;max-height:60vh" alt="'+name+'"/>'}else if(type==='application/pdf'){c.innerHTML='<iframe src="'+url+'" style="width:100%;height:60vh;border:none"></iframe>'}else{c.innerHTML='<div class="text-gray-500 py-8"><div style="font-size:3rem">&#128196;</div><div class="mt-2">'+name+'</div><div class="text-xs mt-1">Preview not available for this file type</div></div>'}};
@@ -81,14 +81,14 @@ export function rfiAttachmentPreview() {
   </script>`;
 }
 export function rfiReportGeneration(rfiId, rfiName) {
-  return `<div id="rfi-report-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-report-dialog-title" aria-hidden="true">
-    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rfi-report-dialog-title">Generate RFI Report</span><button class="dialog-close" onclick="document.getElementById('rfi-report-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
+  return `<div id="rfi-report-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-report-dialog-title" aria-hidden="true">
+    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rfi-report-dialog-title">Generate RFI Report</span><button class="dialog-close" data-dialog-close="rfi-report-dialog" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div class="modal-form-group"><label for="rrg-type">Report Type</label><select id="rrg-type" class="select select-bordered w-full"><option value="summary">Summary Report</option><option value="detailed">Detailed Report (with responses)</option><option value="status">Status Report</option><option value="overdue">Overdue Items Report</option></select></div>
         <div class="modal-form-group"><label for="rrg-format">Format</label><select id="rrg-format" class="select select-bordered w-full"><option value="pdf">PDF</option><option value="xlsx">Excel</option><option value="csv">CSV</option></select></div>
         <div class="modal-form-group"><label class="flex items-center gap-2"><input type="checkbox" id="rrg-attachments" class="checkbox"/><span class="text-sm">Include attachments</span></label></div>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('rfi-report-dialog').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="rrgGenerate()">Generate</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="rfi-report-dialog">Cancel</button><button class="btn btn-primary btn-sm" data-action="rrgGenerate">Generate</button></div>
     </div></div>
   <script>
   window.openRfiReport=function(){document.getElementById('rfi-report-dialog').style.display='flex'};
@@ -96,15 +96,15 @@ export function rfiReportGeneration(rfiId, rfiName) {
   </script>`;
 }
 export function rfiEmailRemindersDialog(rfiId) {
-  return `<div id="rfi-reminders-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-reminders-dialog-title" aria-hidden="true">
-    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rfi-reminders-dialog-title">Email Reminders</span><button class="dialog-close" onclick="document.getElementById('rfi-reminders-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
+  return `<div id="rfi-reminders-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-reminders-dialog-title" aria-hidden="true">
+    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rfi-reminders-dialog-title">Email Reminders</span><button class="dialog-close" data-dialog-close="rfi-reminders-dialog" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div class="modal-form-group"><label class="flex items-center gap-2"><input type="checkbox" id="rre-auto" class="checkbox" checked/><span class="text-sm">Auto-send reminders for overdue items</span></label></div>
         <div class="modal-form-group"><label for="rre-freq">Reminder Frequency</label><select id="rre-freq" class="select select-bordered w-full"><option value="daily">Daily</option><option value="weekly" selected>Weekly</option><option value="biweekly">Bi-weekly</option></select></div>
         <div class="modal-form-group"><label>Include in reminder</label><div class="flex flex-col gap-2"><label class="flex items-center gap-2"><input type="checkbox" class="checkbox rre-inc" value="overdue" checked/><span class="text-sm">Overdue questions</span></label><label class="flex items-center gap-2"><input type="checkbox" class="checkbox rre-inc" value="upcoming" checked/><span class="text-sm">Upcoming deadlines (3 days)</span></label><label class="flex items-center gap-2"><input type="checkbox" class="checkbox rre-inc" value="unanswered"/><span class="text-sm">All unanswered questions</span></label></div></div>
-        <button class="btn btn-outline btn-sm mt-2" onclick="rreSendNow()">Send Reminder Now</button>
+        <button class="btn btn-outline btn-sm mt-2" data-action="rreSendNow">Send Reminder Now</button>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('rfi-reminders-dialog').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="rreSave()">Save Settings</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="rfi-reminders-dialog">Cancel</button><button class="btn btn-primary btn-sm" data-action="rreSave">Save Settings</button></div>
     </div></div>
   <script>
   window.openRfiReminders=function(){document.getElementById('rfi-reminders-dialog').style.display='flex'};
@@ -142,8 +142,8 @@ export function rfiUnreadBadges(counts = {}) {
   return { messages: badge('messages', 'Messages'), questions: badge('questions', 'Questions'), responses: badge('responses', 'Responses') };
 }
 export function rfiItemDialog() {
-  return `<div id="rfi-item-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-item-dialog-title" aria-hidden="true">
-    <div class="dialog-panel" style="max-width:640px"><div class="dialog-header"><span class="dialog-title" id="rfi-item-dialog-title">RFI Item</span><button class="dialog-close" onclick="document.getElementById('rfi-item-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
+  return `<div id="rfi-item-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-item-dialog-title" aria-hidden="true">
+    <div class="dialog-panel" style="max-width:640px"><div class="dialog-header"><span class="dialog-title" id="rfi-item-dialog-title">RFI Item</span><button class="dialog-close" data-dialog-close="rfi-item-dialog" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div class="modal-form-group"><label for="rid-title">Title</label><input id="rid-title" class="input input-bordered w-full"/></div>
         <div class="modal-form-group"><label for="rid-desc">Description</label><textarea id="rid-desc" class="textarea textarea-bordered w-full" rows="3"></textarea></div>
@@ -152,7 +152,7 @@ export function rfiItemDialog() {
           <div class="modal-form-group"><label for="rid-due">Due Date</label><input type="date"  id="rid-due" class="input input-bordered w-full"/></div>
         </div>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('rfi-item-dialog').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="ridSave()">Save</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="rfi-item-dialog">Cancel</button><button class="btn btn-primary btn-sm" data-action="ridSave">Save</button></div>
     </div></div>
   <script>
   var ridId=null;var ridRfiId=null;
@@ -161,13 +161,13 @@ export function rfiItemDialog() {
   </script>`;
 }
 export function rfiAttachDialog(rfiId) {
-  return `<div id="rfi-attach-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-attach-dialog-title" aria-hidden="true">
-    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rfi-attach-dialog-title">Attach File to RFI</span><button class="dialog-close" onclick="document.getElementById('rfi-attach-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
+  return `<div id="rfi-attach-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-attach-dialog-title" aria-hidden="true">
+    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rfi-attach-dialog-title">Attach File to RFI</span><button class="dialog-close" data-dialog-close="rfi-attach-dialog" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div class="modal-form-group"><label for="rad-file">File</label><input type="file"  id="rad-file" class="file-input file-input-bordered w-full"/></div>
         <div class="modal-form-group"><label for="rad-desc">Description</label><input id="rad-desc" class="input input-bordered w-full" placeholder="File description (optional)"/></div>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('rfi-attach-dialog').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="radUpload()">Upload</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="rfi-attach-dialog">Cancel</button><button class="btn btn-primary btn-sm" data-action="radUpload">Upload</button></div>
     </div></div>
   <script>
   window.openRfiAttach=function(){document.getElementById('rfi-attach-dialog').style.display='flex'};
@@ -175,10 +175,10 @@ export function rfiAttachDialog(rfiId) {
   </script>`;
 }
 export function rfiAttachQuestionDialog(questionId) {
-  return `<div id="rfi-aq-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-aq-dialog-title" aria-hidden="true">
-    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rfi-aq-dialog-title">Attach File to Question</span><button class="dialog-close" onclick="document.getElementById('rfi-aq-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
+  return `<div id="rfi-aq-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rfi-aq-dialog-title" aria-hidden="true">
+    <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rfi-aq-dialog-title">Attach File to Question</span><button class="dialog-close" data-dialog-close="rfi-aq-dialog" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body"><div class="modal-form-group"><label for="raq-file">File</label><input type="file"  id="raq-file" class="file-input file-input-bordered w-full"/></div><div class="modal-form-group"><label for="raq-note">Note</label><input id="raq-note" class="input input-bordered w-full" placeholder="Optional note"/></div></div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('rfi-aq-dialog').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="raqUpload()">Upload</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="rfi-aq-dialog">Cancel</button><button class="btn btn-primary btn-sm" data-action="raqUpload">Upload</button></div>
     </div></div>
   <script>
   var raqQid=null;

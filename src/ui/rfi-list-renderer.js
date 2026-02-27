@@ -29,7 +29,7 @@ export function renderRfiList(user, rfis = [], engagements = []) {
     const name = esc(r.display_name || r.name || r.title || 'RFI '+r.id.slice(0,6));
     const engLink = eng.name ? `<a href="/engagement/${eng.id}" onclick="event.stopPropagation()" style="color:var(--color-info)">${esc(eng.name)}</a>` : '<span style="color:var(--color-text-light)">—</span>';
     const created = r.created_at ? new Date(typeof r.created_at==='number'?r.created_at*1000:r.created_at).toLocaleDateString('en-ZA') : '—';
-    return `<tr data-row data-status="${s}" onclick="window.location='/rfi/${r.id}'" style="cursor:pointer">
+    return `<tr data-row data-status="${s}" data-navigate="/rfi/${r.id}" style="cursor:pointer">
       <td data-col="name"><strong>${name}</strong></td>
       <td data-col="engagement">${engLink}</td>
       <td data-col="status">${statusPill(r.status)}</td>

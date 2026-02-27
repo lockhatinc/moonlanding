@@ -31,7 +31,7 @@ function statusBadge(status) {
 }
 
 function reviewRow(r) {
-  return `<tr class="review-row" data-status="${r.status || ''}" data-flags="${r.flags_count || 0}" data-highlights="${r.highlights_count || 0}" data-archived="${r.archived || 0}" data-priority="${(r.is_priority || r.flagged || (r.flags_count > 0)) ? 1 : 0}" data-stage="${r.stage || r.status || ''}" onclick="window.location='/review/${r.id}'" oncontextmenu="showCtxMenu(event,'${r.id}')" style="cursor:pointer">
+  return `<tr class="review-row" data-status="${r.status || ''}" data-flags="${r.flags_count || 0}" data-highlights="${r.highlights_count || 0}" data-archived="${r.archived || 0}" data-priority="${(r.is_priority || r.flagged || (r.flags_count > 0)) ? 1 : 0}" data-stage="${r.stage || r.status || ''}" data-navigate="/review/${r.id}" oncontextmenu="showCtxMenu(event,'${r.id}')" style="cursor:pointer">
     <td style="font-weight:500;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name || r.title || 'Untitled'}</td>
     <td style="font-size:13px;color:var(--color-text-muted)">${r.engagement_name || r.engagement_id_display || '-'}</td>
     <td>${statusBadge(r.status)}</td>
@@ -148,7 +148,7 @@ export function reviewGroupedList(reviews, groupBy) {
           <span class="pill pill-neutral">${items.length}</span>
         </div>
         <div class="review-group-items">
-          ${items.map(r => `<div class="list-item-row" style="padding:8px 0" onclick="window.location='/review/${r.id}'">
+          ${items.map(r => `<div class="list-item-row" style="padding:8px 0" data-navigate="/review/${r.id}">
             <span class="list-item-name">${r.name || r.title || 'Untitled'}</span>
             ${r.status ? statusBadge(r.status) : ''}
           </div>`).join('')}
@@ -256,7 +256,7 @@ export function renderMwrHome(user, stats) {
   </nav>`;
 
   function listItem(r) {
-    return `<div class="list-item-row" onclick="window.location='/review/${r.id}'">
+    return `<div class="list-item-row" data-navigate="/review/${r.id}">
       <span class="list-item-name">${r.name || 'Untitled'}</span>
       <div class="list-item-meta">${statusBadge(r.status)}<span style="font-size:12px;color:var(--color-text-light)">${fmtDate(r.updated_at || r.created_at)}</span></div>
     </div>`;

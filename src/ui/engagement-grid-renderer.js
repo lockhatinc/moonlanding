@@ -10,7 +10,7 @@ function engRow(e) {
   const team = esc(e.team_name || e.team_id_display || e.team_id || '-');
   const deadline = e.deadline ? new Date(e.deadline).toLocaleDateString() : '-';
   const stageLbl = STAGE_CONFIG.find(s => s.key === e.stage)?.label || (e.stage || '-');
-  return `<tr data-row onclick="location.href='/engagement/${esc(e.id)}'" style="cursor:pointer">
+  return `<tr data-row data-navigate="/engagement/${esc(e.id)}" style="cursor:pointer">
     <td data-col="name"><strong>${name}</strong></td>
     <td data-col="client">${client}</td>
     <td data-col="type">${type}</td>

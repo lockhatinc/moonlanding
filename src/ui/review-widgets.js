@@ -37,14 +37,14 @@ export function sidebarReviewDetails(review) {
 }
 
 export function archiveReviewDialog() {
-  return `<div id="archive-review-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="archive-review-dialog-title" aria-hidden="true">
+  return `<div id="archive-review-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="archive-review-dialog-title" aria-hidden="true">
     <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title" id="archive-review-dialog-title">Archive Review</span><button class="dialog-close" onclick="document.getElementById('archive-review-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="archive-review-dialog-title">Archive Review</span><button class="dialog-close" data-dialog-close="archive-review-dialog" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div class="archive-ctx">This action will archive the review. Archived reviews are hidden from active lists but can be restored.</div>
         <div class="modal-form-group"><label class="form-label" for="ard-confirm">Type ARCHIVE to confirm</label><input type="text"  id="ard-confirm" class="archive-type-input" placeholder="Type ARCHIVE"/></div>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('archive-review-dialog').style.display='none'">Cancel</button><button class="btn btn-error btn-sm" id="ard-btn" onclick="ardConfirm()">Archive</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="archive-review-dialog">Cancel</button><button class="btn btn-error btn-sm" id="ard-btn" data-action="ardConfirm">Archive</button></div>
     </div></div>
   <script>${TOAST_SCRIPT}
   window._ardId=null;
@@ -73,14 +73,14 @@ export function reviewPrivateToggle(reviewId, isPrivate) {
 }
 
 export function markAllHighlightsResolved(reviewId, unresolvedCount = 0) {
-  return `<div id="bulk-resolve-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="bulk-resolve-dialog-title" aria-hidden="true">
+  return `<div id="bulk-resolve-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="bulk-resolve-dialog-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:380px">
-      <div class="dialog-header"><span class="dialog-title" id="bulk-resolve-dialog-title">Resolve All Highlights</span><button class="dialog-close" onclick="document.getElementById('bulk-resolve-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="bulk-resolve-dialog-title">Resolve All Highlights</span><button class="dialog-close" data-dialog-close="bulk-resolve-dialog" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div class="bulk-resolve-count" id="brc-count">${unresolvedCount}</div>
         <div class="bulk-resolve-label">unresolved highlights will be marked as resolved</div>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('bulk-resolve-dialog').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="bulkResolve('${reviewId}')">Resolve All</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="bulk-resolve-dialog">Cancel</button><button class="btn btn-primary btn-sm" onclick="bulkResolve('${reviewId}')">Resolve All</button></div>
     </div></div>
   <script>${TOAST_SCRIPT}
   window.showBulkResolve=function(reviewId,count){document.getElementById('brc-count').textContent=count;document.getElementById('bulk-resolve-dialog').style.display='flex'};

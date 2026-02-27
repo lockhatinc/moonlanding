@@ -18,15 +18,15 @@ export function stageTransitionDialog(engId, currentStage) {
   const opts = STAGE_CONFIG.map(s =>
     `<option value="${s.key}" ${s.key === currentStage ? 'selected' : ''}>${s.label}</option>`
   ).join('');
-  return `<div id="stage-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-    <div class="modal-overlay" onclick="document.getElementById('stage-dialog').style.display='none'"></div>
+  return `<div id="stage-dialog" class="modal" style="display:none" data-dialog-close-overlay="true">
+    <div class="modal-overlay" data-dialog-close="stage-dialog"></div>
     <div class="modal-content rounded-box max-w-md p-6">
       <h3 class="text-lg font-semibold mb-4">Move Engagement Stage</h3>
       <div class="form-group mb-3"><label class="label"><span class="label-text font-medium">New Stage</span></label><select id="stage-select" class="select select-solid max-w-full">${opts}</select></div>
       <div class="form-group mb-4"><label class="label"><span class="label-text font-medium">Reason (optional)</span></label><textarea id="stage-note" rows="3" placeholder="Reason for stage change..." class="textarea textarea-solid max-w-full"></textarea></div>
       <div class="modal-action mt-4">
         <button onclick="confirmStageTransition('${esc(engId)}')" class="btn btn-primary">Confirm</button>
-        <button onclick="document.getElementById('stage-dialog').style.display='none'" class="btn btn-ghost">Cancel</button>
+        <button data-dialog-close="stage-dialog" class="btn btn-ghost">Cancel</button>
       </div>
     </div>
   </div>`;

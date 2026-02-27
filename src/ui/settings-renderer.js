@@ -96,7 +96,7 @@ export function renderSettingsSystem(user, config = {}) {
 
 export function renderSettingsUsers(user, users = []) {
   const active = users.filter(u => (u.status||'active') === 'active').length;
-  const rows = users.map(u => `<tr class="hover cursor-pointer" data-row onclick="window.location='/user/${u.id}'">
+  const rows = users.map(u => `<tr class="hover cursor-pointer" data-row data-navigate="/user/${u.id}">
     <td data-col="name">
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">${(u.name||'?').charAt(0).toUpperCase()}</div>

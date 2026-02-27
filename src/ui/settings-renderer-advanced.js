@@ -8,7 +8,7 @@ const hdr = (title, addHref, addLabel) => `${settingsBack()}<div class="flex jus
 </div>`;
 const bc = (label) => [{ href: '/', label: 'Dashboard' }, { href: '/admin/settings', label: 'Settings' }, { label }];
 const editBtn = (href) => `<a href="${href}" onclick="event.stopPropagation()" class="btn btn-ghost btn-xs">Edit</a>`;
-const trClick = (url) => `class="hover cursor-pointer" onclick="window.location='${url}'"`;
+const trClick = (url) => `class="hover cursor-pointer" data-navigate="${url}"`;
 
 export function renderSettingsTemplates(user, templates = []) {
   const rows = templates.map(t => `<tr ${trClick('/review_template/'+t.id)}>
@@ -49,7 +49,7 @@ export function renderSettingsRecreation(user, logs = [], users = []) {
       <div class="form-group"><label class="label"><span class="label-text font-semibold">Start Date</span></label><input type="date" id="filter-start" class="input input-solid"/></div>
       <div class="form-group"><label class="label"><span class="label-text font-semibold">End Date</span></label><input type="date" id="filter-end" class="input input-solid"/></div>
       <div class="form-group"><label class="label"><span class="label-text font-semibold">User</span></label><select id="filter-user" class="select select-solid"><option value="">All Users</option>${userOpts}</select></div>
-      <button onclick="applyFilters()" class="btn btn-primary btn-sm">Filter</button>
+      <button data-action="applyFilters" class="btn btn-primary btn-sm">Filter</button>
     </div>
   </div></div>`;
   const content = `${settingsBack()}<h1 class="text-2xl font-bold mb-6">Recreation Logs</h1>${filters}${inlineTable(['Date','User','Action','Entity','Entity ID','Details'], rows, 'No recreation logs found')}`;

@@ -16,7 +16,7 @@ export function renderClientList(user, clients) {
     : '';
   const rows = (clients || []).map(c => {
     const sp = (c.status || 'active') === 'active' ? '<span class="pill pill-success">Active</span>' : '<span class="pill pill-neutral">Inactive</span>';
-    return `<tr data-row onclick="location.href='/client/${esc(c.id)}'" style="cursor:pointer">
+    return `<tr data-row data-navigate="/client/${esc(c.id)}" style="cursor:pointer">
       <td data-col="code" style="font-weight:600;color:var(--color-info)">${esc(c.client_code || c.code || '-')}</td>
       <td data-col="name"><strong>${esc(c.name || '-')}</strong></td>
       <td data-col="type">${esc(c.entity_type || c.industry || '-')}</td>
@@ -66,13 +66,13 @@ export function renderClientDashboard(user, client, stats = {}) {
    const mkStat = (icon, value, label) => `<div class="card-clean"><div class="card-clean-body" style="padding:${SPACING.md}"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${SPACING.xs}"><span style="font-size:1.4rem">${icon}</span><span style="font-size:1.8rem;font-weight:700">${value}</span></div><div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">${label}</div></div></div>`;
    const statsHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:${SPACING.md};margin-bottom:${SPACING.lg}">${mkStat('📁',stats.engagements||0,'Engagements')}${mkStat('📋',stats.activeRfis||0,'Active RFIs')}${mkStat('👤',stats.users||0,'Users')}${mkStat('📄',stats.reviews||0,'Reviews')}</div>`;
 
-  const engRows = (stats.engagementList || []).map(e => `<tr class="hover cursor-pointer" onclick="window.location='/engagement/${e.id}'"><td class="text-sm font-medium">${esc(e.name || '-')}</td><td>${statusBadge(e.stage)}</td><td>${statusBadge(e.status)}</td></tr>`).join('') || `<tr><td colspan="3" class="text-center py-10 text-base-content/40"><div class="flex flex-col items-center gap-2"><span class="text-3xl">📁</span><span class="text-sm">No engagements yet</span>${canEdit(user, 'client') ? `<a href="/engagement/new?client_id=${esc(c.id)}" class="btn btn-primary btn-xs mt-1">+ New Engagement</a>` : ''}</div></td></tr>`;
+  const engRows = (stats.engagementList || []).map(e => `<tr class="hover cursor-pointer" data-navigate="/engagement/${e.id}"><td class="text-sm font-medium">${esc(e.name || '-')}</td><td>${statusBadge(e.stage)}</td><td>${statusBadge(e.status)}</td></tr>`).join('') || `<tr><td colspan="3" class="text-center py-10 text-base-content/40"><div class="flex flex-col items-center gap-2"><span class="text-3xl">📁</span><span class="text-sm">No engagements yet</span>${canEdit(user, 'client') ? `<a href="/engagement/new?client_id=${esc(c.id)}" class="btn btn-primary btn-xs mt-1">+ New Engagement</a>` : ''}</div></td></tr>`;
 
   const canEditClient = canEdit(user, 'client');
   const actions = canEditClient ? `<div class="flex gap-2 flex-wrap">
     <a href="/client/${esc(c.id)}/edit" class="btn btn-primary btn-sm">Edit Client</a>
-    <button onclick="document.getElementById('risk-dialog').style.display='flex'" class="btn btn-ghost btn-sm border border-base-300">Risk Assessment</button>
-    <button onclick="document.getElementById('test-email-dialog').style.display='flex'" class="btn btn-ghost btn-sm border border-base-300">Test Email</button>
+    <button data-action="openDialog" data-params='{"dialogId":"risk-dialog"}' class="btn btn-ghost btn-sm border border-base-300">Risk Assessment</button>
+    <button data-action="openDialog" data-params='{"dialogId":"test-email-dialog"}' class="btn btn-ghost btn-sm border border-base-300">Test Email</button>
     <button onclick="window.showClientUsers()" class="btn btn-ghost btn-sm border border-base-300">Manage Users</button>
   </div>` : '';
 
@@ -116,17 +116,17 @@ export function renderClientDashboard(user, client, stats = {}) {
 }
 
 export function clientUserManagementDialog(clientId) {
-  return `<div id="client-user-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="client-user-dialog-title" aria-hidden="true">
-    <div class="modal-overlay" onclick="document.getElementById('client-user-dialog').style.display='none'"></div>
+  return `<div id="client-user-dialog" class="modal" style="display:none" data-dialog-close-overlay="true" role="dialog" aria-modal="true" aria-labelledby="client-user-dialog-title" aria-hidden="true">
+    <div class="modal-overlay" data-dialog-close="client-user-dialog"></div>
     <div class="modal-content rounded-box max-w-lg p-6">
       <h3 class="text-lg font-semibold mb-4" id="client-user-dialog-title">Manage Client Users</h3>
       <div id="cud-list" class="flex flex-col gap-2 mb-4"></div>
       <div class="form-group"><div class="flex gap-2 items-end">
         <div class="flex-1"><label class="label"><span class="label-text font-medium">Email</span></label><input type="email" id="cud-email" class="input input-solid max-w-full" placeholder="user@example.com"/></div>
         <div><label class="label"><span class="label-text font-medium">Role</span></label><select id="cud-role" class="select select-solid"><option value="client_user">User</option><option value="client_admin">Admin</option></select></div>
-        <button class="btn btn-primary btn-sm" onclick="cudAdd()">Add</button>
+        <button class="btn btn-primary btn-sm" data-action="cudAdd">Add</button>
       </div></div>
-      <div class="modal-action mt-4"><button class="btn btn-ghost" onclick="document.getElementById('client-user-dialog').style.display='none'">Close</button></div>
+      <div class="modal-action mt-4"><button class="btn btn-ghost" data-dialog-close="client-user-dialog">Close</button></div>
     </div>
   </div>
   <script>
@@ -138,15 +138,15 @@ export function clientUserManagementDialog(clientId) {
 }
 
 export function clientUserReplaceDialog(clientId) {
-  return `<div id="client-replace-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal-overlay" onclick="document.getElementById('client-replace-dialog').style.display='none'"></div>
+  return `<div id="client-replace-dialog" class="modal" style="display:none" data-dialog-close-overlay="true" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-overlay" data-dialog-close="client-replace-dialog"></div>
     <div class="modal-content rounded-box max-w-md p-6">
       <h3 class="text-lg font-semibold mb-4">Replace Client User</h3>
       <div class="form-group mb-3"><label class="label"><span class="label-text font-medium">Current User</span></label><select id="crd-from" class="select select-solid max-w-full"><option value="">Select user to replace...</option></select></div>
       <div class="divider text-xs text-base-content/40">Replace with</div>
       <div class="form-group mb-3"><label class="label"><span class="label-text font-medium">New User</span></label><select id="crd-to" class="select select-solid max-w-full"><option value="">Select replacement user...</option></select></div>
       <div class="form-group mb-4"><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="crd-transfer" class="checkbox" checked/><span class="label-text">Transfer all assignments</span></label></div>
-      <div class="modal-action"><button class="btn btn-primary" onclick="crdConfirm()">Replace</button><button class="btn btn-ghost" onclick="document.getElementById('client-replace-dialog').style.display='none'">Cancel</button></div>
+      <div class="modal-action"><button class="btn btn-primary" data-action="crdConfirm">Replace</button><button class="btn btn-ghost" data-dialog-close="client-replace-dialog">Cancel</button></div>
     </div>
   </div>
   <script>
@@ -156,14 +156,14 @@ export function clientUserReplaceDialog(clientId) {
 }
 
 export function clientTestEmailDialog(clientId) {
-  return `<div id="test-email-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal-overlay" onclick="document.getElementById('test-email-dialog').style.display='none'"></div>
+  return `<div id="test-email-dialog" class="modal" style="display:none" data-dialog-close-overlay="true" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-overlay" data-dialog-close="test-email-dialog"></div>
     <div class="modal-content rounded-box max-w-md p-6">
       <h3 class="text-lg font-semibold mb-4">Send Test Email</h3>
       <div class="form-group mb-3"><label class="label"><span class="label-text font-medium">To</span></label><input type="email" id="ted-to" class="input input-solid max-w-full" placeholder="recipient@example.com"/></div>
       <div class="form-group mb-3"><label class="label"><span class="label-text font-medium">Subject</span></label><input type="text" id="ted-subject" class="input input-solid max-w-full" value="Test Email - Platform Notification"/></div>
       <div class="form-group mb-4"><label class="label"><span class="label-text font-medium">Message</span></label><textarea id="ted-body" class="textarea textarea-solid max-w-full" rows="4">This is a test email from the Platform to verify email delivery to client users.</textarea></div>
-      <div class="modal-action"><button class="btn btn-primary" onclick="tedSend()">Send Test</button><button class="btn btn-ghost" onclick="document.getElementById('test-email-dialog').style.display='none'">Cancel</button></div>
+      <div class="modal-action"><button class="btn btn-primary" data-action="tedSend">Send Test</button><button class="btn btn-ghost" data-dialog-close="test-email-dialog">Cancel</button></div>
     </div>
   </div>
   <script>
@@ -173,13 +173,13 @@ export function clientTestEmailDialog(clientId) {
 
 export function clientRiskAssessmentDialog(clientId, currentRisk) {
   const options = RISK_LEVELS.map(r => `<label class="flex items-center gap-3 p-3 rounded-box border border-base-200 cursor-pointer hover:bg-base-200 transition-colors"><input type="radio" name="crad-risk" value="${r.value}" ${currentRisk === r.value ? 'checked' : ''} class="radio radio-primary"/><span class="badge ${r.cls}">${r.label}</span></label>`).join('');
-  return `<div id="risk-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal-overlay" onclick="document.getElementById('risk-dialog').style.display='none'"></div>
+  return `<div id="risk-dialog" class="modal" style="display:none" data-dialog-close-overlay="true" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal-overlay" data-dialog-close="risk-dialog"></div>
     <div class="modal-content rounded-box max-w-md p-6">
       <h3 class="text-lg font-semibold mb-4">Risk Assessment</h3>
       <div class="flex flex-col gap-2 mb-4">${options}</div>
       <div class="form-group mb-4"><label class="label"><span class="label-text font-medium">Notes</span></label><textarea id="crad-notes" class="textarea textarea-solid max-w-full" rows="2" placeholder="Risk assessment notes..."></textarea></div>
-      <div class="modal-action"><button class="btn btn-primary" onclick="cradSave()">Save</button><button class="btn btn-ghost" onclick="document.getElementById('risk-dialog').style.display='none'">Cancel</button></div>
+      <div class="modal-action"><button class="btn btn-primary" data-action="cradSave">Save</button><button class="btn btn-ghost" data-dialog-close="risk-dialog">Cancel</button></div>
     </div>
   </div>
   <script>

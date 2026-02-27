@@ -24,7 +24,7 @@ export function collaboratorRow(c) {
 }
 
 export function addCollaboratorDialog(reviewId) {
-  return `<div id="collab-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  return `<div id="collab-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true">
     <div class="dialog-panel" style="max-width:400px;width:100%">
       <h3 style="font-size:16px;font-weight:600;color:var(--color-text);margin:0 0 16px">Add Collaborator</h3>
       <div class="form-field" style="margin-bottom:12px">
@@ -40,7 +40,7 @@ export function addCollaboratorDialog(reviewId) {
         </select>
       </div>
       <div class="form-actions" style="padding-top:0;margin-top:0">
-        <button onclick="document.getElementById('collab-dialog').style.display='none'" class="btn-ghost-clean" style="font-size:13px;padding:8px 16px">Cancel</button>
+        <button data-dialog-close="collab-dialog" class="btn-ghost-clean" style="font-size:13px;padding:8px 16px">Cancel</button>
         <button onclick="addCollaborator('${esc(reviewId)}')" class="btn-primary-clean" style="font-size:13px;padding:8px 16px">Add</button>
       </div>
     </div>

@@ -44,6 +44,7 @@ export function generateHtml(title, bodyContent, scripts = [], pathname = '/') {
   <script type="importmap">
   { "imports": { "webjsx": "/lib/webjsx/index.js", "webjsx/jsx-runtime": "/lib/webjsx/jsx-runtime.js" } }
   </script>
+  <script src="/ui/event-delegation.js"></script>
   <script type="module" src="/ui/client.js"></script>
   ${scriptTags}
   <script>${swRegistration}</script>
@@ -94,7 +95,7 @@ export function nav(user, pathname = '') {
     <div style="display:flex;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;border-radius:50%;background:${avatarBg};color:#fff;font-weight:700;font-size:0.82rem;cursor:pointer;flex-shrink:0;min-width:44px;min-height:44px" id="user-avatar" onclick="toggleUserMenu(event)" title="${user?.name || 'User'}" aria-label="User menu" role="button" tabindex="0">
       ${avatarInitial}
     </div>
-    <button class="nav-hamburger" onclick="toggleMobileNav()" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-drawer" style="background:none;border:none;color:#ced4da;cursor:pointer;padding:8px;border-radius:4px;align-items:center;justify-content:center;min-width:44px;min-height:44px">
+    <button class="nav-hamburger" data-action="toggleMobileNav" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-drawer" style="background:none;border:none;color:#ced4da;cursor:pointer;padding:8px;border-radius:4px;align-items:center;justify-content:center;min-width:44px;min-height:44px">
       ${hamburgerSvg}
     </button>
   </div>
@@ -111,11 +112,11 @@ export function nav(user, pathname = '') {
   </div>
 </nav>
 <div id="mobile-nav-drawer" style="display:none;position:fixed;inset:0;z-index:200;pointer-events:none" aria-hidden="true">
-  <div onclick="closeMobileNav()" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);pointer-events:auto"></div>
+  <div data-action="closeMobileNav" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);pointer-events:auto"></div>
   <div style="position:absolute;left:0;top:0;bottom:0;width:280px;max-width:80vw;background:#04141f;padding:0;display:flex;flex-direction:column;transform:translateX(-100%);transition:transform 0.25s ease" id="mobile-nav-panel">
     <div style="padding:1rem;border-bottom:1px solid #0d4d6d;display:flex;align-items:center;justify-content:space-between">
       <span style="color:#f8f9fa;font-weight:700;letter-spacing:1px;font-size:0.85rem">MOONLANDING</span>
-      <button onclick="closeMobileNav()" style="background:none;border:none;color:#ced4da;cursor:pointer;font-size:1.5rem;padding:8px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center" aria-label="Close menu">&times;</button>
+      <button data-action="closeMobileNav" style="background:none;border:none;color:#ced4da;cursor:pointer;font-size:1.5rem;padding:8px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center" aria-label="Close menu">&times;</button>
     </div>
     <nav style="flex:1;padding:1rem 0;overflow-y:auto">
       <a href="/" style="display:block;padding:14px 20px;color:#ced4da;text-decoration:none;font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;min-height:48px;display:flex;align-items:center" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">Dashboard</a>
@@ -135,7 +136,7 @@ export function nav(user, pathname = '') {
   <div class="confirm-dialog">
     <h2 id="idle-dialog-title" class="confirm-title">Session Expiring</h2>
     <div id="idle-dialog-msg" class="confirm-message">Your session will expire due to inactivity. You will be logged out in <span id="idle-countdown" ${aria.live('polite')}>5:00</span>.</div>
-    <div class="confirm-actions"><button type="button" onclick="stayLoggedIn()" class="btn btn-primary" ${aria.label('Stay logged in and reset timeout')}>Stay Logged In</button></div>
+    <div class="confirm-actions"><button type="button" data-action="stayLoggedIn" class="btn btn-primary" ${aria.label('Stay logged in and reset timeout')}>Stay Logged In</button></div>
   </div>
 </div>
 <script>
@@ -183,8 +184,8 @@ export function confirmDialog(entityName) {
   return `<div id="confirm-dialog" class="confirm-overlay" style="display:none" ${role.alertdialog} ${aria.labelledBy('confirm-title')} ${aria.describedBy('confirm-msg')} ${aria.hidden('true')}>
     <div class="confirm-dialog"><h2 id="confirm-title" class="confirm-title">Confirm Delete</h2>
     <div id="confirm-msg" class="confirm-message">Are you sure you want to delete this item? This action cannot be undone.</div>
-    <div class="confirm-actions"><button type="button" onclick="cancelDelete()" class="btn btn-ghost" ${aria.label('Cancel deletion')}>Cancel</button>
-    <button type="button" id="confirm-delete-btn" onclick="executeDelete()" class="btn btn-error" ${aria.label('Confirm deletion')}>Delete</button></div></div></div>`
+    <div class="confirm-actions"><button type="button" data-action="cancelDelete" class="btn btn-ghost" ${aria.label('Cancel deletion')}>Cancel</button>
+    <button type="button" id="confirm-delete-btn" data-action="executeDelete" class="btn btn-error" ${aria.label('Confirm deletion')}>Delete</button></div></div></div>`
 }
 
 export function dataTable(headers, rows, emptyMsg) {

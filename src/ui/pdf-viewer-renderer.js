@@ -62,18 +62,18 @@ function pdfToolbar(review, canEditReview) {
     <button class="pdf-tool-btn" onclick="zoomPdf(0)" title="Reset" aria-label="Reset zoom">&#8634;</button>
   </div>`;
   const pageNav = `<div class="pdf-toolbar-group">
-    <button class="pdf-tool-btn" onclick="prevPage()" aria-label="Previous page">&#8249;</button>
+    <button class="pdf-tool-btn" data-action="prevPage" aria-label="Previous page">&#8249;</button>
     <span id="page-indicator" class="pdf-zoom-display" style="min-width:60px">--</span>
-    <button class="pdf-tool-btn" onclick="nextPage()" aria-label="Next page">&#8250;</button>
+    <button class="pdf-tool-btn" data-action="nextPage" aria-label="Next page">&#8250;</button>
   </div>`;
   const tools = canEditReview ? `<div class="pdf-toolbar-group">
     <button class="pdf-tool-btn" id="tool-text" onclick="toggleHighlightMode('text')" title="Text Highlight" aria-pressed="false">Text</button>
     <button class="pdf-tool-btn" id="tool-area" onclick="toggleHighlightMode('area')" title="Area Highlight" aria-pressed="false">Area</button>
-    <button class="pdf-tool-btn active" onclick="saveHighlights()">Save</button>
+    <button class="pdf-tool-btn active" data-action="saveHighlights">Save</button>
   </div>` : '';
   const actions = `<div class="pdf-toolbar-group">
-    <button class="pdf-tool-btn" onclick="toggleFullscreen()" title="Fullscreen" aria-label="Toggle fullscreen"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
-    <button class="pdf-tool-btn" onclick="downloadPdf()" title="Download PDF" aria-label="Download PDF"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 4v12"/></svg></button>
+    <button class="pdf-tool-btn" data-action="toggleFullscreen" title="Fullscreen" aria-label="Toggle fullscreen"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></button>
+    <button class="pdf-tool-btn" data-action="downloadPdf" title="Download PDF" aria-label="Download PDF"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 4v12"/></svg></button>
   </div>`;
   return `<div class="pdf-toolbar">${pageNav}${zoomControls}${tools}${actions}</div>`;
 }

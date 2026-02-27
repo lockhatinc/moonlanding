@@ -53,7 +53,7 @@ export function renderJobManagement(user, jobs, recentLogs = []) {
   }).join('');
   const logTable = `<div class="card-clean"><div class="card-clean-body"><h3 class="font-semibold mb-3">Recent Execution Logs</h3><table class="data-table"><thead><tr><th>Job</th><th>Result</th><th>Time</th><th>Duration</th><th>Message</th></tr></thead><tbody>${logRows || '<tr><td colspan="5" class="text-center py-4 text-gray-400">No recent logs</td></tr>'}</tbody></table></div></div>`;
 
-  const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Scheduled Jobs</h1>${canManage ? '<button class="btn btn-primary btn-sm" onclick="triggerAll()">Run All Now</button>' : ''}</div>${statCards}${table}${logTable}`;
+  const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Scheduled Jobs</h1>${canManage ? '<button class="btn btn-primary btn-sm" data-action="triggerAll">Run All Now</button>' : ''}</div>${statCards}${table}${logTable}`;
 
   const jobScript = `window.triggerJob=async function(name){try{const r=await fetch('/api/admin/jobs/'+name+'/trigger',{method:'POST'});if(r.ok){location.reload()}else{alert('Trigger failed: '+(await r.text()))}}catch(e){alert(e.message)}};window.toggleJob=async function(name,enabled){try{const r=await fetch('/api/admin/jobs/'+name,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled})});if(r.ok)location.reload();else alert('Toggle failed')}catch(e){alert(e.message)}};window.triggerAll=async function(){if(!confirm('Run all jobs now?'))return;try{const r=await fetch('/api/admin/jobs/trigger-all',{method:'POST'});if(r.ok)location.reload();else alert('Failed')}catch(e){alert(e.message)}}`;
 

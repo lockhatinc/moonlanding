@@ -1,11 +1,11 @@
 import { statusLabel } from '@/ui/renderer.js';
 
 export function tenderDetailsDialog(tenderId) {
-  return `<div id="tender-detail-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="tender-detail-dialog-title" aria-hidden="true">
+  return `<div id="tender-detail-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="tender-detail-dialog-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:640px">
-      <div class="dialog-header"><span class="dialog-title" id="tender-detail-dialog-title">Tender Details</span><button class="dialog-close" onclick="document.getElementById('tender-detail-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="tender-detail-dialog-title">Tender Details</span><button class="dialog-close" data-dialog-close="tender-detail-dialog" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body" id="tdd-body"><div class="text-gray-500 text-center py-4">Loading...</div></div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('tender-detail-dialog').style.display='none'">Close</button><a id="tdd-edit-link" href="#" class="btn btn-outline btn-sm">Edit</a></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="tender-detail-dialog">Close</button><a id="tdd-edit-link" href="#" class="btn btn-outline btn-sm">Edit</a></div>
     </div></div>
   <script>
   window.openTenderDetails=function(id){var tid=id||'${tenderId}';document.getElementById('tender-detail-dialog').style.display='flex';document.getElementById('tdd-edit-link').href='/tender/'+tid+'/edit';fetch('/api/tender/'+tid).then(function(r){return r.json()}).then(function(d){var t=d.data||d;var rows=[['Name',t.name||'-'],['Status',t.status||'-'],['Type',t.tender_type||'-'],['Priority',t.priority||'-'],['Client',t.client_name||t.client_id||'-'],['Due Date',t.due_date?new Date(typeof t.due_date==='number'?t.due_date*1000:t.due_date).toLocaleDateString():'-'],['Value',t.value?'R '+Number(t.value).toLocaleString():'-'],['Description',t.description||'-']];document.getElementById('tdd-body').innerHTML=rows.map(function(r){return'<div class="py-2 border-b"><span class="text-gray-500 text-sm">'+r[0]+'</span><p class="font-medium">'+r[1]+'</p></div>'}).join('')}).catch(function(){document.getElementById('tdd-body').innerHTML='<div class="text-red-500 text-center py-4">Failed to load</div>'})};

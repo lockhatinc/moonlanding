@@ -37,7 +37,7 @@ export function renderDashboard(user, stats = {}) {
 
   const recentRows = (stats.recentEngagements || []).map(e => {
     const updated = e.updated_at ? new Date(typeof e.updated_at === 'number' ? e.updated_at * 1000 : e.updated_at).toLocaleDateString() : '-';
-    return `<tr data-row onclick="location.href='/engagement/${esc(e.id)}'" style="cursor:pointer">
+    return `<tr data-row data-navigate="/engagement/${esc(e.id)}" style="cursor:pointer">
       <td data-col="name"><strong>${esc(e.name || e.client_name || 'Untitled')}</strong></td>
       <td data-col="client">${esc(e.client_id_display || e.client_name || '-')}</td>
       <td data-col="stage">${stagePill(e.stage)}</td>

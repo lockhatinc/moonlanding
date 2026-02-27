@@ -12,7 +12,7 @@ export function engagementCard(engagement, user) {
   const team = e.team?.length ? `<div class="engagement-card-team">${teamAvatarGroup(e.team, 3)}</div>` : ''
   const dueDate = e.due_date ? `<span class="text-xs text-gray-500">${typeof e.due_date === 'number' ? new Date(e.due_date * 1000).toLocaleDateString() : e.due_date}</span>` : ''
   const clientName = e.client_name || e.client?.name || ''
-  return `<div class="engagement-card card-clean" onclick="window.location='/engagement/${e.id}'" style="cursor:pointer">
+  return `<div class="engagement-card card-clean" data-navigate="/engagement/${e.id}" style="cursor:pointer">
     <div class="card-clean-body">
       <div class="flex justify-between items-center mb-2">${clientName ? `<span class="text-xs text-gray-500">${clientName}</span>` : '<span></span>'}${sts}</div>
       <h3 class="font-medium mb-2">${e.name || e.title || 'Untitled'}</h3>
@@ -59,7 +59,7 @@ export function activityTimeline(activities = [], showAll = false) {
     const timeStr = ts ? (typeof ts === 'number' && ts > 1e9 ? new Date(ts * 1000).toLocaleString() : new Date(ts).toLocaleString()) : ''
     return `<div class="act-tl-item"><div class="act-tl-icon act-tl-${action}">${icon}</div><div class="act-tl-content"><div class="act-tl-header"><span class="act-tl-desc">${a.description || a.action || ''}</span></div><div class="act-tl-time">${timeStr}${a.user_name ? ' by ' + a.user_name : ''}</div></div></div>`
   }).join('')
-  const moreBtn = !showAll && activities.length > maxItems ? `<div class="act-tl-more"><button class="btn btn-ghost btn-sm" onclick="showAllActivity()">Show ${activities.length - maxItems} more</button></div>` : ''
+  const moreBtn = !showAll && activities.length > maxItems ? `<div class="act-tl-more"><button class="btn btn-ghost btn-sm" data-action="showAllActivity">Show ${activities.length - maxItems} more</button></div>` : ''
   return `<div class="act-timeline">${timelineItems}</div>${moreBtn}`
 }
 
@@ -72,5 +72,5 @@ export function splashScreen(domain) {
 }
 
 export function swUpdateBanner() {
-  return `<div id="sw-update-banner" class="sw-banner" style="display:none"><span class="sw-banner-text">A new version is available.</span><button class="btn btn-sm btn-primary sw-banner-btn" onclick="swDoUpdate()">Update</button><button class="btn btn-sm btn-ghost sw-banner-btn" onclick="swDismiss()">Dismiss</button></div><script>(function(){function show(){document.getElementById('sw-update-banner').style.display='flex'}window.swDoUpdate=function(){window.location.reload()};window.swDismiss=function(){document.getElementById('sw-update-banner').style.display='none'};if('serviceWorker' in navigator){navigator.serviceWorker.addEventListener('controllerchange',show);navigator.serviceWorker.getRegistration().then(function(reg){if(reg)reg.addEventListener('updatefound',function(){var nw=reg.installing;if(nw)nw.addEventListener('statechange',function(){if(nw.state==='installed'&&navigator.serviceWorker.controller)show()})})})}})()</script>`
+  return `<div id="sw-update-banner" class="sw-banner" style="display:none"><span class="sw-banner-text">A new version is available.</span><button class="btn btn-sm btn-primary sw-banner-btn" data-action="swDoUpdate">Update</button><button class="btn btn-sm btn-ghost sw-banner-btn" data-action="swDismiss">Dismiss</button></div><script>(function(){function show(){document.getElementById('sw-update-banner').style.display='flex'}window.swDoUpdate=function(){window.location.reload()};window.swDismiss=function(){document.getElementById('sw-update-banner').style.display='none'};if('serviceWorker' in navigator){navigator.serviceWorker.addEventListener('controllerchange',show);navigator.serviceWorker.getRegistration().then(function(reg){if(reg)reg.addEventListener('updatefound',function(){var nw=reg.installing;if(nw)nw.addEventListener('statechange',function(){if(nw.state==='installed'&&navigator.serviceWorker.controller)show()})})})}})()</script>`
 }

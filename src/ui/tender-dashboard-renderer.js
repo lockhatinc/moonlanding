@@ -40,7 +40,7 @@ function tenderFlagBadge(flag) {
 function tenderRow(tender) {
   const days = daysRemaining(tender.deadline_date);
   const flag = tender.flag || tender.status || 'open';
-  return `<tr class="hover cursor-pointer" tabindex="0" role="link" onclick="window.location='/review/${tender.review_id}'" onkeydown="if(event.key==='Enter'){window.location='/review/${tender.review_id}'}" data-flag="${flag}" data-overdue="${days !== null && days < 0 ? '1' : '0'}"><td class="font-medium">${tender.review_name || tender.name || 'Untitled'}</td><td>${tenderFlagBadge(flag)}</td><td>${fmtDate(tender.deadline_date)}</td><td>${deadlineBadge(days)}</td><td class="text-sm">${tender.contact_person || '-'}</td><td class="text-sm">${tender.price ? '$' + Number(tender.price).toLocaleString() : '-'}</td><td class="text-sm">${fmtDate(tender.announcement_date)}</td></tr>`;
+  return `<tr class="hover cursor-pointer" tabindex="0" role="link" data-navigate="/review/${tender.review_id}" onkeydown="if(event.key==='Enter'){window.location='/review/${tender.review_id}'}" data-flag="${flag}" data-overdue="${days !== null && days < 0 ? '1' : '0'}"><td class="font-medium">${tender.review_name || tender.name || 'Untitled'}</td><td>${tenderFlagBadge(flag)}</td><td>${fmtDate(tender.deadline_date)}</td><td>${deadlineBadge(days)}</td><td class="text-sm">${tender.contact_person || '-'}</td><td class="text-sm">${tender.price ? '$' + Number(tender.price).toLocaleString() : '-'}</td><td class="text-sm">${fmtDate(tender.announcement_date)}</td></tr>`;
 }
 
 export function renderTenderDashboard(user, tenders, reviews = []) {

@@ -70,12 +70,12 @@ export function renderSettingsTemplateManage(user, template = {}, sections = [])
       <div class="form-group mb-3"><label class="label"><span class="label-text font-semibold">Name</span></label><input type="text" id="tpl-name" class="input input-solid max-w-full" value="${esc(template.name || '')}"/></div>
       <div class="form-group mb-3"><label class="label"><span class="label-text font-semibold">Type</span></label><select id="tpl-type" class="select select-solid max-w-full"><option value="standard" ${template.type==='standard'?'selected':''}>Standard</option><option value="checklist" ${template.type==='checklist'?'selected':''}>Checklist</option><option value="audit" ${template.type==='audit'?'selected':''}>Audit</option></select></div>
       <div class="form-group mb-4"><label class="label cursor-pointer justify-start gap-3"><input type="checkbox" id="tpl-active" class="checkbox checkbox-primary" ${template.is_active?'checked':''}/><span class="label-text">Active</span></label></div>
-      <button onclick="saveTplInfo()" class="btn btn-primary btn-sm">Save Template Info</button>
+      <button data-action="saveTplInfo" class="btn btn-primary btn-sm">Save Template Info</button>
     </div></div>
     <div class="card-clean"><div class="card-clean-body">
       <div class="flex justify-between items-center mb-4">
         <h2 class="card-title text-base">Sections</h2>
-        <button onclick="addTplSection()" class="btn btn-primary btn-sm">+ Add Section</button>
+        <button data-action="addTplSection" class="btn btn-primary btn-sm">+ Add Section</button>
       </div>
       ${inlineTable(['Color', 'Name', 'Order', 'Actions'], sectionRows, 'No sections defined')}
     </div></div>
@@ -84,7 +84,7 @@ export function renderSettingsTemplateManage(user, template = {}, sections = [])
     <div class="flex flex-wrap gap-4 items-end">
       <div class="form-group flex-1 min-w-40"><label class="label"><span class="label-text font-semibold">Name</span></label><input type="text" id="tpl-sec-name" class="input input-solid max-w-full" placeholder="Section name"/></div>
       <div class="form-group"><label class="label"><span class="label-text font-semibold">Color</span></label><input type="color" id="tpl-sec-color" value="#B0B0B0" class="input input-solid" style="height:42px;width:60px;padding:4px"/></div>
-      <div class="flex gap-2"><button onclick="saveTplSection()" class="btn btn-primary btn-sm">Save</button><button onclick="cancelTplSection()" class="btn btn-ghost btn-sm">Cancel</button></div>
+      <div class="flex gap-2"><button data-action="saveTplSection" class="btn btn-primary btn-sm">Save</button><button data-action="cancelTplSection" class="btn btn-ghost btn-sm">Cancel</button></div>
     </div>
     <input type="hidden" id="tpl-sec-id" value=""/>
   </div></div>`;

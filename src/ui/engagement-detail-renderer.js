@@ -22,7 +22,7 @@ export function renderEngagementCardView(user, engagements) {
     const cfg = STAGE_CONFIG.find(s => s.key === e.stage);
     const stageLbl = cfg ? `<span class="badge ${cfg.badge} text-xs">${cfg.label}</span>` : '';
     const pct = typeof e.progress === 'number' ? Math.min(100, Math.round(e.progress)) : 0;
-    return `<div onclick="location.href='/engagement/${esc(e.id)}'" class="card-clean">
+    return `<div data-navigate="/engagement/${esc(e.id)}" class="card-clean">
       <div class="card-clean-body" style="padding:${SPACING.md}">
         <div class="font-semibold text-sm mb-1">${esc(e.name || 'Untitled')}</div>
         <div class="text-xs text-base-content/60 mb-2">${esc(e.client_name || '')}</div>
@@ -76,7 +76,7 @@ export function renderEngagementDetail(user, engagement, client, rfis = []) {
   const rfiRows = rfis.map(r => {
     const rs = r.status || 'pending';
     const rc = rs==='active'?'badge-success badge-flat-success':rs==='closed'?'badge-flat-secondary':'badge-warning badge-flat-warning';
-    return `<tr class="hover cursor-pointer" onclick="location.href='/rfi/${esc(r.id)}'"><td class="text-sm">${esc(r.name||r.title||'RFI')}</td><td><span class="badge ${rc} text-xs">${rs}</span></td><td class="text-sm">${r.deadline?new Date(r.deadline).toLocaleDateString():'-'}</td></tr>`;
+    return `<tr class="hover cursor-pointer" data-navigate="/rfi/${esc(r.id)}"><td class="text-sm">${esc(r.name||r.title||'RFI')}</td><td><span class="badge ${rc} text-xs">${rs}</span></td><td class="text-sm">${r.deadline?new Date(r.deadline).toLocaleDateString():'-'}</td></tr>`;
   }).join('') || `<tr><td colspan="3" class="text-center py-6 text-base-content/40 text-sm">No RFIs</td></tr>`;
 
   const stageBtn = canTransition ? `<button onclick="openStageTransition('${esc(e.stage)}')" class="btn btn-ghost btn-sm">Move Stage</button>` : '';

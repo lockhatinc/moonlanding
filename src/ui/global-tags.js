@@ -64,14 +64,14 @@ function renderTagsList() {
 function showDialog(mode = 'create', tagId = null) {
   const tag = mode === 'edit' ? tagsStore[tagId] : null;
   const html = `
-    <div class="dialog-overlay" id="tag-dialog-overlay" onclick="gtsCloseDialog()" onkeydown="if(event.key==='Escape')gtsCloseDialog()" role="dialog" aria-modal="true" aria-labelledby="tag-dialog-heading" aria-hidden="true">
+    <div class="dialog-overlay" id="tag-dialog-overlay" data-action="gtsCloseDialog" onkeydown="if(event.key==='Escape')gtsCloseDialog()" role="dialog" aria-modal="true" aria-labelledby="tag-dialog-heading" aria-hidden="true">
       <div class="dialog-content" onclick="event.stopPropagation()">
-        <div class="dialog-header"><h2 id="tag-dialog-heading">${mode === 'create' ? 'Create New Tag' : 'Edit Tag'}</h2><button class="btn btn-sm btn-ghost" onclick="gtsCloseDialog()" aria-label="Close dialog">&times;</button></div>
+        <div class="dialog-header"><h2 id="tag-dialog-heading">${mode === 'create' ? 'Create New Tag' : 'Edit Tag'}</h2><button class="btn btn-sm btn-ghost" data-action="gtsCloseDialog" aria-label="Close dialog">&times;</button></div>
         <div class="dialog-body">
           <div class="form-group"><label class="label" for="tag-name-input">Tag Name</label><input type="text" class="input input-bordered w-full" id="tag-name-input" placeholder="e.g., Priority" value="${tag ? esc(tag.name) : ''}" maxlength="50" /></div>
           <div class="form-group"><label class="label" for="tag-color-input">Color</label><div class="flex gap-2"><input type="color" id="tag-color-input" value="${tag ? tag.color : '#808080'}" aria-label="Tag color" /><span id="color-preview" class="w-8 h-8 rounded border" style="background-color: ${tag ? tag.color : '#808080'}" aria-hidden="true"></span></div></div>
         </div>
-        <div class="dialog-footer"><button class="btn btn-ghost" onclick="gtsCloseDialog()">Cancel</button><button class="btn btn-primary" onclick="gtsSaveTag('${mode}', '${tagId || ''}')">${mode === 'create' ? 'Create' : 'Update'}</button></div>
+        <div class="dialog-footer"><button class="btn btn-ghost" data-action="gtsCloseDialog">Cancel</button><button class="btn btn-primary" onclick="gtsSaveTag('${mode}', '${tagId || ''}')">${mode === 'create' ? 'Create' : 'Update'}</button></div>
       </div>
     </div>`;
   const container = document.getElementById('tag-dialog-container') || (c => (document.body.appendChild(c), c))(Object.assign(document.createElement('div'), { id: 'tag-dialog-container' }));

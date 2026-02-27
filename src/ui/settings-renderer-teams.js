@@ -14,7 +14,7 @@ function parseMembers(t) {
 
 export function renderSettingsTeams(user, teams = [], allUsers = []) {
   const editDialog = `<div id="team-dialog" class="modal" style="display:none" onclick="if(event.target===this)closeTeamDialog()">
-    <div class="modal-overlay" onclick="closeTeamDialog()"></div>
+    <div class="modal-overlay" data-action="closeTeamDialog"></div>
     <div class="modal-content rounded-box max-w-md p-6">
       <h3 id="team-dialog-title" class="text-lg font-semibold mb-4">Edit Team</h3>
       <input type="hidden" id="team-edit-id"/>
@@ -23,8 +23,8 @@ export function renderSettingsTeams(user, teams = [], allUsers = []) {
         <input id="team-name-input" type="text" class="input input-solid max-w-full" placeholder="Team name"/>
       </div>
       <div class="modal-action">
-        <button onclick="saveTeam()" class="btn btn-primary">Save</button>
-        <button onclick="closeTeamDialog()" class="btn btn-ghost">Cancel</button>
+        <button data-action="saveTeam" class="btn btn-primary">Save</button>
+        <button data-action="closeTeamDialog" class="btn btn-ghost">Cancel</button>
       </div>
     </div>
   </div>`;
@@ -83,7 +83,7 @@ export function renderSettingsRfiSections(user, sections = []) {
       <div class="flex flex-wrap gap-4 items-end">
         <div class="form-group"><label class="label"><span class="label-text font-medium">Name</span></label><input type="text" id="section-name" class="input input-solid" style="max-width:200px" placeholder="Section name"/></div>
         <div><label class="label"><span class="label-text font-medium">Color</span></label><div id="color-palette" class="flex gap-2 flex-wrap">${palette}</div><input type="hidden" id="section-color" value="#B0B0B0"/></div>
-        <div class="flex gap-2"><button onclick="saveSection()" class="btn btn-primary btn-sm">Save</button><button onclick="cancelForm()" class="btn btn-ghost btn-sm">Cancel</button></div>
+        <div class="flex gap-2"><button data-action="saveSection" class="btn btn-primary btn-sm">Save</button><button data-action="cancelForm" class="btn btn-ghost btn-sm">Cancel</button></div>
       </div>
       <input type="hidden" id="edit-id" value=""/>
     </div>

@@ -27,8 +27,8 @@ function questionRow(q, i, sections = []) {
 
 function editQuestionDialog(rfiId, sections) {
   const sectionOpts = sections.map(s => `<option value="${esc(s.id)}">${esc(s.name)}</option>`).join('');
-  return `<div id="q-dialog" data-rfi-id="${esc(rfiId)}" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-    <div class="modal-overlay" onclick="document.getElementById('q-dialog').style.display='none'"></div>
+  return `<div id="q-dialog" data-rfi-id="${esc(rfiId)}" class="modal" style="display:none" data-dialog-close-overlay="true">
+    <div class="modal-overlay" data-dialog-close="q-dialog"></div>
     <div class="modal-content rounded-box max-w-lg p-6">
       <h3 class="text-lg font-semibold mb-4" id="q-dialog-title">Edit Question</h3>
       <div class="form-group mb-3">
@@ -52,15 +52,15 @@ function editQuestionDialog(rfiId, sections) {
       <input type="hidden" id="q-edit-id"/>
       <div class="modal-action">
         <button onclick="saveQuestion('${esc(rfiId)}')" class="btn btn-primary">Save</button>
-        <button onclick="document.getElementById('q-dialog').style.display='none'" class="btn btn-ghost">Cancel</button>
+        <button data-dialog-close="q-dialog" class="btn btn-ghost">Cancel</button>
       </div>
     </div>
   </div>`;
 }
 
 function addSectionDialog(rfiId) {
-  return `<div id="sec-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-    <div class="modal-overlay" onclick="document.getElementById('sec-dialog').style.display='none'"></div>
+  return `<div id="sec-dialog" class="modal" style="display:none" data-dialog-close-overlay="true">
+    <div class="modal-overlay" data-dialog-close="sec-dialog"></div>
     <div class="modal-content rounded-box max-w-sm p-6">
       <h3 class="text-lg font-semibold mb-4">Add Section</h3>
       <div class="form-group mb-4">
@@ -69,7 +69,7 @@ function addSectionDialog(rfiId) {
       </div>
       <div class="modal-action">
         <button onclick="saveSection('${esc(rfiId)}')" class="btn btn-primary">Add</button>
-        <button onclick="document.getElementById('sec-dialog').style.display='none'" class="btn btn-ghost">Cancel</button>
+        <button data-dialog-close="sec-dialog" class="btn btn-ghost">Cancel</button>
       </div>
     </div>
   </div>`;
@@ -91,8 +91,8 @@ export function renderRfiDetail(user, rfi = {}, questions = [], sections = [], e
 
   const headerBtns = canEditRfi ? `
     <div class="flex gap-2 flex-wrap">
-      <button onclick="openAddQuestion()" class="btn btn-primary btn-sm">+ Question</button>
-      <button onclick="document.getElementById('sec-dialog').style.display='flex'" class="btn btn-ghost btn-sm">+ Section</button>
+      <button data-action="openAddQuestion" class="btn btn-primary btn-sm">+ Question</button>
+      <button data-action="openDialog" data-params='{"dialogId":"sec-dialog"}' class="btn btn-ghost btn-sm">+ Section</button>
       <button onclick="sendReminder('${esc(rfi.id)}')" class="btn btn-ghost btn-sm">Send Reminder</button>
       <a href="/rfi/${esc(rfi.id)}/edit" class="btn btn-outline-primary btn-sm">Edit RFI</a>
     </div>` : '';

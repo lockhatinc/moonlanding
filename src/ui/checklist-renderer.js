@@ -7,13 +7,13 @@ const TOAST = `window.showToast=(m,t='info')=>{let c=document.getElementById('to
 function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 export function checklistTemplatesUI(user, templates = []) {
-  const rows = templates.map(t => `<tr class="hover cursor-pointer" onclick="window.location='/admin/settings/checklists/${esc(t.id)}'">
+  const rows = templates.map(t => `<tr class="hover cursor-pointer" data-navigate="/admin/settings/checklists/${esc(t.id)}">
     <td class="font-medium text-sm">${esc(t.name || 'Untitled')}</td>
     <td class="text-sm">${t.item_count || 0} items</td>
     <td>${t.active ? '<span class="badge badge-success badge-flat-success text-xs">Active</span>' : '<span class="badge badge-flat-secondary text-xs">Inactive</span>'}</td>
     <td class="text-sm text-base-content/50">${t.created_at ? new Date(typeof t.created_at === 'number' ? t.created_at * 1000 : t.created_at).toLocaleDateString() : '-'}</td>
   </tr>`).join('');
-  const createBtn = canCreate(user, 'checklist') ? `<button class="btn btn-primary btn-sm" onclick="chtCreate()">+ New Template</button>` : '';
+  const createBtn = canCreate(user, 'checklist') ? `<button class="btn btn-primary btn-sm" data-action="chtCreate">+ New Template</button>` : '';
   const bc = [{ href: '/', label: 'Dashboard' }, { href: '/admin/settings', label: 'Settings' }, { label: 'Checklists' }];
   const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Checklist Templates</h1>${createBtn}</div>
     <div class="card-clean"><div class="card-clean-body" style="padding:0rem">
@@ -27,17 +27,17 @@ export function checklistTemplatesUI(user, templates = []) {
 }
 
 export function checklistDialog(checklistId) {
-  return `<div id="checklist-dialog" class="modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
-    <div class="modal-overlay" onclick="document.getElementById('checklist-dialog').style.display='none'"></div>
+  return `<div id="checklist-dialog" class="modal" style="display:none" data-dialog-close-overlay="true">
+    <div class="modal-overlay" data-dialog-close="checklist-dialog"></div>
     <div class="modal-content rounded-box max-w-lg p-6">
       <h3 class="text-lg font-semibold mb-4" id="checklist-dialog-title">Checklist</h3>
       <div id="ckd-items" class="flex flex-col gap-2 mb-4"></div>
       <div class="flex gap-2">
         <input id="ckd-new" class="input input-solid flex-1" placeholder="New item..."/>
-        <button class="btn btn-primary btn-sm" onclick="ckdAdd()">Add</button>
+        <button class="btn btn-primary btn-sm" data-action="ckdAdd">Add</button>
       </div>
       <div class="modal-action mt-4">
-        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('checklist-dialog').style.display='none'">Close</button>
+        <button class="btn btn-ghost btn-sm" data-dialog-close="checklist-dialog">Close</button>
       </div>
     </div>
   </div>
@@ -86,7 +86,7 @@ export function renderChecklistDetails(user, checklist, items = []) {
         <p class="text-sm text-base-content/50 mt-1" data-ck-label>${completed} of ${items.length} items complete${remaining > 0 ? ` &middot; ${remaining} remaining` : ''}</p>
       </div>
       <div class="flex gap-2">
-        ${remaining > 0 && items.length > 0 ? `<button class="btn btn-ghost btn-sm border border-base-300" onclick="ckCompleteAll()">Complete All</button>` : ''}
+        ${remaining > 0 && items.length > 0 ? `<button class="btn btn-ghost btn-sm border border-base-300" data-action="ckCompleteAll">Complete All</button>` : ''}
       </div>
     </div>
     <div class="flex items-center gap-3 mb-6">
@@ -100,7 +100,7 @@ export function renderChecklistDetails(user, checklist, items = []) {
       </div>
       <div class="flex gap-2 p-4 border-t border-base-200">
         <input id="ck-new" class="input input-solid flex-1" placeholder="Add a new item..." onkeydown="if(event.key==='Enter')ckAdd()"/>
-        <button class="btn btn-primary btn-sm" onclick="ckAdd()">Add</button>
+        <button class="btn btn-primary btn-sm" data-action="ckAdd">Add</button>
       </div>
     </div>`;
 
@@ -117,7 +117,7 @@ window.ckCompleteAll=async function(){var cbs=document.querySelectorAll('#ck-ite
 export function renderChecklistsHome(user, checklists = []) {
   const rows = checklists.map(c => {
     const pct = c.total_items > 0 ? Math.round((c.completed_items || 0) / c.total_items * 100) : 0;
-    return `<tr class="hover cursor-pointer" onclick="window.location='/checklist/${esc(c.id)}'">
+    return `<tr class="hover cursor-pointer" data-navigate="/checklist/${esc(c.id)}">
       <td class="font-medium text-sm">${esc(c.name || 'Untitled')}</td>
       <td class="text-sm">${esc(c.engagement_name || '-')}</td>
       <td><progress class="progress progress-primary w-32" value="${c.completed_items || 0}" max="${c.total_items || 1}"></progress></td>

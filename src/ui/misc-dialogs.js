@@ -9,11 +9,11 @@ export function fridayGlobalsCrossApp() {
 }
 
 export function fridayTeamDialog() {
-  return `<div id="friday-team-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="friday-team-dialog-title" aria-hidden="true">
+  return `<div id="friday-team-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="friday-team-dialog-title" aria-hidden="true">
     <div class="dialog-panel">
-      <div class="dialog-header"><span class="dialog-title" id="friday-team-dialog-title">Assign Team</span><button class="dialog-close" onclick="document.getElementById('friday-team-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="friday-team-dialog-title">Assign Team</span><button class="dialog-close" data-dialog-close="friday-team-dialog" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body"><div id="ftd-teams" class="flex flex-col gap-2"></div></div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('friday-team-dialog').style.display='none'">Close</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="friday-team-dialog">Close</button></div>
     </div></div>
   <script>
   window._ftdCallback=null;
@@ -23,9 +23,9 @@ export function fridayTeamDialog() {
 }
 
 export function fridayDueDateDialog() {
-  return `<div id="friday-due-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="friday-due-dialog-title" aria-hidden="true">
+  return `<div id="friday-due-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="friday-due-dialog-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:380px">
-      <div class="dialog-header"><span class="dialog-title" id="friday-due-dialog-title">Set Due Date</span><button class="dialog-close" onclick="document.getElementById('friday-due-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="friday-due-dialog-title">Set Due Date</span><button class="dialog-close" data-dialog-close="friday-due-dialog" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div class="modal-form-group"><label for="fdd-date">Due Date</label><input type="date"  id="fdd-date" class="input input-bordered w-full"/></div>
         <div class="date-presets">
@@ -35,7 +35,7 @@ export function fridayDueDateDialog() {
           <button class="date-preset-btn" onclick="fddPreset(90)">+3 Months</button>
         </div>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('friday-due-dialog').style.display='none'">Cancel</button><button class="btn btn-error btn-outline btn-sm" onclick="fddClear()">Clear</button><button class="btn btn-primary btn-sm" onclick="fddConfirm()">Set</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="friday-due-dialog">Cancel</button><button class="btn btn-error btn-outline btn-sm" data-action="fddClear">Clear</button><button class="btn btn-primary btn-sm" data-action="fddConfirm">Set</button></div>
     </div></div>
   <script>
   window._fddCallback=null;
@@ -47,11 +47,11 @@ export function fridayDueDateDialog() {
 }
 
 export function emailReceiveDialog() {
-  return `<div id="email-receive-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="email-receive-dialog-title" aria-hidden="true">
+  return `<div id="email-receive-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="email-receive-dialog-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:640px">
-      <div class="dialog-header"><span class="dialog-title" id="email-receive-dialog-title">Received Emails</span><button class="dialog-close" onclick="document.getElementById('email-receive-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="email-receive-dialog-title">Received Emails</span><button class="dialog-close" data-dialog-close="email-receive-dialog" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body"><div id="erd-list" class="flex flex-col gap-2" style="max-height:400px;overflow:auto"><div class="text-gray-500 text-center py-4">Loading...</div></div></div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('email-receive-dialog').style.display='none'">Close</button><button class="btn btn-outline btn-sm" onclick="erdRefresh()">Refresh</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="email-receive-dialog">Close</button><button class="btn btn-outline btn-sm" data-action="erdRefresh">Refresh</button></div>
     </div></div>
   <script>
   window.openEmailReceive=function(){document.getElementById('email-receive-dialog').style.display='flex';erdRefresh()};
@@ -60,21 +60,21 @@ export function emailReceiveDialog() {
 }
 
 export function feeSplitDialog(engagementId) {
-  return `<div id="fee-split-dialog" class="dialog-overlay" style="display:none" onclick="if(event.target===this)this.style.display='none'" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="fee-split-dialog-title" aria-hidden="true">
+  return `<div id="fee-split-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="fee-split-dialog-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:560px">
-      <div class="dialog-header"><span class="dialog-title" id="fee-split-dialog-title">Fee Split</span><button class="dialog-close" onclick="document.getElementById('fee-split-dialog').style.display='none'" aria-label="Close dialog">&times;</button></div>
+      <div class="dialog-header"><span class="dialog-title" id="fee-split-dialog-title">Fee Split</span><button class="dialog-close" data-dialog-close="fee-split-dialog" aria-label="Close dialog">&times;</button></div>
       <div class="dialog-body">
         <div id="fsd-splits" class="flex flex-col gap-2"></div>
         <div class="inline-form" style="margin-top:1rem">
           <div class="inline-form-row">
             <div class="inline-form-field" style="flex:1"><label for="fsd-user">User</label><select id="fsd-user" class="select select-bordered select-sm w-full"></select></div>
             <div class="inline-form-field" style="width:80px"><label for="fsd-pct">%</label><input type="number"  id="fsd-pct" class="input input-bordered input-sm" min="0" max="100" value="0"/></div>
-            <div class="inline-form-field"><label>&nbsp;</label><button class="btn btn-primary btn-sm" onclick="fsdAdd()">Add</button></div>
+            <div class="inline-form-field"><label>&nbsp;</label><button class="btn btn-primary btn-sm" data-action="fsdAdd">Add</button></div>
           </div>
         </div>
         <div id="fsd-total" class="text-sm font-medium mt-2"></div>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('fee-split-dialog').style.display='none'">Cancel</button><button class="btn btn-primary btn-sm" onclick="fsdSave()">Save</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="fee-split-dialog">Cancel</button><button class="btn btn-primary btn-sm" data-action="fsdSave">Save</button></div>
     </div></div>
   <script>
   var fsdSplits=[];

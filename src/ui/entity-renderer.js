@@ -19,7 +19,7 @@ export function renderEntityList(entityName, items, spec, user, options = {}) {
     const cells = listFields.map(([k]) => `<td>${fmtVal(item[k], k, item)}</td>`).join('')
     const editBtn = userCanEdit ? `<a href="/${entityName}/${item.id}/edit" class="btn btn-xs btn-outline">Edit</a>` : `<span class="btn btn-xs btn-outline btn-disabled tooltip" data-tip="No permission">Edit</span>`
     const delBtn = userCanDelete ? `<button onclick="event.stopPropagation();confirmDelete('${item.id}')" class="btn btn-xs btn-error btn-outline">Delete</button>` : `<span class="btn btn-xs btn-error btn-outline btn-disabled tooltip" data-tip="No permission">Delete</span>`
-    return `<tr class="hover cursor-pointer" data-searchable tabindex="0" role="link" onclick="window.location='/${entityName}/${item.id}'" onkeydown="if(event.key==='Enter'){window.location='/${entityName}/${item.id}'}">${cells}<td class="flex gap-1"><a href="/${entityName}/${item.id}" class="btn btn-xs btn-ghost">View</a>${editBtn}${delBtn}</td></tr>`
+    return `<tr class="hover cursor-pointer" data-searchable tabindex="0" role="link" data-navigate="/${entityName}/${item.id}" onkeydown="if(event.key==='Enter'){window.location='/${entityName}/${item.id}'}">${cells}<td class="flex gap-1"><a href="/${entityName}/${item.id}" class="btn btn-xs btn-ghost">View</a>${editBtn}${delBtn}</td></tr>`
   }
 
   let tableContent
@@ -103,7 +103,7 @@ export function renderEntityDetail(entityName, item, spec, user) {
     </div>` : `<div style="margin-bottom:1.5rem"><h1 style="font-size:1.5rem;font-weight:700">${displayName}</h1></div>`
 
   const editBtn = userCanEdit ? `<a href="/${entityName}/${item.id}/edit" class="btn btn-outline btn-sm">Edit</a>` : ''
-  const delBtn = userCanDelete ? `<button onclick="showDeleteConfirm()" class="btn btn-error btn-outline btn-sm">Delete</button>` : ''
+  const delBtn = userCanDelete ? `<button data-action="showDeleteConfirm" class="btn btn-error btn-outline btn-sm">Delete</button>` : ''
 
   const content = `
     <div style="display:flex;justify-content:space-between;align-items:flex-start">
