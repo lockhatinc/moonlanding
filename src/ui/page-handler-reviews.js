@@ -48,8 +48,10 @@ export async function handleReviewRoutes(normalized, segments, user, req) {
   if (segments[0] === 'review' && segments.length === 3 && segments[2] === 'sections') {
     const reviewId = segments[1];
     if (!canView(user, 'review')) return renderAccessDenied(user, 'review', 'view');
-    const review = get('review', reviewId); if (!review) return null;
-    let sections = []; try { sections = list('review_section', {}).filter(s => s.review_id === reviewId); } catch {}
+    const review = get('review', reviewId) || getDatabase().prepare('SELECT * FROM review WHERE id=?').get(reviewId);
+    if (!review) return null;
+    let sections = [];
+    try { sections = list('review_section', {}).filter(s => s.review_id === reviewId); } catch (e) { console.error('Failed to fetch sections', e); }
     return renderSectionReport(user, review, sections);
   }
 

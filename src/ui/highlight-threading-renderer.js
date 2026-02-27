@@ -1,7 +1,8 @@
-import { statusLabel, userAvatar } from '@/ui/renderer.js';
 import { page } from '@/ui/layout.js';
 import { canEdit } from '@/ui/permissions-ui.js';
 import { reviewZoneNav } from '@/ui/review-zone-nav.js';
+import { esc } from '@/ui/render-helpers.js';
+import { SPACING, renderStatsRow, renderPageHeader, renderButton, renderEmptyState } from '@/ui/spacing-system.js';
 
 function fmtDate(ts) {
   if (!ts) return '';
@@ -11,37 +12,78 @@ function fmtDate(ts) {
 }
 
 const RESOLUTION_STATES = {
-  unresolved: { label: 'Unresolved', color: '#ef4444', bg: '#fee2e2' },
-  partial_resolved: { label: 'Partial', color: '#f59e0b', bg: '#fef3c7' },
-  manager_resolved: { label: 'Manager Resolved', color: '#3b82f6', bg: '#dbeafe' },
-  partner_resolved: { label: 'Partner Resolved', color: '#8b5cf6', bg: '#ede9fe' },
-  resolved: { label: 'Resolved', color: '#22c55e', bg: '#d1fae5' },
+  unresolved: { label: 'Unresolved', color: '#ef4444', pill: 'pill pill-danger' },
+  partial_resolved: { label: 'Partial', color: '#f59e0b', pill: 'pill pill-warning' },
+  manager_resolved: { label: 'Manager', color: '#3b82f6', pill: 'pill pill-info' },
+  partner_resolved: { label: 'Partner', color: '#8b5cf6', pill: 'pill pill-primary' },
+  resolved: { label: 'Resolved', color: '#22c55e', pill: 'pill pill-success' },
 };
 
 function resolutionBadge(status) {
   const s = RESOLUTION_STATES[status] || RESOLUTION_STATES.unresolved;
-  return `<span style="background:${s.bg};color:${s.color};padding:2px 8px;border-radius:9999px;font-size:0.7rem;font-weight:600">${s.label}</span>`;
+  return `<span class="${s.pill}">${s.label}</span>`;
 }
 
 function responseItem(response) {
-  const avatar = response.user ? userAvatar(response.user, 'sm') : `<span class="user-avatar user-avatar-sm" style="width:28px;height:28px;background:#9ca3af;font-size:11px">?</span>`;
   const name = response.user?.name || response.user_name || 'Unknown';
+  const initial = name.charAt(0).toUpperCase();
   const date = fmtDate(response.created_at);
-  return `<div class="flex gap-3 py-3"><div class="flex-shrink-0 mt-0.5">${avatar}</div><div class="flex-1 min-w-0"><div class="flex items-center gap-2 mb-1"><span class="text-sm font-medium text-gray-900">${name}</span><span class="text-xs text-gray-400">${date}</span></div><div class="text-sm text-gray-700">${response.text || response.content || ''}</div>${response.attachment ? `<div class="mt-1 text-xs text-blue-600"><a href="${response.attachment.url || '#'}" class="hover:underline">${response.attachment.name || 'Attachment'}</a></div>` : ''}</div></div>`;
+  return `<div class="response-item">
+    <div class="response-avatar">${initial}</div>
+    <div class="response-content">
+      <div class="response-meta">
+        <span class="response-name">${esc(name)}</span>
+        <span class="response-date">${date}</span>
+      </div>
+      <div class="response-text">${esc(response.text || response.content || '')}</div>
+      ${response.attachment ? `<div class="response-attachment">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+        <a href="${response.attachment.url || '#'}" target="_blank" rel="noopener">${esc(response.attachment.name || 'Attachment')}</a>
+      </div>` : ''}
+    </div>
+  </div>`;
 }
 
-function highlightThread(highlight, responses, canResolve) {
-  const idx = highlight._index !== undefined ? highlight._index + 1 : '?';
+function highlightThread(highlight, responses, canResolve, idx) {
   const status = highlight.status || 'unresolved';
   const badge = resolutionBadge(status);
   const color = RESOLUTION_STATES[status]?.color || '#ef4444';
-  const threadItems = responses.map(r => responseItem(r)).join('<div class="border-t border-gray-100"></div>');
 
-  const resolveActions = canResolve ? `<div class="flex gap-1 mt-3"><select id="resolve-status-${highlight.id}" class="select select-bordered select-xs"><option value="unresolved">Unresolved</option><option value="partial_resolved">Partial</option><option value="manager_resolved">Manager Resolved</option><option value="partner_resolved">Partner Resolved</option><option value="resolved">Resolved</option></select><button class="btn btn-xs btn-primary" onclick="updateResolution('${highlight.id}')">Update</button></div>` : '';
+  const threadItems = responses.map(r => responseItem(r)).join('');
+  const sectionTag = highlight.section_name ? `<span class="review-meta-tag">${esc(highlight.section_name)}</span>` : '';
 
-  const replyForm = `<div class="mt-3 border-t border-gray-100 pt-3"><textarea id="reply-${highlight.id}" class="textarea textarea-bordered textarea-sm w-full" rows="2" placeholder="Add a response..."></textarea><div class="flex justify-end gap-2 mt-2"><button class="btn btn-xs btn-primary" onclick="submitResponse('${highlight.id}')">Reply</button></div></div>`;
+  const resolveSelect = canResolve ? `<div class="thread-card-actions">
+    <label style="font-size:12px;color:var(--color-text-muted)">Mark as:</label>
+    <select id="resolve-status-${highlight.id}" class="form-input" style="width:auto;padding:4px 8px;font-size:13px;min-height:auto" aria-label="Resolution status" onchange="updateResolution('${highlight.id}')">
+      <option value="unresolved" ${status === 'unresolved' ? 'selected' : ''}>Unresolved</option>
+      <option value="partial_resolved" ${status === 'partial_resolved' ? 'selected' : ''}>Partial</option>
+      <option value="manager_resolved" ${status === 'manager_resolved' ? 'selected' : ''}>Manager</option>
+      <option value="partner_resolved" ${status === 'partner_resolved' ? 'selected' : ''}>Partner</option>
+      <option value="resolved" ${status === 'resolved' ? 'selected' : ''}>Resolved</option>
+    </select>
+  </div>` : '';
 
-  return `<div class="card-clean" style="margin-bottom:1rem" id="thread-${highlight.id}"><div class="card-clean-body"><div class="flex items-start justify-between mb-3"><div class="flex items-center gap-2"><span style="width:28px;height:28px;border-radius:50%;background:${color};color:white;display:inline-flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700">${idx}</span><span class="font-medium text-sm">${highlight.text || highlight.content || 'Area highlight'}</span></div>${badge}</div><div class="text-xs text-gray-400 mb-2">Page ${highlight.page_number || '?'} ${highlight.section_name ? '&middot; ' + highlight.section_name : ''}</div><div class="border-t border-gray-100">${threadItems || '<div class="py-4 text-center text-sm text-gray-400">No responses yet</div>'}</div>${resolveActions}${replyForm}</div></div>`;
+  const replyForm = `<div class="thread-reply">
+    <textarea id="reply-${highlight.id}" class="form-input" style="resize:vertical;min-height:60px" rows="2" placeholder="Add a response..."></textarea>
+    <button class="btn-primary-clean" style="align-self:flex-start;padding:8px 16px" onclick="submitResponse('${highlight.id}')">Reply</button>
+  </div>`;
+
+  return `<div class="thread-card" id="thread-${highlight.id}" data-thread-status="${status}">
+    <div class="thread-card-header">
+      <div class="thread-card-meta">
+        <span class="thread-card-idx" style="background:${color}">${idx + 1}</span>
+        <span class="thread-card-text">${esc(highlight.text || highlight.content || 'Area highlight')}</span>
+        ${sectionTag}
+      </div>
+      ${badge}
+    </div>
+    <div class="thread-card-page">Page ${highlight.page_number || '?'}</div>
+    <div class="thread-card-body">
+      ${threadItems || `<div class="thread-card-empty">No responses yet. Be the first to reply.</div>`}
+    </div>
+    ${resolveSelect}
+    ${replyForm}
+  </div>`;
 }
 
 export function renderHighlightThreading(user, review, highlights, responseMap) {
@@ -55,23 +97,79 @@ export function renderHighlightThreading(user, review, highlights, responseMap) 
     open: highlights.filter(h => !h.status || h.status === 'unresolved').length,
   };
 
-  const summary = `<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">${[
-    { label: 'Total', value: stats.total },
-    { label: 'Open', value: stats.open, color: 'red' },
-    { label: 'Partial', value: stats.partial, color: 'yellow' },
-    { label: 'Resolved', value: stats.resolved, color: 'green' },
-  ].map(s => `<div class="card-clean"><div class="card-clean-body" style=""><div class="text-lg font-bold${s.color ? ` text-${s.color}-600` : ''}">${s.value}</div><div class="text-xs text-gray-500">${s.label}</div></div></div>`).join('')}</div>`;
+  const statsHtml = renderStatsRow([
+    { value: stats.total, label: 'Total' },
+    { value: stats.open, label: 'Open', color: 'var(--color-danger)' },
+    { value: stats.partial, label: 'Partial', color: 'var(--color-warning)' },
+    { value: stats.resolved, label: 'Resolved', color: 'var(--color-success)' },
+  ]);
 
-  const filterBar = `<div class="flex gap-2 mb-4"><button class="btn btn-sm btn-primary" data-thread-filter="all" onclick="filterThreads('all')">All (${stats.total})</button><button class="btn btn-sm btn-ghost" data-thread-filter="open" onclick="filterThreads('open')">Open (${stats.open})</button><button class="btn btn-sm btn-ghost" data-thread-filter="resolved" onclick="filterThreads('resolved')">Resolved (${stats.resolved})</button></div>`;
+  const filterBar = `<div class="review-filter-bar">
+    <button class="pill pill-primary" data-thread-filter="all" onclick="filterThreads('all')">All (${stats.total})</button>
+    <button class="pill pill-neutral" data-thread-filter="open" onclick="filterThreads('open')">Open (${stats.open})</button>
+    <button class="pill pill-neutral" data-thread-filter="resolved" onclick="filterThreads('resolved')">Resolved (${stats.resolved})</button>
+  </div>`;
 
   const threads = indexed.map(h => {
     const responses = responseMap?.[h.id] || [];
-    return highlightThread(h, responses, canResolve);
+    return highlightThread(h, responses, canResolve, h._index);
   }).join('');
 
-  const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Highlight Discussions</h1><div class="flex gap-2"><a href="/review/${review.id}" class="btn btn-ghost btn-sm">Back to Review</a>${canResolve ? `<button class="btn btn-sm btn-outline" onclick="bulkResolve()">Resolve All</button>` : ''}</div></div>${summary}${filterBar}<div id="threads-container">${threads || '<div class="text-center py-12 text-gray-400">No highlights to discuss</div>'}</div>`;
+  const pageHeader = renderPageHeader(
+    'Highlight Discussions',
+    `${review.name || 'Review'}`,
+    `${renderButton('Back to Review', { variant: 'ghost', size: 'sm', href: `/review/${review.id}` })}
+     ${canResolve ? renderButton('Resolve All', { variant: 'primary', size: 'sm', onclick: "bulkResolve()" }) : ''}`
+  );
 
-  const threadScript = `window.filterThreads=function(f){document.querySelectorAll('[data-thread-filter]').forEach(b=>{b.classList.toggle('btn-primary',b.dataset.threadFilter===f);b.classList.toggle('btn-ghost',b.dataset.threadFilter!==f)});document.querySelectorAll('#threads-container>.card').forEach(c=>{if(f==='all'){c.style.display=''}else{const badge=c.querySelector('[style*="border-radius:9999px"]');const text=badge?.textContent?.toLowerCase()||'';c.style.display=(f==='resolved'?text==='resolved':text!=='resolved')?'':'none'}})};window.submitResponse=async function(hid){const ta=document.getElementById('reply-'+hid);if(!ta||!ta.value.trim())return;try{const res=await fetch('/api/mwr/review/highlight/'+hid+'/responses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:ta.value.trim()})});if(res.ok){ta.value='';location.reload()}else{alert('Failed to submit response')}}catch(e){alert('Error: '+e.message)}};window.updateResolution=async function(hid){const sel=document.getElementById('resolve-status-'+hid);if(!sel)return;try{const res=await fetch('/api/mwr/review/highlight/'+hid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:sel.value})});if(res.ok)location.reload();else alert('Failed to update')}catch(e){alert('Error: '+e.message)}};window.bulkResolve=async function(){if(!confirm('Resolve all highlights?'))return;try{const res=await fetch(location.pathname.replace('/highlights','')+'?action=resolve-all',{method:'POST'});if(res.ok)location.reload();else alert('Failed')}catch(e){alert('Error: '+e.message)}}`;
+  const content = `
+    ${pageHeader}
+    ${statsHtml}
+    ${filterBar}
+    <div id="threads-container">
+      ${threads || renderEmptyState('No highlights to discuss. Add highlights from the PDF viewer.')}
+    </div>`;
+
+  const threadScript = `
+    window.showToast=window.showToast||function(m,t){alert(m)};
+    window.filterThreads=function(f){
+      document.querySelectorAll('[data-thread-filter]').forEach(b=>{
+        b.className=b.dataset.threadFilter===f?'pill pill-primary':'pill pill-neutral';
+      });
+      document.querySelectorAll('#threads-container>.thread-card').forEach(c=>{
+        const status=c.dataset.threadStatus;
+        const isResolved=status==='resolved';
+        if(f==='all')c.style.display='';
+        else if(f==='resolved')c.style.display=isResolved?'':'none';
+        else c.style.display=isResolved?'none':'';
+      });
+    };
+    window.submitResponse=async function(hid){
+      const ta=document.getElementById('reply-'+hid);
+      if(!ta||!ta.value.trim()){alert('Please enter a response');return}
+      try{
+        const res=await fetch('/api/mwr/review/highlight/'+hid+'/responses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:ta.value.trim()})});
+        if(res.ok){ta.value='';showToast('Response submitted','success');setTimeout(()=>location.reload(),500)}
+        else{const err=await res.json().then(d=>d.error||d.message||'Failed').catch(()=>'Failed');alert('Error: '+err)}
+      }catch(e){alert('Error: '+e.message)}
+    };
+    window.updateResolution=async function(hid){
+      const sel=document.getElementById('resolve-status-'+hid);
+      if(!sel)return;
+      try{
+        const res=await fetch('/api/mwr/review/highlight/'+hid,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:sel.value})});
+        if(res.ok){showToast('Status updated','success');setTimeout(()=>location.reload(),500)}
+        else{alert('Failed to update')}
+      }catch(e){alert('Error: '+e.message)}
+    };
+    window.bulkResolve=async function(){
+      if(!confirm('Resolve all highlights in this review?'))return;
+      try{
+        const res=await fetch('/api/mwr/review/${review.id}?action=resolve-all',{method:'POST'});
+        if(res.ok){showToast('All highlights resolved','success');setTimeout(()=>location.reload(),500)}
+        else{alert('Failed to resolve all')}
+      }catch(e){alert('Error: '+e.message)}
+    };`;
 
   const bc = [{ href: '/', label: 'Home' }, { href: '/review', label: 'Reviews' }, { href: `/review/${review.id}`, label: review.name || 'Review' }, { label: 'Highlights' }];
   return page(user, `${review.name || 'Review'} | Highlights`, bc, reviewZoneNav(review.id, 'highlights') + content, [threadScript]);

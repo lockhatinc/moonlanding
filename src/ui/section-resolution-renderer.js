@@ -1,15 +1,16 @@
-import { statusLabel, linearProgress } from '@/ui/renderer.js';
 import { page } from '@/ui/layout.js';
 import { canEdit } from '@/ui/permissions-ui.js';
 import { reviewZoneNav } from '@/ui/review-zone-nav.js';
+import { esc } from '@/ui/render-helpers.js';
+import { SPACING, renderPageHeader, renderButton, renderResolutionBar, renderEmptyState } from '@/ui/spacing-system.js';
 
-function resolutionBar(resolved, partial, total) {
-  if (total === 0) return '<div class="text-xs text-gray-400">No highlights</div>';
-  const rPct = Math.round((resolved / total) * 100);
-  const pPct = Math.round((partial / total) * 100);
-  const uPct = 100 - rPct - pPct;
-  return `<div class="w-full bg-gray-200 rounded-full h-3 flex overflow-hidden"><div class="bg-green-500 h-3" style="width:${rPct}%" title="${resolved} resolved"></div><div class="bg-yellow-400 h-3" style="width:${pPct}%" title="${partial} partial"></div><div class="bg-red-400 h-3" style="width:${uPct}%"></div></div><div class="flex justify-between text-xs text-gray-500 mt-1"><span class="text-green-600">${resolved} resolved</span><span class="text-yellow-600">${partial} partial</span><span class="text-red-600">${total - resolved - partial} open</span></div>`;
-}
+const RESOLUTION_STATES = {
+  unresolved: { label: 'Unresolved', color: '#ef4444', icon: '&#9679;' },
+  partial_resolved: { label: 'Partial', color: '#f59e0b', icon: '&#9684;' },
+  manager_resolved: { label: 'Manager', color: '#3b82f6', icon: '&#9670;' },
+  partner_resolved: { label: 'Partner', color: '#8b5cf6', icon: '&#9671;' },
+  resolved: { label: 'Resolved', color: '#22c55e', icon: '&#10003;' },
+};
 
 function sectionCard(section, highlights, canResolve) {
   const total = highlights.length;
@@ -19,19 +20,50 @@ function sectionCard(section, highlights, canResolve) {
   const partnerResolved = highlights.filter(h => h.status === 'partner_resolved').length;
   const isMandatory = section.mandatory || section.is_mandatory;
   const allResolved = resolved === total && total > 0;
-  const borderColor = allResolved ? 'border-green-400' : isMandatory ? 'border-red-300' : 'border-gray-100';
 
-  const roleBreakdown = `<div class="grid grid-cols-2 gap-2 mt-3 text-xs"><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span>Manager: ${managerResolved}</div><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-purple-500"></span>Partner: ${partnerResolved}</div></div>`;
+  const cardClass = allResolved ? 'section-card section-card-complete' : isMandatory ? 'section-card section-card-mandatory' : 'section-card section-card-default';
 
-  const highlightRows = highlights.map((h, i) => {
-    const colors = { resolved: '#22c55e', partial_resolved: '#f59e0b', manager_resolved: '#3b82f6', partner_resolved: '#8b5cf6' };
-    const color = colors[h.status] || '#ef4444';
-    return `<div class="flex items-center gap-2 py-1.5 border-b border-gray-50"><span style="width:6px;height:6px;border-radius:50%;background:${color};display:inline-block;flex-shrink:0"></span><span class="text-xs text-gray-700 flex-1 truncate">${h.text || h.content || 'Highlight ' + (i + 1)}</span><span class="text-xs text-gray-400">p.${h.page_number || '?'}</span></div>`;
+  const roleBreakdown = total > 0 ? `<div class="role-breakdown">
+    <div class="role-breakdown-item"><span class="role-breakdown-dot" style="background:#3b82f6"></span>Manager: ${managerResolved}</div>
+    <div class="role-breakdown-item"><span class="role-breakdown-dot" style="background:#8b5cf6"></span>Partner: ${partnerResolved}</div>
+  </div>` : '';
+
+  const highlightRows = highlights.map(h => {
+    const color = RESOLUTION_STATES[h.status]?.color || '#ef4444';
+    const icon = RESOLUTION_STATES[h.status]?.icon || '&#9675;';
+    const text = esc((h.text || h.content || 'Highlight').substring(0, 60));
+    const truncated = (h.text || h.content || '').length > 60 ? '...' : '';
+    return `<div class="section-highlight-row" data-highlight-id="${h.id}">
+      <span class="section-highlight-status" style="color:${color}">${icon}</span>
+      <span class="section-highlight-text" title="${esc(h.text || h.content || 'Highlight')}">${text}${truncated}</span>
+      <span class="section-highlight-page">p.${h.page_number || '?'}</span>
+    </div>`;
   }).join('');
 
-  const resolveBtn = canResolve && !allResolved ? `<button class="btn btn-xs btn-outline mt-2" onclick="resolveSection('${section.id}')">Resolve All</button>` : '';
+  const resolveBtn = canResolve && !allResolved
+    ? `<div class="section-card-actions"><button class="btn-primary-clean" style="width:100%;justify-content:center;padding:8px" onclick="resolveSection('${section.id}')">Resolve All in Section</button></div>`
+    : '';
 
-  return `<div class="card-clean" style="margin-bottom:1rem" data-section-id="${section.id}" data-section-complete="${allResolved}"><div class="card-clean-body"><div class="flex items-start justify-between mb-2"><div class="flex items-center gap-2"><button class="btn btn-ghost btn-xs" onclick="toggleSection('${section.id}')">&#9660;</button><span class="font-medium">${section.name || 'Unnamed Section'}</span>${isMandatory ? '<span class="badge badge-sm bg-red-100 text-red-700">Required</span>' : ''}</div><span class="text-sm font-semibold ${allResolved ? 'text-green-600' : 'text-gray-700'}">${resolved}/${total}</span></div>${resolutionBar(resolved, partial, total)}${roleBreakdown}<div class="mt-3 section-highlights" id="section-highlights-${section.id}">${highlightRows}</div>${resolveBtn}</div></div>`;
+  return `<div class="${cardClass}" data-section-id="${section.id}" data-section-complete="${allResolved}">
+    <div class="section-card-header" onclick="toggleSection('${section.id}')">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="section-card-name">${esc(section.name || 'Unnamed Section')}</span>
+          ${isMandatory ? '<span class="tag-required">REQUIRED</span>' : ''}
+        </div>
+        <div class="section-card-count">${total} highlight${total !== 1 ? 's' : ''}</div>
+      </div>
+      <button style="background:none;border:none;font-size:16px;color:var(--color-text-light);cursor:pointer;padding:4px" aria-label="Toggle section">&#9660;</button>
+    </div>
+    <div class="section-card-body" id="section-body-${section.id}">
+      ${renderResolutionBar(resolved, partial, total)}
+      ${roleBreakdown}
+      <div style="margin-top:${SPACING.md}">
+        ${highlightRows || `<div style="font-size:13px;color:var(--color-text-light);font-style:italic;padding:8px 0">No highlights in this section</div>`}
+      </div>
+    </div>
+    ${resolveBtn}
+  </div>`;
 }
 
 export function renderSectionResolution(user, review, sections, highlightsBySection) {
@@ -47,17 +79,76 @@ export function renderSectionResolution(user, review, sections, highlightsBySect
   });
 
   const overallPct = totalHighlights > 0 ? Math.round((totalResolved / totalHighlights) * 100) : 0;
+  const pctClass = overallPct === 100 ? 'summary-card-pct-success' : overallPct > 50 ? 'summary-card-pct-warning' : 'summary-card-pct-danger';
 
-  const summary = `<div class="card-clean" style="margin-bottom:1.5rem"><div class="card-clean-body"><div class="flex items-center justify-between mb-4"><div><h3 class="font-semibold">Overall Resolution</h3><p class="text-sm text-gray-500">${totalResolved} of ${totalHighlights} highlights resolved</p></div><div class="text-3xl font-bold ${overallPct === 100 ? 'text-green-600' : overallPct > 50 ? 'text-yellow-600' : 'text-red-600'}">${overallPct}%</div></div>${resolutionBar(totalResolved, totalPartial, totalHighlights)}${!mandatoryComplete ? '<div class="mt-3 p-2 bg-red-50 rounded text-sm text-red-700">Mandatory sections have unresolved highlights. Status change blocked.</div>' : ''}</div></div>`;
+  const summaryCard = `<div class="summary-card" style="border-left:4px solid ${overallPct === 100 ? 'var(--color-success)' : overallPct > 50 ? 'var(--color-warning)' : 'var(--color-danger)'}">
+    <div class="summary-card-row">
+      <div>
+        <div style="font-size:15px;font-weight:600;color:var(--color-text)">Overall Resolution</div>
+        <div style="font-size:13px;color:var(--color-text-muted);margin-top:4px">${totalResolved} of ${totalHighlights} highlights resolved</div>
+      </div>
+      <div class="summary-card-pct ${pctClass}">${overallPct}%</div>
+    </div>
+    ${renderResolutionBar(totalResolved, totalPartial, totalHighlights)}
+    ${!mandatoryComplete
+      ? `<div class="summary-card-alert summary-card-alert-danger">Mandatory sections have unresolved highlights. Status changes may be blocked until completed.</div>`
+      : `<div class="summary-card-alert summary-card-alert-success">All mandatory sections are complete</div>`}
+  </div>`;
 
   const sectionCards = sections.map(s => {
     const hs = highlightsBySection[s.id] || [];
     return sectionCard(s, hs, canResolve);
   }).join('');
 
-  const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Section Resolution</h1><div class="flex gap-2"><a href="/review/${review.id}" class="btn btn-ghost btn-sm">Back to Review</a>${canResolve ? `<button class="btn btn-sm btn-primary" onclick="resolveAll()">Resolve All Sections</button>` : ''}</div></div>${summary}<div class="flex items-center gap-2 mb-4"><span class="text-sm font-medium">Sections (${sections.length})</span><label class="flex items-center gap-1 text-sm ml-auto"><input type="checkbox" id="hide-complete" class="checkbox checkbox-sm" onchange="toggleComplete()"/>Hide complete</label></div>${sectionCards || '<div class="text-center py-12 text-gray-400">No sections defined for this review</div>'}`;
+  const pageHeader = renderPageHeader(
+    'Section Resolution',
+    'Track and resolve highlights by section',
+    `${renderButton('Back to Review', { variant: 'ghost', size: 'sm', href: `/review/${review.id}` })}
+     ${canResolve ? renderButton('Resolve All Sections', { variant: 'primary', size: 'sm', onclick: "resolveAll()" }) : ''}`
+  );
 
-  const sectionScript = `window.toggleSection=function(id){const el=document.getElementById('section-highlights-'+id);if(el)el.style.display=el.style.display==='none'?'':'none'};window.toggleComplete=function(){const hide=document.getElementById('hide-complete')?.checked;document.querySelectorAll('[data-section-complete="true"]').forEach(c=>c.style.display=hide?'none':'')};window.resolveSection=async function(id){try{const r=await fetch('/api/mwr/review/section/'+id+'/resolve-all',{method:'POST'});if(r.ok)location.reload();else alert('Failed')}catch(e){alert(e.message)}};window.resolveAll=async function(){if(!confirm('Resolve all highlights in all sections?'))return;try{const r=await fetch('/api/mwr/review/${review.id}/resolve-all',{method:'POST'});if(r.ok)location.reload();else alert('Failed')}catch(e){alert(e.message)}}`;
+  const sectionFilter = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${SPACING.md}">
+    <span style="font-size:14px;font-weight:600;color:var(--color-text)">Sections (${sections.length})</span>
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--color-text-muted);cursor:pointer">
+      <input type="checkbox" id="hide-complete" onchange="toggleComplete()"/>
+      Hide completed sections
+    </label>
+  </div>`;
+
+  const content = `
+    ${pageHeader}
+    ${summaryCard}
+    ${sectionFilter}
+    ${sectionCards || renderEmptyState('No sections defined for this review')}`;
+
+  const sectionScript = `
+    window.showToast=window.showToast||function(m,t){alert(m)};
+    window.toggleSection=function(id){
+      const body=document.getElementById('section-body-'+id);
+      if(!body)return;
+      const isHidden=body.style.display==='none';
+      body.style.display=isHidden?'':'none';
+    };
+    window.toggleComplete=function(){
+      const hide=document.getElementById('hide-complete')?.checked;
+      document.querySelectorAll('[data-section-complete="true"]').forEach(c=>{c.style.display=hide?'none':''});
+    };
+    window.resolveSection=async function(id){
+      if(!confirm('Resolve all highlights in this section?'))return;
+      try{
+        const res=await fetch('/api/mwr/review/section/'+id+'/resolve-all',{method:'POST'});
+        if(res.ok){showToast('Section resolved','success');setTimeout(()=>location.reload(),300)}
+        else{alert('Failed to resolve section')}
+      }catch(e){alert('Error: '+e.message)}
+    };
+    window.resolveAll=async function(){
+      if(!confirm('Resolve ALL highlights in ALL sections? This cannot be undone.'))return;
+      try{
+        const res=await fetch('/api/mwr/review/${review.id}/resolve-all',{method:'POST'});
+        if(res.ok){showToast('All highlights resolved','success');setTimeout(()=>location.reload(),300)}
+        else{alert('Failed to resolve all')}
+      }catch(e){alert('Error: '+e.message)}
+    };`;
 
   const bc = [{ href: '/', label: 'Home' }, { href: '/review', label: 'Reviews' }, { href: `/review/${review.id}`, label: review.name || 'Review' }, { label: 'Resolution' }];
   return page(user, `${review.name || 'Review'} | Resolution`, bc, reviewZoneNav(review.id, 'resolution') + content, [sectionScript]);
