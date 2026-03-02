@@ -12,7 +12,7 @@ function stagePipelineHtml(e) {
     const bg = isCurrent || isPast ? s.color : '#e2e8f0';
     const color = isCurrent || isPast ? '#fff' : '#94a3b8';
     const opacity = isPast ? '0.7' : '1';
-    return `<div onclick="openStageTransition('${esc(s.key)}')" title="${s.label}" style="flex:1;min-width:0;padding:${SPACING.xs} ${SPACING.xs};text-align:center;background:${bg};color:${color};opacity:${opacity};font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.label}</div>`;
+    return `<div data-action="openStageTransition" data-args='["${esc(s.key)}"]' title="${s.label}" style="flex:1;min-width:0;padding:${SPACING.xs} ${SPACING.xs};text-align:center;background:${bg};color:${color};opacity:${opacity};font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.label}</div>`;
   }).join('');
   return `<div style="display:flex;flex-direction:row;width:100%;border-radius:6px;overflow:hidden;height:34px">${stages}</div>`;
 }
@@ -79,12 +79,12 @@ export function renderEngagementDetail(user, engagement, client, rfis = []) {
     return `<tr class="hover cursor-pointer" data-navigate="/rfi/${esc(r.id)}"><td class="text-sm">${esc(r.name||r.title||'RFI')}</td><td><span class="badge ${rc} text-xs">${rs}</span></td><td class="text-sm">${r.deadline?new Date(r.deadline).toLocaleDateString():'-'}</td></tr>`;
   }).join('') || `<tr><td colspan="3" class="text-center py-6 text-base-content/40 text-sm">No RFIs</td></tr>`;
 
-  const stageBtn = canTransition ? `<button onclick="openStageTransition('${esc(e.stage)}')" class="btn btn-ghost btn-sm">Move Stage</button>` : '';
+  const stageBtn = canTransition ? `<button data-action="openStageTransition" data-args='["${esc(e.stage)}"]' class="btn btn-ghost btn-sm">Move Stage</button>` : '';
   const editBtn = canEdit(user, 'engagement') ? `<a href="/engagement/${esc(e.id)}/edit" class="btn btn-primary btn-sm">Edit</a>` : '';
   const newRfiBtn = `<a href="/rfi/new?engagement_id=${esc(e.id)}" class="btn btn-primary btn-sm">+ RFI</a>`;
 
   const TABS = ['Details','RFIs','Chat','Checklist','Activity','Files'];
-  const tabBar = `<div class="tab-bar">${TABS.map((t,i) => `<button onclick="switchEngTab('${t.toLowerCase()}')" id="engtab-${t.toLowerCase()}" class="tab-btn${i===0?' active':''}">${t}</button>`).join('')}</div>`;
+  const tabBar = `<div class="tab-bar">${TABS.map((t,i) => `<button data-action="switchEngTab" data-args='["${t.toLowerCase()}"]' id="engtab-${t.toLowerCase()}" class="tab-btn${i===0?' active':''}">${t}</button>`).join('')}</div>`;
 
   const rfiTable = `<div class="table-wrap"><table class="data-table"><thead><tr><th>Name</th><th>Status</th><th>Deadline</th></tr></thead><tbody>${rfiRows}</tbody></table></div>`;
 

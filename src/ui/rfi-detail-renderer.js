@@ -18,8 +18,8 @@ function questionRow(q, i, sections = []) {
     <td>${respBadge}</td>
     <td>
       <div class="flex gap-2">
-        <button onclick="openEditQuestion('${esc(q.id)}')" class="btn btn-ghost btn-xs">Edit</button>
-        <button onclick="deleteQuestion('${esc(q.id)}')" class="btn btn-error btn-xs">Del</button>
+        <button data-action="openEditQuestion" data-args='["${esc(q.id)}"]' class="btn btn-ghost btn-xs">Edit</button>
+        <button data-action="deleteQuestion" data-args='["${esc(q.id)}"]' class="btn btn-error btn-xs">Del</button>
       </div>
     </td>
   </tr>`;
@@ -51,7 +51,7 @@ function editQuestionDialog(rfiId, sections) {
       </div>
       <input type="hidden" id="q-edit-id"/>
       <div class="modal-action">
-        <button onclick="saveQuestion('${esc(rfiId)}')" class="btn btn-primary">Save</button>
+        <button data-action="saveQuestion" data-args='["${esc(rfiId)}"]' class="btn btn-primary">Save</button>
         <button data-dialog-close="q-dialog" class="btn btn-ghost">Cancel</button>
       </div>
     </div>
@@ -68,7 +68,7 @@ function addSectionDialog(rfiId) {
         <input type="text" id="sec-name" class="input input-solid max-w-full"/>
       </div>
       <div class="modal-action">
-        <button onclick="saveSection('${esc(rfiId)}')" class="btn btn-primary">Add</button>
+        <button data-action="saveSection" data-args='["${esc(rfiId)}"]' class="btn btn-primary">Add</button>
         <button data-dialog-close="sec-dialog" class="btn btn-ghost">Cancel</button>
       </div>
     </div>
@@ -81,8 +81,8 @@ export function renderRfiDetail(user, rfi = {}, questions = [], sections = [], e
     `<tr><td colspan="6" class="text-center py-8 text-base-content/40 text-sm">No questions yet. Add one using the button above.</td></tr>`;
 
   const sectionTabs = sections.length ? `<div class="tabs tabs-boxed bg-base-200 flex-wrap gap-1">
-    <button onclick="filterBySection('')" id="stab-all" class="tab-btn active">All</button>
-    ${sections.map(s => `<button onclick="filterBySection('${esc(s.id)}')" id="stab-${esc(s.id)}" class="tab-btn">${esc(s.name)}</button>`).join('')}
+    <button data-action="filterBySection" data-args='[""]' id="stab-all" class="tab-btn active">All</button>
+    ${sections.map(s => `<button data-action="filterBySection" data-args='["${esc(s.id)}"]' id="stab-${esc(s.id)}" class="tab-btn">${esc(s.name)}</button>`).join('')}
   </div>` : '';
 
   const engLink = engagement
@@ -93,7 +93,7 @@ export function renderRfiDetail(user, rfi = {}, questions = [], sections = [], e
     <div class="flex gap-2 flex-wrap">
       <button data-action="openAddQuestion" class="btn btn-primary btn-sm">+ Question</button>
       <button data-action="openDialog" data-params='{"dialogId":"sec-dialog"}' class="btn btn-ghost btn-sm">+ Section</button>
-      <button onclick="sendReminder('${esc(rfi.id)}')" class="btn btn-ghost btn-sm">Send Reminder</button>
+      <button data-action="sendReminder" data-args='["${esc(rfi.id)}"]' class="btn btn-ghost btn-sm">Send Reminder</button>
       <a href="/rfi/${esc(rfi.id)}/edit" class="btn btn-outline-primary btn-sm">Edit RFI</a>
     </div>` : '';
 

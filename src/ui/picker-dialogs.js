@@ -5,7 +5,7 @@ const DIALOG_COLORS = ['#B0B0B0','#44BBA4','#FF4141','#7F7EFF','#3b82f6','#f59e0
 
 export function colorPickerDialog(id = 'cpd', selected = '#B0B0B0', onSelect = '') {
   const swatches = DIALOG_COLORS.map(c =>
-    `<div class="cpd-swatch${c === selected ? ' cpd-selected' : ''}" style="background:${c}" data-color="${c}" role="option" tabindex="0" aria-label="Color ${c}" aria-selected="${c === selected}" onclick="cpdSelect('${id}','${c}',${onSelect ? 'true' : 'false'})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cpdSelect('${id}','${c}',${onSelect ? 'true' : 'false'})}"></div>`
+    `<div class="cpd-swatch${c === selected ? ' cpd-selected' : ''}" style="background:${c}" data-color="${c}" role="option" tabindex="0" aria-label="Color ${c}" aria-selected="${c === selected}" data-action="cpdSelect" data-args='["${id}","${c}",${onSelect ? "true" : "false"}]' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();cpdSelect('${id}','${c}',${onSelect ? 'true' : 'false'})}"></div>`
   ).join('')
   return `<div id="${id}-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="${id}-dialog-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:360px">
@@ -13,7 +13,7 @@ export function colorPickerDialog(id = 'cpd', selected = '#B0B0B0', onSelect = '
       <div class="dialog-body"><div class="color-picker-grid" role="listbox" aria-label="Color options">${swatches}</div>
         <div style="margin-top:0.75rem;display:flex;align-items:center;gap:0.75rem"><label class="text-sm text-gray-500" for="${id}-custom">Custom:</label><input type="color" id="${id}-custom" value="${selected}" onchange="cpdSelect('${id}',this.value,true)" aria-label="Custom color picker" style="width:40px;height:32px;border:none;cursor:pointer"/><span id="${id}-val" class="text-sm font-medium" aria-live="polite">${selected}</span></div>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="${id}-dialog">Cancel</button><button class="btn btn-primary btn-sm" onclick="cpdConfirm('${id}')">Select</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="${id}-dialog">Cancel</button><button class="btn btn-primary btn-sm" data-action="cpdConfirm" data-args='["${id}"]'>Select</button></div>
     </div></div>
   <script>window._cpd=window._cpd||{};window._cpd['${id}']='${selected}';
   window.cpdSelect=function(id,c){window._cpd[id]=c;document.getElementById(id+'-val').textContent=c;document.getElementById(id+'-custom').value=c;document.querySelectorAll('#'+id+'-dialog .cpd-swatch').forEach(function(el){el.classList.toggle('cpd-selected',el.dataset.color===c)})};
@@ -27,7 +27,7 @@ export function dateChoiceDialog(id = 'dcd') {
     { label: '+1 Week', days: 7 }, { label: '+2 Weeks', days: 14 }, { label: '+1 Month', days: 30 },
     { label: '+3 Months', days: 90 }, { label: 'End of Month', days: 'eom' }, { label: 'End of Quarter', days: 'eoq' },
   ]
-  const presetBtns = presets.map(p => `<button class="date-preset-btn" onclick="dcdPreset('${id}',${typeof p.days === 'number' ? p.days : "'" + p.days + "'"})">${p.label}</button>`).join('')
+  const presetBtns = presets.map(p => `<button class="date-preset-btn" data-action="dcdPreset" data-args='["${id}",${typeof p.days === 'number' ? p.days : '"' + p.days + '"'}]'>${p.label}</button>`).join('')
   return `<div id="${id}-dialog" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="${id}-dialog-title" aria-hidden="true">
     <div class="dialog-panel" style="max-width:380px">
       <div class="dialog-header"><span class="dialog-title" id="${id}-dialog-title">Choose Date</span><button class="dialog-close" data-dialog-close="${id}-dialog" aria-label="Close dialog">&times;</button></div>
@@ -35,7 +35,7 @@ export function dateChoiceDialog(id = 'dcd') {
         <div class="modal-form-group"><label for="${id}-input">Date</label><input type="date"  id="${id}-input" class="input input-bordered w-full"/></div>
         <div class="date-presets">${presetBtns}</div>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="${id}-dialog">Cancel</button><button class="btn btn-error btn-outline btn-sm" onclick="dcdClear('${id}')">Clear</button><button class="btn btn-primary btn-sm" onclick="dcdConfirm('${id}')">Select</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="${id}-dialog">Cancel</button><button class="btn btn-error btn-outline btn-sm" data-action="dcdClear" data-args='["${id}"]'>Clear</button><button class="btn btn-primary btn-sm" data-action="dcdConfirm" data-args='["${id}"]'>Select</button></div>
     </div></div>
   <script>window.dcdPreset=function(id,days){var d=new Date();if(days==='eom'){d=new Date(d.getFullYear(),d.getMonth()+1,0)}else if(days==='eoq'){var q=Math.floor(d.getMonth()/3);d=new Date(d.getFullYear(),(q+1)*3,0)}else{d.setDate(d.getDate()+days)}document.getElementById(id+'-input').value=d.toISOString().split('T')[0]};
   window.dcdConfirm=function(id){var v=document.getElementById(id+'-input').value;document.getElementById(id+'-dialog').style.display='none';if(window._dcdCallback)window._dcdCallback(v||null)};
@@ -70,7 +70,7 @@ export function teamAssignmentDialog(id = 'tad') {
         <input type="text" id="${id}-search" class="tad-search" placeholder="Search by name or email..." aria-label="Search team members" oninput="tadFilter('${id}')"/>
         <div id="${id}-list" class="tad-list"></div>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="${id}-dialog">Cancel</button><button class="btn btn-primary btn-sm" onclick="tadConfirm('${id}')">Assign</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="${id}-dialog">Cancel</button><button class="btn btn-primary btn-sm" data-action="tadConfirm" data-args='["${id}"]'>Assign</button></div>
     </div></div>
   <script>${TOAST_SCRIPT}
   window._tad=window._tad||{};
@@ -83,7 +83,7 @@ export function teamAssignmentDialog(id = 'tad') {
 
 export function teamSelector(id = 'ts', teams = []) {
   const items = teams.map(t =>
-    `<div class="tad-row" data-name="${(t.name || '').toLowerCase()}" onclick="tsSelect('${id}','${t.id}','${(t.name || '').replace(/'/g, "\\'")}')"><div class="tad-name">${t.name || 'Unknown'}</div><div class="tad-email">${t.member_count || 0} members</div></div>`
+    `<div class="tad-row" data-name="${(t.name || '').toLowerCase()}" data-action="tsSelect" data-args='["${id}","${t.id}","${(t.name || '').replace(/"/g, '&quot;')}"]'><div class="tad-name">${t.name || 'Unknown'}</div><div class="tad-email">${t.member_count || 0} members</div></div>`
   ).join('')
   return `<div class="ts-wrap" id="${id}-wrap">
     <div id="${id}-badges" class="ts-badges"></div>
@@ -94,7 +94,7 @@ export function teamSelector(id = 'ts', teams = []) {
   <script>window._ts=window._ts||{};window._ts['${id}']=[];
   window.tsFilter=function(id){var q=document.getElementById(id+'-search').value.toLowerCase();document.querySelectorAll('#'+id+'-dropdown .tad-row').forEach(function(r){r.style.display=r.dataset.name.includes(q)?'':'none'})};
   window.tsSelect=function(id,tid,name){window._ts[id].push({id:tid,name:name});tsRender(id);document.getElementById(id+'-dropdown').classList.remove('ts-open');document.getElementById(id+'-search').value=''};
-  function tsRender(id){var b=document.getElementById(id+'-badges');b.innerHTML='';window._ts[id].forEach(function(t,i){b.innerHTML+='<span class="ts-badge">'+t.name+' <span class="ts-badge-x" onclick="tsRemove(\\''+id+'\\','+i+')">&times;</span></span>'});document.getElementById(id+'-value').value=window._ts[id].map(function(t){return t.id}).join(',')}
+  function tsRender(id){var b=document.getElementById(id+'-badges');b.innerHTML='';window._ts[id].forEach(function(t,i){b.innerHTML+='<span class="ts-badge">'+t.name+' <span class="ts-badge-x" data-action="tsRemove" data-args=\\'["'+id+'",'+i+']\\' >&times;</span></span>'});document.getElementById(id+'-value').value=window._ts[id].map(function(t){return t.id}).join(',')}
   window.tsRemove=function(id,idx){window._ts[id].splice(idx,1);tsRender(id)};
   document.addEventListener('click',function(e){if(!document.getElementById('${id}-wrap').contains(e.target))document.getElementById('${id}-dropdown').classList.remove('ts-open')});</script>`
 }

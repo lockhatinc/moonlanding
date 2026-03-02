@@ -20,7 +20,7 @@ export function crossEngagementFilePicker(currentEngId) {
     </div></div>
   <script>
   window.openCrossFilePicker=function(){document.getElementById('cross-file-picker').style.display='flex';fetch('/api/engagement').then(function(r){return r.json()}).then(function(d){var engs=d.data||d||[];var sel=document.getElementById('cfp-eng');while(sel.options.length>0)sel.remove(0);engs.filter(function(e){return e.id!=='${currentEngId}'}).forEach(function(e){var o=document.createElement('option');o.value=e.id;o.textContent=e.name||e.id;sel.appendChild(o)});if(sel.options.length)cfpLoadFiles()}).catch(function(){})};
-  window.cfpLoadFiles=function(){var eid=document.getElementById('cfp-eng').value;if(!eid)return;fetch('/api/file?engagement_id='+eid).then(function(r){return r.json()}).then(function(d){var files=d.data||d||[];document.getElementById('cfp-files').innerHTML=files.map(function(f){return'<div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded"><span class="text-sm">'+(f.name||f.id)+'</span><button class="btn btn-xs btn-primary" onclick="cfpLink(\\''+f.id+'\\')">Link</button></div>'}).join('')||'<div class="text-gray-500 text-sm">No files</div>'}).catch(function(){})};
+  window.cfpLoadFiles=function(){var eid=document.getElementById('cfp-eng').value;if(!eid)return;fetch('/api/file?engagement_id='+eid).then(function(r){return r.json()}).then(function(d){var files=d.data||d||[];document.getElementById('cfp-files').innerHTML=files.map(function(f){return'<div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded"><span class="text-sm">'+(f.name||f.id)+'</span><button class="btn btn-xs btn-primary" data-action="cfpLink" data-args='["'+f.id+'"]'>Link</button></div>'}).join('')||'<div class="text-gray-500 text-sm">No files</div>'}).catch(function(){})};
   window.cfpLink=async function(fid){try{var r=await fetch('/api/file/link',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file_id:fid,engagement_id:'${currentEngId}'})});if(r.ok){showToast('File linked','success');document.getElementById('cross-file-picker').style.display='none'}else showToast('Failed','error')}catch(e){showToast('Error','error')}};
   </script>`;
 }
@@ -53,7 +53,7 @@ export function fetchCachedPdf(fileId) {
 }
 export function fileAttachmentBar(files = []) {
   if (!files.length) return '';
-  const items = files.map(f => `<div class="flex items-center gap-2 p-1 rounded hover:bg-gray-100 cursor-pointer" onclick="quickView('/api/file/${f.id}/download','${(f.name || '').replace(/'/g, '')}','${f.mime_type || ''}')"><span style="font-size:1.2rem">&#128206;</span><span class="text-xs truncate" style="max-width:120px">${f.name || 'file'}</span></div>`).join('');
+  const items = files.map(f => `<div class="flex items-center gap-2 p-1 rounded hover:bg-gray-100 cursor-pointer" data-action="quickView" data-args='["/api/file/${f.id}/download","${(f.name || '').replace(/"/g, '&quot;')}","${f.mime_type || ''}"]'><span style="font-size:1.2rem">&#128206;</span><span class="text-xs truncate" style="max-width:120px">${f.name || 'file'}</span></div>`).join('');
   return `<div class="flex flex-wrap gap-1 mt-2">${items}</div>`;
 }
 export function fileLinksBar(links = []) {
@@ -64,7 +64,7 @@ export function fileLinksBar(links = []) {
 export function reviewAttachmentChoiceDialog(reviewId) {
   return `<div id="rev-attach-choice" class="dialog-overlay" style="display:none" data-dialog-close-overlay="true" onkeydown="if(event.key==='Escape')this.style.display='none'" role="dialog" aria-modal="true" aria-labelledby="rev-attach-choice-title" aria-hidden="true">
     <div class="dialog-panel"><div class="dialog-header"><span class="dialog-title" id="rev-attach-choice-title">Add Attachment</span><button class="dialog-close" data-dialog-close="rev-attach-choice" aria-label="Close dialog">&times;</button></div>
-      <div class="dialog-body"><div class="flex flex-col gap-3"><button class="btn btn-outline w-full text-left" onclick="document.getElementById('rev-attach-choice').style.display='none';document.getElementById('rac-upload').click()">&#128206; Upload New File</button><button class="btn btn-outline w-full text-left" onclick="document.getElementById('rev-attach-choice').style.display='none';openCrossFilePicker()">&#128279; Link Existing File</button><button class="btn btn-outline w-full text-left" onclick="document.getElementById('rev-attach-choice').style.display='none';racUrl()">&#127760; Add URL</button></div><input type="file" id="rac-upload" style="display:none" onchange="racUploadFile()"/></div>
+      <div class="dialog-body"><div class="flex flex-col gap-3"><button class="btn btn-outline w-full text-left" data-dialog-close="rev-attach-choice" data-action="triggerUpload">&#128206; Upload New File</button><button class="btn btn-outline w-full text-left" data-dialog-close="rev-attach-choice" data-action="openCrossFilePicker">&#128279; Link Existing File</button><button class="btn btn-outline w-full text-left" data-dialog-close="rev-attach-choice" data-action="racUrl">&#127760; Add URL</button></div><input type="file" id="rac-upload" style="display:none" onchange="racUploadFile()"/></div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="rev-attach-choice">Cancel</button></div>
     </div></div>
   <script>

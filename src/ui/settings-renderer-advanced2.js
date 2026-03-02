@@ -55,8 +55,8 @@ export function renderSettingsTemplateManage(user, template = {}, sections = [])
     <td class="text-sm font-medium">${esc(s.name || '-')}</td>
     <td class="text-sm text-base-content/50">${s.order ?? i}</td>
     <td><div class="flex gap-1">
-      <button onclick="editTplSection('${esc(s.id)}','${esc((s.name||'').replace(/'/g,"\\'"))}','${esc(s.color||'#B0B0B0')}')" class="btn btn-ghost btn-xs">Edit</button>
-      <button onclick="deleteTplSection('${esc(s.id)}')" class="btn btn-error btn-xs btn-outline">Delete</button>
+      <button data-action="editTplSection" data-args='["${esc(s.id)}","${esc((s.name||'').replace(/"/g,'&quot;'))}","${esc(s.color||'#B0B0B0')}"]' class="btn btn-ghost btn-xs">Edit</button>
+      <button data-action="deleteTplSection" data-args='["${esc(s.id)}"]' class="btn btn-error btn-xs btn-outline">Delete</button>
     </div></td>
   </tr>`).join('');
   const tplBc = [{ href: '/', label: 'Dashboard' }, { href: '/admin/settings', label: 'Settings' }, { href: '/admin/settings/templates', label: 'Templates' }, { label: template.name || 'Template' }];

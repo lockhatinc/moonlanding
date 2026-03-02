@@ -92,7 +92,7 @@ export function nav(user, pathname = '') {
     ${logoutLink}${engLink}${clientLink}${settingsLink}${reviewLink}
   </div>
   <div style="display:flex;align-items:center;gap:0.75rem;margin-left:1rem;padding-right:1rem;flex-shrink:0">
-    <div style="display:flex;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;border-radius:50%;background:${avatarBg};color:#fff;font-weight:700;font-size:0.82rem;cursor:pointer;flex-shrink:0;min-width:44px;min-height:44px" id="user-avatar" onclick="toggleUserMenu(event)" title="${user?.name || 'User'}" aria-label="User menu" role="button" tabindex="0">
+    <div style="display:flex;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;border-radius:50%;background:${avatarBg};color:#fff;font-weight:700;font-size:0.82rem;cursor:pointer;flex-shrink:0;min-width:44px;min-height:44px" id="user-avatar" data-action="toggleUserMenu" data-pass-event title="${user?.name || 'User'}" aria-label="User menu" role="button" tabindex="0">
       ${avatarInitial}
     </div>
     <button class="nav-hamburger" data-action="toggleMobileNav" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-drawer" style="background:none;border:none;color:#ced4da;cursor:pointer;padding:8px;border-radius:4px;align-items:center;justify-content:center;min-width:44px;min-height:44px">

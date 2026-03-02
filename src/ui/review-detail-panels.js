@@ -10,7 +10,7 @@ export function highlightRow(h) {
     <td style="font-size:13px;color:var(--color-text-muted)">p.${h.page||h.page_number||'-'}</td>
     <td>${badge}</td>
     <td style="font-size:13px;color:var(--color-text-muted)">${h.created_by_name||h.user_id||'-'}</td>
-    <td>${!resolved ? `<button onclick="resolveHighlight('${esc(h.id)}')" class="btn-primary-clean" style="font-size:12px;padding:4px 10px">Resolve</button>` : ''}</td>
+    <td>${!resolved ? `<button data-action="resolveHighlight" data-args='["${esc(h.id)}"]' class="btn-primary-clean" style="font-size:12px;padding:4px 10px">Resolve</button>` : ''}</td>
   </tr>`;
 }
 
@@ -19,7 +19,7 @@ export function collaboratorRow(c) {
     <td>${esc(c.user_name||c.email||c.user_id||'-')}</td>
     <td><span class="pill pill-info">${esc(c.role||'viewer')}</span></td>
     <td style="font-size:13px;color:var(--color-text-muted)">${c.expires_at?new Date(typeof c.expires_at==='number'?c.expires_at*1000:c.expires_at).toLocaleDateString():'-'}</td>
-    <td><button onclick="removeCollaborator('${esc(c.id)}')" class="btn-danger-clean" style="font-size:12px;padding:4px 10px">Remove</button></td>
+    <td><button data-action="removeCollaborator" data-args='["${esc(c.id)}"]' class="btn-danger-clean" style="font-size:12px;padding:4px 10px">Remove</button></td>
   </tr>`;
 }
 
@@ -41,7 +41,7 @@ export function addCollaboratorDialog(reviewId) {
       </div>
       <div class="form-actions" style="padding-top:0;margin-top:0">
         <button data-dialog-close="collab-dialog" class="btn-ghost-clean" style="font-size:13px;padding:8px 16px">Cancel</button>
-        <button onclick="addCollaborator('${esc(reviewId)}')" class="btn-primary-clean" style="font-size:13px;padding:8px 16px">Add</button>
+        <button data-action="addCollaborator" data-args='["${esc(reviewId)}"]' class="btn-primary-clean" style="font-size:13px;padding:8px 16px">Add</button>
       </div>
     </div>
   </div>`;

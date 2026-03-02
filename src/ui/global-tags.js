@@ -54,8 +54,8 @@ function renderTagsList() {
       <div class="tag-dot" style="background-color: ${t.color}"></div>
       <div class="tag-info"><span class="tag-name">${esc(t.name)}</span><span class="tag-usage">${t.usage || 0} items</span></div>
       <div class="tag-actions">
-        <button class="btn btn-xs btn-ghost" onclick="gtsEditTag('${t.id}')">Edit</button>
-        <button class="btn btn-xs btn-ghost text-error" onclick="gtsDeleteTag('${t.id}')">Delete</button>
+        <button class="btn btn-xs btn-ghost" data-action="gtsEditTag" data-args='["${t.id}"]'>Edit</button>
+        <button class="btn btn-xs btn-ghost text-error" data-action="gtsDeleteTag" data-args='["${t.id}"]'>Delete</button>
       </div>
     </div>
   `).join('') || '<p class="text-xs text-gray-500">No tags created</p>'}</div>`;
@@ -65,13 +65,13 @@ function showDialog(mode = 'create', tagId = null) {
   const tag = mode === 'edit' ? tagsStore[tagId] : null;
   const html = `
     <div class="dialog-overlay" id="tag-dialog-overlay" data-action="gtsCloseDialog" onkeydown="if(event.key==='Escape')gtsCloseDialog()" role="dialog" aria-modal="true" aria-labelledby="tag-dialog-heading" aria-hidden="true">
-      <div class="dialog-content" onclick="event.stopPropagation()">
+      <div class="dialog-content" data-stop-propagation="true">
         <div class="dialog-header"><h2 id="tag-dialog-heading">${mode === 'create' ? 'Create New Tag' : 'Edit Tag'}</h2><button class="btn btn-sm btn-ghost" data-action="gtsCloseDialog" aria-label="Close dialog">&times;</button></div>
         <div class="dialog-body">
           <div class="form-group"><label class="label" for="tag-name-input">Tag Name</label><input type="text" class="input input-bordered w-full" id="tag-name-input" placeholder="e.g., Priority" value="${tag ? esc(tag.name) : ''}" maxlength="50" /></div>
           <div class="form-group"><label class="label" for="tag-color-input">Color</label><div class="flex gap-2"><input type="color" id="tag-color-input" value="${tag ? tag.color : '#808080'}" aria-label="Tag color" /><span id="color-preview" class="w-8 h-8 rounded border" style="background-color: ${tag ? tag.color : '#808080'}" aria-hidden="true"></span></div></div>
         </div>
-        <div class="dialog-footer"><button class="btn btn-ghost" data-action="gtsCloseDialog">Cancel</button><button class="btn btn-primary" onclick="gtsSaveTag('${mode}', '${tagId || ''}')">${mode === 'create' ? 'Create' : 'Update'}</button></div>
+        <div class="dialog-footer"><button class="btn btn-ghost" data-action="gtsCloseDialog">Cancel</button><button class="btn btn-primary" data-action="gtsSaveTag" data-args='["${mode}","${tagId || ''}"]'>${mode === 'create' ? 'Create' : 'Update'}</button></div>
       </div>
     </div>`;
   const container = document.getElementById('tag-dialog-container') || (c => (document.body.appendChild(c), c))(Object.assign(document.createElement('div'), { id: 'tag-dialog-container' }));
@@ -135,7 +135,7 @@ export async function initGlobalTags() {
 export function renderTagsUI() {
   return `
     <div class="card-clean"><div class="card-clean-body">
-      <div class="flex justify-between items-center mb-4"><h2 class="card-title text-lg">Global Tags</h2><button class="btn btn-primary btn-sm" onclick="gtsOpenDialog('create')">New Tag</button></div>
+      <div class="flex justify-between items-center mb-4"><h2 class="card-title text-lg">Global Tags</h2><button class="btn btn-primary btn-sm" data-action="gtsOpenDialog" data-args='["create"]'>New Tag</button></div>
       <div id="tags-list-container">${renderTagsList()}</div>
     </div></div>
     <div id="tag-dialog-container"></div>

@@ -34,7 +34,7 @@ export function reviewTemplateChoiceDialog() {
       </div>
       <div class="dialog-footer">
         <button class="btn btn-ghost btn-sm" data-dialog-close="review-template-dialog">Cancel</button>
-        <button class="btn btn-outline btn-sm" onclick="window.rtdCallback&&window.rtdCallback(null);document.getElementById('review-template-dialog').style.display='none'">No Template</button>
+        <button class="btn btn-outline btn-sm" data-action="rtdCancel" data-dialog-close="review-template-dialog">No Template</button>
       </div>
     </div>
   </div>
@@ -45,14 +45,14 @@ export function reviewTemplateChoiceDialog() {
 
 export function reviewContextMenu() {
   return `<div id="review-ctx-menu" class="review-ctx-menu" style="display:none" role="menu" aria-label="Review actions" onkeydown="if(event.key==='Escape'){this.style.display='none'}">
-    <div class="ctx-item" role="menuitem" tabindex="0" onclick="ctxAction('view')" onkeydown="if(event.key==='Enter')ctxAction('view')">View</div>
-    <div class="ctx-item" role="menuitem" tabindex="0" onclick="ctxAction('edit')" onkeydown="if(event.key==='Enter')ctxAction('edit')">Edit</div>
-    <div class="ctx-item" role="menuitem" tabindex="0" onclick="ctxAction('duplicate')" onkeydown="if(event.key==='Enter')ctxAction('duplicate')">Duplicate</div>
+    <div class="ctx-item" role="menuitem" tabindex="0" data-action="ctxAction" data-args='["view"]' onkeydown="if(event.key==='Enter')ctxAction('view')">View</div>
+    <div class="ctx-item" role="menuitem" tabindex="0" data-action="ctxAction" data-args='["edit"]' onkeydown="if(event.key==='Enter')ctxAction('edit')">Edit</div>
+    <div class="ctx-item" role="menuitem" tabindex="0" data-action="ctxAction" data-args='["duplicate"]' onkeydown="if(event.key==='Enter')ctxAction('duplicate')">Duplicate</div>
     <div class="ctx-sep" role="separator"></div>
-    <div class="ctx-item" role="menuitem" tabindex="0" onclick="ctxAction('archive')" onkeydown="if(event.key==='Enter')ctxAction('archive')">Archive</div>
-    <div class="ctx-item" role="menuitem" tabindex="0" onclick="ctxAction('export')" onkeydown="if(event.key==='Enter')ctxAction('export')">Export PDF</div>
+    <div class="ctx-item" role="menuitem" tabindex="0" data-action="ctxAction" data-args='["archive"]' onkeydown="if(event.key==='Enter')ctxAction('archive')">Archive</div>
+    <div class="ctx-item" role="menuitem" tabindex="0" data-action="ctxAction" data-args='["export"]' onkeydown="if(event.key==='Enter')ctxAction('export')">Export PDF</div>
     <div class="ctx-sep" role="separator"></div>
-    <div class="ctx-item ctx-danger" role="menuitem" tabindex="0" onclick="ctxAction('delete')" onkeydown="if(event.key==='Enter')ctxAction('delete')">Delete</div>
+    <div class="ctx-item ctx-danger" role="menuitem" tabindex="0" data-action="ctxAction" data-args='["delete"]' onkeydown="if(event.key==='Enter')ctxAction('delete')">Delete</div>
   </div>`;
 }
 
@@ -73,7 +73,7 @@ export function reviewFlagsDialog() {
     </div>
   </div>
   <script>${TOAST_SCRIPT_INLINE}
-  window.showFlagsDialog=function(reviewId,flags){window._rfdReviewId=reviewId;document.getElementById('review-flags-dialog').style.display='flex';var c=document.getElementById('rfd-flags');c.innerHTML='';(flags||[]).forEach(function(f,i){var d=document.createElement('div');d.className='flex items-center justify-between gap-2';d.style.padding='0.5rem 0';d.style.borderBottom='1px solid #f3f4f6';d.innerHTML='<span class="text-sm">'+f+'</span><button class="btn btn-xs btn-error btn-outline" onclick="removeReviewFlag('+i+')">Remove</button>';c.appendChild(d)});if(!flags||!flags.length)c.innerHTML='<div class="text-gray-500 text-sm text-center py-2">No flags</div>'};
+  window.showFlagsDialog=function(reviewId,flags){window._rfdReviewId=reviewId;document.getElementById('review-flags-dialog').style.display='flex';var c=document.getElementById('rfd-flags');c.innerHTML='';(flags||[]).forEach(function(f,i){var d=document.createElement('div');d.className='flex items-center justify-between gap-2';d.style.padding='0.5rem 0';d.style.borderBottom='1px solid #f3f4f6';d.innerHTML='<span class="text-sm">'+f+'</span><button class="btn btn-xs btn-error btn-outline" data-action="removeReviewFlag" data-args='["+i+"]'>Remove</button>';c.appendChild(d)});if(!flags||!flags.length)c.innerHTML='<div class="text-gray-500 text-sm text-center py-2">No flags</div>'};
   window._rfdFlags=[];
   window.addReviewFlag=async function(){var inp=document.getElementById('rfd-new');var v=inp.value.trim();if(!v)return;try{var res=await fetch('/api/review/'+window._rfdReviewId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({flags:JSON.stringify([...(window._rfdFlags||[]),v])})});if(res.ok){showToast('Flag added','success');inp.value='';setTimeout(function(){location.reload()},500)}else{showToast('Failed','error')}}catch(e){showToast('Error: '+e.message,'error')}};
   window.removeReviewFlag=async function(idx){var f=(window._rfdFlags||[]).filter(function(_,i){return i!==idx});try{var res=await fetch('/api/review/'+window._rfdReviewId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({flags:JSON.stringify(f)})});if(res.ok){showToast('Flag removed','success');setTimeout(function(){location.reload()},500)}else{showToast('Failed','error')}}catch(e){showToast('Error: '+e.message,'error')}};
@@ -99,7 +99,7 @@ export function reviewTagsDialog() {
   <script>${TOAST_SCRIPT_INLINE}
   window._rtagsId=null;window._rtagsList=[];
   window.showTagsDialog=function(reviewId,tags){window._rtagsId=reviewId;window._rtagsList=tags||[];document.getElementById('review-tags-dialog').style.display='flex';renderTags()};
-  function renderTags(){var c=document.getElementById('rtags-list');c.innerHTML='';window._rtagsList.forEach(function(t,i){c.innerHTML+='<span class="ts-badge">'+t+' <span class="ts-badge-x" onclick="removeReviewTag('+i+')">&times;</span></span>'});if(!window._rtagsList.length)c.innerHTML='<span class="text-xs text-gray-500">No tags</span>'}
+  function renderTags(){var c=document.getElementById('rtags-list');c.innerHTML='';window._rtagsList.forEach(function(t,i){c.innerHTML+='<span class="ts-badge">'+t+' <span class="ts-badge-x" data-action="removeReviewTag" data-args='["+i+"]'>&times;</span></span>'});if(!window._rtagsList.length)c.innerHTML='<span class="text-xs text-gray-500">No tags</span>'}
   window.addReviewTag=async function(){var v=document.getElementById('rtags-new').value.trim();if(!v)return;window._rtagsList.push(v);try{await fetch('/api/review/'+window._rtagsId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({tags:JSON.stringify(window._rtagsList)})});showToast('Tag added','success');document.getElementById('rtags-new').value='';renderTags()}catch(e){showToast('Error','error')}};
   window.removeReviewTag=async function(idx){window._rtagsList.splice(idx,1);try{await fetch('/api/review/'+window._rtagsId,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({tags:JSON.stringify(window._rtagsList)})});showToast('Tag removed','success');renderTags()}catch(e){showToast('Error','error')}};
   </script>`;
@@ -134,10 +134,10 @@ export function reviewDeadlineDialog() {
       <div class="dialog-body">
         <div class="modal-form-group"><label for="rdd-date">Deadline Date</label><input type="date"  id="rdd-date" class="input input-bordered w-full"/></div>
         <div class="date-presets">
-          <button class="date-preset-btn" onclick="setDeadlinePreset(7)">+1 Week</button>
-          <button class="date-preset-btn" onclick="setDeadlinePreset(14)">+2 Weeks</button>
-          <button class="date-preset-btn" onclick="setDeadlinePreset(30)">+1 Month</button>
-          <button class="date-preset-btn" onclick="setDeadlinePreset(90)">+3 Months</button>
+          <button class="date-preset-btn" data-action="setDeadlinePreset" data-args='[7]'>+1 Week</button>
+          <button class="date-preset-btn" data-action="setDeadlinePreset" data-args='[14]'>+2 Weeks</button>
+          <button class="date-preset-btn" data-action="setDeadlinePreset" data-args='[30]'>+1 Month</button>
+          <button class="date-preset-btn" data-action="setDeadlinePreset" data-args='[90]'>+3 Months</button>
         </div>
         <div class="modal-form-group" style="margin-top:1rem"><label for="rdd-reminder">Reminder</label><select id="rdd-reminder" class="select select-bordered w-full"><option value="">No reminder</option><option value="1">1 day before</option><option value="3">3 days before</option><option value="7">1 week before</option></select></div>
       </div>

@@ -56,7 +56,7 @@ export function renderPasswordResetPage(params = {}) {
           </div>
           <button type="submit" id="submitBtn">Send Reset Link</button>
           <p class="note">
-            Remember your password? <span class="link" onclick="window.location.href='/login'">Sign in</span>
+            Remember your password? <span class="link" data-navigate="/login">Sign in</span>
           </p>
         ` : `
           <input type="hidden" name="token" value="${token}">
@@ -70,7 +70,7 @@ export function renderPasswordResetPage(params = {}) {
           </div>
           <button type="submit" id="submitBtn">Update Password</button>
           <p class="note">
-            <span class="link" onclick="window.location.href='/login'">Back to login</span>
+            <span class="link" data-navigate="/login">Back to login</span>
           </p>
         `}
       </form>

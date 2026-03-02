@@ -52,9 +52,9 @@ export function renderSettingsUserDetail(user, targetUser = {}, teams = []) {
     ${selectField('Status', 'u-status', ['active','inactive','deleted'], targetUser.status || 'active')}
     ${isNew ? field('Password', 'u-password', 'password', '') : ''}
     <div class="flex gap-3 pt-4 border-t border-base-200">
-      <button type="button" onclick="saveUser('${esc(targetUser.id || '')}')" class="btn btn-primary">${isNew ? 'Create User' : 'Save Changes'}</button>
-      ${!isNew ? `<button type="button" onclick="resetPassword('${esc(targetUser.id)}')" class="btn btn-ghost">Reset Password</button>` : ''}
-      ${!isNew && targetUser.status !== 'deleted' ? `<button type="button" onclick="deactivateUser('${esc(targetUser.id)}')" class="btn btn-error btn-outline">Deactivate</button>` : ''}
+      <button type="button" data-action="saveUser" data-args='["${esc(targetUser.id || '')}"]' class="btn btn-primary">${isNew ? 'Create User' : 'Save Changes'}</button>
+      ${!isNew ? `<button type="button" data-action="resetPassword" data-args='["${esc(targetUser.id)}"]' class="btn btn-ghost">Reset Password</button>` : ''}
+      ${!isNew && targetUser.status !== 'deleted' ? `<button type="button" data-action="deactivateUser" data-args='["${esc(targetUser.id)}"]' class="btn btn-error btn-outline">Deactivate</button>` : ''}
     </div>
   </form>`;
 
@@ -91,7 +91,7 @@ export function renderSettingsTeamDetail(user, team = {}, allUsers = []) {
     <td class="text-sm">${esc(m.name||'-')}</td>
     <td class="text-sm text-base-content/60">${esc(m.email||'-')}</td>
     <td>${roleBadge(m.role)}</td>
-    <td><button onclick="removeMember('${esc(team.id||'')}','${esc(m.id)}')" class="btn btn-error btn-xs btn-outline">Remove</button></td>
+    <td><button data-action="removeMember" data-args='["${esc(team.id||'')}","${esc(m.id)}"]' class="btn btn-error btn-xs btn-outline">Remove</button></td>
   </tr>`).join('') || `<tr><td colspan="4" class="text-center py-6 text-base-content/40 text-sm">No members yet</td></tr>`;
 
   const availOpts = available.map(u => `<option value="${esc(u.id)}">${esc(u.name||u.email||u.id)}</option>`).join('');
@@ -102,13 +102,13 @@ export function renderSettingsTeamDetail(user, team = {}, allUsers = []) {
       <div class="space-y-4">
         ${field('Team Name', 't-name', 'text', team.name || '')}
         ${selectField('Context', 't-context', ['general','engagement_team','review_team'], team.context || 'general')}
-        <button onclick="saveTeam('${esc(team.id||'')}')" class="btn btn-primary">${isNew ? 'Create Team' : 'Save Changes'}</button>
+        <button data-action="saveTeam" data-args='["${esc(team.id||'')}"]' class="btn btn-primary">${isNew ? 'Create Team' : 'Save Changes'}</button>
       </div>
     </div></div>
     <div class="card-clean"><div class="card-clean-body">
       <div class="flex justify-between items-center mb-4">
         <h2 class="card-title text-base">Members (${members.length})</h2>
-        ${!isNew ? `<div class="flex gap-2"><select id="add-member-select" class="select select-solid select-sm"><option value="">Select user...</option>${availOpts}</select><button onclick="addMember('${esc(team.id||'')}')" class="btn btn-primary btn-sm">Add</button></div>` : '<span class="text-sm text-base-content/40">Save team first to add members</span>'}
+        ${!isNew ? `<div class="flex gap-2"><select id="add-member-select" class="select select-solid select-sm"><option value="">Select user...</option>${availOpts}</select><button data-action="addMember" data-args='["${esc(team.id||'')}"]' class="btn btn-primary btn-sm">Add</button></div>` : '<span class="text-sm text-base-content/40">Save team first to add members</span>'}
       </div>
       ${inlineTable(['Name','Email','Role',''], memberRows, 'No members')}
     </div></div>

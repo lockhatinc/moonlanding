@@ -63,6 +63,7 @@ export function renderStandaloneLogin(showGoogleAuth = false) {
       </form>
     </div>
   </div>
+  <script src="/ui/event-delegation.js"></script>
   <script>
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
       e.preventDefault();

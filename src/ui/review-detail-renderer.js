@@ -31,7 +31,7 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
   ];
 
   const tabBar = `<nav class="tab-bar" style="margin-bottom:${SPACING.lg}">
-    ${TABS.map((t, i) => `<button onclick="switchTab('${t.id}')" id="rvtab-${t.id}" class="tab-btn${i === 0 ? ' active' : ''}" aria-selected="${i === 0}">${t.label}${t.count !== undefined ? `<span class="tab-count">${t.count}</span>` : ''}</button>`).join('')}
+    ${TABS.map((t, i) => `<button data-action="switchTab" data-args='["${t.id}"]' id="rvtab-${t.id}" class="tab-btn${i === 0 ? ' active' : ''}" aria-selected="${i === 0}">${t.label}${t.count !== undefined ? `<span class="tab-count">${t.count}</span>` : ''}</button>`).join('')}
   </nav>`;
 
   const infoGrid = renderInfoGrid([
@@ -64,10 +64,10 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
   actions.push(renderButton('Resolution', { variant: 'ghost', size: 'sm', href: `/review/${esc(r.id)}/resolution` }));
   if (canEditReview) {
     actions.push(renderButton('Edit', { variant: 'outline', size: 'sm', href: `/review/${esc(r.id)}/edit` }));
-    actions.push(renderButton('Export PDF', { variant: 'ghost', size: 'sm', onclick: `exportPdf('${esc(r.id)}')` }));
+    actions.push(renderButton('Export PDF', { variant: 'ghost', size: 'sm', action: 'exportPdf', args: [`${esc(r.id)}`] }));
   }
   if (resolvedH < totalH && canEditReview) {
-    actions.push(renderButton('Bulk Resolve', { variant: 'success', size: 'sm', onclick: `bulkResolve('${esc(r.id)}')` }));
+    actions.push(renderButton('Bulk Resolve', { variant: 'success', size: 'sm', action: 'bulkResolve', args: [`${esc(r.id)}`] }));
   }
 
   const overviewPanel = `<div id="rvpanel-overview" class="rv-panel">
@@ -93,7 +93,7 @@ export function renderReviewDetail(user, review, highlights = [], collaborators 
 
   const collabRows = collaborators.map(c => collaboratorRow(c)).join('');
   const collabPanel = tablePanel('collaborators', 'Collaborators', collaborators.length,
-    canEditReview ? renderButton('+ Add Collaborator', { variant: 'primary', size: 'sm', onclick: "document.getElementById('collab-dialog').style.display='flex'" }) : '',
+    canEditReview ? renderButton('+ Add Collaborator', { variant: 'primary', size: 'sm', action: 'openDialog', args: ['collab-dialog'] }) : '',
     ['User', 'Role', 'Expires', 'Actions'], collabRows, 'No collaborators added yet');
 
   const clRows = checklists.map(cl => {

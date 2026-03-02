@@ -17,7 +17,7 @@ export function renderRfiList(user, rfis = [], engagements = []) {
   const tabBar = `<div class="tab-bar">${TABS.map(t => {
     const count = t === 'all' ? rfis.length : (statusCounts[t] || 0);
     const label = t === 'all' ? 'All RFIs' : t.charAt(0).toUpperCase()+t.slice(1);
-    return `<button class="tab-btn${t==='all'?' active':''}" id="tab-${t}" onclick="filterTab('${t}')">${label}<span class="tab-count">${count}</span></button>`;
+    return `<button class="tab-btn${t==='all'?' active':''}" id="tab-${t}" data-action="filterTab" data-args='["${t}"]'>${label}<span class="tab-count">${count}</span></button>`;
   }).join('')}</div>`;
 
   const overdueCount = rfis.filter(r => r.deadline && new Date(typeof r.deadline==='number'?r.deadline*1000:r.deadline) < new Date()).length;
@@ -27,7 +27,7 @@ export function renderRfiList(user, rfis = [], engagements = []) {
     const eng = engMap[r.engagement_id] || {};
     const s = (r.status || 'draft').toLowerCase();
     const name = esc(r.display_name || r.name || r.title || 'RFI '+r.id.slice(0,6));
-    const engLink = eng.name ? `<a href="/engagement/${eng.id}" onclick="event.stopPropagation()" style="color:var(--color-info)">${esc(eng.name)}</a>` : '<span style="color:var(--color-text-light)">—</span>';
+    const engLink = eng.name ? `<a href="/engagement/${eng.id}" data-stop-propagation="true" style="color:var(--color-info)">${esc(eng.name)}</a>` : '<span style="color:var(--color-text-light)">—</span>';
     const created = r.created_at ? new Date(typeof r.created_at==='number'?r.created_at*1000:r.created_at).toLocaleDateString('en-ZA') : '—';
     return `<tr data-row data-status="${s}" data-navigate="/rfi/${r.id}" style="cursor:pointer">
       <td data-col="name"><strong>${name}</strong></td>

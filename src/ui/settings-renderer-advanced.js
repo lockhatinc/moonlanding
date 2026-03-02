@@ -7,7 +7,7 @@ const hdr = (title, addHref, addLabel) => `${settingsBack()}<div class="flex jus
   <a href="${addHref}" class="btn btn-primary btn-sm">${addLabel}</a>
 </div>`;
 const bc = (label) => [{ href: '/', label: 'Dashboard' }, { href: '/admin/settings', label: 'Settings' }, { label }];
-const editBtn = (href) => `<a href="${href}" onclick="event.stopPropagation()" class="btn btn-ghost btn-xs">Edit</a>`;
+const editBtn = (href) => `<a href="${href}" data-stop-propagation="true" class="btn btn-ghost btn-xs">Edit</a>`;
 const trClick = (url) => `class="hover cursor-pointer" data-navigate="${url}"`;
 
 export function renderSettingsTemplates(user, templates = []) {
@@ -73,13 +73,13 @@ export function renderSettingsIntegrations(user, integrations = {}) {
         <div class="flex-1"><div class="font-semibold">${integ.name}</div><div class="text-xs text-base-content/50">${integ.desc}</div></div>
         <div class="flex flex-col items-end gap-2">
           <span class="badge ${connected ? 'badge-success badge-flat-success' : 'badge-flat-secondary'} text-xs">${connected ? 'Connected' : 'Disconnected'}</span>
-          <button onclick="toggleConfig('${integ.id}')" class="btn btn-ghost btn-xs">Configure</button>
+          <button data-action="toggleConfig" data-args='["${integ.id}"]' class="btn btn-ghost btn-xs">Configure</button>
         </div>
       </div>
       <div id="config-${integ.id}" class="hidden mt-4 pt-4 border-t border-base-200">
         <div class="flex gap-3 items-end flex-wrap">
           <div class="form-group flex-1 min-w-48"><label class="label"><span class="label-text font-semibold">API Key / Credentials</span></label><input type="password" id="key-${integ.id}" class="input input-solid max-w-full" placeholder="Enter credentials"/></div>
-          <div class="flex gap-2"><button onclick="saveIntegration('${integ.id}')" class="btn btn-primary btn-sm">Save</button><button onclick="testIntegration('${integ.id}')" class="btn btn-ghost btn-sm">Test</button></div>
+          <div class="flex gap-2"><button data-action="saveIntegration" data-args='["${integ.id}"]' class="btn btn-primary btn-sm">Save</button><button data-action="testIntegration" data-args='["${integ.id}"]' class="btn btn-ghost btn-sm">Test</button></div>
         </div>
       </div>
     </div></div>`;

@@ -46,11 +46,11 @@ export function renderReviewListTabbed(user, reviews) {
   TAB_DEFS.forEach(t => { counts[t.key] = reviews.filter(t.filter).length; });
 
   const tabBar = `<nav class="tab-bar" style="margin-bottom:${SPACING.lg}">
-    ${TAB_DEFS.map(t => `<button class="tab-btn${t.key === 'all' ? ' active' : ''}" data-tab="${t.key}" onclick="switchTab('${t.key}')">${t.label}<span class="tab-count">${counts[t.key]}</span></button>`).join('')}
+    ${TAB_DEFS.map(t => `<button class="tab-btn${t.key === 'all' ? ' active' : ''}" data-tab="${t.key}" data-action="switchTab" data-args='["${t.key}"]'>${t.label}<span class="tab-count">${counts[t.key]}</span></button>`).join('')}
   </nav>`;
 
   const createBtn = canCreate(user, 'review')
-    ? renderButton('New Review', { variant: 'primary', size: 'sm', onclick: "document.getElementById('review-create-dialog').style.display='flex'" })
+    ? renderButton('New Review', { variant: 'primary', size: 'sm', action: 'openDialog', args: ['review-create-dialog'] })
     : '';
 
   const pageHeader = renderPageHeader(
@@ -143,7 +143,7 @@ export function reviewGroupedList(reviews, groupBy) {
   return Object.entries(groups).map(([name, items]) =>
     `<div class="card-clean" style="margin-bottom:${SPACING.md}">
       <div class="card-clean-body" style="padding:${SPACING.md}">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${SPACING.sm};cursor:pointer" onclick="this.parentElement.querySelector('.review-group-items').classList.toggle('collapsed')">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${SPACING.sm};cursor:pointer" data-action="toggleReviewGroup" data-self>
           <span style="font-weight:600;font-size:14px">${name}</span>
           <span class="pill pill-neutral">${items.length}</span>
         </div>
@@ -222,8 +222,8 @@ export function renderSectionReport(user, review, sections) {
   const pageHeader = renderPageHeader(
     `Section Report: ${review.name || 'Review'}`,
     '',
-    `${renderButton('Print', { variant: 'ghost', size: 'sm', onclick: "window.print()" })}
-     ${renderButton('Export CSV', { variant: 'primary', size: 'sm', onclick: "exportSectionReport()" })}`
+    `${renderButton('Print', { variant: 'ghost', size: 'sm', action: 'printPage' })}
+     ${renderButton('Export CSV', { variant: 'primary', size: 'sm', action: 'exportSectionReport' })}`
   );
 
   const content = `${pageHeader}
@@ -250,9 +250,9 @@ export function renderMwrHome(user, stats) {
   ]);
 
   const tabBar = `<nav class="tab-bar" style="margin-bottom:${SPACING.md}">
-    <button class="tab-btn active" data-tab="my" onclick="switchHomeTab('my')">My Reviews<span class="tab-count">${myReviews.length}</span></button>
-    <button class="tab-btn" data-tab="shared" onclick="switchHomeTab('shared')">Shared With Me<span class="tab-count">${sharedReviews.length}</span></button>
-    <button class="tab-btn" data-tab="activity" onclick="switchHomeTab('activity')">Recent Activity<span class="tab-count">${recentActivity.length}</span></button>
+    <button class="tab-btn active" data-tab="my" data-action="switchHomeTab" data-args='["my"]'>My Reviews<span class="tab-count">${myReviews.length}</span></button>
+    <button class="tab-btn" data-tab="shared" data-action="switchHomeTab" data-args='["shared"]'>Shared With Me<span class="tab-count">${sharedReviews.length}</span></button>
+    <button class="tab-btn" data-tab="activity" data-action="switchHomeTab" data-args='["activity"]'>Recent Activity<span class="tab-count">${recentActivity.length}</span></button>
   </nav>`;
 
   function listItem(r) {

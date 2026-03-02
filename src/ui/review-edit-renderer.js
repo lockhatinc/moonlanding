@@ -86,7 +86,7 @@ export function renderReviewEdit(user, review, engagements = [], teams = []) {
       </label>
     </div>
     <div class="form-actions full" style="border-top:1px solid var(--color-border);padding-top:${SPACING.md};margin-top:${SPACING.sm}">
-      <button type="button" onclick="deleteReview('${id}')" class="btn-danger-clean" style="margin-right:auto">Delete Review</button>
+      <button type="button" data-action="deleteReview" data-args='["${id}"]' class="btn-danger-clean" style="margin-right:auto">Delete Review</button>
       <a href="/review/${id}" class="btn-ghost-clean">Cancel</a>
       <button type="submit" id="save-btn" class="btn-primary-clean">
         <span class="btn-text">Save Changes</span>

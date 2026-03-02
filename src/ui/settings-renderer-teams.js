@@ -13,7 +13,7 @@ function parseMembers(t) {
 }
 
 export function renderSettingsTeams(user, teams = [], allUsers = []) {
-  const editDialog = `<div id="team-dialog" class="modal" style="display:none" onclick="if(event.target===this)closeTeamDialog()">
+  const editDialog = `<div id="team-dialog" class="modal" style="display:none" data-overlay-close="true" data-action="closeTeamDialog">
     <div class="modal-overlay" data-action="closeTeamDialog"></div>
     <div class="modal-content rounded-box max-w-md p-6">
       <h3 id="team-dialog-title" class="text-lg font-semibold mb-4">Edit Team</h3>
@@ -77,12 +77,12 @@ export function renderSettingsRfiSections(user, sections = []) {
     </div></td>
   </tr>`).join('');
 
-  const palette = RFI_PALETTE.map(c => `<div data-color="${c}" class="w-6 h-6 rounded cursor-pointer border-2 border-transparent hover:border-base-content" style="background:${c}" onclick="selectColor('${c}')" title="${c}"></div>`).join('');
-  const formHtml = `<div id="section-form" class="card-clean" style="margin-bottom:1rem" style="display:none">
+  const palette = RFI_PALETTE.map(c => `<div data-color="${c}" class="rounded cursor-pointer" style="background:${c};width:24px;height:24px;border:2px solid transparent;border-radius:4px" data-action="selectColor" data-args='["${c}"]' title="${c}"></div>`).join('');
+  const formHtml = `<div id="section-form" class="card-clean" style="margin-bottom:1rem;display:none">
     <div class="card-clean-body">
-      <div class="flex flex-wrap gap-4 items-end">
+      <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end">
         <div class="form-group"><label class="label"><span class="label-text font-medium">Name</span></label><input type="text" id="section-name" class="input input-solid" style="max-width:200px" placeholder="Section name"/></div>
-        <div><label class="label"><span class="label-text font-medium">Color</span></label><div id="color-palette" class="flex gap-2 flex-wrap">${palette}</div><input type="hidden" id="section-color" value="#B0B0B0"/></div>
+        <div><label class="label"><span class="label-text font-medium">Color</span></label><div id="color-palette" style="display:flex;gap:8px;flex-wrap:wrap">${palette}</div><input type="hidden" id="section-color" value="#B0B0B0"/></div>
         <div class="flex gap-2"><button data-action="saveSection" class="btn btn-primary btn-sm">Save</button><button data-action="cancelForm" class="btn btn-ghost btn-sm">Cancel</button></div>
       </div>
       <input type="hidden" id="edit-id" value=""/>

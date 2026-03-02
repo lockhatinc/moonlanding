@@ -17,7 +17,7 @@ export function fridayTeamDialog() {
     </div></div>
   <script>
   window._ftdCallback=null;
-  window.showFridayTeamDialog=function(currentTeamId,cb){window._ftdCallback=cb;document.getElementById('friday-team-dialog').style.display='flex';fetch('/api/team').then(function(r){return r.json()}).then(function(d){var teams=d.data||d||[];var el=document.getElementById('ftd-teams');el.innerHTML=teams.map(function(t){var sel=t.id===currentTeamId?' style="background:#dbeafe"':'';return'<div class="p-2 rounded hover:bg-gray-50 cursor-pointer flex justify-between items-center"'+sel+' onclick="ftdSelect(\\''+t.id+'\\')"><span class="text-sm font-medium">'+(t.name||t.id)+'</span><span class="text-xs text-gray-500">'+(t.member_count||0)+' members</span></div>'}).join('')||'<div class="text-gray-500 text-sm text-center py-4">No teams</div>'}).catch(function(){})};
+  window.showFridayTeamDialog=function(currentTeamId,cb){window._ftdCallback=cb;document.getElementById('friday-team-dialog').style.display='flex';fetch('/api/team').then(function(r){return r.json()}).then(function(d){var teams=d.data||d||[];var el=document.getElementById('ftd-teams');el.innerHTML=teams.map(function(t){var sel=t.id===currentTeamId?' style="background:#dbeafe"':'';return'<div class="p-2 rounded hover:bg-gray-50 cursor-pointer flex justify-between items-center"'+sel+' data-action="ftdSelect" data-args='["'+t.id+'"]'><span class="text-sm font-medium">'+(t.name||t.id)+'</span><span class="text-xs text-gray-500">'+(t.member_count||0)+' members</span></div>'}).join('')||'<div class="text-gray-500 text-sm text-center py-4">No teams</div>'}).catch(function(){})};
   window.ftdSelect=function(teamId){document.getElementById('friday-team-dialog').style.display='none';if(window._ftdCallback)window._ftdCallback(teamId)};
   </script>`;
 }
@@ -29,10 +29,10 @@ export function fridayDueDateDialog() {
       <div class="dialog-body">
         <div class="modal-form-group"><label for="fdd-date">Due Date</label><input type="date"  id="fdd-date" class="input input-bordered w-full"/></div>
         <div class="date-presets">
-          <button class="date-preset-btn" onclick="fddPreset(7)">+1 Week</button>
-          <button class="date-preset-btn" onclick="fddPreset(14)">+2 Weeks</button>
-          <button class="date-preset-btn" onclick="fddPreset(30)">+1 Month</button>
-          <button class="date-preset-btn" onclick="fddPreset(90)">+3 Months</button>
+          <button class="date-preset-btn" data-action="fddPreset" data-args='[7]'>+1 Week</button>
+          <button class="date-preset-btn" data-action="fddPreset" data-args='[14]'>+2 Weeks</button>
+          <button class="date-preset-btn" data-action="fddPreset" data-args='[30]'>+1 Month</button>
+          <button class="date-preset-btn" data-action="fddPreset" data-args='[90]'>+3 Months</button>
         </div>
       </div>
       <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="friday-due-dialog">Cancel</button><button class="btn btn-error btn-outline btn-sm" data-action="fddClear">Clear</button><button class="btn btn-primary btn-sm" data-action="fddConfirm">Set</button></div>
@@ -79,7 +79,7 @@ export function feeSplitDialog(engagementId) {
   <script>
   var fsdSplits=[];
   window.openFeeSplit=function(){document.getElementById('fee-split-dialog').style.display='flex';fetch('/api/user?role=partner').then(function(r){return r.json()}).then(function(d){var sel=document.getElementById('fsd-user');while(sel.options.length)sel.remove(0);(d.data||d||[]).forEach(function(u){var o=document.createElement('option');o.value=u.id;o.textContent=u.name||u.email;sel.appendChild(o)})}).catch(function(){});fetch('/api/engagement/${engagementId}').then(function(r){return r.json()}).then(function(d){var eng=d.data||d;try{fsdSplits=JSON.parse(eng.fee_splits||'[]')}catch(e){fsdSplits=[]}fsdRender()}).catch(function(){})};
-  function fsdRender(){var el=document.getElementById('fsd-splits');el.innerHTML=fsdSplits.map(function(s,i){return'<div class="flex items-center justify-between p-2 border-b"><span class="text-sm">'+(s.name||s.user_id)+'</span><span class="font-medium">'+s.percentage+'%</span><button class="btn btn-xs btn-error btn-outline" onclick="fsdRemove('+i+')">Remove</button></div>'}).join('');var total=fsdSplits.reduce(function(a,s){return a+Number(s.percentage)},0);document.getElementById('fsd-total').textContent='Total: '+total+'%';document.getElementById('fsd-total').style.color=total===100?'#22c55e':total>100?'#ef4444':'#f59e0b'}
+  function fsdRender(){var el=document.getElementById('fsd-splits');el.innerHTML=fsdSplits.map(function(s,i){return'<div class="flex items-center justify-between p-2 border-b"><span class="text-sm">'+(s.name||s.user_id)+'</span><span class="font-medium">'+s.percentage+'%</span><button class="btn btn-xs btn-error btn-outline" data-action="fsdRemove" data-args='["+i+"]'>Remove</button></div>'}).join('');var total=fsdSplits.reduce(function(a,s){return a+Number(s.percentage)},0);document.getElementById('fsd-total').textContent='Total: '+total+'%';document.getElementById('fsd-total').style.color=total===100?'#22c55e':total>100?'#ef4444':'#f59e0b'}
   window.fsdAdd=function(){var uid=document.getElementById('fsd-user').value;var pct=Number(document.getElementById('fsd-pct').value);if(!uid||!pct)return;var name=document.getElementById('fsd-user').selectedOptions[0]?.textContent||uid;fsdSplits.push({user_id:uid,name:name,percentage:pct});fsdRender()};
   window.fsdRemove=function(idx){fsdSplits.splice(idx,1);fsdRender()};
   window.fsdSave=async function(){try{var r=await fetch('/api/engagement/${engagementId}',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({fee_splits:JSON.stringify(fsdSplits)})});if(r.ok){showToast('Fee split saved','success');document.getElementById('fee-split-dialog').style.display='none'}else showToast('Failed','error')}catch(e){showToast('Error','error')}};

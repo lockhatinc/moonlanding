@@ -217,8 +217,9 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    if (pathname === '/ui/client.js') {
-      const jsPath = path.join(__dirname, 'src/ui/client.js');
+    if (pathname === '/ui/client.js' || pathname === '/ui/event-delegation.js' || pathname === '/ui/common-handlers.js') {
+      const filename = pathname.split('/').pop();
+      const jsPath = path.join(__dirname, 'src/ui', filename);
       if (fs.existsSync(jsPath)) {
         let content = fs.readFileSync(jsPath, 'utf-8');
         const { minifyJS } = await loadModule(path.join(__dirname, 'src/lib/minifier.js'));

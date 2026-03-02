@@ -41,11 +41,11 @@ function sectionCard(section, highlights, canResolve) {
   }).join('');
 
   const resolveBtn = canResolve && !allResolved
-    ? `<div class="section-card-actions"><button class="btn-primary-clean" style="width:100%;justify-content:center;padding:8px" onclick="resolveSection('${section.id}')">Resolve All in Section</button></div>`
+    ? `<div class="section-card-actions"><button class="btn-primary-clean" style="width:100%;justify-content:center;padding:8px" data-action="resolveSection" data-args='["${section.id}"]'>Resolve All in Section</button></div>`
     : '';
 
   return `<div class="${cardClass}" data-section-id="${section.id}" data-section-complete="${allResolved}">
-    <div class="section-card-header" onclick="toggleSection('${section.id}')">
+    <div class="section-card-header" data-action="toggleSection" data-args='["${section.id}"]'>
       <div>
         <div style="display:flex;align-items:center;gap:8px">
           <span class="section-card-name">${esc(section.name || 'Unnamed Section')}</span>
@@ -104,7 +104,7 @@ export function renderSectionResolution(user, review, sections, highlightsBySect
     'Section Resolution',
     'Track and resolve highlights by section',
     `${renderButton('Back to Review', { variant: 'ghost', size: 'sm', href: `/review/${review.id}` })}
-     ${canResolve ? renderButton('Resolve All Sections', { variant: 'primary', size: 'sm', onclick: "resolveAll()" }) : ''}`
+     ${canResolve ? renderButton('Resolve All Sections', { variant: 'primary', size: 'sm', action: 'resolveAll' }) : ''}`
   );
 
   const sectionFilter = `<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${SPACING.md}">

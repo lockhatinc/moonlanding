@@ -48,3 +48,4 @@ serviceAccountCloud.json
 .code-search/
 .glootie-stop-verified
 data/backups/*.db
+.gm-stop-verified

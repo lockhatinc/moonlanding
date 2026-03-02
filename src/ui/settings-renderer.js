@@ -108,7 +108,7 @@ export function renderSettingsUsers(user, users = []) {
     </td>
     <td data-col="role">${roleBadge(u.role || '-')}</td>
     <td data-col="status">${statusBadge(u.status)}</td>
-    <td><a href="/user/${u.id}/edit" onclick="event.stopPropagation()" class="btn btn-ghost btn-xs">Edit</a></td>
+    <td><a href="/user/${u.id}/edit" data-stop-propagation="true" class="btn btn-ghost btn-xs">Edit</a></td>
   </tr>`).join('');
 
   const content = `${settingsBack()}

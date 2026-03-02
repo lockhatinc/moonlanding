@@ -28,7 +28,7 @@ export function sidebarReviewDetails(review) {
   const collaborators = r.collaborators?.length ? `<div class="sidebar-section"><span class="text-xs text-gray-500 mb-1">Collaborators</span>${teamAvatarGroup(r.collaborators, 5)}</div>` : ''
   const checklists = r.checklists_total !== undefined ? `<div class="sidebar-section"><span class="text-xs text-gray-500">Checklists</span><span class="font-medium">${r.checklists_completed || 0}/${r.checklists_total}</span></div>` : ''
   return `<aside class="sidebar-review-panel" id="sidebar-review-panel">
-    <div class="sidebar-header"><h3 class="font-medium">Review Details</h3><button class="btn btn-ghost btn-xs sidebar-toggle" onclick="document.getElementById('sidebar-review-panel').classList.toggle('sidebar-collapsed')" aria-label="Toggle sidebar">&times;</button></div>
+    <div class="sidebar-header"><h3 class="font-medium">Review Details</h3><button class="btn btn-ghost btn-xs sidebar-toggle" data-action="toggleSidebar" aria-label="Toggle sidebar">&times;</button></div>
     <div class="sidebar-body">
       <div class="sidebar-section"><h4 class="font-medium text-sm mb-1">${r.name || r.title || 'Untitled Review'}</h4>${sts}</div>
       ${meta ? `<div class="sidebar-section">${meta}</div>` : ''}
@@ -55,7 +55,7 @@ export function archiveReviewDialog() {
 export function reviewOpenCloseToggle(reviewId, isOpen) {
   const on = isOpen ? 'rvw-on rvw-green' : ''
   return `<div class="rvw-toggle">
-    <div class="rvw-toggle-track ${on}" id="rvw-oc-track" role="switch" tabindex="0" aria-checked="${isOpen}" aria-label="Review open/closed status" onclick="rvwToggleOC('${reviewId}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();rvwToggleOC('${reviewId}')}"><div class="rvw-toggle-knob"></div></div>
+    <div class="rvw-toggle-track ${on}" id="rvw-oc-track" role="switch" tabindex="0" aria-checked="${isOpen}" aria-label="Review open/closed status" data-action="rvwToggleOC" data-args='["${reviewId}"]' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();rvwToggleOC('${reviewId}')}"><div class="rvw-toggle-knob"></div></div>
     <span class="rvw-toggle-label">${isOpen ? 'Open' : 'Closed'}</span>
   </div>
   <script>${TOAST_SCRIPT}
@@ -65,7 +65,7 @@ export function reviewOpenCloseToggle(reviewId, isOpen) {
 export function reviewPrivateToggle(reviewId, isPrivate) {
   const on = isPrivate ? 'rvw-on rvw-purple' : ''
   return `<div class="rvw-toggle">
-    <div class="rvw-toggle-track ${on}" id="rvw-priv-track" role="switch" tabindex="0" aria-checked="${isPrivate}" aria-label="Review private/public toggle" onclick="rvwTogglePriv('${reviewId}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();rvwTogglePriv('${reviewId}')}"><div class="rvw-toggle-knob"></div></div>
+    <div class="rvw-toggle-track ${on}" id="rvw-priv-track" role="switch" tabindex="0" aria-checked="${isPrivate}" aria-label="Review private/public toggle" data-action="rvwTogglePriv" data-args='["${reviewId}"]' onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();rvwTogglePriv('${reviewId}')}"><div class="rvw-toggle-knob"></div></div>
     <span class="rvw-toggle-label"><svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style="vertical-align:middle;margin-right:4px"><path d="${isPrivate ? 'M8 1a4 4 0 014 4v2h1a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1h1V5a4 4 0 014-4zm2 6V5a2 2 0 10-4 0v2h4z' : 'M12 7h1a1 1 0 011 1v6a1 1 0 01-1 1H3a1 1 0 01-1-1V8a1 1 0 011-1h7V5a2 2 0 10-4 0v1H4V5a4 4 0 018 0v2z'}"/></svg>${isPrivate ? 'Private' : 'Public'}</span>
   </div>
   <script>${TOAST_SCRIPT}
@@ -80,7 +80,7 @@ export function markAllHighlightsResolved(reviewId, unresolvedCount = 0) {
         <div class="bulk-resolve-count" id="brc-count">${unresolvedCount}</div>
         <div class="bulk-resolve-label">unresolved highlights will be marked as resolved</div>
       </div>
-      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="bulk-resolve-dialog">Cancel</button><button class="btn btn-primary btn-sm" onclick="bulkResolve('${reviewId}')">Resolve All</button></div>
+      <div class="dialog-footer"><button class="btn btn-ghost btn-sm" data-dialog-close="bulk-resolve-dialog">Cancel</button><button class="btn btn-primary btn-sm" data-action="bulkResolve" data-args='["${reviewId}"]'>Resolve All</button></div>
     </div></div>
   <script>${TOAST_SCRIPT}
   window.showBulkResolve=function(reviewId,count){document.getElementById('brc-count').textContent=count;document.getElementById('bulk-resolve-dialog').style.display='flex'};

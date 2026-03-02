@@ -35,7 +35,7 @@ export function renderEngagementGrid(user, engagements, options = {}) {
   engagements.forEach(e => { if (stageCounts[e.stage] !== undefined) stageCounts[e.stage]++; });
 
   const stageStats = `<div class="stats-row">${STAGE_CONFIG.map(s =>
-    `<div class="stat-card stat-card-clickable" onclick="filterByStage('${s.key}')" id="stage-card-${s.key}">
+    `<div class="stat-card stat-card-clickable" data-action="filterByStage" data-args='["${s.key}"]' id="stage-card-${s.key}">
       <div class="stat-card-value">${stageCounts[s.key]||0}</div>
       <div class="stat-card-label">${s.label}</div>
     </div>`
@@ -48,7 +48,7 @@ export function renderEngagementGrid(user, engagements, options = {}) {
   ];
 
   const tabBar = `<div class="tab-bar">${tabs.map(t =>
-    `<button class="tab-btn${t.key === filter ? ' active' : ''}" onclick="switchTab('${t.key}')" id="tab-${t.key}">${t.label}<span class="tab-count">${t.count}</span></button>`
+    `<button class="tab-btn${t.key === filter ? ' active' : ''}" data-action="switchTab" data-args='["${t.key}"]' id="tab-${t.key}">${t.label}<span class="tab-count">${t.count}</span></button>`
   ).join('')}</div>`;
 
   const addBtn = canCreate(user, 'engagement')

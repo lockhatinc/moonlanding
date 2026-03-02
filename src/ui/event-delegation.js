@@ -5,10 +5,16 @@
 window.__events = window.__events || {
   handlers: new Map(),
   register(name, fn) { this.handlers.set(name, fn); },
-  dispatch(name, ...args) {
+  dispatch(name, event, target, params) {
     const fn = this.handlers.get(name);
-    if (!fn) console.warn(`Unknown action: ${name}`);
-    return fn?.(...args);
+    if (fn) return fn(event, target, params);
+    if (typeof window[name] === 'function') {
+      const args = target?.dataset?.args ? JSON.parse(target.dataset.args) : [];
+      if ('passEvent' in (target?.dataset || {})) args.unshift(event);
+      if ('self' in (target?.dataset || {})) args.push(target);
+      return window[name](...args);
+    }
+    console.warn(`Unknown action: ${name}`);
   }
 };
 
@@ -18,6 +24,14 @@ const eventDelegation = {
     const el = document.getElementById(dialogId);
     if (el) el.style.display = 'none';
   },
+
+  openDialog(e, target, params) {
+    const id = params?.dialogId || (target?.dataset?.args ? JSON.parse(target.dataset.args)[0] : null);
+    const el = id ? document.getElementById(id) : null;
+    if (el) el.style.display = 'flex';
+  },
+
+  printPage() { window.print(); },
 
   navigate(path) { window.location = path; },
 
@@ -60,10 +74,15 @@ Object.entries(eventDelegation).forEach(([name, fn]) => {
 
 // Universal click handler - attach to document root
 document.addEventListener('click', (e) => {
+  const stopEl = e.target.closest('[data-stop-propagation]');
+  if (stopEl) { e.stopPropagation(); if (!stopEl.dataset.action) return; }
+
+  const overlay = e.target.closest('[data-overlay-close]');
+  if (overlay && e.target === overlay) { overlay.style.display = 'none'; return; }
+
   let target = e.target.closest('[data-action], [data-dialog-close], [data-navigate], [data-toggle]');
   if (!target) return;
 
-  // Stop propagation for dialog overlays
   if (target.classList.contains('dialog-overlay') && e.target === target) {
     target.style.display = 'none';
     return;
@@ -71,6 +90,10 @@ document.addEventListener('click', (e) => {
 
   if (target.dataset.dialogClose) {
     eventDelegation.closeDialog(target.dataset.dialogClose);
+    if (target.dataset.action) {
+      const params = target.dataset.params ? JSON.parse(target.dataset.params) : {};
+      window.__events.dispatch(target.dataset.action, e, target, params);
+    }
   } else if (target.dataset.navigate) {
     eventDelegation.navigate(target.dataset.navigate);
   } else if (target.dataset.toggle) {

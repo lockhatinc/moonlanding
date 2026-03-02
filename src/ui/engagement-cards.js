@@ -18,7 +18,7 @@ export function engagementCard(engagement, user) {
       <h3 class="font-medium mb-2">${e.name || e.title || 'Untitled'}</h3>
       <div class="flex items-center gap-2 mb-2">${stageBadge}${dueDate}</div>
       ${progress}
-      <div class="flex justify-between items-center mt-2">${team}<div class="flex gap-1"><a href="/engagement/${e.id}" class="btn btn-xs btn-ghost" onclick="event.stopPropagation()">View</a>${canEdit(user, 'engagement') ? `<a href="/engagement/${e.id}/edit" class="btn btn-xs btn-outline" onclick="event.stopPropagation()">Edit</a>` : ''}</div></div>
+      <div class="flex justify-between items-center mt-2">${team}<div class="flex gap-1"><a href="/engagement/${e.id}" class="btn btn-xs btn-ghost" data-stop-propagation="true">View</a>${canEdit(user, 'engagement') ? `<a href="/engagement/${e.id}/edit" class="btn btn-xs btn-outline" data-stop-propagation="true">Edit</a>` : ''}</div></div>
     </div></div>`
 }
 
@@ -42,7 +42,7 @@ export function stagePipeline(currentStage, stages = null, clickable = false, on
   const pills = stageKeys.map((key, i) => {
     const s = STAGE_COLORS[key] || { bg: '#f3f4f6', text: '#4b5563', label: key }
     const cls = i === activeIdx ? 'spl-current' : i < activeIdx ? 'spl-past' : 'spl-future'
-    const click = clickable ? ` spl-clickable" onclick="${onClickFn}('${key}')"` : '"'
+    const click = clickable ? ` spl-clickable" data-action="${onClickFn}" data-args='["${key}"]'` : '"'
     return `<div class="spl-pill ${cls}${click} style="background:${s.bg};color:${s.text}">${s.label}</div>`
   }).join('')
   return `<div class="stage-pipeline">${pills}</div>`

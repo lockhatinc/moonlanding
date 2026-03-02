@@ -15,7 +15,7 @@ function highlightSidebarItem(h, idx) {
   const responses = h.response_count || 0;
   const sectionTag = h.section_name ? `<span class="review-meta-tag">${escapeHtml(h.section_name)}</span>` : '';
 
-  return `<div class="highlight-sidebar-item" data-highlight-id="${h.id}" data-page="${h.page_number || 1}" onclick="scrollToHighlight('${h.id}')" role="button" tabindex="0" aria-label="Highlight ${idx + 1}">
+  return `<div class="highlight-sidebar-item" data-highlight-id="${h.id}" data-page="${h.page_number || 1}" data-action="scrollToHighlight" data-args='["${h.id}"]' role="button" tabindex="0" aria-label="Highlight ${idx + 1}">
     <div class="highlight-sidebar-meta">
       <span style="font-size:12px;font-weight:700;color:${color}">${statusIcon}</span>
       <span style="font-size:12px;font-weight:600;color:var(--color-text-muted)">#${idx + 1}</span>
@@ -43,9 +43,9 @@ function highlightSidebar(highlights) {
         <div class="resolution-bar-segment resolution-bar-resolved" style="width:${pct}%"></div>
       </div>
       <div class="pdf-sidebar-filters">
-        <button class="pill pill-primary highlight-filter-btn" data-filter="all" onclick="filterHighlights('all')">All</button>
-        <button class="pill pill-neutral highlight-filter-btn" data-filter="unresolved" onclick="filterHighlights('unresolved')">Open</button>
-        <button class="pill pill-neutral highlight-filter-btn" data-filter="resolved" onclick="filterHighlights('resolved')">Resolved</button>
+        <button class="pill pill-primary highlight-filter-btn" data-filter="all" data-action="filterHighlights" data-args='["all"]'>All</button>
+        <button class="pill pill-neutral highlight-filter-btn" data-filter="unresolved" data-action="filterHighlights" data-args='["unresolved"]'>Open</button>
+        <button class="pill pill-neutral highlight-filter-btn" data-filter="resolved" data-action="filterHighlights" data-args='["resolved"]'>Resolved</button>
       </div>
     </div>
     <div class="pdf-sidebar-list" id="highlight-list" role="list" aria-label="Highlights list">
@@ -56,10 +56,10 @@ function highlightSidebar(highlights) {
 
 function pdfToolbar(review, canEditReview) {
   const zoomControls = `<div class="pdf-toolbar-group">
-    <button class="pdf-tool-btn" onclick="zoomPdf(-0.1)" title="Zoom Out" aria-label="Zoom out">&#65293;</button>
+    <button class="pdf-tool-btn" data-action="zoomPdf" data-args='[-0.1]' title="Zoom Out" aria-label="Zoom out">&#65293;</button>
     <span id="zoom-level" class="pdf-zoom-display">100%</span>
-    <button class="pdf-tool-btn" onclick="zoomPdf(0.1)" title="Zoom In" aria-label="Zoom in">&#65291;</button>
-    <button class="pdf-tool-btn" onclick="zoomPdf(0)" title="Reset" aria-label="Reset zoom">&#8634;</button>
+    <button class="pdf-tool-btn" data-action="zoomPdf" data-args='[0.1]' title="Zoom In" aria-label="Zoom in">&#65291;</button>
+    <button class="pdf-tool-btn" data-action="zoomPdf" data-args='[0]' title="Reset" aria-label="Reset zoom">&#8634;</button>
   </div>`;
   const pageNav = `<div class="pdf-toolbar-group">
     <button class="pdf-tool-btn" data-action="prevPage" aria-label="Previous page">&#8249;</button>
@@ -67,8 +67,8 @@ function pdfToolbar(review, canEditReview) {
     <button class="pdf-tool-btn" data-action="nextPage" aria-label="Next page">&#8250;</button>
   </div>`;
   const tools = canEditReview ? `<div class="pdf-toolbar-group">
-    <button class="pdf-tool-btn" id="tool-text" onclick="toggleHighlightMode('text')" title="Text Highlight" aria-pressed="false">Text</button>
-    <button class="pdf-tool-btn" id="tool-area" onclick="toggleHighlightMode('area')" title="Area Highlight" aria-pressed="false">Area</button>
+    <button class="pdf-tool-btn" id="tool-text" data-action="toggleHighlightMode" data-args='["text"]' title="Text Highlight" aria-pressed="false">Text</button>
+    <button class="pdf-tool-btn" id="tool-area" data-action="toggleHighlightMode" data-args='["area"]' title="Area Highlight" aria-pressed="false">Area</button>
     <button class="pdf-tool-btn active" data-action="saveHighlights">Save</button>
   </div>` : '';
   const actions = `<div class="pdf-toolbar-group">

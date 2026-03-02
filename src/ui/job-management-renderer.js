@@ -25,8 +25,8 @@ function jobRow(job, canManage) {
   const lastRun = fmtDate(job.last_run_at);
   const nextRun = fmtDate(job.next_run_at);
   const duration = job.last_duration ? (job.last_duration < 1000 ? job.last_duration + 'ms' : Math.round(job.last_duration / 1000) + 's') : '-';
-  const triggerBtn = canManage ? `<button class="btn btn-xs btn-primary" onclick="triggerJob('${job.name}')">Run Now</button>` : '';
-  const toggleBtn = canManage ? `<button class="btn btn-xs ${job.enabled !== false ? 'btn-warning' : 'btn-success'}" onclick="toggleJob('${job.name}',${!job.enabled})">${job.enabled !== false ? 'Disable' : 'Enable'}</button>` : '';
+  const triggerBtn = canManage ? `<button class="btn btn-xs btn-primary" data-action="triggerJob" data-args='["${job.name}"]'>Run Now</button>` : '';
+  const toggleBtn = canManage ? `<button class="btn btn-xs ${job.enabled !== false ? 'btn-warning' : 'btn-success'}" data-action="toggleJob" data-args='["${job.name}",${!job.enabled}]'>${job.enabled !== false ? 'Disable' : 'Enable'}</button>` : '';
   return `<tr><td class="font-medium">${job.label || job.name}</td><td>${job.schedule || job.cron || '-'}</td><td>${jobStatusBadge(job.status || (job.enabled === false ? 'disabled' : 'scheduled'))}</td><td class="text-sm">${lastRun}</td><td class="text-sm">${nextRun}</td><td class="text-sm">${duration}</td><td class="text-sm">${job.last_result || '-'}</td><td class="flex gap-1">${triggerBtn}${toggleBtn}</td></tr>`;
 }
 

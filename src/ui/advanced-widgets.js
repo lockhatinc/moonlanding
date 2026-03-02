@@ -5,14 +5,14 @@ export function dataGridAdvanced(config) {
   const { columns = [], data = [], groupBy = null, sortable = true, filterable = true, expandable = false, detailRenderer = null } = config
   const gridId = 'dg-' + Math.random().toString(36).slice(2, 8)
   const colHeaders = columns.map((col, i) => {
-    const sortAttr = sortable ? ` data-dg-sort="${col.field}" onclick="dgSort('${gridId}','${col.field}',${i},event)"` : ''
+    const sortAttr = sortable ? ` data-dg-sort="${col.field}" data-action="dgSort" data-args='["${gridId}","${col.field}","${i},event"]'` : ''
     const filterHtml = filterable ? `<div class="dg-filter"><input type="text" data-dg-filter="${col.field}" placeholder="Filter..." class="dg-filter-input" aria-label="Filter ${col.label || col.field}" oninput="dgFilter('${gridId}')"/></div>` : ''
     return `<th${sortAttr} class="${sortable ? 'dg-sortable' : ''}">${col.label || col.field}<span class="dg-sort-indicator" data-dg-indicator="${col.field}"></span>${filterHtml}</th>`
   }).join('')
   const expandCol = expandable ? '<th class="dg-expand-col"></th>' : ''
   const renderRow = (item, rowId, groupId) => {
     const memberAttr = groupId ? ` data-dg-member="${groupId}"` : ''
-    const expandBtn = expandable ? `<td class="dg-expand-col"><button class="dg-expand-btn" data-dg-row="${rowId}" onclick="dgToggleDetail('${gridId}',this)" aria-label="Expand row details" aria-expanded="false">&#9654;</button></td>` : ''
+    const expandBtn = expandable ? `<td class="dg-expand-col"><button class="dg-expand-btn" data-dg-row="${rowId}" data-action="dgToggleDetail" data-args='["${gridId}"]' data-self aria-label="Expand row details" aria-expanded="false">&#9654;</button></td>` : ''
     const cells = columns.map(col => `<td>${item[col.field] ?? '-'}</td>`).join('')
     const detailRow = expandable ? `<tr class="dg-detail-row"${memberAttr} data-dg-detail="${rowId}" style="display:none"><td colspan="${columns.length + 1}"><div class="dg-detail-panel">${detailRenderer ? detailRenderer(item) : ''}</div></td></tr>` : ''
     return `<tr class="dg-data-row"${memberAttr} data-dg-values='${JSON.stringify(columns.map(c => String(item[c.field] ?? '')))}'>${expandBtn}${cells}</tr>${detailRow}`
@@ -24,7 +24,7 @@ export function dataGridAdvanced(config) {
     bodyHtml = Object.entries(groups).map(([key, items]) => {
       const gid = `${gridId}-g-${key.replace(/\W/g, '_')}`
       const rows = items.map((item, i) => renderRow(item, `${gid}-r${i}`, gid)).join('')
-      return `<tr class="dg-group-header" data-dg-group="${gid}" tabindex="0" onclick="dgToggleGroup('${gid}')" onkeydown="if(event.key==='Enter')dgToggleGroup('${gid}')"><td colspan="${columns.length + (expandable ? 1 : 0)}"><span class="dg-group-arrow">&#9660;</span> <strong>${key}</strong> <span class="dg-group-count">(${items.length})</span></td></tr>${rows}`
+      return `<tr class="dg-group-header" data-dg-group="${gid}" tabindex="0" data-action="dgToggleGroup" data-args='["${gid}"]' onkeydown="if(event.key==='Enter')dgToggleGroup('${gid}')"><td colspan="${columns.length + (expandable ? 1 : 0)}"><span class="dg-group-arrow">&#9660;</span> <strong>${key}</strong> <span class="dg-group-count">(${items.length})</span></td></tr>${rows}`
     }).join('')
   } else {
     bodyHtml = data.map((item, i) => renderRow(item, `${gridId}-r${i}`, null)).join('')
@@ -40,7 +40,7 @@ export function collapsibleSidebar(sections, currentPath) {
       const active = currentPath === item.href
       return `<a href="${item.href}" class="sidebar-link${active ? ' sidebar-link-active' : ''}">${item.label}</a>`
     }).join('')
-    return `<div class="sidebar-section"><div class="sidebar-section-header" onclick="sidebarToggleSection(this)">${section.title}<span class="sidebar-section-arrow">&#9660;</span></div><div class="sidebar-section-body">${links}</div></div>`
+    return `<div class="sidebar-section"><div class="sidebar-section-header" data-action="sidebarToggleSection" data-self>${section.title}<span class="sidebar-section-arrow">&#9660;</span></div><div class="sidebar-section-body">${links}</div></div>`
   }).join('')
   const script = `(function(){var sb=document.getElementById('${sidebarId}');var saved=localStorage.getItem('sidebar-width');if(saved)sb.style.width=saved+'px';var collapsed=localStorage.getItem('sidebar-collapsed')==='true';if(collapsed)sb.classList.add('sidebar-collapsed');window.sidebarToggleSection=function(el){el.parentElement.classList.toggle('sidebar-section-closed')};window.sidebarToggleCollapse=function(){sb.classList.toggle('sidebar-collapsed');localStorage.setItem('sidebar-collapsed',sb.classList.contains('sidebar-collapsed'))};var handle=sb.querySelector('.sidebar-resize-handle');var startX,startW;handle.addEventListener('mousedown',function(e){startX=e.clientX;startW=sb.offsetWidth;function onMove(ev){var w=startW+(ev.clientX-startX);if(w>48&&w<400){sb.style.width=w+'px';localStorage.setItem('sidebar-width',w)}}function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp)}document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp)})})();`
   return `<aside id="${sidebarId}" class="sidebar-collapsible"><div class="sidebar-inner"><button class="sidebar-collapse-btn" data-action="sidebarToggleCollapse" title="Toggle sidebar">&#9776;</button>${sectionHtml}</div><div class="sidebar-resize-handle"></div></aside><script>${script}</script>`

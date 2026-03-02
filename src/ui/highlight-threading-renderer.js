@@ -65,7 +65,7 @@ function highlightThread(highlight, responses, canResolve, idx) {
 
   const replyForm = `<div class="thread-reply">
     <textarea id="reply-${highlight.id}" class="form-input" style="resize:vertical;min-height:60px" rows="2" placeholder="Add a response..."></textarea>
-    <button class="btn-primary-clean" style="align-self:flex-start;padding:8px 16px" onclick="submitResponse('${highlight.id}')">Reply</button>
+    <button class="btn-primary-clean" style="align-self:flex-start;padding:8px 16px" data-action="submitResponse" data-args='["${highlight.id}"]'>Reply</button>
   </div>`;
 
   return `<div class="thread-card" id="thread-${highlight.id}" data-thread-status="${status}">
@@ -105,9 +105,9 @@ export function renderHighlightThreading(user, review, highlights, responseMap) 
   ]);
 
   const filterBar = `<div class="review-filter-bar">
-    <button class="pill pill-primary" data-thread-filter="all" onclick="filterThreads('all')">All (${stats.total})</button>
-    <button class="pill pill-neutral" data-thread-filter="open" onclick="filterThreads('open')">Open (${stats.open})</button>
-    <button class="pill pill-neutral" data-thread-filter="resolved" onclick="filterThreads('resolved')">Resolved (${stats.resolved})</button>
+    <button class="pill pill-primary" data-thread-filter="all" data-action="filterThreads" data-args='["all"]'>All (${stats.total})</button>
+    <button class="pill pill-neutral" data-thread-filter="open" data-action="filterThreads" data-args='["open"]'>Open (${stats.open})</button>
+    <button class="pill pill-neutral" data-thread-filter="resolved" data-action="filterThreads" data-args='["resolved"]'>Resolved (${stats.resolved})</button>
   </div>`;
 
   const threads = indexed.map(h => {
@@ -119,7 +119,7 @@ export function renderHighlightThreading(user, review, highlights, responseMap) 
     'Highlight Discussions',
     `${review.name || 'Review'}`,
     `${renderButton('Back to Review', { variant: 'ghost', size: 'sm', href: `/review/${review.id}` })}
-     ${canResolve ? renderButton('Resolve All', { variant: 'primary', size: 'sm', onclick: "bulkResolve()" }) : ''}`
+     ${canResolve ? renderButton('Resolve All', { variant: 'primary', size: 'sm', action: "bulkResolve" }) : ''}`
   );
 
   const content = `

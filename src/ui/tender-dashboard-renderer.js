@@ -59,10 +59,10 @@ export function renderTenderDashboard(user, tenders, reviews = []) {
     { label: 'Won', value: won, color: 'green' },
   ].map(s => `<div class="card-clean"><div class="card-clean-body" style="padding:0.75rem 0"><h3 class="text-gray-500 text-xs">${s.label}</h3><p class="text-xl font-bold${s.color ? ` text-${s.color}-600` : ''}">${s.value}</p></div></div>`).join('')}</div>`;
 
-  const filterBar = `<div class="flex gap-2 mb-4 flex-wrap"><button class="btn btn-sm btn-primary" data-tender-filter="all" onclick="filterTenders('all')">All (${total})</button>${Object.entries(TENDER_FLAGS).map(([k, v]) => {
+  const filterBar = `<div class="flex gap-2 mb-4 flex-wrap"><button class="btn btn-sm btn-primary" data-tender-filter="all" data-action="filterTenders" data-args='["all"]'>All (${total})</button>${Object.entries(TENDER_FLAGS).map(([k, v]) => {
     const cnt = tenders.filter(t => (t.flag || t.status) === k).length;
-    return cnt > 0 ? `<button class="btn btn-sm btn-ghost" data-tender-filter="${k}" onclick="filterTenders('${k}')">${v.label} (${cnt})</button>` : '';
-  }).join('')}<button class="btn btn-sm btn-ghost ${overdue > 0 ? 'text-red-600' : ''}" data-tender-filter="overdue" onclick="filterTenders('overdue')">Overdue (${overdue})</button></div>`;
+    return cnt > 0 ? `<button class="btn btn-sm btn-ghost" data-tender-filter="${k}" data-action="filterTenders" data-args='["${k}"]'>${v.label} (${cnt})</button>` : '';
+  }).join('')}<button class="btn btn-sm btn-ghost ${overdue > 0 ? 'text-red-600' : ''}" data-tender-filter="overdue" data-action="filterTenders" data-args='["overdue"]'>Overdue (${overdue})</button></div>`;
 
   const headers = '<th>Review</th><th>Status</th><th>Deadline</th><th>Remaining</th><th>Contact</th><th>Price</th><th>Announcement</th>';
   const rows = tenders.sort((a, b) => {

@@ -21,19 +21,19 @@ function generateDialogHtml(dialogId, title, fields, actions, width, context, on
   const fieldHtml = fields.map(f => generateFieldHtml(f, dialogId, context)).join('');
   const actionButtons = (actions || []).map(a => {
     if (a.type === 'cancel') {
-      return `<button type="button" class="btn btn-ghost btn-sm" ${aria.label('Cancel dialog')} onclick="closeDialog('${dialogId}')">${a.label || 'Cancel'}</button>`;
+      return `<button type="button" class="btn btn-ghost btn-sm" ${aria.label('Cancel dialog')} data-action="closeDialog" data-args='["${dialogId}"]'>${a.label || 'Cancel'}</button>`;
     } else if (a.type === 'submit') {
-      return `<button type="button" class="btn btn-primary btn-sm" ${aria.label('Submit dialog')} onclick="submitDialog('${dialogId}')">${a.label || 'Submit'}</button>`;
+      return `<button type="button" class="btn btn-primary btn-sm" ${aria.label('Submit dialog')} data-action="submitDialog" data-args='["${dialogId}"]'>${a.label || 'Submit'}</button>`;
     }
     return '';
   }).join('');
 
   return `
-    <div id="${dialogId}" class="dialog-overlay" style="display:none" ${role.dialog} aria-modal="true" ${aria.labelledBy(titleId)} ${aria.hidden(true)} onclick="if(event.target===this)closeDialog('${dialogId}')" onkeydown="${keyboard.escape(`closeDialog('${dialogId}')`)}">
+    <div id="${dialogId}" class="dialog-overlay" style="display:none" ${role.dialog} aria-modal="true" ${aria.labelledBy(titleId)} ${aria.hidden(true)} data-overlay-close="true" data-action="closeDialog" data-args='["${dialogId}"]' onkeydown="${keyboard.escape(`closeDialog('${dialogId}')`)}">
       <div id="${dialogId}-panel" class="dialog-panel" style="max-width:${width}">
         <div class="dialog-header">
           <h2 id="${titleId}" class="dialog-title">${escapeHtml(title)}</h2>
-          <button type="button" class="dialog-close" ${aria.label('Close dialog')} onclick="closeDialog('${dialogId}')">&times;</button>
+          <button type="button" class="dialog-close" ${aria.label('Close dialog')} data-action="closeDialog" data-args='["${dialogId}"]'>&times;</button>
         </div>
         <div class="dialog-body">
           ${fieldHtml}

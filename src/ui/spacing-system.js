@@ -65,7 +65,7 @@ export function renderInfoGrid(items) {
 }
 
 export function renderButton(label, opts = {}) {
-  const { onclick, href, variant = 'ghost', size = 'sm', style = '', disabled = false } = opts;
+  const { onclick, action, args, href, variant = 'ghost', size = 'sm', style = '', disabled = false } = opts;
   const variantMap = {
     primary: 'btn-primary-clean',
     ghost: 'btn-ghost-clean',
@@ -79,6 +79,11 @@ export function renderButton(label, opts = {}) {
 
   if (href) {
     return `<a href="${href}" class="${btnClass}" style="${extraStyle}">${label}</a>`;
+  }
+
+  if (action) {
+    const argsAttr = args ? ` data-args='${JSON.stringify(args)}'` : '';
+    return `<button data-action="${action}"${argsAttr} class="${btnClass}" ${disabled ? 'disabled' : ''} style="${extraStyle}">${label}</button>`;
   }
 
   return `<button onclick="${onclick}" class="${btnClass}" ${disabled ? 'disabled' : ''} style="${extraStyle}">${label}</button>`;
@@ -143,7 +148,8 @@ export function renderResolutionBar(resolved, partial, total) {
 }
 
 export function renderFilterBar(filters, activeKey = 'all') {
-  return `<div class="review-filter-bar">${filters.map(f =>
-    `<button class="pill${f.key === activeKey ? ' pill-primary' : ' pill-neutral'}" data-thread-filter="${f.key}" onclick="${f.onclick}">${f.label}${f.count !== undefined ? ` (${f.count})` : ''}</button>`
-  ).join('')}</div>`;
+  return `<div class="review-filter-bar">${filters.map(f => {
+    const actionAttr = f.action ? `data-action="${f.action}"${f.args ? ` data-args='${JSON.stringify(f.args)}'` : ''}` : (f.onclick ? `onclick="${f.onclick}"` : '');
+    return `<button class="pill${f.key === activeKey ? ' pill-primary' : ' pill-neutral'}" data-thread-filter="${f.key}" ${actionAttr}>${f.label}${f.count !== undefined ? ` (${f.count})` : ''}</button>`;
+  }).join('')}</div>`;
 }

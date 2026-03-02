@@ -1,6 +1,9 @@
 /* Prevent horizontal overflow at page level */
 html, body { overflow-x: hidden; max-width: 100%; }
 
+/* Override Ripple UI .modal opacity/visibility - we use display:none/flex to show/hide */
+.modal { opacity: 1 !important; visibility: visible !important; z-index: 200 !important; }
+
 /* Design tokens */
 :root {
   --color-primary: #04141f;

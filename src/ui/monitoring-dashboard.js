@@ -61,11 +61,11 @@ export function renderMonitoringDashboard() {
           </div>
 
           <div class="tabs mb-4">
-            <button class="tab tab-lifted tab-active" onclick="showTab('requests')">Requests</button>
-            <button class="tab tab-lifted" onclick="showTab('alerts')">Alerts</button>
-            <button class="tab tab-lifted" onclick="showTab('database')">Database</button>
-            <button class="tab tab-lifted" onclick="showTab('resources')">Resources</button>
-            <button class="tab tab-lifted" onclick="showTab('logs')">Logs</button>
+            <button class="tab tab-lifted tab-active" data-action="showTab" data-args='["requests"]'>Requests</button>
+            <button class="tab tab-lifted" data-action="showTab" data-args='["alerts"]'>Alerts</button>
+            <button class="tab tab-lifted" data-action="showTab" data-args='["database"]'>Database</button>
+            <button class="tab tab-lifted" data-action="showTab" data-args='["resources"]'>Resources</button>
+            <button class="tab tab-lifted" data-action="showTab" data-args='["logs"]'>Logs</button>
           </div>
 
           <div id="tab-requests" class="tab-content">

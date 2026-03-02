@@ -9,7 +9,7 @@ export function stagePipelineHtml(e) {
     const color = isCurrent || isPast ? '#fff' : '#94a3b8';
     const opacity = isPast ? '0.7' : '1';
     const shine = isCurrent ? 'background:rgba(255,255,255,0.18);position:absolute;inset:0;pointer-events:none' : '';
-    return `<div onclick="openStageTransition('${esc(s.key)}')" title="${s.label}" style="flex:1;min-width:0;padding:9px 4px;text-align:center;background:${bg};color:${color};opacity:${opacity};font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;cursor:pointer;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isCurrent ? `<div style="${shine}"></div>` : ''}<span style="position:relative">${s.label}</span></div>`;
+    return `<div data-action="openStageTransition" data-args='["${esc(s.key)}"]' title="${s.label}" style="flex:1;min-width:0;padding:9px 4px;text-align:center;background:${bg};color:${color};opacity:${opacity};font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;cursor:pointer;position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isCurrent ? `<div style="${shine}"></div>` : ''}<span style="position:relative">${s.label}</span></div>`;
   }).join('');
   return `<div style="display:flex;flex-direction:row;width:100%;border-radius:8px;overflow:hidden;height:34px">${stages}</div>`;
 }
@@ -25,7 +25,7 @@ export function stageTransitionDialog(engId, currentStage) {
       <div class="form-group mb-3"><label class="label"><span class="label-text font-medium">New Stage</span></label><select id="stage-select" class="select select-solid max-w-full">${opts}</select></div>
       <div class="form-group mb-4"><label class="label"><span class="label-text font-medium">Reason (optional)</span></label><textarea id="stage-note" rows="3" placeholder="Reason for stage change..." class="textarea textarea-solid max-w-full"></textarea></div>
       <div class="modal-action mt-4">
-        <button onclick="confirmStageTransition('${esc(engId)}')" class="btn btn-primary">Confirm</button>
+        <button data-action="confirmStageTransition" data-args='["${esc(engId)}"]' class="btn btn-primary">Confirm</button>
         <button data-dialog-close="stage-dialog" class="btn btn-ghost">Cancel</button>
       </div>
     </div>
@@ -36,7 +36,7 @@ export function chatPanel(engId) {
   return `<div id="tab-chat" class="eng-tab-panel" style="display:none"><div class="card-clean"><div class="card-clean-body">
     <h2 class="card-title text-sm mb-4">Team Chat</h2>
     <div id="chat-msgs" class="min-h-48 max-h-96 overflow-y-auto border border-base-200 rounded-box p-3 mb-3 bg-base-50"><div class="text-center text-base-content/40 text-sm py-8">Loading messages...</div></div>
-    <div class="flex gap-2"><input id="chat-input" type="text" placeholder="Type a message..." class="input input-solid flex-1" onkeydown="if(event.key==='Enter')sendChatMsg('${esc(engId)}')"/><button onclick="sendChatMsg('${esc(engId)}')" class="btn btn-primary">Send</button></div>
+    <div class="flex gap-2"><input id="chat-input" type="text" placeholder="Type a message..." class="input input-solid flex-1" onkeydown="if(event.key==='Enter')sendChatMsg('${esc(engId)}')"/><button data-action="sendChatMsg" data-args='["${esc(engId)}"]' class="btn btn-primary">Send</button></div>
   </div></div></div>`;
 }
 
@@ -57,7 +57,7 @@ export function activityPanel(engId) {
 export function filesPanel(engId) {
   return `<div id="tab-files" class="eng-tab-panel" style="display:none"><div class="card-clean"><div class="card-clean-body">
     <div class="flex justify-between items-center mb-4"><h2 style="font-size:0.875rem;font-weight:600">Files</h2>
-      <div class="flex gap-2"><label class="btn btn-ghost btn-sm">Upload <input type="file" multiple style="display:none" onchange="uploadEngFiles(event,'${esc(engId)}')"/></label><button onclick="downloadFilesZip('${esc(engId)}')" class="btn btn-primary btn-sm">Download ZIP</button></div>
+      <div class="flex gap-2"><label class="btn btn-ghost btn-sm">Upload <input type="file" multiple style="display:none" onchange="uploadEngFiles(event,'${esc(engId)}')"/></label><button data-action="downloadFilesZip" data-args='["${esc(engId)}"]' class="btn btn-primary btn-sm">Download ZIP</button></div>
     </div>
     <div id="eng-files-list"><div class="text-center text-base-content/40 text-sm py-8">Loading files...</div></div>
   </div></div></div>`;
