@@ -22,8 +22,8 @@ export function stageTransitionDialog(engId, currentStage) {
     <div class="modal-overlay" data-dialog-close="stage-dialog"></div>
     <div class="modal-content rounded-box max-w-md p-6">
       <h3 class="text-lg font-semibold mb-4">Move Engagement Stage</h3>
-      <div class="form-group mb-3"><label class="label"><span class="label-text font-medium">New Stage</span></label><select id="stage-select" class="select select-solid max-w-full">${opts}</select></div>
-      <div class="form-group mb-4"><label class="label"><span class="label-text font-medium">Reason (optional)</span></label><textarea id="stage-note" rows="3" placeholder="Reason for stage change..." class="textarea textarea-solid max-w-full"></textarea></div>
+      <div style="margin-bottom:12px"><label class="form-label">New Stage</label><select id="stage-select" class="form-input">${opts}</select></div>
+      <div style="margin-bottom:16px"><label class="form-label">Reason (optional)</label><textarea id="stage-note" rows="3" placeholder="Reason for stage change..." class="form-input" style="min-height:80px;resize:vertical"></textarea></div>
       <div class="modal-action mt-4">
         <button data-action="confirmStageTransition" data-args='["${esc(engId)}"]' class="btn btn-primary">Confirm</button>
         <button data-dialog-close="stage-dialog" class="btn btn-ghost">Cancel</button>

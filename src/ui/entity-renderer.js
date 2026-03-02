@@ -76,9 +76,9 @@ export function renderEntityDetail(entityName, item, spec, user) {
   const visibleFields = Object.entries(fields).filter(([k]) => k !== 'id' && !HIDDEN_FIELDS.has(k) && item[k] !== undefined)
 
   const fieldRows = visibleFields.map(([k, f]) =>
-    `<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:0.625rem 0;border-bottom:1px solid var(--color-border)">
-      <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted);width:8rem;flex-shrink:0;padding-top:2px">${f.label || k}</span>
-      <span style="font-size:0.875rem;text-align:right">${formatFieldValue(k, item[k], entityName)}</span>
+    `<div class="detail-row">
+      <span class="detail-row-label">${f.label || k}</span>
+      <span class="detail-row-value">${formatFieldValue(k, item[k], entityName)}</span>
     </div>`
   ).join('')
 
@@ -111,7 +111,7 @@ export function renderEntityDetail(entityName, item, spec, user) {
       <div style="display:flex;gap:0.5rem;margin-left:1rem">${editBtn}${delBtn}</div>
     </div>
     <div class="card-clean">
-      <div class="card-clean-body">${fieldRows || '<p style="color:var(--color-text-muted);font-size:0.875rem">No details available</p>'}</div>
+      <div class="card-clean-body"><div class="detail-grid">${fieldRows || '<p style="color:var(--color-text-muted);font-size:0.875rem;grid-column:1/-1">No details available</p>'}</div></div>
     </div>
     ${userCanDelete ? confirmDialog(entityName) : ''}`
 
@@ -123,7 +123,7 @@ export function renderEntityDetail(entityName, item, spec, user) {
 export function renderEntityForm(entityName, item, spec, user, isNew = false, refOptions = {}) {
   const label = spec?.label || entityName
   const fields = spec?.fields || {}
-  const lbl = (k, f, req) => `<label class="label" for="field-${k}"><span class="label-text font-semibold">${f.label||k}${req ? ' <span class="text-error">*</span>' : ''}</span></label>`
+  const lbl = (k, f, req) => `<label class="form-label" for="field-${k}">${f.label||k}${req ? '<span class="req">*</span>' : ''}</label>`
   const formFields = Object.entries(fields).filter(([k, f]) => k !== 'id' && !f.auto && !f.readOnly && !f.auto_generate && k !== 'password_hash').map(([k, f]) => {
     const val = item?.[k] ?? f.default ?? ''
     const req = f.required ? 'required' : ''
@@ -131,33 +131,33 @@ export function renderEntityForm(entityName, item, spec, user, isNew = false, re
     const placeholder = `placeholder="Enter ${(f.label||k).toLowerCase()}"`
     if (entityName === 'user' && k === 'role') {
       const opts = ['partner','manager','clerk','client_admin','client_user'].map(o => `<option value="${o}" ${val===o?'selected':''}>${o.charAt(0).toUpperCase()+o.slice(1).replace('_',' ')}</option>`).join('')
-      return `<div class="form-group">${lbl(k,{label:'Role'},true)}<select id="field-role" name="role" class="select select-solid max-w-full" required>${opts}</select></div>`
+      return `<div class="form-field">${lbl(k,{label:'Role'},true)}<select id="field-role" name="role" class="form-input" required>${opts}</select></div>`
     }
     if (entityName === 'user' && k === 'status') {
       const opts = ['active','inactive','pending'].map(o => `<option value="${o}" ${val===o?'selected':''}>${o.charAt(0).toUpperCase()+o.slice(1)}</option>`).join('')
-      return `<div class="form-group">${lbl(k,{label:'Status'},false)}<select id="field-status" name="status" class="select select-solid max-w-full">${opts}</select></div>`
+      return `<div class="form-field">${lbl(k,{label:'Status'},false)}<select id="field-status" name="status" class="form-input">${opts}</select></div>`
     }
     if (f.type === 'ref' && refOptions[k]) {
       const opts = refOptions[k].map(o => `<option value="${o.value}" ${val===o.value?'selected':''}>${o.label}</option>`).join('')
-      return `<div class="form-group">${lbl(k,f,f.required)}<select id="field-${k}" name="${k}" class="select select-solid max-w-full" ${req}><option value="">Select ${f.label||k}...</option>${opts}</select></div>`
+      return `<div class="form-field">${lbl(k,f,f.required)}<select id="field-${k}" name="${k}" class="form-input" ${req}><option value="">Select ${f.label||k}...</option>${opts}</select></div>`
     }
-    if (f.type === 'textarea') return `<div class="form-group">${lbl(k,f,f.required)}<textarea id="field-${k}" name="${k}" class="textarea textarea-solid max-w-full" ${req} placeholder="Enter ${(f.label||k).toLowerCase()}">${val}</textarea></div>`
-    if (f.type === 'bool') return `<div class="form-group"><label class="label cursor-pointer justify-start gap-3"><input type="checkbox" id="field-${k}" name="${k}" class="checkbox checkbox-primary" ${val?'checked':''}/><span class="label-text">${f.label||k}</span></label></div>`
+    if (f.type === 'textarea') return `<div class="form-field full">${lbl(k,f,f.required)}<textarea id="field-${k}" name="${k}" class="form-input" style="min-height:100px;resize:vertical" ${req} placeholder="Enter ${(f.label||k).toLowerCase()}">${val}</textarea></div>`
+    if (f.type === 'bool') return `<div class="form-field"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" id="field-${k}" name="${k}" class="checkbox checkbox-primary" ${val?'checked':''}/><span class="form-label" style="margin:0">${f.label||k}</span></label></div>`
     if (f.type === 'enum' && f.options) {
       const opts = (Array.isArray(f.options) ? f.options : []).map(o => { const ov = typeof o === 'string' ? o : o.value; const ol = typeof o === 'string' ? o : o.label; return `<option value="${ov}" ${val===ov?'selected':''}>${ol}</option>` }).join('')
-      return `<div class="form-group">${lbl(k,f,f.required)}<select id="field-${k}" name="${k}" class="select select-solid max-w-full" ${req}><option value="">Select ${f.label||k}...</option>${opts}</select></div>`
+      return `<div class="form-field">${lbl(k,f,f.required)}<select id="field-${k}" name="${k}" class="form-input" ${req}><option value="">Select ${f.label||k}...</option>${opts}</select></div>`
     }
-    return `<div class="form-group">${lbl(k,f,f.required)}<input type="${type}" id="field-${k}" name="${k}" value="${val}" class="input input-solid max-w-full" ${req} ${placeholder}/></div>`
+    return `<div class="form-field">${lbl(k,f,f.required)}<input type="${type}" id="field-${k}" name="${k}" value="${val}" class="form-input" ${req} ${placeholder}/></div>`
   }).join('\n')
 
-  const pwField = entityName === 'user' ? `<div class="form-group"><label class="label" for="field-new-password"><span class="label-text font-semibold">New Password <small class="text-gray-400">(leave blank to keep unchanged)</small></span></label><input type="password" id="field-new-password" name="new_password" class="input input-solid max-w-full" placeholder="Enter new password" autocomplete="new-password"/></div>` : ''
+  const pwField = entityName === 'user' ? `<div class="form-field"><label class="form-label" for="field-new-password">New Password <small style="font-weight:400;color:var(--color-text-muted)">(leave blank to keep unchanged)</small></label><input type="password" id="field-new-password" name="new_password" class="form-input" placeholder="Enter new password" autocomplete="new-password"/></div>` : ''
   const bc = isNew
     ? [{ href: '/', label: 'Dashboard' }, { href: `/${entityName}`, label: spec?.labelPlural || label }, { label: 'Create' }]
     : [{ href: '/', label: 'Dashboard' }, { href: `/${entityName}`, label: spec?.labelPlural || label }, { href: `/${entityName}/${item?.id}`, label: item?.name || item?.title || `#${item?.id}` }, { label: 'Edit' }]
-  const content = `<div class="mb-6"><h1 class="text-2xl font-bold">${isNew ? 'Create' : 'Edit'} ${label}</h1></div>
-    <div class="card-clean"><div class="card-clean-body"><form id="entity-form" class="space-y-4" aria-label="${isNew ? 'Create' : 'Edit'} ${label}">${formFields}${pwField}
-    <div class="flex gap-3 pt-4 border-t border-base-200"><button type="submit" id="submit-btn" class="btn btn-primary"><span class="btn-text">Save</span><span class="btn-loading-text" style="display:none">Saving...</span></button>
-    <a href="/${entityName}${isNew ? '' : '/' + item?.id}" class="btn btn-ghost">Cancel</a></div></form></div></div>`
+  const content = `<div class="form-shell"><div style="margin-bottom:24px"><h1 style="font-size:24px;font-weight:700">${isNew ? 'Create' : 'Edit'} ${label}</h1></div>
+    <div class="form-section"><form id="entity-form" class="form-grid" aria-label="${isNew ? 'Create' : 'Edit'} ${label}">${formFields}${pwField}
+    <div class="form-actions" style="grid-column:1/-1"><button type="submit" id="submit-btn" class="btn-primary-clean"><span class="btn-text">Save</span><span class="btn-loading-text" style="display:none">Saving...</span></button>
+    <a href="/${entityName}${isNew ? '' : '/' + item?.id}" class="btn-ghost-clean">Cancel</a></div></form></div></div>`
   const script = `${TOAST_SCRIPT}const form=document.getElementById('entity-form');const sb=document.getElementById('submit-btn');form.addEventListener('submit',async(e)=>{e.preventDefault();sb.classList.add('btn-loading');sb.querySelector('.btn-text').style.display='none';sb.querySelector('.btn-loading-text').style.display='inline';sb.disabled=true;const fd=new FormData(form);const data={};for(const[k,v]of fd.entries())data[k]=v;form.querySelectorAll('input[type=checkbox]').forEach(cb=>{data[cb.name]=cb.checked});form.querySelectorAll('input[type=number]').forEach(inp=>{if(inp.name&&data[inp.name]!==undefined&&data[inp.name]!=='')data[inp.name]=Number(data[inp.name])});const url=${isNew}?'/api/${entityName}':'/api/${entityName}/${item?.id}';const method=${isNew}?'POST':'PUT';try{const res=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const result=await res.json();if(res.ok){showToast('${isNew?'Created':'Updated'} successfully!','success');const ed=result.data||result;setTimeout(()=>{window.location='/${entityName}/'+(ed.id||'${item?.id}')},500)}else{showToast(result.message||result.error||'Save failed','error');sb.classList.remove('btn-loading');sb.querySelector('.btn-text').style.display='inline';sb.querySelector('.btn-loading-text').style.display='none';sb.disabled=false}}catch(err){showToast('Error: '+err.message,'error');sb.classList.remove('btn-loading');sb.querySelector('.btn-text').style.display='inline';sb.querySelector('.btn-loading-text').style.display='none';sb.disabled=false}})`
   return page(user, `${isNew ? 'Create' : 'Edit'} ${label}`, bc, content, [script])
 }
