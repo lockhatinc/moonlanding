@@ -29,8 +29,8 @@ html, body { overflow-x: hidden; max-width: 100%; }
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-primary: #1e293b;
-    --color-primary-hover: #0f172a;
+    --color-primary: #64b5f6;
+    --color-primary-hover: #42a5f5;
     --color-surface: #1a1a1a;
     --color-bg: #0f172a;
     --color-border: #334155;
