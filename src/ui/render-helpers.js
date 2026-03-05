@@ -1,12 +1,12 @@
 import { h } from '@/ui/webjsx.js'
 
 export const STAGE_COLORS = {
-  info_gathering: { bg: '#dbeafe', text: '#1e40af', label: 'Info Gathering' },
-  commencement: { bg: '#dbeafe', text: '#1e40af', label: 'Commencement' },
-  team_execution: { bg: '#fef3c7', text: '#92400e', label: 'Team Execution' },
-  partner_review: { bg: '#fef3c7', text: '#92400e', label: 'Partner Review' },
-  finalization: { bg: '#d1fae5', text: '#065f46', label: 'Finalization' },
-  closeout: { bg: '#d1fae5', text: '#065f46', label: 'Close Out' },
+  info_gathering: { bg: '#dbeafe', text: '#1e40af', label: 'Info Gathering', bgDark: '#1e3a8a', textDark: '#60a5fa' },
+  commencement: { bg: '#dbeafe', text: '#1e40af', label: 'Commencement', bgDark: '#1e3a8a', textDark: '#60a5fa' },
+  team_execution: { bg: '#fef3c7', text: '#92400e', label: 'Team Execution', bgDark: '#78350f', textDark: '#fbbf24' },
+  partner_review: { bg: '#fef3c7', text: '#92400e', label: 'Partner Review', bgDark: '#78350f', textDark: '#fbbf24' },
+  finalization: { bg: '#d1fae5', text: '#065f46', label: 'Finalization', bgDark: '#064e3b', textDark: '#34d399' },
+  closeout: { bg: '#d1fae5', text: '#065f46', label: 'Close Out', bgDark: '#064e3b', textDark: '#34d399' },
 }
 
 export const STATUS_COLORS = {
@@ -56,6 +56,10 @@ export function esc(s) {
 export function stagePill(stage) {
   const cfg = STAGE_CONFIG.find(s => s.key === stage)
   const lbl = cfg ? cfg.label : (stage || '-')
+  const stageColor = STAGE_COLORS[stage]
+  if (stageColor) {
+    return `<span class="stage-pill stage-${esc(stage||'')}" data-stage="${stage}" style="background:${stageColor.bg};color:${stageColor.text}">${lbl}</span>`
+  }
   return `<span class="stage-pill stage-${esc(stage||'')}">${lbl}</span>`
 }
 

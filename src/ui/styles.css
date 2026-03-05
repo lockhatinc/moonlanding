@@ -2514,5 +2514,17 @@ nav.breadcrumbs ul li a:hover { text-decoration: underline; }
   .card-clean-body { color: #f5f5f5; }
   .table-hover tbody tr:hover { background: #2d2d2d; }
   .rvw-toggle-knob { background: #f5f5f5; }
+  .badge-stage[data-stage="info_gathering"],
+  .badge-stage[data-stage="commencement"] { background: #1e3a8a !important; color: #60a5fa !important; }
+  .badge-stage[data-stage="team_execution"],
+  .badge-stage[data-stage="partner_review"] { background: #78350f !important; color: #fbbf24 !important; }
+  .badge-stage[data-stage="finalization"],
+  .badge-stage[data-stage="closeout"] { background: #064e3b !important; color: #34d399 !important; }
+  .stage-pill[data-stage="info_gathering"],
+  .stage-pill[data-stage="commencement"] { background: #1e3a8a !important; color: #60a5fa !important; }
+  .stage-pill[data-stage="team_execution"],
+  .stage-pill[data-stage="partner_review"] { background: #78350f !important; color: #fbbf24 !important; }
+  .stage-pill[data-stage="finalization"],
+  .stage-pill[data-stage="closeout"] { background: #064e3b !important; color: #34d399 !important; }
 }
 

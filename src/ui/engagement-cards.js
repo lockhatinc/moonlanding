@@ -6,7 +6,7 @@ import { canEdit } from '@/ui/permissions-ui.js'
 export function engagementCard(engagement, user) {
   const e = engagement || {}
   const stage = e.stage ? (STAGE_COLORS[e.stage] || { bg: '#f3f4f6', text: '#6b7280', label: e.stage }) : null
-  const stageBadge = stage ? `<span class="badge-stage" style="background:${stage.bg};color:${stage.text}">${stage.label || e.stage}</span>` : ''
+  const stageBadge = stage ? `<span class="badge-stage" data-stage="${e.stage}" style="background:${stage.bg};color:${stage.text}">${stage.label || e.stage}</span>` : ''
   const sts = e.status ? statusLabel(e.status) : ''
   const progress = typeof e.progress === 'number' ? `<div class="engagement-card-progress"><div class="engagement-card-progress-bar" style="width:${Math.min(100, Math.max(0, e.progress))}%"></div></div>` : ''
   const team = e.team?.length ? `<div class="engagement-card-team">${teamAvatarGroup(e.team, 3)}</div>` : ''
@@ -25,7 +25,7 @@ export function engagementCard(engagement, user) {
 export function mobileEngagementCard(engagement) {
   const e = engagement || {}
   const stage = e.stage ? (STAGE_COLORS[e.stage] || { bg: '#f3f4f6', text: '#6b7280', label: e.stage }) : null
-  const stageBadge = stage ? `<span class="badge-stage" style="background:${stage.bg};color:${stage.text};font-size:0.65rem;padding:0.15rem 0.5rem">${stage.label || e.stage}</span>` : ''
+  const stageBadge = stage ? `<span class="badge-stage" data-stage="${e.stage}" style="background:${stage.bg};color:${stage.text};font-size:0.65rem;padding:0.15rem 0.5rem">${stage.label || e.stage}</span>` : ''
   const sts = e.status ? statusLabel(e.status) : ''
   return `<div class="mobile-card mobile-engagement-card card-clean">
     <div class="card-clean-body">
@@ -43,7 +43,7 @@ export function stagePipeline(currentStage, stages = null, clickable = false, on
     const s = STAGE_COLORS[key] || { bg: '#f3f4f6', text: '#4b5563', label: key }
     const cls = i === activeIdx ? 'spl-current' : i < activeIdx ? 'spl-past' : 'spl-future'
     const click = clickable ? ` spl-clickable" data-action="${onClickFn}" data-args='["${key}"]'` : '"'
-    return `<div class="spl-pill ${cls}${click} style="background:${s.bg};color:${s.text}">${s.label}</div>`
+    return `<div class="spl-pill ${cls}" data-stage="${key}"${click} style="background:${s.bg};color:${s.text}">${s.label}</div>`
   }).join('')
   return `<div class="stage-pipeline">${pills}</div>`
 }
