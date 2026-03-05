@@ -3,7 +3,61 @@
     "BASH_DEFAULT_TIMEOUT_MS": "3600000",
     "BASH_MAX_TIMEOUT_MS": "14400000"
   },
-  "hooks": {},
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-tool-use-hook.js\"",
+            "timeout": 3600
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/session-start-hook.js\"",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/prompt-submit-hook.js\"",
+            "timeout": 3600
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-hook.js\"",
+            "timeout": 300000
+          },
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PROJECT_DIR}/.claude/hooks/stop-hook-git.js\"",
+            "timeout": 60000
+          }
+        ]
+      }
+    ]
+  },
   "enabledPlugins": {
     "glootie-cc@anentrypoint-glootie-cc": true
   },
