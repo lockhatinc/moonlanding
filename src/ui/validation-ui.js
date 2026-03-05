@@ -94,19 +94,30 @@ export const ClientValidator = {
   
   showFormSummary(form, errors) {
     ClientValidator.clearFormSummary(form);
-    
+
     if (Object.keys(errors).length === 0) return;
-    
+
     const summary = document.createElement('div');
     summary.className = 'alert alert-error mb-4';
     summary.dataset.formSummary = 'true';
-    
-    const errorList = Object.entries(errors)
-      .map(([field, errs]) => `<li>${field}: ${errs[0]}</li>`)
-      .join('');
-    
-    summary.innerHTML = `<div><strong>Please fix the following errors:</strong><ul class="list-disc ml-4 mt-2">${errorList}</ul></div>`;
-    
+
+    const heading = document.createElement('strong');
+    heading.textContent = 'Please fix the following errors:';
+
+    const ul = document.createElement('ul');
+    ul.className = 'list-disc ml-4 mt-2';
+
+    Object.entries(errors).forEach(([field, errs]) => {
+      const li = document.createElement('li');
+      li.textContent = `${field}: ${errs[0]}`;
+      ul.appendChild(li);
+    });
+
+    const wrapper = document.createElement('div');
+    wrapper.appendChild(heading);
+    wrapper.appendChild(ul);
+    summary.appendChild(wrapper);
+
     form.insertBefore(summary, form.firstChild);
   },
   
