@@ -12,7 +12,6 @@ setInterval(() => {
   for (const [key, data] of oauthStateStore) {
     if (data.expiresAt < now) {
       oauthStateStore.delete(key);
-      console.log('[OAuth] Cleaned up expired state:', key.substring(0, 20));
     }
   }
 }, 5 * 60 * 1000);
@@ -40,7 +39,6 @@ export async function setOAuthCookie(name, value, options = {}) {
     createdAt: timestamp,
   });
 
-  console.log('[OAuth] Stored state in memory:', { key: key.substring(0, 20), expiresIn: SESSION.cookieMaxAge });
 
   // Return the key - this will be used as part of the state variable sent to Google
   // Google returns it unchanged, allowing us to retrieve the state on callback
@@ -54,17 +52,14 @@ export async function getOAuthCookie(name) {
   const data = oauthStateStore.get(key);
 
   if (!data) {
-    console.log('[OAuth] State not found in memory:', key?.substring(0, 20));
     return null;
   }
 
   if (data.expiresAt < Date.now()) {
-    console.log('[OAuth] State expired:', key.substring(0, 20));
     oauthStateStore.delete(key);
     return null;
   }
 
-  console.log('[OAuth] Retrieved state from memory:', key.substring(0, 20));
   return data.value;
 }
 
@@ -73,7 +68,6 @@ export async function deleteOAuthCookie(name) {
   const key = name;
   if (key) {
     oauthStateStore.delete(key);
-    console.log('[OAuth] Deleted state from memory:', key.substring(0, 20));
   }
 }
 

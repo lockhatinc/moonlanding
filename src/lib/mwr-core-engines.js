@@ -191,7 +191,6 @@ export function autoCloseExpiredTender(tenderId) {
       close_reason: 'deadline_passed'
     }, { id: 'system', role: 'partner' });
 
-    console.log(`[tender-engine] Auto-closed expired tender ${tenderId}`);
     return true;
   }
 

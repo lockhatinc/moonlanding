@@ -34,7 +34,6 @@ function log(level, message, metadata = {}) {
   } else if (level === 'warn') {
     console.warn(prefix, message, metaStr)
   } else {
-    console.log(prefix, message, metaStr)
   }
 }
 

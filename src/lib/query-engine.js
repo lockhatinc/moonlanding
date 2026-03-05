@@ -217,7 +217,6 @@ export const update = (entity, id, data, user) => {
   if (!Object.keys(fields).length) return;
   const sql = `UPDATE ${tbl} SET ${Object.keys(fields).map(k => `${k}=?`).join(',')} WHERE id=?`;
   const values = [...Object.values(fields), id];
-  console.log(`[query-engine] UPDATE ${entity} fields:`, Object.keys(fields), 'values:', values.slice(0, -1));
   execRun(sql, values, { entity, operation: 'Update' });
 };
 

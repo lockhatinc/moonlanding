@@ -90,7 +90,6 @@ export class Supervisor extends EventEmitter {
       return;
     }
 
-    console.log(`[Supervisor:${this.name}] Restarting in ${this.currentBackoff}ms (attempt ${this.restarts.length}/${this.options.maxRestarts})`);
 
     await new Promise(resolve => setTimeout(resolve, this.currentBackoff));
     this.currentBackoff = Math.min(this.currentBackoff * 2, this.options.maxBackoffMs);

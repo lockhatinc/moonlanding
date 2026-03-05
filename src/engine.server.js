@@ -13,14 +13,6 @@ export const lucia = new Lucia(adapter, {
   getUserAttributes: (row) => ({ id: row.id, email: row.email, name: row.name, avatar: row.avatar, type: row.type, role: row.role }),
 });
 
-console.log('[Engine] Lucia session cookie name:', lucia.sessionCookieName);
-
-console.log('[Engine] Google Auth Config:', {
-  hasGoogleAuth: hasGoogleAuth(),
-  clientId: config.auth.google.clientId ? '***set***' : 'MISSING',
-  clientSecret: config.auth.google.clientSecret ? '***set***' : 'MISSING',
-  redirectUri: config.auth.google.redirectUri
-});
 
 export const google = hasGoogleAuth()
   ? new Google(config.auth.google.clientId, config.auth.google.clientSecret, config.auth.google.redirectUri)

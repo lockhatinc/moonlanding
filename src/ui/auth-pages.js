@@ -104,7 +104,12 @@ form.addEventListener('submit', async function(e) {
       btn.textContent = 'Redirecting\u2026';
       window.location.href = data.redirect || '/';
     } else {
-      errArea.innerHTML = '<div class="auth-err" role="alert">' + (data.error || 'Login failed. Please check your credentials.') + '</div>';
+      var errEl = document.createElement('div');
+      errEl.className = 'auth-err';
+      errEl.setAttribute('role', 'alert');
+      errEl.textContent = data.error || 'Login failed. Please check your credentials.';
+      errArea.innerHTML = '';
+      errArea.appendChild(errEl);
       btn.textContent = 'Sign In';
       btn.disabled = false;
     }
@@ -164,7 +169,12 @@ form.addEventListener('submit', async function(e) {
       document.getElementById('reset-success').style.display = 'block';
     } else {
       var d = await res.json().catch(function() { return {}; });
-      errArea.innerHTML = '<div class="auth-err" role="alert">' + (d.error || 'Request failed. Please try again.') + '</div>';
+      var errEl2 = document.createElement('div');
+      errEl2.className = 'auth-err';
+      errEl2.setAttribute('role', 'alert');
+      errEl2.textContent = d.error || 'Request failed. Please try again.';
+      errArea.innerHTML = '';
+      errArea.appendChild(errEl2);
       btn.textContent = 'Send Reset Link';
       btn.disabled = false;
     }
@@ -234,7 +244,12 @@ form.addEventListener('submit', async function(e) {
       form.style.display = 'none';
       document.getElementById('confirm-success').style.display = 'block';
     } else {
-      errArea.innerHTML = '<div class="auth-err" role="alert">' + (data.error || 'Reset failed. Please try again.') + '</div>';
+      var errEl3 = document.createElement('div');
+      errEl3.className = 'auth-err';
+      errEl3.setAttribute('role', 'alert');
+      errEl3.textContent = data.error || 'Reset failed. Please try again.';
+      errArea.innerHTML = '';
+      errArea.appendChild(errEl3);
       btn.textContent = 'Update Password';
       btn.disabled = false;
     }

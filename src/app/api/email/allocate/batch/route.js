@@ -94,12 +94,6 @@ export async function POST(request) {
       }
     }
 
-    console.log('[EMAIL_BATCH_ALLOCATE] Batch allocation complete:', {
-      allocated: results.allocated.length,
-      skipped: results.skipped.length,
-      failed: results.failed.length,
-    });
-
     return NextResponse.json(results);
 
   } catch (error) {

@@ -70,13 +70,11 @@ export async function recreateEngagement(sourceId) {
     console.error(`[Recreation Rollback] Error during recreation for engagement ${sourceId}:`, e.message);
 
     if (newEng?.id) {
-      console.log(`[Recreation Rollback] Deleting partial engagement ${newEng.id} and all child records`);
       list('rfi', { engagement_id: newEng.id }).forEach(r => remove('rfi', r.id));
       list('rfi_section', { engagement_id: newEng.id }).forEach(s => remove('rfi_section', s.id));
       remove('engagement', newEng.id);
     }
 
-    console.log(`[Recreation Rollback] Reverting source engagement ${sourceId} repeat_interval to '${originalRepeatInterval}'`);
     update('engagement', sourceId, { repeat_interval: originalRepeatInterval });
 
     create('recreation_log', { engagement_id: sourceId, client_id: src.client_id, status: 'failed', error: e.message, details: JSON.stringify({ source_id: sourceId, year, month }) });

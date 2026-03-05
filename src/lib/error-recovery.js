@@ -138,7 +138,6 @@ export async function withRecovery(fn, options = {}) {
   if (checkpointName) {
     const savedState = restoreCheckpoint(checkpointName);
     if (savedState) {
-      console.log(`[RECOVERY] Using checkpoint: ${checkpointName}`);
     }
   }
 

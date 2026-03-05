@@ -123,13 +123,6 @@ export async function POST(request) {
       timestamp
     );
 
-    console.log('[EMAIL_ALLOCATE] Email allocated:', {
-      email_id,
-      engagement_id: result.engagement_id || null,
-      rfi_id: result.rfi_id || null,
-      method: auto ? 'automatic' : 'manual',
-    });
-
     return NextResponse.json({
       success: true,
       email: result.email,

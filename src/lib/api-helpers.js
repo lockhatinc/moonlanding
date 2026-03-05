@@ -11,12 +11,9 @@ import { ERROR_MESSAGES } from '@/config';
 let dbInit = false;
 export function ensureDb() {
   if (!dbInit) {
-    console.log('[ensureDb] Initializing database...');
     migrate();
     dbInit = true;
-    console.log('[ensureDb] Database initialized');
   } else {
-    console.log('[ensureDb] Database already initialized');
   }
 }
 

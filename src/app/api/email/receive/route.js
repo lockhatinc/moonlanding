@@ -126,13 +126,6 @@ export async function POST(request) {
       timestamp
     );
 
-    console.log('[EMAIL_RECEIVE] Email received and stored:', {
-      id: emailId,
-      from: sender_email,
-      subject,
-      attachments: attachmentData.length,
-    });
-
     return NextResponse.json({
       success: true,
       email_id: emailId,

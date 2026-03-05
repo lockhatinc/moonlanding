@@ -67,7 +67,6 @@ export const POST = withErrorHandler(async (request) => {
   const sessionCookie = lucia.createSessionCookie(session.id);
   const cookieHeader = `${sessionCookie.name}=${sessionCookie.value}; Path=/; HttpOnly; SameSite=Lax${sessionCookie.attributes.secure ? '; Secure' : ''}`;
 
-  console.log(`[MWR Bridge] Session created for ${email} -> user ${user.id}`);
 
   return new Response(JSON.stringify({
     status: 'success',

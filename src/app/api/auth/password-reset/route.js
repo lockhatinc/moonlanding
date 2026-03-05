@@ -22,7 +22,6 @@ export const POST = withErrorHandler(async (request) => {
     db.prepare('DELETE FROM password_reset_tokens WHERE user_id = ?').run(user.id);
     db.prepare('INSERT INTO password_reset_tokens (id, user_id, token, expires_at, used, created_at) VALUES (?, ?, ?, ?, 0, ?)').run(genId(), user.id, token, expiresAt, now());
 
-    console.log(`[PasswordReset] Token generated for ${email}`);
   }
 
   return new Response(JSON.stringify({ status: 'success', message: 'If an account exists with that email, a reset link has been sent.' }), {
@@ -60,7 +59,6 @@ export const PUT = withErrorHandler(async (request) => {
   db.prepare('UPDATE password_reset_tokens SET used = 1 WHERE id = ?').run(resetToken.id);
   db.prepare('DELETE FROM sessions WHERE user_id = ?').run(resetToken.user_id);
 
-  console.log(`[PasswordReset] Password updated for user ${resetToken.user_id}`);
 
   return new Response(JSON.stringify({ status: 'success', message: 'Password updated successfully' }), {
     status: 200, headers: { 'Content-Type': 'application/json' }

@@ -86,14 +86,12 @@ function startMonitoring(interval = 5000, databasePath = null) {
     collectResources()
   }, interval)
 
-  console.log(`[ResourceMonitor] Started (interval: ${interval}ms)`)
 }
 
 function stopMonitoring() {
   if (monitoringInterval) {
     clearInterval(monitoringInterval)
     monitoringInterval = null
-    console.log('[ResourceMonitor] Stopped')
   }
 }
 

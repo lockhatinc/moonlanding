@@ -285,14 +285,11 @@ let globalDomainLoader = null;
 export function getDomainLoader() {
   if (!globalDomainLoader) {
     try {
-      console.log('[getDomainLoader] Calling getConfigEngineSync...');
       const engine = getConfigEngineSync();
-      console.log('[getDomainLoader] Engine returned:', engine ? 'YES' : 'NULL', engine?.constructor?.name);
       if (!engine) {
         throw new Error('[getDomainLoader] Config engine is not initialized (null returned)');
       }
       globalDomainLoader = new DomainLoader(engine);
-      console.log('[getDomainLoader] Successfully created instance');
     } catch (error) {
       console.error('[getDomainLoader] Error:', error.message);
       throw error;

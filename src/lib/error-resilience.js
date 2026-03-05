@@ -50,13 +50,11 @@ export async function withCircuitBreaker(name, fn, options = {}) {
       throw new AppError(`Service unavailable: ${name}`, 'CIRCUIT_OPEN', HTTP.SERVICE_UNAVAILABLE, { nextAttempt: breaker.nextAttempt });
     }
     breaker.state = 'half-open';
-    console.log(`[CIRCUIT] ${name} entering half-open state`);
   }
 
   try {
     const result = await fn();
     if (breaker.state === 'half-open') {
-      console.log(`[CIRCUIT] ${name} recovered, closing circuit`);
     }
     breaker.failures = 0;
     breaker.state = 'closed';
@@ -80,13 +78,11 @@ export function checkpoint(name, state) {
     state: JSON.parse(JSON.stringify(state)),
     timestamp: Date.now()
   });
-  console.log(`[CHECKPOINT] Saved: ${name}`);
 }
 
 export function restoreCheckpoint(name) {
   const cp = errorState.checkpoints.get(name);
   if (cp) {
-    console.log(`[CHECKPOINT] Restored: ${name} from ${new Date(cp.timestamp).toISOString()}`);
     return cp.state;
   }
   return null;
@@ -100,7 +96,6 @@ export function logRecovery(context, action) {
     timestamp: new Date().toISOString()
   });
   if (errorState.errors.length > 1000) errorState.errors.shift();
-  console.log(`[RECOVERY] ${action}`, context);
 }
 
 export function getErrorStats() {

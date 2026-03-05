@@ -31,7 +31,6 @@ function runBackup() {
   try {
     const result = createBackup({ dbPath: DB_PATH, backupDir: BACKUP_DIR, label: 'auto' });
     pruneBackups({ backupDir: BACKUP_DIR, maxBackups: MAX_BACKUPS });
-    console.log(`[DR] Backup created: ${path.basename(result.path)} (${(result.size / 1024).toFixed(0)}KB)`);
     return result;
   } catch (err) {
     console.error('[DR] Backup failed:', err.message);
@@ -40,7 +39,6 @@ function runBackup() {
 }
 
 export function startLifecycle(server) {
-  console.log('[DR] Starting disaster recovery lifecycle');
 
   checkIntegrity();
   runBackup();
@@ -51,15 +49,12 @@ export function startLifecycle(server) {
   const shutdown = (signal) => {
     if (shutdownRequested) return;
     shutdownRequested = true;
-    console.log(`[DR] ${signal} received, graceful shutdown`);
 
     clearInterval(backupTimer);
     clearInterval(integrityTimer);
 
     server.close(() => {
-      console.log('[DR] Server closed');
       runBackup();
-      console.log('[DR] Final backup complete. Exiting.');
       process.exit(0);
     });
 

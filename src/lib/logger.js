@@ -34,7 +34,6 @@ export const logger = {
 
   info: (context, message, data) => {
     if (LOG_LEVELS.info <= MIN_LOG_LEVEL) {
-      console.log(formatLog('info', context, message, data));
     }
   },
 

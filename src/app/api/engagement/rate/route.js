@@ -135,13 +135,6 @@ export async function POST(request) {
       stage: engagement.stage
     });
 
-    console.log('[ENGAGEMENT_RATING] Rating submitted:', {
-      engagement_id,
-      rating,
-      user_id: user.id,
-      client_id: user.client_id
-    });
-
     return NextResponse.json({
       success: true,
       engagement_id,

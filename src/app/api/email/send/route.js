@@ -113,7 +113,6 @@ async function sendSingleEmail(db, emailRecord, attempt = 1, maxRetries = 3, max
       emailData.references = emailRecord.references;
     }
 
-    console.log('[EMAIL] Sending email:', { id: emailRecord.id, to: emailData.to, subject: emailData.subject, attempt });
 
     const result = await sendEmail(emailData);
 
@@ -135,7 +134,6 @@ async function sendSingleEmail(db, emailRecord, attempt = 1, maxRetries = 3, max
       attempt
     });
 
-    console.log('[EMAIL] Email sent successfully:', { id: emailRecord.id, messageId: result.id || result.messageId });
 
     return { success: true, messageId: result.id || result.messageId, emailId: emailRecord.id };
   } catch (error) {
@@ -261,7 +259,6 @@ export async function POST(request) {
       });
     }
 
-    console.log('[EMAIL] Processing batch:', { count: pendingEmails.length });
 
     const results = [];
     let successCount = 0;
@@ -292,12 +289,6 @@ export async function POST(request) {
     }
 
     checkFailureRate(db);
-
-    console.log('[EMAIL] Batch completed:', {
-      total: pendingEmails.length,
-      success: successCount,
-      failed: failureCount
-    });
 
     return NextResponse.json({
       success: true,

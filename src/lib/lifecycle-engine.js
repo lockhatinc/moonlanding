@@ -211,5 +211,4 @@ export function registerEngagementStageHooks(hookEngine) {
     return context;
   }, { priority: 100, name: 'engagement-stage-validator' });
 
-  console.log('[HOOKS] Registered engagement lifecycle engine');
 }

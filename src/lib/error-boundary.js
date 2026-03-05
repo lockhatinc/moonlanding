@@ -44,7 +44,6 @@ export class ErrorBoundary {
   }
 
   reset() {
-    console.log(`[ErrorBoundary:${this.id}] Resetting`);
     this.setState({
       hasError: false,
       error: null,

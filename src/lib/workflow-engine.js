@@ -211,5 +211,4 @@ export function registerWorkflowHooks(hookEngine) {
     return context;
   }, { priority: 100, name: 'workflow-stage-validator' });
 
-  console.log('[HOOKS] Registered universal workflow engine');
 }

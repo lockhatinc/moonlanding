@@ -134,7 +134,6 @@ export const createErrorLogger = (context = '') => {
       console.warn(`[${context}] Warning:`, message, details);
     },
     info: (message, details = {}) => {
-      console.log(`[${context}] Info:`, message, details);
     },
     debug: (message, details = {}) => {
       if (process.env.DEBUG) {

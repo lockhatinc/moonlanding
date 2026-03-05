@@ -31,10 +31,8 @@ const activateWorkflowsForStage = async (engagementId, stage, user) => {
 
     for (const feature of activatedFeatures) {
       if (feature === 'post_rfi') {
-        console.log(`[ACTIVATION] Activating post_rfi workflow for engagement ${engagementId}`);
         logActivity('engagement', engagementId, 'workflow_activated', `Activated post_rfi workflow`, user, { activated_feature: 'post_rfi' });
       } else if (feature === 'client_feedback') {
-        console.log(`[ACTIVATION] Activating client_feedback feature for engagement ${engagementId}`);
         logActivity('engagement', engagementId, 'feature_activated', `Activated client_feedback feature`, user, { activated_feature: 'client_feedback' });
       }
     }

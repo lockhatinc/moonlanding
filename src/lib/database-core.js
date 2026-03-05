@@ -35,27 +35,21 @@ db.pragma('foreign_keys = ON');
 
 export const migrate = () => {
   console.error('[Database] ===== MIGRATE CALLED =====');
-  console.log('[Database] Running migration...');
-  console.log('[Database] Initial specs count:', Object.keys(specs).length);
 
   let specsToUse = specs;
   if (Object.keys(specs).length === 0) {
-    console.log('[Database] Specs is empty, loading from ConfigEngine...');
     try {
       const engine = getConfigEngineSync();
       specsToUse = {};
       for (const entityName of engine.getAllEntities()) {
         specsToUse[entityName] = engine.generateEntitySpec(entityName);
       }
-      console.log(`[Database] Generated ${Object.keys(specsToUse).length} specs from ConfigEngine`);
     } catch (e) {
       console.error('[Database] Failed to get specs from ConfigEngine during migration:', e.message);
       specsToUse = specs;
     }
   } else {
-    console.log('[Database] Using pre-loaded specs:', Object.keys(specsToUse).length);
   }
-  console.log('[Database] Final specs count:', Object.keys(specsToUse).length);
 
   for (const spec of Object.values(specsToUse)) {
     if (!spec) continue;
@@ -101,7 +95,6 @@ export const migrate = () => {
             alterSql += ` DEFAULT ${defaultVal}`;
           }
           db.exec(alterSql);
-          console.log(`[Database] Added missing column ${tableName}.${key}`);
         }
       });
     } catch (e) {
@@ -268,7 +261,6 @@ export const migrate = () => {
     console.error('[Database] Password reset tokens table creation failed:', e.message);
   }
 
-  console.log('[Database] Migration complete');
 };
 
 let migrationComplete = false;

@@ -92,7 +92,8 @@ export function renderStandaloneLogin(showGoogleAuth = false) {
           btn.textContent = 'Redirecting\u2026';
           window.location.href = data.redirect || '/';
         } else {
-          errArea.innerHTML = '<div class="err"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' + (data.error || 'Login failed. Please check your credentials.') + '</div>';
+          errArea.innerHTML = '<div class="err"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span></span></div>';
+          errArea.querySelector('span').textContent = data.error || 'Login failed. Please check your credentials.';
           btn.textContent = 'Sign In';
           btn.disabled = false;
         }

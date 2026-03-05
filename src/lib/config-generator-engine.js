@@ -191,7 +191,6 @@ export class ConfigGeneratorEngine {
 
     if (cached) {
       if (this.debugMode) {
-        console.log(`[ConfigGeneratorEngine] Returning cached spec for ${entityName}`);
       }
       return this._deepFreeze(this._deepClone(cached));
     }
@@ -320,7 +319,6 @@ export class ConfigGeneratorEngine {
     this.specCache.set(cacheKey, frozenSpec);
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Generated and cached spec for ${entityName}`);
     }
 
     return this._deepFreeze(this._deepClone(frozenSpec));
@@ -370,7 +368,6 @@ export class ConfigGeneratorEngine {
     };
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Generated notification handler for ${notificationName}`);
     }
 
     return this._deepFreeze(handler);
@@ -428,7 +425,6 @@ export class ConfigGeneratorEngine {
     };
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Generated automation job for ${scheduleName}`);
     }
 
     return this._deepFreeze(job);
@@ -449,7 +445,6 @@ export class ConfigGeneratorEngine {
     const entities = domain.entities || [];
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved ${entities.length} entities for domain ${domainName}`);
     }
 
     return [...entities];
@@ -501,7 +496,6 @@ export class ConfigGeneratorEngine {
     }
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Feature "${featureName}" is enabled for context`, context);
     }
 
     return true;
@@ -534,7 +528,6 @@ export class ConfigGeneratorEngine {
     }
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved threshold for ${path}:`, current);
     }
 
     if (typeof current === 'object' && current !== null) {
@@ -559,7 +552,6 @@ export class ConfigGeneratorEngine {
     const resolved = this._recursiveResolve(workflow, config);
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved workflow ${workflowName}`);
     }
 
     return this._deepFreeze(resolved);
@@ -580,7 +572,6 @@ export class ConfigGeneratorEngine {
     const resolved = this._recursiveResolve(rule, config);
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved validation rule ${ruleName}`);
     }
 
     return this._deepFreeze(resolved);
@@ -596,7 +587,6 @@ export class ConfigGeneratorEngine {
     const entityNames = Object.keys(config.entities);
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved ${entityNames.length} entity names`);
     }
 
     return entityNames.sort();
@@ -612,7 +602,6 @@ export class ConfigGeneratorEngine {
     const schedules = this._deepClone(config.automation.schedules);
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved ${schedules.length} automation schedules`);
     }
 
     return schedules;
@@ -633,7 +622,6 @@ export class ConfigGeneratorEngine {
     this.specCache.set(cacheKey, frozen);
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Cached spec for ${entityName}`);
     }
 
     return true;
@@ -644,7 +632,6 @@ export class ConfigGeneratorEngine {
     this.masterConfig = null;
 
     if (this.debugMode) {
-      console.log('[ConfigGeneratorEngine] Cache invalidated');
     }
 
     return true;
@@ -692,7 +679,6 @@ export class ConfigGeneratorEngine {
     const stageNames = workflow.stages.map(s => typeof s === 'string' ? s : s.name);
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved ${stageNames.length} stages for workflow ${workflowName}`);
     }
 
     return stageNames;
@@ -735,7 +721,6 @@ export class ConfigGeneratorEngine {
     const resolved = this._recursiveResolve(result, config);
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved stage config for ${workflowName}.${stageName}`);
     }
 
     return this._deepFreeze(resolved);
@@ -757,7 +742,6 @@ export class ConfigGeneratorEngine {
     const intervals = this._deepClone(config.repeat_intervals);
 
     if (this.debugMode) {
-      console.log('[ConfigGeneratorEngine] Retrieved repeat intervals');
     }
 
     return this._deepFreeze(intervals);
@@ -807,7 +791,6 @@ export class ConfigGeneratorEngine {
     const integration = this._deepClone(config.integrations[integrationName]);
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved integration ${integrationName}`);
     }
 
     return this._deepFreeze(integration);
@@ -829,7 +812,6 @@ export class ConfigGeneratorEngine {
     const resolved = this._recursiveResolve(template, config);
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved document template ${templateName}`);
     }
 
     return this._deepFreeze(resolved);
@@ -849,7 +831,6 @@ export class ConfigGeneratorEngine {
     const statusEnum = this._deepClone(config.status_enums[enumName]);
 
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved status enum ${enumName}`);
     }
 
     return this._deepFreeze(statusEnum);
@@ -975,7 +956,6 @@ export class ConfigGeneratorEngine {
     const roles = this._deepFreeze(this._deepClone(config.roles));
     this.specCache.set(cacheKey, roles);
     if (this.debugMode) {
-      console.log('[ConfigGeneratorEngine] Retrieved all roles');
     }
     return this._deepFreeze(this._deepClone(roles));
   }
@@ -995,7 +975,6 @@ export class ConfigGeneratorEngine {
     const role = this._deepClone(config.roles[roleName]);
     this.specCache.set(cacheKey, role);
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved role ${roleName}`);
     }
     return this._deepFreeze(role);
   }
@@ -1019,7 +998,6 @@ export class ConfigGeneratorEngine {
     const status = this._deepClone(config.status_enums[enumName][statusName]);
     this.specCache.set(cacheKey, status);
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved status ${entityName}.${statusName}`);
     }
     return this._deepFreeze(status);
   }
@@ -1039,7 +1017,6 @@ export class ConfigGeneratorEngine {
     const statuses = this._deepClone(config.status_enums[enumName]);
     this.specCache.set(cacheKey, statuses);
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved statuses for enum ${enumName}`);
     }
     return this._deepFreeze(statuses);
   }
@@ -1059,7 +1036,6 @@ export class ConfigGeneratorEngine {
     const entity = this._deepClone(config.entities[entityName]);
     this.specCache.set(cacheKey, entity);
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved entity ${entityName}`);
     }
     return this._deepFreeze(entity);
   }
@@ -1114,7 +1090,6 @@ export class ConfigGeneratorEngine {
     const timing = this.getThreshold('timing');
     this.specCache.set(cacheKey, timing);
     if (this.debugMode) {
-      console.log('[ConfigGeneratorEngine] Retrieved timing config');
     }
     return this._deepFreeze(this._deepClone(timing));
   }
@@ -1127,7 +1102,6 @@ export class ConfigGeneratorEngine {
     const limits = this.getThreshold('system');
     this.specCache.set(cacheKey, limits);
     if (this.debugMode) {
-      console.log('[ConfigGeneratorEngine] Retrieved system limits config');
     }
     return this._deepFreeze(this._deepClone(limits));
   }
@@ -1140,7 +1114,6 @@ export class ConfigGeneratorEngine {
     const ui = this.getThreshold('ui');
     this.specCache.set(cacheKey, ui);
     if (this.debugMode) {
-      console.log('[ConfigGeneratorEngine] Retrieved UI config');
     }
     return this._deepFreeze(this._deepClone(ui));
   }
@@ -1153,7 +1126,6 @@ export class ConfigGeneratorEngine {
     const polling = this.getThreshold('polling');
     this.specCache.set(cacheKey, polling);
     if (this.debugMode) {
-      console.log('[ConfigGeneratorEngine] Retrieved polling config');
     }
     return this._deepFreeze(this._deepClone(polling));
   }
@@ -1167,7 +1139,6 @@ export class ConfigGeneratorEngine {
     const theme = config.theme || {};
     this.specCache.set(cacheKey, theme);
     if (this.debugMode) {
-      console.log('[ConfigGeneratorEngine] Retrieved theme config');
     }
     return this._deepFreeze(this._deepClone(theme));
   }
@@ -1181,7 +1152,6 @@ export class ConfigGeneratorEngine {
     const icons = config.icons || {};
     this.specCache.set(cacheKey, icons);
     if (this.debugMode) {
-      console.log('[ConfigGeneratorEngine] Retrieved icons config');
     }
     return this._deepFreeze(this._deepClone(icons));
   }
@@ -1204,7 +1174,6 @@ export class ConfigGeneratorEngine {
       return null;
     }
     if (this.debugMode) {
-      console.log(`[ConfigGeneratorEngine] Retrieved icon ${iconType}.${iconName}`);
     }
     return icon;
   }
@@ -1277,7 +1246,6 @@ export function getConfigEngineSync() {
       }
 
       g.__configEngine__ = new ConfigGeneratorEngine(config);
-      console.log('[ConfigGeneratorEngine] Lazy-initialized from master-config.yml');
     } catch (error) {
       console.error('[ConfigGeneratorEngine] Lazy-init failed:', error instanceof Error ? error.stack : error);
       throw error;
