@@ -81,7 +81,7 @@ export async function POST(request, { params }) {
       success: true,
       responseId,
       message: 'Response added'
-    });
+    }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: String(error?.message || error) },

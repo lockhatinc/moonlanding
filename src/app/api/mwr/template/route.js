@@ -62,7 +62,7 @@ export async function POST(request) {
       success: true,
       templateId,
       message: 'Template created'
-    });
+    }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: String(error?.message || error) },

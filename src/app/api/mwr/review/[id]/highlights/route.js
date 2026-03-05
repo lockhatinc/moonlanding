@@ -43,7 +43,7 @@ export async function POST(request, { params }) {
       success: true,
       highlightId,
       message: 'Highlight created'
-    });
+    }, { status: 201 });
   } catch (error) {
     console.error('[highlights-post] Error:', error);
     return NextResponse.json(

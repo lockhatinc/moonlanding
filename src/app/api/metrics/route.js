@@ -51,14 +51,8 @@ export const GET = async (request) => {
       }
     )
   } catch (error) {
-    console.error('[Metrics] Error:', error)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
+    const status = error.statusCode || (error.code === 'UNAUTHORIZED' ? 401 : 500);
+    return new Response(JSON.stringify({ error: error.message }), { status, headers: { 'Content-Type': 'application/json' } });
   }
 }
 
@@ -70,24 +64,10 @@ export const DELETE = async (request) => {
     if (user.role !== 'admin') {
       return new Response(JSON.stringify({ error: 'Permission denied' }), { status: 403, headers: { 'Content-Type': 'application/json' } })
     }
-
     clearMetrics()
-
-    return new Response(
-      JSON.stringify({ success: true, message: 'Metrics cleared' }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
+    return new Response(JSON.stringify({ success: true, message: 'Metrics cleared' }), { status: 200, headers: { 'Content-Type': 'application/json' } })
   } catch (error) {
-    console.error('[Metrics] Clear error:', error)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
+    const status = error.statusCode || (error.code === 'UNAUTHORIZED' ? 401 : 500);
+    return new Response(JSON.stringify({ error: error.message }), { status, headers: { 'Content-Type': 'application/json' } });
   }
 }

@@ -48,7 +48,7 @@ export async function POST(request, context) {
     };
 
     const checklist = create('checklist', checklistData, user);
-    return NextResponse.json({ success: true, checklist, message: 'Checklist created' });
+    return NextResponse.json({ success: true, checklist, message: 'Checklist created' }, { status: 201 });
   } catch (error) {
     console.error('[mwr-checklists] Error:', error.message);
     return NextResponse.json({ success: false, error: error.message }, { status: 400 });

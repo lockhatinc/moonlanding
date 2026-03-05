@@ -14,12 +14,8 @@ export async function POST(request, { params }) {
       created_by: user.id
     });
 
-    return NextResponse.json({
-      success: true,
-      item
-    });
+    return NextResponse.json({ success: true, item }, { status: 201 });
   } catch (error) {
-    console.error('[checklist-items-post] Error:', error);
     return NextResponse.json(
       { success: false, error: error.message },
       { status: 400 }
