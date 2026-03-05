@@ -43,8 +43,6 @@ function trackResponse(req, statusCode, startTime) {
   console.log(`[${req.method}] ${req.url} ${statusCode} ${elapsed}ms`);
 }
 
-register('./import-hook.js', import.meta.url);
-
 process.on('uncaughtException', (err) => {
   console.error('[FATAL] Uncaught exception (process kept alive):', err?.message || err);
   if (err?.stack) console.error(err.stack);
