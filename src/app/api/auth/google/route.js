@@ -25,13 +25,6 @@ export async function GET(request) {
   const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:3000';
   const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
 
-  console.log('[OAuth] Redirect URI:', {
-    'x-forwarded-proto': request.headers['x-forwarded-proto'],
-    'x-forwarded-host': request.headers['x-forwarded-host'],
-    'host': request.headers.host,
-    'computed-redirectUri': redirectUri
-  });
-
   // Create a dynamic Google client instance with the request-specific redirect URI
   const dynamicGoogle = new Google(
     config.auth.google.clientId,
@@ -52,8 +45,6 @@ export async function GET(request) {
     // The key will be sent to Google and returned unchanged
     const stateKey = await setOAuthCookie('google_oauth_state', { state, codeVerifier });
 
-    console.log('[OAuth] Generated state key:', stateKey.substring(0, 20));
-
     // Use the key as the state parameter - Google returns it unchanged
     const url = await dynamicGoogle.createAuthorizationURL(stateKey, codeVerifier, {
       scopes: ['profile', 'email'],
@@ -66,7 +57,6 @@ export async function GET(request) {
 export async function HEAD(request) {
   try {
     const { valid } = validateOAuthProvider(google);
-    console.log('[OAuth HEAD] Google configured:', valid);
     return new Response(null, { status: valid ? 200 : 503 });
   } catch (error) {
     console.error('[OAuth HEAD] Error:', error);

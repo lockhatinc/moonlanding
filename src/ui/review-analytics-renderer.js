@@ -74,5 +74,5 @@ export function renderReviewAnalytics(user, stats) {
 
   const content = `<div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold">Review Analytics</h1><a href="/reviews" class="btn btn-ghost btn-sm">Back to Reviews</a></div>${cards}${charts}${creatorChart}${activityTable}`;
 
-  return page(user, 'Review Analytics', [{ href: '/', label: 'Dashboard' }, { href: '/reviews', label: 'Reviews' }, { label: 'Analytics' }], content);
+  return page(user, 'Review Analytics | MOONLANDING', [{ href: '/', label: 'Dashboard' }, { href: '/reviews', label: 'Reviews' }, { label: 'Analytics' }], content);
 }

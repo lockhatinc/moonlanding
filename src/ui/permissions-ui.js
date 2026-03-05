@@ -46,13 +46,6 @@ export function canAccess(user, entity, action) {
   const allPermissions = getEntityPermissions();
   const permissions = allPermissions[entity];
 
-  // Debug logging
-  if (entity === 'client' && action === 'list') {
-    console.log(`[Permission Check] user.role=${user.role}, entity=${entity}, action=${action}`);
-    console.log(`[Permission Check] allPermissions['client']=`, allPermissions['client']);
-    console.log(`[Permission Check] allowed roles=`, permissions?.[action] || []);
-  }
-
   if (!permissions) return isPartner(user);
   const allowed = permissions[action] || [];
   if (allowed.includes(user.role)) return true;

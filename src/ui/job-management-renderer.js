@@ -57,5 +57,5 @@ export function renderJobManagement(user, jobs, recentLogs = []) {
 
   const jobScript = `window.triggerJob=async function(name){try{const r=await fetch('/api/admin/jobs/'+name+'/trigger',{method:'POST'});if(r.ok){location.reload()}else{alert('Trigger failed: '+(await r.text()))}}catch(e){alert(e.message)}};window.toggleJob=async function(name,enabled){try{const r=await fetch('/api/admin/jobs/'+name,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled})});if(r.ok)location.reload();else alert('Toggle failed')}catch(e){alert(e.message)}};window.triggerAll=async function(){if(!confirm('Run all jobs now?'))return;try{const r=await fetch('/api/admin/jobs/trigger-all',{method:'POST'});if(r.ok)location.reload();else alert('Failed')}catch(e){alert(e.message)}}`;
 
-  return page(user, 'Scheduled Jobs', [{ href: '/', label: 'Dashboard' }, { href: '/admin/settings', label: 'Settings' }, { label: 'Jobs' }], content, [jobScript]);
+  return page(user, 'Scheduled Jobs | MOONLANDING', [{ href: '/', label: 'Dashboard' }, { href: '/admin/settings', label: 'Settings' }, { label: 'Jobs' }], content, [jobScript]);
 }

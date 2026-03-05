@@ -23,7 +23,7 @@ export function checklistTemplatesUI(user, templates = []) {
       </table></div>
     </div></div>`;
   const script = `${TOAST}window.chtCreate=async function(){var name=prompt('Template name:');if(!name)return;try{var r=await fetch('/api/checklist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,active:true})});if(r.ok){var d=await r.json();window.location='/admin/settings/checklists/'+(d.data?.id||d.id||'');}else showToast('Failed','error')}catch(e){showToast('Error','error')}}`;
-  return page(user, 'Checklist Templates', bc, content, [script]);
+  return page(user, 'Checklist Templates | MOONLANDING', bc, content, [script]);
 }
 
 export function checklistDialog(checklistId) {
@@ -132,7 +132,7 @@ export function renderChecklistsHome(user, checklists = []) {
         <tbody>${rows || '<tr><td colspan="4" class="text-center py-8 text-base-content/40">No checklists</td></tr>'}</tbody>
       </table></div>
     </div></div>`;
-  return page(user, 'Checklists', bc, content);
+  return page(user, 'Checklists | MOONLANDING', bc, content);
 }
 
 export function renderChecklistsManagement(user, checklists = []) {
@@ -155,5 +155,5 @@ export function renderChecklistsManagement(user, checklists = []) {
       </table></div>
     </div></div>`;
   const script = `${TOAST}window.ckmToggle=async function(id,active){await fetch('/api/checklist/'+id,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({active:active})});location.reload()};window.ckmDel=async function(id){if(!confirm('Delete?'))return;await fetch('/api/checklist/'+id,{method:'DELETE'});location.reload()}`;
-  return page(user, 'Manage Checklists', bc, content, [script]);
+  return page(user, 'Manage Checklists | MOONLANDING', bc, content, [script]);
 }

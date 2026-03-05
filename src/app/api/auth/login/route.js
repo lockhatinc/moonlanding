@@ -96,8 +96,6 @@ export const POST = withErrorHandler(async (request) => {
     const sessionCookie = lucia.createSessionCookie(session.id);
     const cookieHeader = `${sessionCookie.name}=${sessionCookie.value}; Path=/; HttpOnly; SameSite=Lax${sessionCookie.attributes.secure ? '; Secure' : ''}`;
 
-    console.log('[Login] Session created for user:', user.id);
-
     const responseBody = JSON.stringify({
       status: 'success',
       message: 'Login successful',

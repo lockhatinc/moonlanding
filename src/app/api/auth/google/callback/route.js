@@ -21,13 +21,6 @@ export async function GET(request) {
   const host = request.headers['x-forwarded-host'] || request.headers.host || 'localhost:3000';
   const redirectUri = `${protocol}://${host}/api/auth/google/callback`;
 
-  console.log('[OAuth Callback] Processing with redirect URI:', {
-    'x-forwarded-proto': request.headers['x-forwarded-proto'],
-    'x-forwarded-host': request.headers['x-forwarded-host'],
-    'host': request.headers.host,
-    'computed-redirectUri': redirectUri
-  });
-
   // Create a dynamic Google client instance with the request-specific redirect URI
   const dynamicGoogle = new Google(
     config.auth.google.clientId,
@@ -48,15 +41,6 @@ export async function GET(request) {
   const storedData = await getOAuthCookie(stateKey);
   const state = storedData?.state;
   const codeVerifier = storedData?.codeVerifier;
-
-  console.log('[OAuth Callback] State validation:', {
-    hasCode: !!code,
-    hasStateKey: !!stateKey,
-    hasStoredData: !!storedData,
-    hasState: !!state,
-    hasCodeVerifier: !!codeVerifier,
-    stateKeyPrefix: stateKey?.substring(0, 20),
-  });
 
   // Validate: code, stateKey (sent to Google and returned), state (retrieved from memory), codeVerifier (retrieved from memory)
   const stateValidation = validateOAuthState(code, stateKey, state, codeVerifier);
@@ -98,7 +82,6 @@ export async function GET(request) {
     });
 
     const { sessionCookie } = await createSession(user.id);
-    console.log('[OAuth Callback] Session created for user');
 
     // Clean up the OAuth state from memory
     await deleteOAuthCookie(stateKey);

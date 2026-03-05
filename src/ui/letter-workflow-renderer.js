@@ -61,7 +61,7 @@ export function renderLetterWorkflow(user, engagement) {
 
   const letterScript = `window.generateLetter=async function(id){try{const r=await fetch('/api/engagement/'+id+'/letter/generate',{method:'POST'});if(r.ok){location.reload()}else{alert('Generation failed')}}catch(e){alert(e.message)}};window.approveLetter=async function(id){try{const r=await fetch('/api/engagement/'+id+'/letter/approve',{method:'POST'});if(r.ok)location.reload();else alert('Approval failed')}catch(e){alert(e.message)}};window.sendLetter=async function(id){if(!confirm('Send engagement letter to client?'))return;try{const r=await fetch('/api/engagement/'+id+'/letter/send',{method:'POST'});if(r.ok)location.reload();else alert('Send failed')}catch(e){alert(e.message)}};window.regenerateLetter=async function(id){if(!confirm('Regenerate letter?'))return;try{const r=await fetch('/api/engagement/'+id+'/letter/generate',{method:'POST'});if(r.ok)location.reload();else alert('Failed')}catch(e){alert(e.message)}};window.uploadSigned=async function(id){const f=document.getElementById('signed-letter')?.files[0];if(!f)return alert('Select a file');const fd=new FormData();fd.append('file',f);try{const r=await fetch('/api/engagement/'+id+'/letter/upload-signed',{method:'POST',body:fd});if(r.ok)location.reload();else alert('Upload failed')}catch(e){alert(e.message)}}`;
 
-  return page(user, 'Engagement Letter', [
+  return page(user, 'Engagement Letter | MOONLANDING', [
     { href: '/', label: 'Dashboard' },
     { href: '/engagement', label: 'Engagements' },
     { href: `/engagement/${engagement.id}`, label: engagement.name || 'Engagement' },

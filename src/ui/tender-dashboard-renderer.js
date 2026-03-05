@@ -78,5 +78,5 @@ export function renderTenderDashboard(user, tenders, reviews = []) {
 
   const tenderScript = `window.filterTenders=function(f){document.querySelectorAll('[data-tender-filter]').forEach(b=>{b.classList.toggle('btn-primary',b.dataset.tenderFilter===f);b.classList.toggle('btn-ghost',b.dataset.tenderFilter!==f)});document.querySelectorAll('#tender-tbody tr').forEach(r=>{if(f==='all')r.style.display='';else if(f==='overdue')r.style.display=r.dataset.overdue==='1'?'':'none';else r.style.display=r.dataset.flag===f?'':'none'})}`;
 
-  return page(user, 'Tenders', [{ href: '/', label: 'Dashboard' }, { href: '/reviews', label: 'Reviews' }, { label: 'Tenders' }], content, [tenderScript]);
+  return page(user, 'Tenders | MOONLANDING', [{ href: '/', label: 'Dashboard' }, { href: '/reviews', label: 'Reviews' }, { label: 'Tenders' }], content, [tenderScript]);
 }

@@ -102,7 +102,7 @@ export function renderAuditDashboard(user, auditData = {}) {
       </table>
     </div>`;
 
-  return page(user, 'Audit Dashboard', [{ href: '/', label: 'Dashboard' }, { href: '/admin/audit', label: 'Audit' }], content, [TABLE_SCRIPT]);
+  return page(user, 'Audit Dashboard | MOONLANDING', [{ href: '/', label: 'Dashboard' }, { href: '/admin/audit', label: 'Audit' }], content, [TABLE_SCRIPT]);
 }
 
 export function renderSystemHealth(user, healthData = {}) {
@@ -130,5 +130,5 @@ export function renderSystemHealth(user, healthData = {}) {
       </table>
     </div>`;
 
-  return page(user, 'System Health', [{ href: '/', label: 'Dashboard' }, { href: '/admin/health', label: 'Health' }], content, [TABLE_SCRIPT]);
+  return page(user, 'System Health | MOONLANDING', [{ href: '/', label: 'Dashboard' }, { href: '/admin/health', label: 'Health' }], content, [TABLE_SCRIPT]);
 }

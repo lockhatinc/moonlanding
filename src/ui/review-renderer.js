@@ -122,7 +122,7 @@ export function renderReviewListTabbed(user, reviews) {
     });
   })()`;
 
-  return page(user, 'Reviews', bc, content, [TOAST_SCRIPT, tabScript, ctxScript, searchScript]);
+  return page(user, 'Reviews | MOONLANDING', bc, content, [TOAST_SCRIPT, tabScript, ctxScript, searchScript]);
 }
 
 export function reviewSearchField() {
@@ -271,5 +271,5 @@ export function renderMwrHome(user, stats) {
   const content = `${renderPageHeader('MWR Home', `Welcome back, ${user?.name || 'User'}`)}${statsHtml}${tabBar}${renderCard(panels, { padding: 0 })}`;
   const script = `window.switchHomeTab=(key)=>{document.querySelectorAll('.tab-btn[data-tab]').forEach(t=>t.classList.toggle('active',t.dataset.tab===key));document.querySelectorAll('[id^="home-panel-"]').forEach(p=>p.style.display='none');const el=document.getElementById('home-panel-'+key);if(el)el.style.display='block'}`;
   const bc = [{ href: '/', label: 'Dashboard' }, { label: 'MWR Home' }];
-  return page(user, 'MWR Home', bc, content, [script]);
+  return page(user, 'MWR Home | MOONLANDING', bc, content, [script]);
 }
