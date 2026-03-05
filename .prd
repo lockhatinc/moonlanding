@@ -1,0 +1,156 @@
+# PRD: Security & Correctness Audit Fixes
+
+## Objective
+Fix 923 identified issues across 5 categories (correctness, security, data integrity, concurrency, config) to achieve 100% production-ready status.
+
+## Current State
+- 373 correctness issues (array bounds, null checks, closures, promises)
+- 79 security issues (cookies, XSS, CORS, headers)
+- 154 data integrity issues (soft-delete filters, timezone handling, unscoped deletes)
+- 195 concurrency issues (transactions, race windows, unbounded queues, dedup)
+- 122 config/init issues (env mutation, circular requires, override order)
+
+## Fix Phases (Dependency Ordered)
+
+### PHASE 1: CRITICAL SECURITY FIXES (15 Set-Cookie + 61 innerHTML)
+**Blocks:** Everything (security)
+**Blocked by:** None
+**Status:** pending
+
+[1.1] Fix Set-Cookie headers - Add Secure flag to all 15 instances
+- Files: src/app/api/auth/google/callback/route.js, src/app/api/auth/login/route.js, src/app/api/auth/logout/route.js, src/app/api/auth/mwr-bridge/route.js, src/lib/next-polyfills.js
+- Pattern: Add `; Secure; HttpOnly; SameSite=Lax` to all Set-Cookie values
+- Validation: No Set-Cookie without Secure flag
+
+[1.2] Fix unsafe innerHTML - Replace 61 instances with safe alternatives
+- Files: src/ui/auth-pages.js, src/ui/checklist-renderer.js, src/ui/client-renderer.js, src/ui/collaboration-dialogs.js, src/ui/common-handlers.js, src/ui/engagement-detail-panels.js, src/ui/engagement-dialogs.js, src/ui/file-dialogs.js, src/ui/global-tags.js, src/ui/layout.js, src/ui/misc-dialogs.js, src/ui/monitoring-dashboard-client.js, src/ui/password-reset-page.js, src/ui/pdf-viewer-renderer.js, src/ui/picker-dialogs.js, src/ui/review-dialogs.js, src/ui/standalone-login.js, src/ui/tender-dialogs.js, src/ui/validation-ui.js, src/ui/virtual-scroll.js, src/ui/widgets.js
+- Strategy: Use textContent for plain text, create safe HTML builders for structured content
+- Validation: No innerHTML= assignments remain
+
+### PHASE 2: CRITICAL CORRECTNESS FIXES (13 unhandled promises)
+**Blocks:** Phase 3+ (prevents runtime crashes)
+**Blocked by:** Phase 1
+**Status:** pending
+
+[2.1] Fix promise chains - Add .catch() to all 13 unhandled promise chains
+- Files: src/lib/query-engine-optimized.js, src/lib/query-engine.js, src/ui/*.js
+- Pattern: Every .then() must have matching .catch()
+- Validation: All promise chains have error handlers
+
+### PHASE 3: DATA INTEGRITY FIXES (25 soft-delete + 103 timezone)
+**Blocks:** Phase 4+ (prevents data loss)
+**Blocked by:** Phase 1
+**Status:** pending
+
+[3.1] Add deleted_at filters - 25 SELECT queries missing soft-delete filter
+- Files: src/app/api/friday/client/*.js, src/app/api/friday/engagement/*.js, src/app/api/friday/rfi/*.js
+- Pattern: Add `AND deleted_at IS NULL` to all SELECT WHERE clauses
+- Validation: Count softdeleted vs active, verify filters work
+
+[3.2] Fix timezone handling - 103 instances using local timezone instead of UTC
+- Files: src/app/api/email/receive/route.js, src/app/api/friday/engagement/stage-counts/route.js, src/app/api/friday/rfi/*.js
+- Pattern: Always use `new Date().toISOString()` instead of `Math.floor(new Date().getTime() / 1000)`
+- Validation: All timestamps end with 'Z', consistent UTC across all tables
+
+### PHASE 4: CONCURRENCY FIXES (52 transactions + dedup)
+**Blocks:** Phase 5+ (prevents race conditions)
+**Blocked by:** Phase 3
+**Status:** pending
+
+[4.1] Wrap multi-step DB ops in transactions - 52 instances
+- Files: src/app/api/auth/*.js, src/app/api/[entity]/*.js, src/app/api/friday/*.js
+- Pattern: BEGIN TRANSACTION; [operations]; COMMIT; or rollback on error
+- Validation: No check-then-act without atomic update
+
+[4.2] Add idempotency & dedup - 41 notification instances
+- Pattern: Use idempotency keys or processed flags
+- Validation: No duplicate notifications
+
+### PHASE 5: ROBUSTNESS FIXES (null/bounds/NaN checks + limits)
+**Blocks:** Phase 6 (prevents runtime errors)
+**Blocked by:** Phase 4
+**Status:** pending
+
+[5.1] Add null checks - 50 instances accessing obj.prop without null check
+- Pattern: Use optional chaining (?.) or explicit null checks
+- Validation: No null dereference errors in logs
+
+[5.2] Add array bounds checks - 251 instances
+- Pattern: Use safe accessors (arr[i] || default) or length checks
+- Validation: No array out of bounds errors
+
+[5.3] Add NaN/Infinity validation - 26 instances
+- Pattern: Validate all arithmetic: isNaN(x), isFinite(x), etc.
+- Validation: No NaN/Infinity in outputs
+
+[5.4] Add size limits - 88 instances without upload/buffer limits
+- Pattern: Check size before processing, add MAX_SIZE constants
+- Validation: Uploads reject > 100MB, buffers capped
+
+### PHASE 6: CONFIG/INIT FIXES (env mutation, circular requires)
+**Blocks:** Production deployment
+**Blocked by:** Phase 5
+**Status:** pending
+
+[6.1] Fix env mutation - Remove all process.env.x = y assignments
+- Files: src/lib/*.js, src/config/*.js
+- Pattern: Use const + defaults, never mutate process.env
+- Validation: No env mutations in hot-reload
+
+[6.2] Fix circular requires - 6 instances
+- Pattern: Extract shared code to separate module, import separately
+- Validation: Import graph is acyclic
+
+[6.3] Fix config override order - 22 instances with undefined priority
+- Pattern: Use consistent pattern: ENV || CONFIG || DEFAULT
+- Validation: All env vars override config file
+
+### PHASE 7: VERIFICATION & TESTING
+**Blocks:** None (final validation)
+**Blocked by:** Phase 6
+**Status:** pending
+
+[7.1] Run full test suite - Execute all code paths
+- Tests: Login/auth, RFI operations, engagement transitions, file uploads, PDF generation
+- Validation: Zero errors in console, all APIs respond correctly
+
+[7.2] Verify with real data - Run migration Phase 3.5
+- Validation: 8/8 validators pass, no data corruption
+
+[7.3] Performance check - Run under load
+- Validation: p95 latency < 500ms @ 100 concurrent requests
+
+## Success Criteria (ALL MUST PASS)
+
+- [ ] No Set-Cookie without Secure flag
+- [ ] No unsafe innerHTML (0/61)
+- [ ] All promise chains have .catch() handlers
+- [ ] All SELECT queries filter soft-deleted records
+- [ ] All timestamps UTC with Z suffix
+- [ ] All multi-step DB ops in transactions
+- [ ] No null dereference errors
+- [ ] All array accesses bounds-checked
+- [ ] No NaN/Infinity in outputs
+- [ ] All uploads have size limits
+- [ ] No env mutations
+- [ ] Import graph is acyclic
+- [ ] Config override order consistent
+- [ ] 8/8 validators pass
+- [ ] Zero production errors observed
+
+## Estimate
+- Phase 1: 2 hours (regex + find/replace)
+- Phase 2: 1 hour (add .catch handlers)
+- Phase 3: 2 hours (soft-delete + timezone)
+- Phase 4: 2 hours (transactions + dedup)
+- Phase 5: 3 hours (null/bounds/limits)
+- Phase 6: 2 hours (env/circular/override)
+- Phase 7: 2 hours (testing + verification)
+**Total: ~14 hours**
+
+## Notes
+- All changes execute in plugin:gm:dev with real data
+- No mocks/stubs/test files
+- All changes committed to git before each phase
+- Git reset available if phase fails
+- Focus on highest-impact issues first

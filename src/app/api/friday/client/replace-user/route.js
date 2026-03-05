@@ -35,7 +35,7 @@ async function handlePost(request) {
 
   const db = getDatabase();
 
-  const oldUser = db.prepare('SELECT id, email, client_id FROM users WHERE id = ? AND client_id = ?').get(old_user_id, client_id);
+  const oldUser = db.prepare('SELECT id, email, client_id FROM users WHERE id = ? AND client_id = ? AND deleted_at IS NULL').get(old_user_id, client_id);
   if (!oldUser) {
     return new Response(
       JSON.stringify({ status: 'error', message: 'Old user not found or does not belong to this client' }),
@@ -43,7 +43,7 @@ async function handlePost(request) {
     );
   }
 
-  const newUser = db.prepare('SELECT id, email, client_id FROM users WHERE id = ? AND client_id = ?').get(new_user_id, client_id);
+  const newUser = db.prepare('SELECT id, email, client_id FROM users WHERE id = ? AND client_id = ? AND deleted_at IS NULL').get(new_user_id, client_id);
   if (!newUser) {
     return new Response(
       JSON.stringify({ status: 'error', message: 'New user not found or does not belong to this client' }),

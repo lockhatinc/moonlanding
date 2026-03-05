@@ -42,7 +42,7 @@ async function handlePost(request) {
   const db = getDatabase();
 
   const existingAuditor = db.prepare(
-    'SELECT id, type FROM users WHERE LOWER(email) = ? AND type IN (?, ?, ?)'
+    'SELECT id, type FROM users WHERE LOWER(email) = ? AND type IN (?, ?, ?) AND deleted_at IS NULL'
   ).get(emailLower, ...AUDITOR_TYPES);
 
   if (existingAuditor) {
@@ -53,7 +53,7 @@ async function handlePost(request) {
   }
 
   const existingClient = db.prepare(
-    'SELECT id FROM users WHERE LOWER(email) = ? AND client_id = ?'
+    'SELECT id FROM users WHERE LOWER(email) = ? AND client_id = ? AND deleted_at IS NULL'
   ).get(emailLower, client_id);
 
   if (existingClient) {

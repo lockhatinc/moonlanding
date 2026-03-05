@@ -31,7 +31,7 @@ async function handlePost(request) {
 
   const deleteBatch = db.transaction(() => {
     for (const userId of user_ids) {
-      const targetUser = db.prepare('SELECT id, email, client_id, type FROM users WHERE id = ?').get(userId);
+      const targetUser = db.prepare('SELECT id, email, client_id, type FROM users WHERE id = ? AND deleted_at IS NULL').get(userId);
 
       if (!targetUser) {
         results.failed.push({ id: userId, reason: 'User not found' });
