@@ -49,3 +49,4 @@ serviceAccountCloud.json
 .glootie-stop-verified
 data/backups/*.db
 .gm-stop-verified
+dogfood-output/
