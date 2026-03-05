@@ -2,6 +2,7 @@ import { list, get, create, update } from '@/engine';
 import { getGmailClient } from '@/adapters/google-auth';
 import { GoogleAdapter } from '@/adapters/google-adapter-base';
 import { config } from '@/config/env';
+import { buildMultipartEmail } from '@/lib/email-mime';
 
 const escapeHtml = (t) => (t || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[m]);
 
@@ -144,9 +145,7 @@ async function sendEmailViaGmail(n) {
   const DEFAULT_SENDER = process.env.GMAIL_SENDER_EMAIL;
   const adapter = new GoogleAdapter('Gmail', () => getGmailClient(DEFAULT_SENDER));
   await adapter.safeExecute(async (gmail) => {
-    const htmlContent = `<!DOCTYPE html><html><head><style>body{font-family:system-ui;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:20px}h2{color:#293241}a{color:#3b82f6}li{margin:5px 0}</style></head><body>${n.content}<hr style="margin-top:30px;border:none;border-top:1px solid #ddd"><p style="font-size:12px;color:#666">Automated message - do not reply</p></body></html>`;
-    const message = [`From: ${EMAIL_DEFAULTS.from}`, `To: ${n.recipient_email}`, 'Content-Type: text/html; charset="UTF-8"', 'MIME-Version: 1.0', `Subject: ${n.subject}`, '', htmlContent].join('\n');
-    const raw = Buffer.from(message).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const raw = buildMultipartEmail({ from: EMAIL_DEFAULTS.from, to: n.recipient_email, subject: n.subject, html: n.content });
     await gmail.users.messages.send({ userId: 'me', requestBody: { raw } });
   }, 'send');
 }

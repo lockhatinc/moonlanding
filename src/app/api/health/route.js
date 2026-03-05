@@ -10,6 +10,7 @@ export const GET = async (request) => {
     const start = process.hrtime.bigint()
 
     db.prepare('SELECT 1').get()
+    db.pragma('wal_checkpoint(PASSIVE)')
 
     const dbLatency = Number(process.hrtime.bigint() - start) / 1000000
     const url = new URL(request.url)

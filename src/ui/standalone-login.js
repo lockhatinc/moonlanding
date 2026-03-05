@@ -41,6 +41,7 @@ export function renderStandaloneLogin(showGoogleAuth = false) {
   </style>
 </head>
 <body>
+  <main id="main-content" aria-label="Sign in">
   <div class="wrap">
     <div class="logo">
       <div class="logo-mark">
@@ -72,6 +73,7 @@ export function renderStandaloneLogin(showGoogleAuth = false) {
       </form>
     </div>
   </div>
+  </main>
   <script src="/ui/event-delegation.js"></script>
   <script>
     document.getElementById('loginForm').addEventListener('submit', async function(e) {

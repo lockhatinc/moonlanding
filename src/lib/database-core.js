@@ -32,6 +32,7 @@ const BUSY_TIMEOUT_MS = process.env.DATABASE_BUSY_TIMEOUT_MS || 5000;
 db.pragma(`busy_timeout = ${BUSY_TIMEOUT_MS}`);
 db.pragma('synchronous = NORMAL');
 db.pragma('foreign_keys = ON');
+db.pragma('auto_vacuum = INCREMENTAL');
 
 export const migrate = () => {
   console.error('[Database] ===== MIGRATE CALLED =====');
@@ -241,6 +242,10 @@ export const migrate = () => {
     db.exec(`CREATE INDEX IF NOT EXISTS idx_rfi_questions_rfi ON rfi_questions(rfi_id)`);
     db.exec(`CREATE INDEX IF NOT EXISTS idx_rfi_questions_status ON rfi_questions(status)`);
     db.exec(`CREATE INDEX IF NOT EXISTS idx_rfi_responses_question ON rfi_responses(question_id)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_chat_messages_rfi ON chat_messages(rfi_id)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_chat_messages_user ON chat_messages(user_id)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_chat_mentions_message ON chat_mentions(message_id)`);
+    db.exec(`CREATE INDEX IF NOT EXISTS idx_chat_mentions_user ON chat_mentions(user_id)`);
   } catch (e) {
     console.error('[Database] RFI index creation failed:', e.message);
   }

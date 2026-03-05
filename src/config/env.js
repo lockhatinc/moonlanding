@@ -81,4 +81,18 @@ export const hasGoogleAuth = () => !!(config.auth.google.clientId && config.auth
 export const hasDriveConfig = () => !!config.drive.rootFolderId;
 export const hasEmailConfig = () => !!(config.email.smtp.user && config.email.smtp.password);
 
+export function validateEnv() {
+  const warnings = [];
+  if (!process.env.DATABASE_PATH && !process.env.NODE_ENV) {
+    warnings.push('DATABASE_PATH not set, using default ./data/app.db');
+  }
+  if (process.env.NODE_ENV === 'production') {
+    if (!process.env.EMAIL_USER) warnings.push('EMAIL_USER not set - email sending disabled');
+    if (!process.env.EMAIL_PASSWORD) warnings.push('EMAIL_PASSWORD not set - email sending disabled');
+    if (!process.env.APP_URL) warnings.push('APP_URL not set - links in emails will use localhost');
+  }
+  warnings.forEach(w => console.warn('[Config]', w));
+  return warnings;
+}
+
 export default config;

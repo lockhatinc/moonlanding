@@ -6,6 +6,7 @@ import { register } from 'module';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = parseInt(process.env.PORT || '3000', 10);
+const SERVER_START = Date.now();
 
 // Load .env file manually
 function loadEnv(filePath) {
@@ -25,6 +26,13 @@ function loadEnv(filePath) {
 
 loadEnv(path.join(__dirname, '.env'));
 
+async function validateConfig() {
+  try {
+    const { validateEnv } = await import('./src/config/env.js');
+    validateEnv();
+  } catch { }
+}
+
 let _recordRequest = null;
 async function ensureMetrics() {
   if (!_recordRequest) {
@@ -36,11 +44,17 @@ async function ensureMetrics() {
   return _recordRequest;
 }
 
+let _reqCounter = 0;
+function genRequestId() {
+  return `${Date.now().toString(36)}-${(++_reqCounter).toString(36)}`;
+}
+
 function trackResponse(req, statusCode, startTime) {
   const elapsed = Date.now() - startTime;
   const pathname = req.url.split('?')[0];
   if (_recordRequest) _recordRequest(pathname, req.method, elapsed, statusCode);
-  console.log(`[${req.method}] ${req.url} ${statusCode} ${elapsed}ms`);
+  const reqId = req._reqId || '-';
+  console.log(`[${req.method}] ${req.url} ${statusCode} ${elapsed}ms rid=${reqId}`);
 }
 
 process.on('uncaughtException', (err) => {
@@ -137,6 +151,8 @@ function setSecurityHeaders(res) {
 
 const server = http.createServer(async (req, res) => {
   const startTime = Date.now();
+  req._reqId = req.headers['x-request-id'] || genRequestId();
+  res.setHeader('X-Request-ID', req._reqId);
   setSecurityHeaders(res);
   await ensureMetrics();
 
@@ -619,11 +635,13 @@ globalThis.NextRequest = NextRequest;
 globalThis.NextResponse = NextResponse;
 
 server.listen(PORT, '0.0.0.0', async () => {
+  await validateConfig();
+  const startupMs = Date.now() - SERVER_START;
   console.log(`\n▲ Zero-Build Runtime Server`);
   console.log(`- Local:        http://localhost:${PORT}`);
   console.log(`- Network:      http://0.0.0.0:${PORT}`);
   console.log(`- Environments: .env.local, .env`);
-  console.log(`✓ Ready in 0.1s\n`);
+  console.log(`✓ Ready in ${startupMs}ms\n`);
 
   try {
     const { startLifecycle } = await import('./src/lib/dr-lifecycle.js');
