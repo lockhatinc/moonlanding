@@ -120,7 +120,7 @@ export function renderPdfViewer(user, review, highlights = [], sections = []) {
   }
   function renderAllPages(){
     pagesDiv.innerHTML='';var fragment=document.createDocumentFragment();
-    for(var i=1;i<=totalPages;i++){var w=document.createElement('div');w.className='page-wrapper';w.style.cssText='position:relative;margin-bottom:16px;background:white;box-shadow:var(--shadow-sm)';w.dataset.pageNumber=i;w.id='page-wrapper-'+i;w.innerHTML='<div style="padding:32px;text-align:center;font-size:13px;color:var(--color-text-light)">Loading page '+i+'...</div>';fragment.appendChild(w)}
+    for(var i=1;i<=totalPages;i++){var w=document.createElement('div');w.className='page-wrapper';w.style.cssText='position:relative;margin-bottom:16px;background:var(--color-surface,white);box-shadow:var(--shadow-sm)';w.dataset.pageNumber=i;w.id='page-wrapper-'+i;w.innerHTML='<div style="padding:32px;text-align:center;font-size:13px;color:var(--color-text-light)">Loading page '+i+'...</div>';fragment.appendChild(w)}
     pagesDiv.appendChild(fragment);
     var promises=[];for(var j=1;j<=totalPages;j++)promises.push(renderPage(j));
     return Promise.all(promises)

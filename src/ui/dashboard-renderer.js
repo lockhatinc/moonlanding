@@ -20,7 +20,7 @@ export function renderDashboard(user, stats = {}) {
       ];
 
   const statsHtml = `<div class="stats-row">${statDefs.map(s => `<a href="${s.href}" class="stat-card stat-card-clickable" style="text-decoration:none">
-    <div class="stat-card-value${s.warn ? ' style="color:var(--color-danger)"' : ''}">${s.value}</div>
+    <div class="stat-card-value${s.warn ? ' stat-card-warn' : ''}">${s.value}</div>
     <div class="stat-card-label">${s.label}</div>
     <div class="stat-card-sub">${s.sub}</div>
   </a>`).join('')}</div>`;

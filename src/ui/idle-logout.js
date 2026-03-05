@@ -54,23 +54,24 @@ export function getIdleLogoutScript(config = {}) {
 
     const content = document.createElement('div');
     content.style.cssText = \`
-      background: white;
+      background: var(--color-surface, #fff);
       padding: 2rem;
       border-radius: 8px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.2);
       max-width: 400px;
       text-align: center;
+      color: var(--color-text, #111);
     \`;
 
     const title = document.createElement('h3');
     title.textContent = CONFIG.warningTitle;
     title.style.marginBottom = '1rem';
-    title.style.color = '#333';
+    title.style.color = 'var(--color-text, #333)';
 
     const message = document.createElement('p');
     message.textContent = CONFIG.warningMessage;
     message.style.marginBottom = '1.5rem';
-    message.style.color = '#666';
+    message.style.color = 'var(--color-text-muted, #666)';
 
     const buttonContainer = document.createElement('div');
     buttonContainer.style.cssText = 'display: flex; gap: 1rem;';

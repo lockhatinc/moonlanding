@@ -17,7 +17,7 @@ export function renderRfiList(user, rfis = [], engagements = []) {
   const tabBar = `<div class="tab-bar">${TABS.map(t => {
     const count = t === 'all' ? rfis.length : (statusCounts[t] || 0);
     const label = t === 'all' ? 'All RFIs' : t.charAt(0).toUpperCase()+t.slice(1);
-    return `<button class="tab-btn${t==='all'?' active':''}" id="tab-${t}" data-action="filterTab" data-args='["${t}"]'>${label}<span class="tab-count">${count}</span></button>`;
+    return `<button class="tab-btn${t==='all'?' active':''}" id="tab-${t}" data-action="filterTab" data-args='["${t}"]' aria-label="${label} (${count})">${label}<span class="tab-count" aria-hidden="true">${count}</span></button>`;
   }).join('')}</div>`;
 
   const overdueCount = rfis.filter(r => r.deadline && new Date(typeof r.deadline==='number'?r.deadline*1000:r.deadline) < new Date()).length;

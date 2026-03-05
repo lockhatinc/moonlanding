@@ -41,7 +41,7 @@ export function stagePill(stage, stageConfig) {
     closeout:        { label: 'Close Out',       color: '#33691e', bg: '#f1f8e9' },
   };
   const cfg = STAGES[stage];
-  if (!cfg) return stage ? `<span style="background:#f5f5f5;color:#555;padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700">${stage}</span>` : '—';
+  if (!cfg) return stage ? `<span style="background:var(--color-bg,#f5f5f5);color:var(--color-text-muted,#555);padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700">${stage}</span>` : '—';
   return `<span style="background:${cfg.bg};color:${cfg.color};padding:2px 8px;border-radius:10px;font-size:0.7rem;font-weight:700;white-space:nowrap;border:1px solid ${cfg.color}44">${cfg.label}</span>`;
 }
 
@@ -91,7 +91,7 @@ export function truncate(str, n) {
 
 export function emptyState(message, icon) {
   const ico = icon || '📭';
-  return `<div style="text-align:center;padding:48px 24px;color:#aaa">
+  return `<div style="text-align:center;padding:48px 24px;color:var(--color-text-muted,#aaa)">
     <div style="font-size:2rem;margin-bottom:12px">${ico}</div>
     <div style="font-size:0.88rem;font-weight:500">${message || 'No items found'}</div>
   </div>`;

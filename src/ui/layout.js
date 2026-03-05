@@ -81,7 +81,7 @@ export function nav(user, pathname = '') {
   const avatarColors = ['#1565c0','#2e7d32','#6a1b9a','#c62828','#e65100','#00695c']
   const avatarBg = avatarColors[(user?.name?.charCodeAt(0) || 0) % avatarColors.length]
 
-  return `<nav id="main-nav" style="background:#04141f;height:50px;display:flex;align-items:center;padding:0;position:relative;z-index:100;overflow:hidden" ${role.navigation} ${aria.label('Main navigation')}>
+  return `<nav id="main-nav" style="background:#04141f;height:50px;display:flex;align-items:center;padding:0;position:relative;z-index:100" ${role.navigation} ${aria.label('Main navigation')}>
   <div style="display:flex;align-items:center;flex:1;gap:1rem;padding:0 1rem;min-width:0">
     <a href="/" style="display:flex;align-items:center;gap:0.5rem;text-decoration:none;flex-shrink:0" ${aria.label('Home')}>
       ${gearSvg}
@@ -99,13 +99,13 @@ export function nav(user, pathname = '') {
       ${hamburgerSvg}
     </button>
   </div>
-  <div id="user-dropdown" style="position:absolute;top:50px;right:1rem;background:white;border:1px solid #e5e7eb;border-radius:0.375rem;box-shadow:0 4px 12px rgba(0,0,0,0.15);min-width:200px;z-index:1000;display:none" ${role.menu}>
-    <div style="padding:0.75rem;border-bottom:1px solid #e5e7eb;font-size:0.875rem">
-      <div style="font-weight:600;color:#111">${user?.name || ''}</div>
-      <div style="color:#6b7280;font-size:0.75rem">${user?.email || ''}</div>
-      <div style="color:#9ca3af;font-size:0.7rem;margin-top:2px;text-transform:capitalize">${user?.role || ''}</div>
+  <div id="user-dropdown" class="user-dropdown" ${role.menu}>
+    <div class="user-dropdown-header">
+      <div class="user-dropdown-name">${user?.name || ''}</div>
+      <div class="user-dropdown-email">${user?.email || ''}</div>
+      <div class="user-dropdown-role">${user?.role || ''}</div>
     </div>
-    <a href="/api/auth/logout" style="display:flex;align-items:center;gap:8px;padding:0.75rem;color:#374151;text-decoration:none;font-size:0.875rem" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
+    <a href="/api/auth/logout" class="user-dropdown-item">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Logout
     </a>
@@ -142,7 +142,7 @@ export function nav(user, pathname = '') {
 <script>
 window.loadingBtn=function(btn,loading,label){if(!btn)return;btn.disabled=loading;btn.style.opacity=loading?'0.7':'1';if(loading){btn._orig=btn.innerHTML;btn.innerHTML='<span class="btn-spinner"></span>'+(label||'Loading...');}else{btn.innerHTML=btn._orig||label||btn.innerHTML;btn.disabled=false}}
 window.showToast=window.showToast||function(m,t){var c=document.getElementById('toast-container');if(!c){c=document.createElement('div');c.id='toast-container';c.className='toast-container';document.body.appendChild(c)}var d=document.createElement('div');d.className='toast toast-'+(t||'info');d.textContent=m;c.appendChild(d);setTimeout(function(){d.style.opacity='0';setTimeout(function(){d.remove()},300)},3000)}
-function toggleUserMenu(e){e.stopPropagation();var d=document.getElementById('user-dropdown');d.style.display=d.style.display==='none'?'block':'none'}
+function toggleUserMenu(e){e.stopPropagation();var d=document.getElementById('user-dropdown');var visible=d.style.display==='block';d.style.display=visible?'none':'block'}
 document.addEventListener('click',function(e){var d=document.getElementById('user-dropdown');if(d&&!d.contains(e.target)&&e.target.id!=='user-avatar'){d.style.display='none'}})
 function toggleMobileNav(){var btn=document.querySelector('.nav-hamburger');var open=btn.getAttribute('aria-expanded')==='true';btn.setAttribute('aria-expanded',String(!open));var drawer=document.getElementById('mobile-nav-drawer');var panel=document.getElementById('mobile-nav-panel');drawer.style.display=open?'none':'block';drawer.setAttribute('aria-hidden',String(open));panel.style.transform=open?'translateX(-100%)':'translateX(0)'}
 function closeMobileNav(){var btn=document.querySelector('.nav-hamburger');if(btn)btn.setAttribute('aria-expanded','false');var drawer=document.getElementById('mobile-nav-drawer');var panel=document.getElementById('mobile-nav-panel');if(drawer){drawer.style.display='none';drawer.setAttribute('aria-hidden','true');if(panel)panel.style.transform='translateX(-100%)'}}
