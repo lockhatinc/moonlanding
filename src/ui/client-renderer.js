@@ -64,7 +64,7 @@ export function renderClientDashboard(user, client, stats = {}) {
   </div>`).join('');
 
    const mkStat = (icon, value, label) => `<div class="card-clean"><div class="card-clean-body" style="padding:${SPACING.md}"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${SPACING.xs}"><span style="font-size:1.4rem">${icon}</span><span style="font-size:1.8rem;font-weight:700">${value}</span></div><div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--color-text-muted)">${label}</div></div></div>`;
-   const statsHtml = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:${SPACING.md};margin-bottom:${SPACING.lg}">${mkStat('📁',stats.engagements||0,'Engagements')}${mkStat('📋',stats.activeRfis||0,'Active RFIs')}${mkStat('👤',stats.users||0,'Users')}${mkStat('📄',stats.reviews||0,'Reviews')}</div>`;
+   const statsHtml = `<div class="client-stats-grid">${mkStat('📁',stats.engagements||0,'Engagements')}${mkStat('📋',stats.activeRfis||0,'Active RFIs')}${mkStat('👤',stats.users||0,'Users')}${mkStat('📄',stats.reviews||0,'Reviews')}</div>`;
 
   const engRows = (stats.engagementList || []).map(e => `<tr class="hover cursor-pointer" data-navigate="/engagement/${e.id}"><td class="text-sm font-medium">${esc(e.name || '-')}</td><td>${statusBadge(e.stage)}</td><td>${statusBadge(e.status)}</td></tr>`).join('') || `<tr><td colspan="3" style="text-align:center;padding:40px 16px;color:var(--color-text-muted)"><div style="display:flex;flex-direction:column;align-items:center;gap:8px"><span style="font-size:1.8rem">📁</span><span style="font-size:14px">No engagements yet</span>${canEdit(user, 'client') ? `<a href="/engagement/new?client_id=${esc(c.id)}" class="btn btn-primary btn-xs" style="margin-top:4px">+ New Engagement</a>` : ''}</div></td></tr>`;
 
@@ -81,19 +81,19 @@ export function renderClientDashboard(user, client, stats = {}) {
   const emailDialog = clientTestEmailDialog(c.id);
 
   const content = `
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+    <div class="page-header">
       <div>
-        <h1 style="font-size:24px;font-weight:700">${esc(c.name || 'Client')}</h1>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <h1 class="page-title">${esc(c.name || 'Client')}</h1>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap">
           ${riskBadge}
           ${statusBadge(c.status || 'active')}
           ${c.client_code ? `<code style="font-size:12px;background:var(--color-bg);padding:2px 8px;border-radius:4px;color:var(--color-text-muted)">${esc(c.client_code)}</code>` : ''}
         </div>
       </div>
-      ${actions}
+      <div class="page-actions">${actions}</div>
     </div>
     ${statsHtml}
-     <div style="display:grid;grid-template-columns:2fr 3fr;gap:${SPACING.md}">
+     <div class="client-detail-grid">
       <div class="card-clean">
         <div class="card-clean-body">
            <h2 style="font-size:0.875rem;font-weight:600;margin-bottom:${SPACING.sm}">Client Info</h2>

@@ -106,7 +106,7 @@ export function renderRfiDetail(user, rfi = {}, questions = [], sections = [], e
     ['Mandatory', rfi.mandatory!==false?'Yes':'No'],
   ];
 
-  const infoGrid = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:${SPACING.md}">` +
+  const infoGrid = `<div class="rfi-info-grid">` +
     infoItems.map(([l,v]) => `<div><div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--color-text-muted);margin-bottom:${SPACING.xs}">${l}</div><div style="font-size:0.875rem;color:var(--color-text)">${v}</div></div>`).join('') +
     `</div>`;
 

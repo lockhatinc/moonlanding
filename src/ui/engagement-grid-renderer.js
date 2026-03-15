@@ -13,15 +13,15 @@ function engRow(e) {
   return `<tr data-row data-navigate="/engagement/${esc(e.id)}" style="cursor:pointer">
     <td data-col="name"><strong>${name}</strong></td>
     <td data-col="client">${client}</td>
-    <td data-col="type">${type}</td>
-    <td data-col="year">${year}</td>
-    <td data-col="team">${team}</td>
+    <td data-col="type" class="eng-col-type">${type}</td>
+    <td data-col="year" class="eng-col-year">${year}</td>
+    <td data-col="team" class="eng-col-team">${team}</td>
     <td data-col="stage">${stagePill(e.stage)}</td>
     <td data-col="stage-raw" style="display:none">${stageLbl}</td>
     <td data-col="status">${statusPill(e.status)}</td>
     <td data-col="deadline">${deadline}</td>
-    <td data-col="rfi" style="text-align:center">${e.rfi_count != null ? e.rfi_count : '-'}</td>
-    <td>${progressBar(e.progress)}</td>
+    <td data-col="rfi" class="eng-col-rfi" style="text-align:center">${e.rfi_count != null ? e.rfi_count : '-'}</td>
+    <td class="eng-col-progress">${progressBar(e.progress)}</td>
   </tr>`;
 }
 
@@ -62,12 +62,13 @@ export function renderEngagementGrid(user, engagements, options = {}) {
   const rows = engagements.map(e => engRow(e)).join('') ||
     `<tr><td colspan="11" style="text-align:center;padding:48px;color:var(--color-text-muted)">No engagements found</td></tr>`;
 
+
   const content = `<div class="page-header">
         <div><h1 class="page-title">Engagements</h1><p class="page-subtitle">${engagements.length} total engagements</p></div>
         ${addBtn}
       </div>
       ${stageStats}${tabBar}
-      <div class="table-wrap">
+      <div class="table-wrap eng-table-mobile-scroll">
         <div class="table-toolbar">
           <div class="table-search"><input id="search-input" type="text" placeholder="Search engagements..."></div>
           ${stageOpts ? `<div class="table-filter"><select data-filter="stage-raw" id="filter-stage"><option value="">All Stages</option>${stageOpts}</select></div>` : ''}
@@ -77,10 +78,10 @@ export function renderEngagementGrid(user, engagements, options = {}) {
         </div>
         <table class="data-table">
           <thead><tr>
-            <th data-sort="name">Name</th><th data-sort="client">Client</th><th data-sort="type">Type</th>
-            <th data-sort="year">Year</th><th data-sort="team">Team</th><th data-sort="stage-raw">Stage</th>
+            <th data-sort="name">Name</th><th data-sort="client">Client</th><th data-sort="type" class="eng-col-type">Type</th>
+            <th data-sort="year" class="eng-col-year">Year</th><th data-sort="team" class="eng-col-team">Team</th><th data-sort="stage-raw">Stage</th>
             <th style="display:none"></th><th data-sort="status">Status</th><th data-sort="deadline">Deadline</th>
-            <th data-sort="rfi" style="text-align:center">RFI</th><th>Progress</th>
+            <th data-sort="rfi" class="eng-col-rfi" style="text-align:center">RFI</th><th class="eng-col-progress">Progress</th>
           </tr></thead>
           <tbody>${rows}</tbody>
         </table>

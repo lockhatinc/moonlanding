@@ -32,7 +32,7 @@ export function renderEngagementCardView(user, engagements) {
       </div>
     </div>`;
   }).join('');
-  return `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">${cards || '<div class="col-span-full text-center py-12 text-base-content/40">No engagements found</div>'}</div>`;
+  return `<div class="engagement-card-grid">${cards || '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--color-text-muted)">No engagements found</div>'}</div>`;
 }
 
 export function renderEngagementDetail(user, engagement, client, rfis = []) {

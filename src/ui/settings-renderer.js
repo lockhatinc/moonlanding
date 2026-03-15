@@ -64,7 +64,7 @@ export function renderSettingsHome(user, config = {}, counts = {}) {
     <div class="flex items-center justify-between mb-6">
       <div><h1 class="text-2xl font-bold text-base-content">Settings</h1><p class="text-sm text-base-content/50 mt-1">System configuration and administration</p></div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:${SPACING.md}">${cards}</div>`;
+    <div class="settings-home-grid">${cards}</div>`;
   return settingsPage(user, 'Settings', [{ href: '/', label: 'Dashboard' }, { label: 'Settings' }], content);
 }
 
@@ -90,7 +90,7 @@ export function renderSettingsSystem(user, config = {}) {
       <h1 class="text-2xl font-bold">System Info</h1>
       <span class="badge badge-flat-success text-xs">Read-only</span>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem">${cards}</div>`;
+    <div class="settings-info-grid">${cards}</div>`;
   return settingsPage(user, 'System Info - Settings', [{ href: '/', label: 'Dashboard' }, { href: '/admin/settings', label: 'Settings' }, { label: 'System Info' }], content);
 }
 

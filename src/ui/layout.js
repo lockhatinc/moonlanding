@@ -66,33 +66,31 @@ export function nav(user, pathname = '') {
   const hamburgerSvg = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`
 
   const isActive = (href) => pathname && (pathname === href || (href !== '/' && pathname.startsWith(href)))
-  const linkStyle = (href) => isActive(href)
-    ? 'color:#fff;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none;border-bottom:2px solid #fff;padding-bottom:2px'
-    : 'color:#ced4da;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none'
+  const linkClass = (href) => isActive(href) ? 'nav-link-active' : 'nav-link'
 
-  const sep = `<span style="color:#0d4d6d" aria-hidden="true">|</span>`
-  const logoutLink = `<a href="/api/auth/logout" style="${linkStyle('')}color:#ced4da;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;text-decoration:none">LOGOUT</a>`
-  const engLink = !isClerk(user) ? `${sep}<a href="/engagements" style="${linkStyle('/engagements')}">ENGAGEMENTS</a>` : ''
-  const clientLink = !isClerk(user) ? `${sep}<a href="/client" style="${linkStyle('/client')}">CLIENTS</a>` : ''
-  const settingsLink = isPartner(user) ? `${sep}<a href="/admin/settings" style="${linkStyle('/admin/settings')}">SETTINGS</a>` : ''
-  const reviewLink = `${sep}<a href="/review" style="${linkStyle('/review')}">MY REVIEW</a>`
+  const sep = `<span class="nav-sep" aria-hidden="true">|</span>`
+  const logoutLink = `<a href="/api/auth/logout" class="nav-link">LOGOUT</a>`
+  const engLink = !isClerk(user) ? `${sep}<a href="/engagements" class="${linkClass('/engagements')}">ENGAGEMENTS</a>` : ''
+  const clientLink = !isClerk(user) ? `${sep}<a href="/client" class="${linkClass('/client')}">CLIENTS</a>` : ''
+  const settingsLink = isPartner(user) ? `${sep}<a href="/admin/settings" class="${linkClass('/admin/settings')}">SETTINGS</a>` : ''
+  const reviewLink = `${sep}<a href="/review" class="${linkClass('/review')}">MY REVIEW</a>`
 
   const avatarInitial = user?.name?.charAt(0)?.toUpperCase() || 'U'
   const avatarColors = ['#1565c0','#2e7d32','#6a1b9a','#c62828','#e65100','#00695c']
   const avatarBg = avatarColors[(user?.name?.charCodeAt(0) || 0) % avatarColors.length]
 
-  return `<nav id="main-nav" style="background:#04141f;height:50px;display:flex;align-items:center;padding:0;position:relative;z-index:100" ${role.navigation} ${aria.label('Main navigation')}>
-  <div style="display:flex;align-items:center;flex:1;gap:1rem;padding:0 1rem;min-width:0">
-    <a href="/" style="display:flex;align-items:center;gap:0.5rem;text-decoration:none;flex-shrink:0" ${aria.label('Home')}>
+  return `<nav id="main-nav" class="main-nav" ${role.navigation} ${aria.label('Main navigation')}>
+  <div class="main-nav-brand">
+    <a href="/" class="main-nav-brand-link" ${aria.label('Home')}>
       ${gearSvg}
-      <span style="color:#f8f9fa;font-size:0.8rem;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;margin-left:0.25rem">MOONLANDING</span>
+      <span class="main-nav-brand-text">MOONLANDING</span>
     </a>
   </div>
   <div class="nav-links-desktop" style="align-items:center;gap:0.5rem;flex-shrink:0">
     ${logoutLink}${engLink}${clientLink}${settingsLink}${reviewLink}
   </div>
-  <div style="display:flex;align-items:center;gap:0.75rem;margin-left:1rem;padding-right:1rem;flex-shrink:0">
-    <div style="display:flex;align-items:center;justify-content:center;width:2.2rem;height:2.2rem;border-radius:50%;background:${avatarBg};color:#fff;font-weight:700;font-size:0.82rem;cursor:pointer;flex-shrink:0;min-width:44px;min-height:44px" id="user-avatar" data-action="toggleUserMenu" data-pass-event title="${user?.name || 'User'}" aria-label="User menu" role="button" tabindex="0">
+  <div class="main-nav-actions">
+    <div class="nav-avatar" style="background:${avatarBg}" id="user-avatar" data-action="toggleUserMenu" data-pass-event title="${user?.name || 'User'}" aria-label="User menu" role="button" tabindex="0">
       ${avatarInitial}
     </div>
     <button class="nav-hamburger" data-action="toggleMobileNav" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-nav-drawer" style="background:none;border:none;color:#ced4da;cursor:pointer;padding:8px;border-radius:4px;align-items:center;justify-content:center;min-width:44px;min-height:44px">
@@ -114,21 +112,21 @@ export function nav(user, pathname = '') {
 <div id="mobile-nav-drawer" style="display:none;position:fixed;inset:0;z-index:200;pointer-events:none" aria-hidden="true">
   <div data-action="closeMobileNav" style="position:absolute;inset:0;background:rgba(0,0,0,0.5);pointer-events:auto"></div>
   <div style="position:absolute;left:0;top:0;bottom:0;width:280px;max-width:80vw;background:#04141f;padding:0;display:flex;flex-direction:column;transform:translateX(-100%);transition:transform 0.25s ease" id="mobile-nav-panel">
-    <div style="padding:1rem;border-bottom:1px solid #0d4d6d;display:flex;align-items:center;justify-content:space-between">
-      <span style="color:#f8f9fa;font-weight:700;letter-spacing:1px;font-size:0.85rem">MOONLANDING</span>
-      <button data-action="closeMobileNav" style="background:none;border:none;color:#ced4da;cursor:pointer;font-size:1.5rem;padding:8px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center" aria-label="Close menu">&times;</button>
+    <div class="mobile-nav-header-bar">
+      <span class="mobile-nav-header-title">MOONLANDING</span>
+      <button data-action="closeMobileNav" class="mobile-nav-close-btn" aria-label="Close menu">&times;</button>
     </div>
     <nav style="flex:1;padding:1rem 0;overflow-y:auto">
-      <a href="/" style="display:block;padding:14px 20px;color:#ced4da;text-decoration:none;font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;min-height:48px;display:flex;align-items:center" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">Dashboard</a>
-      ${!isClerk(user) ? `<a href="/engagements" style="display:block;padding:14px 20px;color:#ced4da;text-decoration:none;font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;min-height:48px;display:flex;align-items:center" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">Engagements</a>` : ''}
-      ${!isClerk(user) ? `<a href="/client" style="display:block;padding:14px 20px;color:#ced4da;text-decoration:none;font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;min-height:48px;display:flex;align-items:center" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">Clients</a>` : ''}
-      <a href="/review" style="display:block;padding:14px 20px;color:#ced4da;text-decoration:none;font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;min-height:48px;display:flex;align-items:center" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">My Review</a>
-      ${isPartner(user) ? `<a href="/admin/settings" style="display:block;padding:14px 20px;color:#ced4da;text-decoration:none;font-size:0.9rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;min-height:48px;display:flex;align-items:center" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">Settings</a>` : ''}
+      <a href="/" class="mobile-nav-link">Dashboard</a>
+      ${!isClerk(user) ? `<a href="/engagements" class="mobile-nav-link">Engagements</a>` : ''}
+      ${!isClerk(user) ? `<a href="/client" class="mobile-nav-link">Clients</a>` : ''}
+      <a href="/review" class="mobile-nav-link">My Review</a>
+      ${isPartner(user) ? `<a href="/admin/settings" class="mobile-nav-link">Settings</a>` : ''}
     </nav>
-    <div style="padding:1rem;border-top:1px solid #0d4d6d">
-      <div style="color:#888;font-size:0.875rem;margin-bottom:4px;font-weight:600">${user?.name || ''}</div>
-      <div style="color:#666;font-size:0.75rem;margin-bottom:12px;word-break:break-all">${user?.email || ''}</div>
-      <a href="/api/auth/logout" style="display:block;padding:12px 16px;background:rgba(255,255,255,0.08);color:#ced4da;text-decoration:none;font-size:0.875rem;font-weight:600;border-radius:6px;text-align:center;text-transform:uppercase;letter-spacing:1px;min-height:44px;display:flex;align-items:center;justify-content:center">Logout</a>
+    <div class="mobile-nav-footer">
+      <div class="mobile-nav-user-name">${user?.name || ''}</div>
+      <div class="mobile-nav-user-email">${user?.email || ''}</div>
+      <a href="/api/auth/logout" class="mobile-nav-logout">Logout</a>
     </div>
   </div>
 </div>

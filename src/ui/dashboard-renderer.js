@@ -26,7 +26,7 @@ export function renderDashboard(user, stats = {}) {
   </a>`).join('')}</div>`;
 
   const overdueAlert = stats.overdueRfis?.length > 0
-    ? `<div class="alert-strip alert-strip-danger mb-5"><span>${stats.overdueRfis.length} overdue RFI${stats.overdueRfis.length !== 1 ? 's' : ''} require attention</span><a href="/rfi" class="btn-danger-clean">View RFIs</a></div>` : '';
+    ? `<div class="alert-strip alert-strip-danger" style="margin-bottom:1.25rem"><span>${stats.overdueRfis.length} overdue RFI${stats.overdueRfis.length !== 1 ? 's' : ''} require attention</span><a href="/rfi" class="btn-danger-clean">View RFIs</a></div>` : '';
 
   const quickActions = getQuickActions(user);
   const actionsHtml = quickActions.length > 0
